@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { WorkSpace } from "./workspace.model";
 import { Folder } from "./folder.model";
+import { ObjectId } from "mongoose";
 
-export interface File extends Document{
+export interface File{
+    _id?: ObjectId,
     title: string,
     iconId?: string,
     data?: string,
@@ -16,7 +18,6 @@ export const FileSchema: Schema<File> = new Schema({
     title:{
         type: String,
         required: [true, "Title is required"],
-        unique: true
     },
     iconId:{
         type: String,

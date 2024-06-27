@@ -1,9 +1,10 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, ObjectId } from "mongoose";
 import { WorkSpace } from "./workspace.model";
 import { File, FileSchema } from "./file.model";
 // import dbConnect from "@/lib/dbConnect";
 
-export interface Folder extends Document{
+export interface Folder{
+    _id?: ObjectId,
     createdAt: Date,
     title: string,
     iconId?: string,
@@ -22,8 +23,7 @@ export const FolderSchema: Schema<Folder> = new Schema({
     },
     title:{
         type: String,
-        required: [true, "Title is required"],
-        unique: true
+        required: [true, "Title is required"]
     },
     iconId:{
         type: String,

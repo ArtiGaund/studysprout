@@ -10,6 +10,10 @@ import { WorkSpace } from "@/model/workspace.model";
 import NativeNavigation from "./native-navigation";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "./folders-dropdown-list";
+import { useDispatch, useSelector } from "react-redux";
+import { SET_CURRENT_FOLDERS, SET_FOLDERS } from "@/store/slices/folderSlice";
+import { SET_CURRENT_WORKSPACES, SET_WORKSPACES } from "@/store/slices/workspaceSlice";
+import { RootState } from "@/store/store";
 interface SidebarProps{
     params: { workspaceId: string};
     className?: string;
@@ -17,46 +21,36 @@ interface SidebarProps{
 
 const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
     const { data: session } = useSession()
-    const [ folders, setFolders ] = useState([] as any)
+    const folders = useSelector((state: RootState) => state.folder.folders);
+    const currentFolderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
     const [ isLoading, setIsLoading ] = useState(false)
     const [ error, setError ] = useState(false)
     const [ allWorkspaces, setAllWorkspaces ] = useState([] as any)
+    const [ currenntWorkspace, setCurrentWorkspace ] = useState()
+    const dispatch = useDispatch()
 
     const router = useRouter()
 
     // console.log("Workspace id in Params in sidebar ",params.workspaceId)
 
-   
+  //  console.log("Folders in sidebar ",folders)
     useEffect(() => {
-      const fetchFolders = async (workspaceId: string) => {
-        try {
-          const response = await axios.get(`/api/get-all-workspace-folders?workspaceId=${workspaceId}`);
-          // console.log("Response ",response)
-          const fetchedFolders = response.data
-          // console.log("fetchedFolders ",fetchedFolders)
-          if(fetchedFolders){
-              setFolders(fetchedFolders);
-          }
-        } catch (err) {
-          console.log("Error fetching the folders ",err)
-          setError(true)
-        }
-      }
       fetchFolders(params.workspaceId);
-    }, [])
+    }, [params.workspaceId]);
     
     // const userId = session?.user._id
     useEffect(() => {
         if(session && session.user && session.user._id){
           const fetchAllWorkspaces = async() => {
             const userId = session?.user._id
-            // console.log("user id in sidebar ",userId)
+            console.log("user id in sidebar ",userId)
             try {
               const response = await axios.get(`/api/get-all-workspaces?userId=${userId}`)
               const fetchedWorkspaces = response.data.data
-              // console.log("fetchedWorkspaces ",fetchedWorkspaces)
+              console.log("fetchedWorkspaces ",fetchedWorkspaces)
               if(fetchedWorkspaces){
                 setAllWorkspaces(fetchedWorkspaces)
+                dispatch(SET_WORKSPACES(fetchedWorkspaces))
               }
             } catch (err) {
               console.log("Error while fetching all the workspaces for user ",err)
@@ -67,15 +61,54 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
         }
             
       }, [session]);
+
+      // setting the current workspace 
+      useEffect(() => {
+        const getCurrentWorkspace = async () => {
+          try {
+            const currentWorkspaceId = params.workspaceId
+          const response = await axios.get(`/api/get-current-workspace?workspaceId=${currentWorkspaceId}`)
+          console.log("Response for current workspace ",response.data.data)
+          setCurrentWorkspace(response.data.data)
+          dispatch(SET_CURRENT_WORKSPACES(response.data.data))
+          } catch (error) {
+            console.log("Error while fetching current workspace ",error)
+          }
+
+        }
+        getCurrentWorkspace()
+      }, [params.workspaceId])
     // getting all the folders for the workspace
 
-      // console.log("All workspace of user ",allWorkspaces.data)
-      // console.log("session ",session)
+    // its an callback method, when folder is added from folder-dropdown-list component, this method is called 
+    // to update the workspaceFolders props
+    const handleFolderAdded = async () => {
+      await fetchFolders(params.workspaceId)
+    }
+
+    const fetchFolders = async (workspaceId: string) => {
+      try {
+        console.log("Inside fetchFolders")
+        const response = await axios.get(`/api/get-all-workspace-folders?workspaceId=${workspaceId}`);
+        console.log("Response for fetch folders ",response)
+        const fetchedFolders = response.data.data
+        console.log("fetchedFolders ",fetchedFolders)
+        
+        if(fetchedFolders){
+            dispatch(SET_FOLDERS(fetchedFolders))
+            if(fetchFolders.length > 0 && !currentFolderId ){
+              dispatch(SET_CURRENT_FOLDERS(fetchedFolders[0]))
+            }
+        }
+      } catch (err) {
+        console.log("Error fetching the folders ",err)
+        setError(true)
+      }
+    }
       
     // user is not login
     if(!session) return
     
-    // console.log("default workspace ", allWorkspaces?.find((workspace:WorkSpace) => workspace._id === params.workspaceId))
 
     // check for the error
     if(error) router.replace('/dashboard')
@@ -89,8 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
             <>
               <WorkspaceDropdown
               workspaces={allWorkspaces}
-              defaultValue={
-                allWorkspaces?.find((workspace:WorkSpace) => workspace._id === params.workspaceId)}
+              defaultValue={currenntWorkspace}
               />
               <NativeNavigation myWorkspaceId={params.workspaceId}/>
               <ScrollArea className="overflow-scroll relative h-[450px]">
@@ -99,6 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
                    <FoldersDropdownList 
                    workspaceFolders={folders || []}
                    workspaceId={params.workspaceId}
+                   onFolderAdded={handleFolderAdded}
                    /> 
               </ScrollArea>
             </>

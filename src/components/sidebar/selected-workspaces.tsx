@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import ImageModel from "@/model/image.model";
 import WorkSpaceModel, { WorkSpace } from "@/model/workspace.model";
 import axios from "axios";

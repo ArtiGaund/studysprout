@@ -1,15 +1,16 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, ObjectId } from "mongoose";
 import { User } from "./user.model";
 import { Image } from "./image.model";
 import { Folder, FolderSchema } from "./folder.model";
 
-export interface WorkSpace extends Document{
+export interface WorkSpace{
+    _id?: ObjectId,
     workspace_owner: User,
-    workspaceName: string,
+    workspaceName?: string,
     iconId?: string,
     data?: string,
     inTrash?: string,
-    logo?: Image,
+    logo?: Image | undefined,
     bannerUrl?: string,
     folders?: Folder[],
 }

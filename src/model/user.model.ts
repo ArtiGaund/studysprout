@@ -4,7 +4,7 @@ import { Folder, FolderSchema } from './folder.model';
 import { File, FileSchema } from './file.model';
 
 // creating User interface
-export interface User extends Document{
+export interface User{
     username: string;
     email: string;
     password: string;
@@ -29,7 +29,8 @@ const UserSchema: Schema<User> = new Schema({
         'Please use a valid email address']
     },
     password:{
-       
+       type: String,
+       required: [true, "Password is required"],
     },
     verifyCode: {
         type: String,

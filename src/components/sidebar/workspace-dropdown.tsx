@@ -1,4 +1,4 @@
-'use client'
+"use client"
 import { WorkSpace } from "@/model/workspace.model";
 import React, { useEffect, useState } from "react"
 import SelectedWorkspaces from "./selected-workspaces";
@@ -13,24 +13,30 @@ interface WorkspaceDropdownProps{
 
 // this component will allow the user to select between the different workspaces
 const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defaultValue }) => {
-    // TODO add dispatch later to set all workspaces once this component is invoked
+    // const { state, dispatch } = useAppState()
+
     const [ selectedOption, setSelectedOption ] = useState(defaultValue)
     const [ isOpen, setIsOpen ] = useState(false)
 
     // TODO: check whether our state has any workspaces or not (to set all the workspaces)
-    // useEffect(() => {
-
-    // }, [workspaces])
+    useEffect(() => {
+        // if(!state.workspaces.length){
+        //     dispatch({
+        //         type: 'SET_WORKSPACES',
+        //         payload: {
+        //             workspaces: [
+        //                 ...workspaces
+        //             ].map((workspace) => ({ ...workspace, folders: []})),
+        //         }
+        //     })
+        // }
+    }, [workspaces])
 
     // handle select
     const handleSelect = ( option: WorkSpace ) => {
         setSelectedOption(option)
         setIsOpen(false)
     }
-    // console.log("default values in workspace deropdown ",defaultValue)
-    // console.log("Workspace in workspace dropdown ",workspaces)
-    // console.log("Workspace id in workspace dropdown ",workspaces[0]._id)
-    // console.log("Selected option ",selectedOption)
     return(
     <div className="relative inline-block text-left">
         <div>
@@ -51,9 +57,10 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
                             <>
                                 <p className="text-muted-foreground">All Workspace</p>
                                 <hr></hr>
-                                {workspaces.map((option) => (
+                                {workspaces.map((option,index) => (
                                     <SelectedWorkspaces 
-                                    key={option.id}
+                                    // key={option._id}
+                                    key={index}
                                     workspace={option}
                                     onClick={handleSelect}
                                     />

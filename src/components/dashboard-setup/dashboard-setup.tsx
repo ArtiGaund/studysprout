@@ -13,6 +13,9 @@ import { ApiResponse } from "@/types/api.interface"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Label } from "../ui/label"
+import { v4 as uuid4 } from "uuid";
+import { useDispatch } from "react-redux"
+import { ADD_WORKSPACE } from "@/store/slices/workspaceSlice"
 
 const DashboardSetup = () => {
     const { data: session, status } = useSession()
@@ -21,6 +24,7 @@ const DashboardSetup = () => {
     const [selectedEmoji, setSelectedEmoji] = useState('💼');
     const [ selectedImage, setSelectedImage ] = useState(null)
     const [workspaceTitle, setWorkspaceTitle ] = useState('')
+    const dispatch = useDispatch()
     
     const { register  } = useForm()
 
@@ -41,6 +45,8 @@ const DashboardSetup = () => {
             setIsSubmitting(true)
             setIsLoading(true)
             const formData = new FormData()
+            // const id = uuid4()
+            // formData.append("_id",id)
             formData.append("workspaceName",workspaceTitle)
             if(session?.user._id){
                 formData.append("userId",session?.user._id)
@@ -63,8 +69,14 @@ const DashboardSetup = () => {
                     description: response.data.message
                 })
             }
+            const newWorkspace = response.data.data
+            dispatch(ADD_WORKSPACE(newWorkspace))
+            // dispatch({
+            //     type: 'ADD_WORKSPACE',
+            //     payload: { ...newWorkspace, folders: [] },
+            // })
             // console.log("Response Data ",response.data)
-            const  workspaceId  = response.data.data._id
+            const  workspaceId  = newWorkspace._id
             // console.log("workspace ",workspaceId)
             // const workspaceId = workspace._id
             // console.log("workspace id ",workspaceId)

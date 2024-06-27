@@ -5,7 +5,9 @@ import AuthProvider from '../context/AuthProvider';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from "@/lib/providers/next-theme-provider";
 import { UserProvider } from '@/lib/providers/user-provider';
-import AppStateProvider from '@/lib/providers/state-provider';
+import ReduxProvider from '@/lib/providers/redux-provider';
+
+
 
 
 const inter = Inter({ subsets: ['latin'] });
@@ -24,13 +26,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     <html lang="en" >
       <AuthProvider>
         <body className={inter.className} >
-        <AppStateProvider>
+        <ReduxProvider>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <UserProvider>
             {children}
           </UserProvider>
         </ThemeProvider>
-        </AppStateProvider>
+        </ReduxProvider>
           <Toaster />
         </body>
       </AuthProvider>

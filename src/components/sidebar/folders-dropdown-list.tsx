@@ -1,45 +1,53 @@
-'use client'
-import { useAppState } from "@/lib/providers/state-provider";
-import { Folder } from "@/model/folder.model";
+"use client"
 import React, { useEffect, useState } from "react";
 import TooltipComponent from "../global/tooltip-component";
 import { PlusIcon } from "lucide-react";
+import axios from "axios";
+import { useToast } from "../ui/use-toast";
+import { v4 as uuid4 } from "uuid";
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+  } from "@/components/ui/accordion"
+import { Folder } from "@/model/folder.model";
+import { useDispatch, useSelector } from "react-redux";
+import { ADD_FOLDER, SET_FOLDERS } from "@/store/slices/folderSlice";
+import { RootState } from "@/store/store";
+  
 
 interface FoldersDropdownListProps{
     workspaceFolders: Folder[] | [];
     workspaceId: string; 
+    onFolderAdded: () => void;
 }
-const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolders, workspaceId }) => {
+const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolders, workspaceId, onFolderAdded }) => {
     // 1) keep track of local state folders
     // set up real time updates => when another user create an update, we want real time update system setup
     // so it can create a folder for us in our localhost (i think i don't need it bz i am not doing collaborator 
     // part)
-    const { state, dispatch } = useAppState()
-    const [ folders, setFolders ] = useState(workspaceFolders)
+    console.log("Workspace id ",workspaceId)
+    console.log("Workspace Folders ",workspaceFolders)
+    // const { state, dispatch, folderId } = useAppState()
+    const folders = useSelector((state: RootState) => state.folder.folders)
+    const currentFolderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
+    const { toast } = useToast()
+    const dispatch = useDispatch()
     // 2)effect set initial state server app state
     useEffect(() => {
+        console.log("inside use effect for set folders")
         if (workspaceFolders.length > 0) {
-            dispatch({
-                type: 'SET_FOLDERS',
-                payload: {
-                    workspaceId,
-                    folders: workspaceFolders.map((folder) => ({
-                        ...folder,
-                        files:
-                            state.workspaces
-                            .find((workspace) => workspace._id === workspaceId)
-                            ?.folders?.find((f) => f._id === folder._id)?.files || []
-                    })) as Folder[]
-                }
-            })
+            dispatch(SET_FOLDERS(workspaceFolders))
         }
-      }, [workspaceFolders, workspaceId]);
+      }, [ workspaceFolders, workspaceId, dispatch ]);
     // 3) state (updating our local states) to manage server data
-    useEffect(() => {
-        setFolders(state.workspaces.find((workspace) => workspace._id === workspaceId)
-        ?.folders || []
-    )
-    }, [state])
+    // useEffect(() => {
+    //     setFolders(state.workspaces.find((workspace) => workspace._id === workspaceId)
+    //     ?.folders || []
+    // )
+    // console.log("setFolders ",state)
+    // }, [state])
     // 4) add folders
 
     const addFolderHandler = async () => {
@@ -53,11 +61,32 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
             workspaceId,
             bannerUrl: '',
           };
-          dispatch({
-            type: 'ADD_FOLDER',
-            payload: { workspaceId, folder: { ...newFolder, files: [] } },
-          });
+       
+       
+        //   creating new folder on the server
+        const createFolder = await axios.post('/api/create-folder', newFolder)
+        console.log("Create Folder ",createFolder)
+        if(!createFolder.data.success){
+            toast({
+                title: "Failed to create folder",
+                description: "Please try again later",
+                variant: "destructive"
+            })
+        }
+        else{
+            toast({
+                title: "Successfully created folder",
+                description: "You can now add files to this folder",
+             })
+             const folderData =createFolder.data.data
+              //   adding folder to a local states
+             dispatch(ADD_FOLDER(folderData))
+             console.log("Folder data",createFolder.data.data)
+             onFolderAdded()
+        }
+        
     }
+    console.log("folders from state ",folders)
 
     return(
         <>
@@ -73,7 +102,23 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                      className="group-hover/title:inline-block hidden cursor-pointer hover:dark:text-white"/>
 
                 </TooltipComponent>
-            </div>
+                </div>
+                {/* Rendering all the folder */}
+                <Accordion
+                type="multiple"
+                defaultValue={[ currentFolderId?.toString() || '']}
+                className="pb-20"
+                >
+                   {
+                   folders.filter((folder) => !folder.inTrash)
+                   .map((folder) => (
+                    <div key={folder._id?.toString()}>
+
+                    </div>
+                   ))
+                   }
+                </Accordion>
+            
         </>
     )
 }
