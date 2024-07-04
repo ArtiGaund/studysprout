@@ -1,19 +1,17 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { WorkSpace } from "./workspace.model";
 import { Folder } from "./folder.model";
-import { ObjectId } from "mongoose";
 
-export interface File{
-    _id?: ObjectId,
-    title: string,
-    iconId?: string,
-    data?: string,
-    inTrash?: string,
-    bannerUrl?: string,
-    workspaceId?: WorkSpace,
-    folderId?: Folder,
+export interface File {
+    _id?: string;
+    title: string;
+    iconId?: string;
+    data?: string;
+    inTrash?: string;
+    bannerUrl?: string;
+    workspaceId?: string;
+    folderId?: string; 
 }
-
 export const FileSchema: Schema<File> = new Schema({
     title:{
         type: String,

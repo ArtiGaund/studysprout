@@ -1,4 +1,5 @@
 import dbConnect from "@/lib/dbConnect";
+import FileModel from "@/model/file.model";
 import FolderModel from "@/model/folder.model";
 import WorkSpaceModel from "@/model/workspace.model";
 import mongoose from "mongoose";
@@ -17,17 +18,35 @@ export async function POST(request: Request) {
                     success: false
                 })
             }
-            const folderId = new mongoose.Types.ObjectId(_id);
-            // updating folder
-            const folder = await FolderModel.findByIdAndUpdate(
-                folderId,
+            const fileId = new mongoose.Types.ObjectId(_id);
+            // updating file
+            const file = await FileModel.findByIdAndUpdate(
+                fileId,
                 updates,
                 { new: true }
+            )
+
+            if(!file){
+                return Response.json({
+                    statusCode: 405,
+                    message: "Failed to update data in folder",
+                    success: false
+                })
+            }
+            // updating folder
+            const folder = await FolderModel.findOneAndUpdate(
+                { "files._id": fileId },
+                {
+                    $set: {
+                        "files.$.title": updates.title, 
+                        "files.$.iconId": updates.iconId 
+                    }
+                }
             )
             if(!folder){
                 return Response.json({
                     statusCode: 405,
-                    message: "Failed to update data in folder",
+                    message: "Folder to update data in folder",
                     success: false
                 })
             }   
@@ -37,13 +56,7 @@ export async function POST(request: Request) {
             // update folder data workspace in workspace
 
             const workspace = await WorkSpaceModel.findOneAndUpdate(
-                { "folders._id" : folderId },
-                {
-                    $set: {
-                         "folders.$.title": updates.title, 
-                         "folders.$.iconId": updates.iconId 
-                    } 
-                },
+                { "folders._id" : folder._id },
                 { new: true }
             )
 
@@ -63,12 +76,13 @@ export async function POST(request: Request) {
              await folder.save()
 
             //  save updated workspace 
+            await workspace.save()
 
             return Response.json({
                 statusCode: 200,
                 message: "Updated data in folder sucessfully. ",
                 success: true,
-                data: { folder, workspace }
+                data: { file, folder, workspace }
             })
     } catch (error) {
         console.log("Error while updating the folder ",error);

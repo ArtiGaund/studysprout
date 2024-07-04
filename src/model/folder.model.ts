@@ -4,7 +4,7 @@ import { File, FileSchema } from "./file.model";
 // import dbConnect from "@/lib/dbConnect";
 
 export interface Folder{
-    _id?: ObjectId,
+    _id?: string;
     createdAt: Date,
     title: string,
     iconId?: string,

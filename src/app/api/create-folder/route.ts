@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         return Response.json({
             statusCode: 200,
             message: "Successfully created new Folder and added in workspace",
-            data: newFolder,
+            data: { folder: newFolder, updatedWorkspace: workspace },
             success: true
         })
     } catch (error) {

@@ -15,6 +15,8 @@ import { Folder } from "@/model/folder.model";
 import { useDispatch, useSelector } from "react-redux";
 import { ADD_FOLDER, SET_FOLDERS } from "@/store/slices/folderSlice";
 import { RootState } from "@/store/store";
+import Dropdown from "./dropdown";
+import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
   
 
 interface FoldersDropdownListProps{
@@ -51,38 +53,49 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
     // 4) add folders
 
     const addFolderHandler = async () => {
-        // this will create a visible folder quickly for the user on the frontend
-        const newFolder: Folder = {
-            data: undefined,
-            createdAt: new Date(),
-            title: 'Untitled',
-            iconId: '📄',
-            inTrash: undefined,
-            workspaceId,
-            bannerUrl: '',
-          };
        
-       
-        //   creating new folder on the server
-        const createFolder = await axios.post('/api/create-folder', newFolder)
-        console.log("Create Folder ",createFolder)
-        if(!createFolder.data.success){
+            // this will create a visible folder quickly for the user on the frontend
+            const newFolder: Folder = {
+                data: undefined,
+                createdAt: new Date(),
+                title: 'Untitled',
+                iconId: '📄',
+                inTrash: undefined,
+                workspaceId,
+                bannerUrl: '',
+              };
+           
+        try {
+            //   creating new folder on the server
+            const createFolder = await axios.post('/api/create-folder', newFolder)
+            console.log("Create Folder ",createFolder)
+            if(!createFolder.data.success){
+                toast({
+                    title: "Failed to create folder",
+                    description: "Please try again later",
+                    variant: "destructive"
+                })
+            }
+            else{
+                toast({
+                    title: "Successfully created folder",
+                    description: "You can now add files to this folder",
+                 })
+                 const folderData =createFolder.data.data.folder
+                  //   adding folder to a local states
+                 dispatch(ADD_FOLDER(folderData))
+                 const updatedWorkspace = createFolder.data.data.updatedWorkspace
+                 dispatch(UPDATE_WORKSPACE(updatedWorkspace))
+                 console.log("Folder data",createFolder.data.data)
+                 onFolderAdded()
+            }
+        } catch (error) {
+            console.log("Error while creating a folder in workspace ",error)
             toast({
                 title: "Failed to create folder",
                 description: "Please try again later",
                 variant: "destructive"
             })
-        }
-        else{
-            toast({
-                title: "Successfully created folder",
-                description: "You can now add files to this folder",
-             })
-             const folderData =createFolder.data.data
-              //   adding folder to a local states
-             dispatch(ADD_FOLDER(folderData))
-             console.log("Folder data",createFolder.data.data)
-             onFolderAdded()
         }
         
     }
@@ -112,9 +125,13 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                    {
                    folders.filter((folder) => !folder.inTrash)
                    .map((folder) => (
-                    <div key={folder._id?.toString()}>
-
-                    </div>
+                        <Dropdown 
+                        key={folder?._id?.toString()} // Ensure key is a string
+                        title={folder.title}
+                        listType="folder"
+                        id={folder?._id?.toString() || ''} // Ensure id is a string and provide a fallback
+                        iconId={folder?.iconId || ''} // Ensure iconId is a string and provide a fallback
+                    />
                    ))
                    }
                 </Accordion>

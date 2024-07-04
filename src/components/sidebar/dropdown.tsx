@@ -1,19 +1,24 @@
-"use client"
+"use client";
 
 import { RootState } from "@/store/store";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Accordion, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import clsx from "clsx";
 import EmojiPicker from "../global/emoji-picker";
-import { UPDATE_FOLDER } from "@/store/slices/folderSlice";
-import { ObjectId } from 'mongodb';
+import { SET_FOLDERS, UPDATE_FOLDER } from "@/store/slices/folderSlice";
+import mongoose from 'mongoose'; 
 import { Folder } from "@/model/folder.model";
 import axios from "axios";
+import { useToast } from "../ui/use-toast";
+import TooltipComponent from "../global/tooltip-component";
+import { PlusIcon, Trash } from "lucide-react";
+import { File } from "@/model/file.model";
+import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
+import { ADD_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
 
-
-interface DropdownProps{
+interface DropdownProps {
     title: string;
     id: string;
     listType: 'folder' | 'file';
@@ -21,7 +26,7 @@ interface DropdownProps{
     children?: React.ReactNode;
     disabled?: boolean;
 }
-// it will show it like a folder or a file
+
 const Dropdown: React.FC<DropdownProps> = ({
     title,
     id,
@@ -31,87 +36,361 @@ const Dropdown: React.FC<DropdownProps> = ({
     disabled,
     ...props
  }) => {
-    // bring current workspace id
-    const workspace = useSelector((state: RootState) => state.workspace.currentWorkspace)
+    const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id);
     const folder = useSelector((state: RootState) => state.folder.folders
-    .find((folder) => folder._id && folder._id.toString() === id))
-    const [ isEditing, setIsEditing ] = useState(false)
-    const router = useRouter()
-    const dispatch = useDispatch()
+        .find((folder) => folder._id && folder._id.toString() === id));
+    const state = useSelector((state: RootState) => state.workspace);
+    const [isEditing, setIsEditing] = useState(false);
+    const router = useRouter();
+    const dispatch = useDispatch();
+    const { toast } = useToast();
+    const [tempTitle, setTempTitle] = useState(title);
+    const [ currentIcon, setCurrentIcon ] = useState(iconId)
 
-    // folder title that is synced with server data and local data
-    
-    // file title
-    // navigate the user to different page
+    useEffect(() => {
+        const fetchFolders = async() => {
+            try {
+                const response = await axios.get(`/api/get-all-workspace-folders?workspaceId=${workspaceId}`)
+                if(!response.data.success){
+                    console.log("Failed to fetch all the folders for the workspace")
+                }else{
+                    console.log("Folders in dropdown ",response.data.data)
+                    dispatch(SET_FOLDERS(response.data.data))
+                }
+            } catch (error) {
+                console.log("Error while fetching all the folders for the workspace ",error)
+            }
+        }
+        fetchFolders()
+    }, [ workspaceId ])
+
+    useEffect(() => {
+        if(folder){
+            setCurrentIcon(folder.iconId || iconId )
+        }
+    }, [folder, iconId])
+
+    // const folderTitle: string | undefined = useMemo(() => {
+    //     if (listType === 'folder') {
+    //         const workspace = state.workspaces.find((workspace) => workspace._id === workspaceId);
+    //         const folderInWorkspace = workspace?.folders?.find((folder) => folder._id?.toString() === id);
+    //         const stateTitle = folderInWorkspace?.title;
+    //         if (title === stateTitle || !stateTitle) return title;
+    //         return stateTitle;
+    //     }
+    // }, [state, listType, workspaceId, id, title]);
+
+    // const fileTitle: string | undefined = useMemo(() => {
+    //     if (listType === 'file') {
+    //         const fileAndFolderId = id.split('folder');
+    //         const workspace = state.workspaces.find((workspace) => workspace._id?.toString() === workspaceId);
+    //         const folderInWorkspace = workspace?.folders?.find((folder) => folder._id?.toString() === fileAndFolderId[0]);
+    //         const fileInFolder = folderInWorkspace?.files?.find((file) => file._id?.toString() === fileAndFolderId[1]);
+    //         const stateTitle = fileInFolder?.title;
+    //         if (title === stateTitle || !stateTitle) return title;
+    //         return stateTitle;
+    //     }
+    // }, [state, listType, workspaceId, id, title]);
+
+    //Navigate the user to a different page
     const navigatePage = (accordionId: string, type: string) => {
-        if(type === 'folder'){
-            router.push(`/dashboard/${workspace?._id}/${accordionId}`)
+        if (type === 'folder') {
+            router.push(`/dashboard/${workspaceId}/${accordionId}`);
         }
-        if(type === 'file'){
-            router.push(`/dashboard/${workspace?._id}/${folder?._id}/${accordionId}`)
+        if (type === 'file') {
+            router.push(`/dashboard/${workspaceId}/${folder?._id}/${accordionId.split('folder')[1]}`);
         }
-    }
-    // add a file
-    // double click handler 
-    // blur => when user is outside the page, save the data
-    // onChanges 
+    };
+
+
+     //double click handler
+    const handleDoubleClick = () => {
+        setIsEditing(true);
+    };
+
+    //blur (value will be saved when input field will be out of focus)
+    const handleBlur = async () => {
+        if (!isEditing) return;
+
+        setIsEditing(false);
+        const fId = id.split('folder');
+        if (fId.length === 1) {
+            if (!tempTitle) return;
+
+            try {
+                const updatedFolder: Partial<Folder> = {
+                    _id: fId[0],
+                    title: tempTitle,
+                };
+
+                const response = await axios.post(`/api/update-folder`, updatedFolder);
+                console.log("Response for update folder ", response.data);
+
+                if (response.data.success) {  
+                    dispatch(UPDATE_FOLDER(updatedFolder));
+                    const workspace = response.data.data.workspace
+                    dispatch(UPDATE_WORKSPACE(workspace))
+                    toast({
+                        title: "Success",
+                        description: "Folder updated successfully",
+                    });
+                } else {
+                    toast({
+                        title: "Failed to update folder",
+                        description: response.data.message,
+                        variant: "destructive",
+                    });
+                }
+            } catch (error) {
+                console.log("Error to update the folder ", error);
+                toast({
+                    title: "Failed to update folder",
+                    description: "Please try again later",
+                    variant: "destructive",
+                });
+            }
+        }
+        if (fId.length === 2 && fId[1]) {
+            if (!tempTitle) return;
+            // update title of the file
+            try {
+                const updatedFile: Partial<File> = {
+                    _id: fId[1],
+                    title: tempTitle
+                }
+                const response = await axios.post(`/api/update-file`,updatedFile)
+                if (response.data.success) {  
+                    const file = response.data.data.file
+                    const folder = response.data.data.folder
+                    const workspace = response.data.data.workspace
+                    dispatch(UPDATE_FILE(file));
+                    dispatch(UPDATE_FOLDER(folder))
+                    // const workspace = response.data.data.workspace
+                    dispatch(UPDATE_WORKSPACE(workspace))
+                    toast({
+                        title: "Success",
+                        description: "File updated successfully",
+                    });
+                } else {
+                    toast({
+                        title: "Failed to update File",
+                        description: response.data.message,
+                        variant: "destructive",
+                    });
+                }
+
+            } catch (error) {
+                console.log("Error to update the file ", error);
+                toast({
+                    title: "Error to update the file ",
+                    description: "Please try again later",
+                    variant: "destructive",
+                });
+            }
+        }
+    };
+
+     //onchanges
     const onChangeEmoji = async (selectedEmoji: string) => {
-        if(listType === 'folder'){
-            if(folder){
+        if (listType === 'folder') {
+            if (folder) {
+                setCurrentIcon(selectedEmoji)
                 const updatedFolder: Partial<Folder> = {
                     _id: folder?._id,
-                    iconId: selectedEmoji
+                    iconId: selectedEmoji,
+                };
+                try {
+                    const response = await axios.post(`/api/update-folder`, updatedFolder);
+                    console.log("Response for update folder ", response);
+                    if (response.data.success) {  
+                        dispatch(UPDATE_FOLDER(updatedFolder));
+                    }
+                    toast({
+                        title: "Success",
+                        description: "Emoji for folder updated successfully",
+                    });
+                } catch (error) {
+                    console.log("Error to update the folder ", error);
+                    toast({
+                        title: "Failed to update emoji for folder",
+                        description: "Please try again later",
+                        variant: "destructive",
+                    });
                 }
-                const response = await axios.post(`/api/update-folder`,updatedFolder)
-                console.log("Response for update folder ",response)
-                dispatch(UPDATE_FOLDER(updatedFolder))
             }
-            
         }
-    }
-    // move to trash
-    
-    const isFolder = listType === 'folder'
-    const listStyles = useMemo(() => {
-        clsx('relative', {
+    };
+
+    const folderTitleChange = (e: any) => {
+        setTempTitle(e.target.value);
+    };
+
+    const fileTitleChange = (e: any) => {
+        setTempTitle(e.target.value);
+    };
+
+    const isFolder = listType === 'folder';
+    const listStyles = useMemo(
+        () =>
+          clsx('relative', {
             'border-none text-md': isFolder,
             'border-none ml-6 text-[16px] py-1': !isFolder,
-        })
-    }, [isFolder])
+          }),
+        [isFolder]
+      );
 
-    const groupIdentifies = clsx(
+      const groupIdentifies = clsx(
         'dark:text-white whitespace-nowrap flex justify-between items-center w-full relative',
         {
           'group/folder': isFolder,
           'group/file': !isFolder,
         }
       );
-    return(
+
+    const hoverStyles = useMemo(
+        () =>
+          clsx(
+            'h-full hidden rounded-sm absolute right-0 items-center justify-center',
+            {
+              'group-hover/file:block': listType === 'file',
+              'group-hover/folder:block': listType === 'folder',
+            }
+          ),
+        [isFolder]
+      );
+    
+
+
+    // add new file
+    const addNewFile = async () => {
+        if (!workspaceId) return;
+        // const fId = new mongoose.Types.ObjectId(id);
+        const newFile: File = {
+            folderId: id,
+            data: undefined,
+            inTrash: undefined,
+            title: 'Untitled',
+            iconId: '📄',
+            workspaceId: workspaceId.toString(), 
+            bannerUrl: '',
+        };
+
+        try {
+            // create new file on the server
+            const createFile = await axios.post(`/api/create-file`,newFile)
+            console.log("Created file ",createFile)
+            if(!createFile.data.success){
+                toast({
+                    title: "Failed to create file",
+                    description: "Please try again later",
+                    variant: "destructive"
+                })
+            }else{
+                const fileData = createFile.data.data.file
+                const updatedFolder = createFile.data.data.updatedFolder
+                const updatedWorkspace = createFile.data.data.updatedWorkspace
+                dispatch(ADD_FILE(fileData))
+                dispatch(UPDATE_FOLDER(updatedFolder))
+                dispatch(UPDATE_WORKSPACE(updatedWorkspace))
+                toast({
+                    title: "Successfully created new file",
+                    description: "Start working on it",
+                })
+            }
+             
+        } catch (error) {
+            console.log("Error while creating file in folder ",error)
+            toast({
+                title: "Failed to create file",
+                description: "Error while creating file in folder",
+                variant: "destructive"
+            })
+        }
+    };
+
+    // move to trash
+
+    return (
         <AccordionItem 
-        value={id} 
-        className={listStyles!}
-        onClick={(e) => {
-            e.stopPropagation();
-            navigatePage( id, listType )
-        }}
+            value={id} 
+            className={listStyles!}
+            onClick={(e) => {
+                e.stopPropagation();
+                navigatePage(id, listType);
+            }}
         >
             <AccordionTrigger
-            id={listType}
-            className="hover:no-underline p-2 dark:text-muted-foreground text-sm"
-            disabled={listType === 'file'}
+                id={listType}
+                className="hover:no-underline p-2 dark:text-muted-foreground text-sm"
+                disabled={listType === 'file'}
             >
                 <div className={groupIdentifies}>
                     <div className="flex gap-4 items-center justify-center overflow-hidden">
                         <div className="relative">
                             <EmojiPicker getValue={onChangeEmoji}>
-                                {iconId}
+                                {currentIcon}
                             </EmojiPicker>
                         </div>
+                        <input
+                            type="text"
+                            value={tempTitle}
+                            className={clsx(
+                                'outline-none overflow-hidden w-[140px] text-Neutrals/neutrals-7',
+                                {
+                                    'bg-muted cursor-text': isEditing,
+                                    'bg-transparent cursor-pointer': !isEditing,
+                                }
+                            )}
+                            readOnly={!isEditing}
+                            onDoubleClick={handleDoubleClick}
+                            onBlur={handleBlur}
+                            onChange={
+                                listType === 'folder' ? folderTitleChange : fileTitleChange
+                              }
+                        />
+                    </div>
+                    <div className={hoverStyles}>
+                        <TooltipComponent message="Delete Folder">
+                            <Trash 
+                                // onClick={moveToTrash}
+                                size={15}
+                                className="hover:dark:text-white dark:text-Neutrals/neutrals-7 transition-colors"
+                            />
+                        </TooltipComponent>
+                        {listType === "folder" && !isEditing && (
+                            <TooltipComponent message="Add File">
+                                <PlusIcon 
+                                    onClick={addNewFile}
+                                    size={15}
+                                    className="hover:dark:text-white dark:text-Neutrals/neutrals-7 transition-colors"
+                                />
+                            </TooltipComponent>
+                        )}
                     </div>
                 </div>
             </AccordionTrigger>
+            {/* It will show files for the folders */}
+            <AccordionContent>
+               {state.workspaces
+               .find((workspace) => workspace._id === workspaceId)
+               ?.folders?.find((folder) => folder._id === id)
+               ?.files?.filter((file) => !file.inTrash)
+               .map((file) => {
+                const customFileId = `${id}folder${file._id}`;
+                return(
+                    <Dropdown 
+                    key={file._id}
+                    title={file.title}
+                    listType="file"
+                    id={customFileId}
+                    iconId={file?.iconId || ''}
+                    />
+                )
+               })
+               }
+            </AccordionContent>
         </AccordionItem>
-    )
-}
+    );
+};
 
-export default Dropdown
+export default Dropdown;

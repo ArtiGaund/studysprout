@@ -4,7 +4,7 @@ import { Image } from "./image.model";
 import { Folder, FolderSchema } from "./folder.model";
 
 export interface WorkSpace{
-    _id?: ObjectId,
+    _id?: mongoose.Types.ObjectId,
     workspace_owner: User,
     workspaceName?: string,
     iconId?: string,

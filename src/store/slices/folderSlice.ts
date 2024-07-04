@@ -1,5 +1,6 @@
 import { Folder } from "@/model/folder.model"
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit"
+import mongoose from "mongoose"
 
 
 
@@ -26,12 +27,15 @@ const folderSlice = createSlice({
             )
         },
         UPDATE_FOLDER: ( state, action:PayloadAction<Partial<Folder>>) => {
-            const { _id, ...data } = action.payload
+           const updatedFolder = action.payload
             const index = state.folders.findIndex(
-                (folder) => folder._id === action.payload._id
+                (folder) => folder._id?.toString() === updatedFolder._id
             )
             if(index !== -1){
-                state.folders[index] = { ...state.folders[index], ...(data as Draft<Folder>) }
+                state.folders[index] = {
+                     ...state.folders[index], 
+                     ...updatedFolder
+                }
             }
         },
         SET_FOLDERS: ( state, action: PayloadAction<Folder[]>) => {
