@@ -17,6 +17,7 @@ import { PlusIcon, Trash } from "lucide-react";
 import { File } from "@/model/file.model";
 import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { ADD_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
+import { useSession } from "next-auth/react";
 
 interface DropdownProps {
     title: string;
@@ -46,6 +47,8 @@ const Dropdown: React.FC<DropdownProps> = ({
     const { toast } = useToast();
     const [tempTitle, setTempTitle] = useState(title);
     const [ currentIcon, setCurrentIcon ] = useState(iconId)
+    const { data: session} = useSession()
+    // console.log("Session in dropdown ", session?.user.username)
 
     useEffect(() => {
         const fetchFolders = async() => {
@@ -54,7 +57,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 if(!response.data.success){
                     console.log("Failed to fetch all the folders for the workspace")
                 }else{
-                    console.log("Folders in dropdown ",response.data.data)
+                    // console.log("Folders in dropdown ",response.data.data)
                     dispatch(SET_FOLDERS(response.data.data))
                 }
             } catch (error) {
@@ -310,6 +313,80 @@ const Dropdown: React.FC<DropdownProps> = ({
 
     // move to trash
 
+    const moveToTrash = async() => {
+        const user = session?.user.username
+        const pathId = id.split('folder')
+        if(listType === 'folder'){
+            const trashValue = `Deleted by ${user}`
+            const updatedFolder: Partial<Folder> ={
+                _id: pathId[0],
+                inTrash: trashValue
+            }
+            // deleting it locally first, to show update to user quickly
+            dispatch(UPDATE_FOLDER(updatedFolder))
+            // deleting it on server
+            try {
+                const response = await axios.post(`/api/update-folder`,updatedFolder)
+                if(!response.data.success){
+                    toast({
+                        title: "Failed to move folder to trash ",
+                        description: "Please try again later",
+                        variant: "destructive"
+                    })
+                }else{
+                    toast({
+                        title: "Folder moved to trash successfully",
+                        description: "Keep it safe",
+                    })
+                }
+            } catch (error) {
+                console.log("Error while moving folder to the trash")
+                toast({
+                    title: "Error while moving folder to the trash ",
+                    description: "Please try again later",
+                    variant: "destructive"
+                })
+            }
+        }
+        if(listType === 'file'){
+            const trashValue = `Deleted by ${user}`
+            const updatedFile: Partial<File> ={
+                _id: pathId[1],
+                inTrash: trashValue
+            }
+            // deleting it locally first, to show update to user quickly
+            dispatch(UPDATE_FILE(updatedFile))
+            // deleting it on server
+            try {
+                const response = await axios.post(`/api/update-file`,updatedFile)
+                if(!response.data.success){
+                    toast({
+                        title: "Failed to move file to trash ",
+                        description: "Please try again later",
+                        variant: "destructive"
+                    })
+                }else{
+                    const file = response.data.data.file
+                    const folder = response.data.data.folder
+                    dispatch(UPDATE_FOLDER(folder))
+                    const workspace = response.data.data.workspace
+                    dispatch(UPDATE_WORKSPACE(workspace))
+                    toast({
+                        title: "File moved to trash successfully",
+                        description: "Keep it safe",
+                    })
+                }
+            } catch (error) {
+                console.log("Error while moving file to the trash")
+                toast({
+                    title: "Error while moving file to the trash ",
+                    description: "Please try again later",
+                    variant: "destructive"
+                })
+            }
+        }
+    }
+
     return (
         <AccordionItem 
             value={id} 
@@ -352,7 +429,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                     <div className={hoverStyles}>
                         <TooltipComponent message="Delete Folder">
                             <Trash 
-                                // onClick={moveToTrash}
+                                onClick={moveToTrash}
                                 size={15}
                                 className="hover:dark:text-white dark:text-Neutrals/neutrals-7 transition-colors"
                             />
@@ -371,24 +448,23 @@ const Dropdown: React.FC<DropdownProps> = ({
             </AccordionTrigger>
             {/* It will show files for the folders */}
             <AccordionContent>
-               {state.workspaces
-               .find((workspace) => workspace._id === workspaceId)
-               ?.folders?.find((folder) => folder._id === id)
-               ?.files?.filter((file) => !file.inTrash)
-               .map((file) => {
-                const customFileId = `${id}folder${file._id}`;
-                return(
-                    <Dropdown 
+    {state.workspaces
+        .find((workspace) => workspace._id === workspaceId)
+        ?.folders?.find((folder) => folder._id === id)
+        ?.files?.filter((file) => file.inTrash === undefined)
+        .map((file) => {
+            const customFileId = `${id}folder${file._id}`;
+            return (
+                <Dropdown 
                     key={file._id}
                     title={file.title}
                     listType="file"
                     id={customFileId}
                     iconId={file?.iconId || ''}
-                    />
-                )
-               })
-               }
-            </AccordionContent>
+                />
+            );
+        })}
+</AccordionContent>
         </AccordionItem>
     );
 };

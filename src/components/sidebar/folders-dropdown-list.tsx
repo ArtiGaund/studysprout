@@ -29,27 +29,20 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
     // set up real time updates => when another user create an update, we want real time update system setup
     // so it can create a folder for us in our localhost (i think i don't need it bz i am not doing collaborator 
     // part)
-    console.log("Workspace id ",workspaceId)
-    console.log("Workspace Folders ",workspaceFolders)
-    // const { state, dispatch, folderId } = useAppState()
+    // console.log("Workspace id ",workspaceId)
+    // console.log("Workspace Folders ",workspaceFolders)
     const folders = useSelector((state: RootState) => state.folder.folders)
     const currentFolderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
     const { toast } = useToast()
     const dispatch = useDispatch()
     // 2)effect set initial state server app state
     useEffect(() => {
-        console.log("inside use effect for set folders")
+        // console.log("inside use effect for set folders")
         if (workspaceFolders.length > 0) {
             dispatch(SET_FOLDERS(workspaceFolders))
         }
       }, [ workspaceFolders, workspaceId, dispatch ]);
-    // 3) state (updating our local states) to manage server data
-    // useEffect(() => {
-    //     setFolders(state.workspaces.find((workspace) => workspace._id === workspaceId)
-    //     ?.folders || []
-    // )
-    // console.log("setFolders ",state)
-    // }, [state])
+    
     // 4) add folders
 
     const addFolderHandler = async () => {
@@ -68,7 +61,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
         try {
             //   creating new folder on the server
             const createFolder = await axios.post('/api/create-folder', newFolder)
-            console.log("Create Folder ",createFolder)
+            // console.log("Create Folder ",createFolder)
             if(!createFolder.data.success){
                 toast({
                     title: "Failed to create folder",
@@ -86,7 +79,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                  dispatch(ADD_FOLDER(folderData))
                  const updatedWorkspace = createFolder.data.data.updatedWorkspace
                  dispatch(UPDATE_WORKSPACE(updatedWorkspace))
-                 console.log("Folder data",createFolder.data.data)
+                //  console.log("Folder data",createFolder.data.data)
                  onFolderAdded()
             }
         } catch (error) {
@@ -99,7 +92,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
         }
         
     }
-    console.log("folders from state ",folders)
+    // console.log("folders from state ",folders)
 
     return(
         <>

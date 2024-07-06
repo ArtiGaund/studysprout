@@ -41,7 +41,10 @@ export async function POST(request: Request) {
                 {
                     $set: {
                          "folders.$.title": updates.title, 
-                         "folders.$.iconId": updates.iconId 
+                         "folders.$.iconId": updates.iconId,
+                         "folders.$.inTrash": updates.inTrash,
+                         "folders.$.data": updates.data,
+                         "folders.$.bannerUrl": updates.bannerUrl,
                     } 
                 },
                 { new: true }
@@ -63,6 +66,7 @@ export async function POST(request: Request) {
              await folder.save()
 
             //  save updated workspace 
+            await workspace.save()
 
             return Response.json({
                 statusCode: 200,

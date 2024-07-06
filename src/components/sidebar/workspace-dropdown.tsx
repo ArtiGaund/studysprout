@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react"
 import SelectedWorkspaces from "./selected-workspaces";
 import CustomDialogTrigger from "../global/custom-dialog";
 import DashboardSetup from "../dashboard-setup/dashboard-setup";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 interface WorkspaceDropdownProps{
     workspaces: WorkSpace[] | [];
@@ -14,23 +16,17 @@ interface WorkspaceDropdownProps{
 // this component will allow the user to select between the different workspaces
 const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defaultValue }) => {
     // const { state, dispatch } = useAppState()
-
+    const state = useSelector((state: RootState) => state.workspace);
     const [ selectedOption, setSelectedOption ] = useState(defaultValue)
     const [ isOpen, setIsOpen ] = useState(false)
 
-    // TODO: check whether our state has any workspaces or not (to set all the workspaces)
+    // if there is any changes done in workspace it will show changes in real time
     useEffect(() => {
-        // if(!state.workspaces.length){
-        //     dispatch({
-        //         type: 'SET_WORKSPACES',
-        //         payload: {
-        //             workspaces: [
-        //                 ...workspaces
-        //             ].map((workspace) => ({ ...workspace, folders: []})),
-        //         }
-        //     })
-        // }
-    }, [workspaces])
+       const findSelectedWorkspace = state.workspaces.find(
+        (workspace) => workspace._id === defaultValue?._id
+       )
+       if(findSelectedWorkspace) setSelectedOption(findSelectedWorkspace)
+    }, [state, defaultValue])
 
     // handle select
     const handleSelect = ( option: WorkSpace ) => {

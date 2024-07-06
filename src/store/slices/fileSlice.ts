@@ -26,15 +26,25 @@ const fileSlice = createSlice({
                 (file) => file._id?.toString() !== action.payload
             )
         },
-        UPDATE_FILE: ( state, action:PayloadAction<File>) => {
-            const { _id, ...data } = action.payload
-            const index = state.files.findIndex(
-                (file) => file._id === action.payload._id
-            )
-            if(index !== -1){
-                state.files[index] = { ...state.files[index], ...(data as Draft<File>) }
+        UPDATE_FILE: (state, action: PayloadAction<Partial<File>>) => {
+            const updatedFile = action.payload;
+            const fileIndex = state.files.findIndex(file => file._id === updatedFile._id);
+            if (fileIndex !== -1) {
+                state.files[fileIndex] = {
+                    ...state.files[fileIndex],
+                    ...updatedFile,
+                };
             }
         },
+        // UPDATE_FILE: ( state, action:PayloadAction<Partial<File>>) => {
+        //     const { _id, ...data } = action.payload
+        //     const index = state.files.findIndex(
+        //         (file) => file._id === action.payload._id
+        //     )
+        //     if(index !== -1){
+        //         state.files[index] = { ...state.files[index], ...(data as Draft<File>) }
+        //     }
+        // },
         SET_FILES: ( state, action: PayloadAction<File[]>) => {
             state.files = action.payload as Draft<File[]> 
         },

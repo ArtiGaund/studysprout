@@ -44,7 +44,6 @@ export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
         type: String,
     },
     folders: [ FolderSchema ],
-    
 },
 {
     timestamps: true

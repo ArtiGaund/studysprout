@@ -26,10 +26,15 @@ const workspaceSlice = createSlice({
             )
         },
         UPDATE_WORKSPACE: ( state, action:PayloadAction<Partial<WorkSpace>>) => {
-            const { _id, workspace_owner, ...data } = action.payload;
-            const index = state.workspaces.findIndex(workspace => workspace._id === _id);
-            if (index !== -1) {
-              state.workspaces[index] = { ...state.workspaces[index], ...(data as Draft<WorkSpace>) };
+            const updatedWorkspace = action.payload
+            const index = state.workspaces.findIndex(
+                (workspace) => workspace._id?.toString() === updatedWorkspace._id
+            )
+            if(index !== -1){
+                state.workspaces[index] = {
+                     ...state.workspaces[index], 
+                     ...(updatedWorkspace as Draft<WorkSpace>)
+                }
             }
         },
         SET_WORKSPACES: ( state, action: PayloadAction<WorkSpace[]>) => {
