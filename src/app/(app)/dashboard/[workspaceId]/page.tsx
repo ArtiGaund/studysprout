@@ -5,7 +5,7 @@ import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
-const WorkspacePage = ({ params }: { params: { workspaceId: string }}) => {
+const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }) => {
     const router = useRouter()
     const [ workspaceDetails, setWorkspaceDetails ] = useState<WorkSpace | undefined>(undefined)
 
