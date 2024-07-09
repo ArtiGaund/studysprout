@@ -16,6 +16,7 @@ export async function POST(request: any){
         const workspaceName = formData.get("workspaceName")
         const userId = formData.get("userId")
         const image = formData.get("logo") as unknown as File
+        const iconId = formData.get("iconId")
         console.log("workspaceName in route",workspaceName)
         
         // Check whether same name workspace exist or not
@@ -50,7 +51,8 @@ export async function POST(request: any){
         const newWorkspace = await WorkSpaceModel.create({
             workspaceName,
             workspace_owner: userId,
-            logo: savedImage._id
+            logo: savedImage._id,
+            iconId
         })
 
         

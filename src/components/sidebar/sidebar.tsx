@@ -43,11 +43,11 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
         if(session && session.user && session.user._id){
           const fetchAllWorkspaces = async() => {
             const userId = session?.user._id
-            console.log("user id in sidebar ",userId)
+            // console.log("user id in sidebar ",userId)
             try {
               const response = await axios.get(`/api/get-all-workspaces?userId=${userId}`)
               const fetchedWorkspaces = response.data.data
-              console.log("fetchedWorkspaces ",fetchedWorkspaces)
+              // console.log("fetchedWorkspaces ",fetchedWorkspaces)
               if(fetchedWorkspaces){
                 setAllWorkspaces(fetchedWorkspaces)
                 dispatch(SET_WORKSPACES(fetchedWorkspaces))
@@ -68,7 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
           try {
             const currentWorkspaceId = params.workspaceId
           const response = await axios.get(`/api/get-current-workspace?workspaceId=${currentWorkspaceId}`)
-          console.log("Response for current workspace ",response.data.data)
+          // console.log("Response for current workspace ",response.data.data)
           setCurrentWorkspace(response.data.data)
           dispatch(SET_CURRENT_WORKSPACES(response.data.data))
           } catch (error) {
@@ -88,11 +88,11 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
 
     const fetchFolders = async (workspaceId: string) => {
       try {
-        console.log("Inside fetchFolders")
+        // console.log("Inside fetchFolders")
         const response = await axios.get(`/api/get-all-workspace-folders?workspaceId=${workspaceId}`);
-        console.log("Response for fetch folders ",response)
+        // console.log("Response for fetch folders ",response)
         const fetchedFolders = response.data.data
-        console.log("fetchedFolders ",fetchedFolders)
+        // console.log("fetchedFolders ",fetchedFolders)
         
         if(fetchedFolders){
             dispatch(SET_FOLDERS(fetchedFolders))

@@ -1,6 +1,7 @@
 "use client"
 
 import DashboardSetup from "@/components/dashboard-setup/dashboard-setup"
+import { WorkSpace } from "@/model/workspace.model"
 import axios from "axios"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
@@ -8,7 +9,7 @@ import { useEffect, useState } from "react"
 
 const DashboardPage = () => {
     const { data: session, status} = useSession()
-    const [workspace, setWorkspace ] = useState([])
+    const [workspace, setWorkspace ] = useState<WorkSpace[]>([])
     const [ isLoading, setIsLoading ]= useState(false)
     const [ error, setError ] = useState('')
 
@@ -24,7 +25,7 @@ const DashboardPage = () => {
             try {
                 const response = await axios.get(`/api/check-user-have-created-workspace?userId=${userId}`)
                 // console.log("Response ",response)
-                setWorkspace(response.data)
+                setWorkspace(response.data.data)
             } catch (error) {
                 console.log('Error while fetching user workspaces ',error)
                 setError('Failed to fetch user workspace')
@@ -43,7 +44,7 @@ const DashboardPage = () => {
        )
    }
 //      if user have already created the workspace they can move directly to the workspace
-    // router.push(`/dashboard/${workspace[0]._id}`)
+    router.push(`/dashboard/${workspace[0]._id}`)
 }
 
 export default DashboardPage

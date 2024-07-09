@@ -16,7 +16,7 @@ import TooltipComponent from "../global/tooltip-component";
 import { PlusIcon, Trash } from "lucide-react";
 import { File } from "@/model/file.model";
 import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
-import { ADD_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
+import { ADD_FILE, SET_CURRENT_FILES, SET_FILES, UPDATE_FILE } from "@/store/slices/fileSlice";
 import { useSession } from "next-auth/react";
 
 interface DropdownProps {
@@ -38,8 +38,9 @@ const Dropdown: React.FC<DropdownProps> = ({
     ...props
  }) => {
     const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id);
-    const folder = useSelector((state: RootState) => state.folder.folders
-        .find((folder) => folder._id && folder._id.toString() === id));
+    const folder = useSelector((state: RootState) => state.folder.folders.find((folder) => folder._id === id))
+        // .find((folder) => folder._id && folder._id.toString() === id));
+    const folderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
     const state = useSelector((state: RootState) => state.workspace);
     const [isEditing, setIsEditing] = useState(false);
     const router = useRouter();
@@ -48,7 +49,6 @@ const Dropdown: React.FC<DropdownProps> = ({
     const [tempTitle, setTempTitle] = useState(title);
     const [ currentIcon, setCurrentIcon ] = useState(iconId)
     const { data: session} = useSession()
-    // console.log("Session in dropdown ", session?.user.username)
 
     useEffect(() => {
         const fetchFolders = async() => {
@@ -73,27 +73,6 @@ const Dropdown: React.FC<DropdownProps> = ({
         }
     }, [folder, iconId])
 
-    // const folderTitle: string | undefined = useMemo(() => {
-    //     if (listType === 'folder') {
-    //         const workspace = state.workspaces.find((workspace) => workspace._id === workspaceId);
-    //         const folderInWorkspace = workspace?.folders?.find((folder) => folder._id?.toString() === id);
-    //         const stateTitle = folderInWorkspace?.title;
-    //         if (title === stateTitle || !stateTitle) return title;
-    //         return stateTitle;
-    //     }
-    // }, [state, listType, workspaceId, id, title]);
-
-    // const fileTitle: string | undefined = useMemo(() => {
-    //     if (listType === 'file') {
-    //         const fileAndFolderId = id.split('folder');
-    //         const workspace = state.workspaces.find((workspace) => workspace._id?.toString() === workspaceId);
-    //         const folderInWorkspace = workspace?.folders?.find((folder) => folder._id?.toString() === fileAndFolderId[0]);
-    //         const fileInFolder = folderInWorkspace?.files?.find((file) => file._id?.toString() === fileAndFolderId[1]);
-    //         const stateTitle = fileInFolder?.title;
-    //         if (title === stateTitle || !stateTitle) return title;
-    //         return stateTitle;
-    //     }
-    // }, [state, listType, workspaceId, id, title]);
 
     //Navigate the user to a different page
     const navigatePage = (accordionId: string, type: string) => {
@@ -101,7 +80,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             router.push(`/dashboard/${workspaceId}/${accordionId}`);
         }
         if (type === 'file') {
-            router.push(`/dashboard/${workspaceId}/${folder?._id}/${accordionId.split('folder')[1]}`);
+            router.push(`/dashboard/${workspaceId}/${folderId}/${accordionId.split('folder')[1]}`);
         }
     };
 
@@ -293,6 +272,8 @@ const Dropdown: React.FC<DropdownProps> = ({
                 const updatedFolder = createFile.data.data.updatedFolder
                 const updatedWorkspace = createFile.data.data.updatedWorkspace
                 dispatch(ADD_FILE(fileData))
+                dispatch(SET_FILES(fileData))
+                dispatch(SET_CURRENT_FILES(fileData))
                 dispatch(UPDATE_FOLDER(updatedFolder))
                 dispatch(UPDATE_WORKSPACE(updatedWorkspace))
                 toast({
@@ -367,6 +348,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                     })
                 }else{
                     const file = response.data.data.file
+                    dispatch(UPDATE_FILE(file))
                     const folder = response.data.data.folder
                     dispatch(UPDATE_FOLDER(folder))
                     const workspace = response.data.data.workspace

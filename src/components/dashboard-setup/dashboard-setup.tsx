@@ -60,6 +60,9 @@ const DashboardSetup = () => {
                 // Handle the case where no image is selected (optional)
                 console.warn('No image selected for upload.');
             }
+            if(selectedEmoji){
+                formData.append('iconId',selectedEmoji)
+            }
             const response = await axios.post(`/api/create-new-workspace`, formData)
             // console.log("Response success ",response.data.success)
            

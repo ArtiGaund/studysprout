@@ -42,7 +42,7 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
             className="flex rounded-md hover:bg-muted transition-all flex-row p-2 gap-4 
             justify-center cursor-pointer items-center my-2"
             >
-                <Image src={`${workspaceLogo}`} alt="workspace logo" width="26" height="26" objectFit="cover"/>
+                <Image src={workspaceLogo} alt="workspace logo" width="26" height="26" objectFit="cover" priority={true}/>
                 <div className="flex flex-col">
                     <p className="text-lg w-[170px] overflow-hidden overflow-ellipsis whitespace-nowrap text-white">
                         {workspace.workspaceName}
