@@ -12,11 +12,13 @@ import { useToast } from "../ui/use-toast";
 import { DELETE_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
 import { DELETE_FOLDER, UPDATE_FOLDER } from "@/store/slices/folderSlice";
 import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
 import EmojiPicker from "../global/emoji-picker";
 import BannerUpload from "../banner-upload/banner-upload";
+import { XCircleIcon } from "lucide-react";
+
 
 
 interface TextEditorProps{
@@ -60,6 +62,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
     const [ saving, setSaving ] = useState(false)
     const [ imageUrl, setImageUrl ] = useState('')
     const [ removingBanner, setRemovingBanner ] = useState(false)
+    const router = useRouter()
 
     
     // to collect data from server side and client side
@@ -236,6 +239,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
                         title: "File deleted successfully",
                         description: "File is premanantly deleted",
                     })
+                    router.replace(`/dashboard/${workspaceId}/${folderId}`)
                 }
             } catch (error) {
                 console.log("Error while deleting file ",error)
@@ -263,6 +267,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
                         title: "Folder deleted successfully",
                         description: "Folder is premanantly deleted",
                     })
+                    router.replace(`/dashboard/${workspaceId}`)
                 }
             } catch (error) {
                 console.log("Error while deleting folder ",error)
@@ -604,10 +609,18 @@ const TextEditor: React.FC<TextEditorProps> = ({
                         className="gap-2 hover:bg-background flex items-center justify-center mt-2
                          text-sm text-muted-foreground w-36 p-2 rounded-md"
                          onClick={deleteBanner}
-                        ><span
-                        className="whitespace-nowrap font-normal"
-                        >Remove Banner</span></Button>}
+                        >   
+                            <XCircleIcon size={16}/>
+                            <span className="whitespace-nowrap font-normal">Remove Banner</span>
+                        </Button>
+                        }
                      </div>
+                     <span className="text-muted-foreground text-3xl font-bold h-9">
+                        {/* {details.title} */}
+                     </span>
+                     <span className="text-sm text-muted-foreground">
+                        {dirType.toUpperCase()}
+                     </span>
                 </div>
                 <div 
                 id="container" 

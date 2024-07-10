@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useToast } from "../ui/use-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Briefcase } from "lucide-react";
+import { Briefcase, LogOut, User } from "lucide-react";
 import { Separator } from "@radix-ui/react-select";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -13,10 +13,14 @@ import axios from "axios";
 import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import CypressProfileIcon from "../icons/CypressProfileIcon";
+import LogoutButton from "../global/logout-button";
 
 const SettingsForm = () => {
     const { toast } = useToast()
     const { data: session } = useSession()
+    const user=session?.user
     const router = useRouter()
     const currentWorkspace = useSelector((state: RootState) => state.workspace.currentWorkspace)
     const [ workspaceDetails, setWorkspaceDetails ] = useState<Partial<WorkSpace>>({
@@ -140,7 +144,7 @@ const SettingsForm = () => {
                 })
 
                 // checking if there is remaining workspace
-                const remainingWorkspaces = workspaces.filter((workspace) => workspace._id !==workspaceId)
+                const remainingWorkspaces = workspaces.filter((workspace:WorkSpace) => workspace._id !==workspaceId)
                 if(remainingWorkspaces.length > 0){
                     const nextWorkspace = remainingWorkspaces[0]
                     dispatch(UPDATE_WORKSPACE(nextWorkspace))
@@ -160,6 +164,9 @@ const SettingsForm = () => {
     }
 
     // fetching avatar details
+    const onChangeProfilePicture = () => {
+
+    }
 
     // get workspace details
 
@@ -215,6 +222,42 @@ const SettingsForm = () => {
                 Delete Workspace
             </Button>
         </Alert>
+        <p className="flex items-center gap-2 mt-6">
+            <User size={20}/> Profile
+        </p>
+        <Separator />
+        <div className="flex items-center">
+            <Avatar>
+                <AvatarImage src={''}/>
+                <AvatarFallback>
+                    <CypressProfileIcon />
+                </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col ml-6">
+                <small className="text-muted-foreground cursor-not-allowed">
+                    {user ? user?.email : ''}
+                </small>
+                <Label htmlFor="profilePicture"
+                className="text-sm text-muted-foreground"
+                >
+                    Profile Picture
+                </Label>
+                <Input 
+                    name="profilePicture"
+                    type="file"
+                    accept="image/*"
+                    placeholder="Profile Picture"
+                    onChange={onChangeProfilePicture}
+                    disabled={uploadingProfilePic}
+                />
+            </div>
+        </div>
+        <LogoutButton>
+            <div className="flex items-center">
+                <LogOut />
+            </div>
+        </LogoutButton>
+        
     </div>
     )
 }
