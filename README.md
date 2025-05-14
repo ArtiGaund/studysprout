@@ -129,10 +129,3 @@ To learn more about the technologies used in this project, check out the followi
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs) - Learn how to style your application.
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/) - Learn about TypeScript features.
 
-## Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests to improve the project.
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
