@@ -1,5 +1,5 @@
 "use client"
-import TextEditor from '@/components/text-editor/text-editor'
+import BannerSection from '@/components/banner-upload/banner-section'
 import { Folder } from '@/model/folder.model'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
@@ -30,11 +30,11 @@ const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
     return (
         <div className='relative'>
             { folderDetails && (
-                <TextEditor
+                <BannerSection
                 dirType='folder'
                 fileId={params.folderId}
                 dirDetails={folderDetails}
-                ></TextEditor>
+                ></BannerSection>
             )}
         </div>
     )

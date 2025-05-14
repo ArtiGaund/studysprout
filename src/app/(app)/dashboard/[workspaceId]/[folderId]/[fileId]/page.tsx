@@ -1,4 +1,5 @@
 "use client"
+import BannerSection from '@/components/banner-upload/banner-section'
 import TextEditor from '@/components/text-editor/text-editor'
 import { File } from '@/model/file.model'
 import axios from 'axios'
@@ -11,6 +12,9 @@ const FilePage: React.FC<{ params : { fileId: string }}> = ({ params }) => {
     const router = useRouter()
     const [ fileDetails, setFileDetails ] = useState<File | undefined>(undefined)
 
+    const onChangeHandler = ( content: string ) => {
+        
+    }
     useEffect(() => {
         const getFileDetails = async() => {
             try {
@@ -30,11 +34,18 @@ const FilePage: React.FC<{ params : { fileId: string }}> = ({ params }) => {
     return (
         <div className='relative'>
             { fileDetails && (
-                <TextEditor
-                dirType='file'
-                fileId={params.fileId}
-                dirDetails={fileDetails}
-                ></TextEditor>
+                <>
+                    <BannerSection
+                    dirType='file'
+                    fileId={params.fileId}
+                    dirDetails={fileDetails}
+                    ></BannerSection>
+                    <TextEditor 
+                    fileId={params.fileId}
+                    fileDetails={fileDetails}
+                    onChange= {onChangeHandler}
+                    />
+                </>
             )}
         </div>
     )

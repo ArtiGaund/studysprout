@@ -1,5 +1,5 @@
 "use client"
-import TextEditor from '@/components/text-editor/text-editor'
+import BannerSection from '@/components/banner-upload/banner-section'
 import { WorkSpace } from '@/model/workspace.model'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
@@ -28,7 +28,7 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
     return (
         <div className='relative'>
             {workspaceDetails && (
-                <TextEditor 
+                <BannerSection 
                     dirType="workspace"
                     fileId={params.workspaceId}
                     dirDetails={workspaceDetails}
