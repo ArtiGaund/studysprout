@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { signInSchema } from "@/schemas/signInSchema";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
-
+import Image from "next/image"
+import { IconMail, IconLock } from "@tabler/icons-react";
 
 const SignIn = () => {
     const [ isSubmitting, setIsSubmitting ] = useState(false)
@@ -71,7 +72,19 @@ const SignIn = () => {
     }
 
     return(
-        <div>
+        <div className="flex  bg-black h-screen justify-center items-center ">
+            <div className="flex flex-row w-[60rem] h-[30.5rem] rounded-3xl bg-zinc-900">
+                        <div className="flex flex-1 items-center justify-center">
+                            <div className="flex flex-col gap-y-4">
+                                <h2 className="text-3xl font-bold text-neutral-800 dark:text-neutral-200">
+                                    Welcome Back on StudySprout
+                                </h2>
+                                <div className="flex justify-center items-center">
+                                    <span>Don&apos;t have an account?</span> &nbsp;
+                                    <span className="text-blue-600">
+                                        <Link href="/sign-up">Sign up</Link>
+                                    </span>
+                                </div>
              <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <FormField 
@@ -79,11 +92,12 @@ const SignIn = () => {
                     control={form.control}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Username or Email</FormLabel>
                             <FormControl>
                                 <Input 
+                                icon={<IconMail />}
                                 placeholder="username or email"
                                 {...field}
+                                 className="w-full p-2"
                                 />
                             </FormControl>
                         </FormItem>
@@ -94,9 +108,8 @@ const SignIn = () => {
                         control={form.control}
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Password</FormLabel>
                             <FormControl>
-                                <Input type="password" placeholder="password" 
+                                <Input icon={<IconLock />} type="password" placeholder="password" className="w-full p-2"
                                 {...field} 
                                 />
                             </FormControl>
@@ -104,7 +117,7 @@ const SignIn = () => {
                             </FormItem>
                         )}
                         />
-                         <Button type="submit" disabled={isSubmitting}>
+                         <Button className="w-full p-2" type="submit" disabled={isSubmitting}>
                             {
                                 isSubmitting ? (
                                     <>
@@ -113,8 +126,18 @@ const SignIn = () => {
                                 ) : ('SignIn')
                             }
                         </Button>
+
                 </form>
             </Form>
+            <div className="flex justify-end text-xs">
+                                    <a href="#">forget password?</a>
+                                </div>
+                        </div>
+                        </div>
+                        <div className="flex-1 w-full h-full rounded-r-3xl overflow-hidden">
+                            <Image src="/images/login.PNG" width={500} height={400} alt="signup" />
+                        </div>
+                    </div>
         </div>
     )
 }

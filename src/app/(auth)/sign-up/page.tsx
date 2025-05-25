@@ -16,6 +16,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
+import Image from "next/image"
+import { IconUser, IconMail, IconLock } from "@tabler/icons-react";
+
 
 const SignUp = () => {
     const [ username, setUsername ] = useState('')
@@ -87,75 +90,101 @@ const SignUp = () => {
         }
     }
     return(
-        <div>
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)}>
-                    <FormField 
-                    name="username"
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                                <Input 
-                                placeholder="username"
-                                {...field}
-                                onChange={(e) => {
-                                    field.onChange(e)
-                                    debounce(e.target.value)
-                                }}
+        <div className="flex  bg-black h-screen justify-center items-center ">
+            <div className="flex flex-row w-[60rem] h-[30.5rem] rounded-3xl bg-zinc-900">
+            <div className="flex flex-1 items-center justify-center">
+                <div className="flex flex-col gap-y-4">
+                    <h2 className="text-3xl font-bold text-neutral-800 dark:text-neutral-200">
+                        Welcome to StudySprout
+                    </h2>
+                    <div className="flex justify-center items-center">
+                        <span>Already have an account?</span> &nbsp;
+                        <span className="text-blue-600">
+                            <Link href="/sign-in">Sign in</Link>
+                        </span>
+                    </div>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)}>
+                            <FormField 
+                            name="username"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    {/* <FormLabel>Username</FormLabel> */}
+                                    <FormControl>
+                                        <Input 
+                                        icon={<IconUser />}
+                                        placeholder="username"
+                                        {...field}
+                                        onChange={(e) => {
+                                            field.onChange(e)
+                                            debounce(e.target.value)
+                                        }}
+                                        className="w-full p-2"
+                                        />
+                                    </FormControl>
+                                    {isCheckingUsername && <Loader2 className="animate-spin"/>}
+                                    <p className={`relative text-sm ${usernameAvailable === "Username is unique" ?
+                                        'text-green-500' : 'text-red-500'
+                                    } left-[12px]`}>
+                                        test {usernameAvailable}
+                                    </p>
+                                </FormItem>
+                            )}
+                            />
+                            <FormField
+                                name="email"
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormControl>
+                                        <Input 
+                                        icon={<IconMail />}
+                                        placeholder="email" 
+                                        {...field} 
+                                        className="w-full p-2"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
                                 />
-                            </FormControl>
-                            {isCheckingUsername && <Loader2 className="animate-spin"/>}
-                            <p className={`text-sm ${usernameAvailable === "Username is unique" ?
-                                'text-green-500' : 'text-red-500'
-                            }`}>
-                                test {usernameAvailable}
-                            </p>
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                        name="email"
-                        control={form.control}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                                <Input placeholder="email" 
-                                {...field} 
+                                <FormField
+                                name="password"
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormControl>
+                                        <Input 
+                                        icon={<IconLock />} 
+                                        type="password" 
+                                        placeholder="password" 
+                                        {...field} 
+                                        className="w-full p-2"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
                                 />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        name="password"
-                        control={form.control}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                                <Input type="password" placeholder="password" 
-                                {...field} 
-                                />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                         <Button type="submit" disabled={isSubmitting}>
-                            {
-                                isSubmitting ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Please Wait
-                                    </>
-                                ) : ('SignUp')
-                            }
-                        </Button>
-                </form>
-            </Form>
+                                <Button className="w-full p-2" type="submit" disabled={isSubmitting}>
+                                    {
+                                        isSubmitting ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Please Wait
+                                            </>
+                                        ) : ('SignUp')
+                                    }
+                                </Button>
+                        </form>
+                    </Form>
+                    
+            </div>
+            </div>
+            <div className="flex-1 w-full h-full rounded-r-3xl overflow-hidden">
+                <Image src="/images/login.PNG" width={500} height={400} alt="signup" />
+            </div>
+        </div>
         </div>
     )
 }
