@@ -110,6 +110,10 @@ const config = {
         'brand-primaryBlue': '#0469ff',
         'brand-primaryPurple': '#7000ff',
         'brand-dark': '#030014',
+        'zantium':'#702963',
+        'dark-purple': '#301934',
+        'jungle-green': '#29AB87',
+        'dark-cyan': '#008B8B',
       },
       borderRadius: {
         lg: "var(--radius)",

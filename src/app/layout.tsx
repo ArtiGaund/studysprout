@@ -13,8 +13,11 @@ import ReduxProvider from '@/lib/providers/redux-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'True Feedback',
-  description: 'Real feedback from real people.',
+  title: "StudySprout",
+  description: "Note taking app",
+  icons: {
+    icon: "/public/images/tab_logo.png", 
+  },
 };
 
 interface RootLayoutProps {
