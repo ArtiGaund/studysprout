@@ -33,16 +33,17 @@ const TextEditor: React.FC<TextEditorProps> = ({
     //     }
     // })
 
-    const handleUpload = async() => {
+    const handleUpload = async (file: File): Promise<string> => {
         // file upload
+        return ""
     }
 
     const editor: BlockNoteEditor = useCreateBlockNote({
         initialContent: initialContent ? JSON.parse(initialContent) as PartialBlock[] : undefined,
-        onEditorContentChange: (editor: any) => {
-            onChange(JSON.stringify(editor.topLevelBlocks, null, 2));
-        },
-        uploadFile: handleUpload,
+        // onEditorContentChange: (editor: any) => {
+        //     onChange(JSON.stringify(editor.topLevelBlocks, null, 2));
+        // },
+        // uploadFile: handleUpload,
     });
 
     return(
