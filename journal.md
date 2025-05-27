@@ -30,11 +30,7 @@ Error in registering the user  MongoServerError: E11000 duplicate key error coll
   8)Return a message like “Verification code sent.”
 
  
-using Brevo to send email, bz resend free trail is over
-SMTP server -  smtp-relay.brevo.com
-Port -587
-Login - 8e10bc001@smtp-brevo.com
-Password - FKUN9S35dCh8nJPX
+
 
 using unverified user model to store unverified users
 
