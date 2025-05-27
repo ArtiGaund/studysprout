@@ -32,7 +32,7 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
             }
             fetchWorkspaceLogoPath()
         }
-    }, [])
+    }, [workspace.logo])
     return(
         <Link href={`/dashboard/${workspace._id}`}
          onClick={() => {

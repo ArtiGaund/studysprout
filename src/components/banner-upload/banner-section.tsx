@@ -95,7 +95,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
             bannerUrl: dirDetails.bannerUrl
             // createdAt: dirDetails.createdAt
         } as WorkSpace | Folder | File
-    }, [state, workspaceId, folderId, fileId, dirDetails, workspace, folder, file])
+    }, [state, workspaceId, folderId, fileId, dirDetails, dirType])
 
 
     const fetchBanner = async () => {

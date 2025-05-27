@@ -40,5 +40,9 @@ using unverified user model to store unverified users
 
 5) Logout is working correctly
 
+6) Deleting the workspace, files, folders from database if the user is not present in the database
+add in left menu the option of delete account, when delete account button is clicked the user all data is deleted
+
+
 6) Storing the data of the file: 
 

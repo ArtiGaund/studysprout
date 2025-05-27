@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
           fetchAllWorkspaces()
         }
             
-      }, [session]);
+      }, [session, dispatch]);
 
       // setting the current workspace 
       useEffect(() => {
@@ -78,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
 
         }
         getCurrentWorkspace()
-      }, [params.workspaceId])
+      }, [params.workspaceId, dispatch])
     // getting all the folders for the workspace
 
     // its an callback method, when folder is added from folder-dropdown-list component, this method is called 

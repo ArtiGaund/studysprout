@@ -4,18 +4,18 @@ import { z } from "zod";
 
 // Schema for username validation
 import { usernameValidation } from "@/schemas/signUpSchema";
-
+import { NextRequest, NextResponse } from "next/server";
 // creating query Schema => to check any object or variable
 const UsernameQuerySchema = z.object({
     username: usernameValidation
 })
 
 // will get the username from the url => /api/check-username-unique?username=one
-export async function GET( request: Request ){
+export async function GET( request: NextRequest ){
     await dbConnect()
     try {
         // getting the url
-        const { searchParams } = new URL(request.url)
+        const { searchParams } = request.nextUrl;
         const queryParams = {
             username: searchParams.get('username')
         }

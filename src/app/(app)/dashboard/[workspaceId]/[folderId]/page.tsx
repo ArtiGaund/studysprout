@@ -26,7 +26,7 @@ const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
             }
         }
         getFolderDetails()
-    }, [params.folderId])
+    }, [params.folderId, router])
     return (
         <div className='relative'>
             { folderDetails && (

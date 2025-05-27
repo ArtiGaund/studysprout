@@ -23,7 +23,7 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
             }
         }
         getWorkspaceDetails()
-    }, [params.workspaceId])
+    }, [params.workspaceId, router])
 
     return (
         <div className='relative'>

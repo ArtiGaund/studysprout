@@ -65,7 +65,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             }
         }
         fetchFolders()
-    }, [ workspaceId ])
+    }, [ workspaceId, dispatch ])
 
     useEffect(() => {
         if(folder){
@@ -238,7 +238,7 @@ const Dropdown: React.FC<DropdownProps> = ({
               'group-hover/folder:block': listType === 'folder',
             }
           ),
-        [isFolder]
+        [listType]
       );
     
 

@@ -66,7 +66,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             }
         }
         getUser()
-    }, [])
+    }, [toast])
     return(
         <UserContext.Provider value={{ user, session}}>
             {children}

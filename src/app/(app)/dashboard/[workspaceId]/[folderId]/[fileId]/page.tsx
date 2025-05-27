@@ -30,7 +30,7 @@ const FilePage: React.FC<{ params : { fileId: string }}> = ({ params }) => {
             }
         }
         getFileDetails()
-    }, [params.fileId])
+    }, [params.fileId, router])
     return (
         <div className='relative'>
             { fileDetails && (
