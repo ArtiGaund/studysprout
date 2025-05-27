@@ -15,3 +15,34 @@ Error in registering the user  MongoServerError: E11000 duplicate key error coll
   Resolved by deleting the workspace.folders._id field in atlas
 
   2) Its still creating the account, even if the user is not getting the verify code
+
+  I think here logic is wrong, First of all I don't want to save not verified user in the database, when user create an account, it should check whether it have account or not, if have account then it should give the notification already have account, if not then it should send the verification code to the user email, until an unless the user didn't give the verification code the user data is not saved in the database, after sending the verification code, user can create a new account. 
+
+
+  sign-up logic 
+  1) Validate all input fields.
+  2) Check if a verified user already exists in the DB with the same email or username → reject.
+  3) Generate a 6-digit verification code.
+  4) Hash the password.
+  5)Save this data temporarily:
+  6)Use in-memory store like Map (for dev) or Redis (for production).
+  7)Send the code to the user’s email.
+  8)Return a message like “Verification code sent.”
+
+ 
+using Brevo to send email, bz resend free trail is over
+SMTP server -  smtp-relay.brevo.com
+Port -587
+Login - 8e10bc001@smtp-brevo.com
+Password - FKUN9S35dCh8nJPX
+
+using unverified user model to store unverified users
+
+3) Login is working correctly
+
+4) Dashboard is working correctly
+
+5) Logout is working correctly
+
+6) Storing the data of the file: 
+

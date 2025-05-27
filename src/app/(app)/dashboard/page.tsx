@@ -25,7 +25,15 @@ const DashboardPage = () => {
             try {
                 const response = await axios.get(`/api/check-user-have-created-workspace?userId=${userId}`)
                 // console.log("Response ",response)
-                setWorkspace(response.data.data)
+                const result = response.data.data
+                if (Array.isArray(result)) {
+                setWorkspace(result)
+            } else if (result && typeof result === 'object') {
+                // Wrap single object in array
+                setWorkspace([result])
+            } else {
+                setWorkspace([])
+            }
             } catch (error) {
                 console.log('Error while fetching user workspaces ',error)
                 setError('Failed to fetch user workspace')
@@ -36,15 +44,24 @@ const DashboardPage = () => {
         fetchUserWorkspaces()
     }, [session])
 
-    // console.log("workspace ",workspace)
-    // console.log("workspace length ", workspace.length)
+    //      if user have already created the workspace they can move directly to the workspace
+    useEffect(() => {
+        if(workspace.length >0){
+            router.push(`/dashboard/${workspace[0]._id}`)
+        }
+    },[workspace, router])
+
+    if(isLoading || status === "loading") return <div>Loading...</div>
+    console.log("workspace ",workspace)
+    console.log("workspace length ", workspace.length)
    if(!workspace.length){
        return(
         <DashboardSetup />
        )
    }
-//      if user have already created the workspace they can move directly to the workspace
-    router.push(`/dashboard/${workspace[0]._id}`)
+
+   return <div>Redirecting to your workspace...</div>
+
 }
 
 export default DashboardPage

@@ -101,6 +101,8 @@ const DashboardSetup = () => {
         }
     }
     return(
+        <div className="flex justify-center items-center">
+            <div className=" flex relative top-[13rem]">
         <Card className="w-screen h-screen sm:h-auto sm:w-auto">
             <CardHeader>
                 <CardTitle>Create a workspace</CardTitle>
@@ -130,7 +132,6 @@ const DashboardSetup = () => {
                                     disabled={isLoading || isSubmitting}
                                     {...register("workspaceName", {required: true})}
                                     onChange={onChangeWorkspaceNameHandler}
-                                    className="bg-transparant"
                                     />
                                 </div>
                             </div>
@@ -167,6 +168,8 @@ const DashboardSetup = () => {
                     </form>
 
         </Card>
+        </div>
+        </div>
     )
 }
 

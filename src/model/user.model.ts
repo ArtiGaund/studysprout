@@ -8,8 +8,8 @@ export interface User{
     username: string;
     email: string;
     password: string;
-    verifyCode: string;
-    verifyCodeExpiry: Date;
+    verifyCode?: string;
+    verifyCodeExpiry?: Date;
     isVerified: boolean;
     workspace?: WorkSpace[],
 }
@@ -34,11 +34,11 @@ const UserSchema: Schema<User> = new Schema({
     },
     verifyCode: {
         type: String,
-        required: [true, "Verify Code is required"],
+        required: false,
     },
     verifyCodeExpiry: {
         type: Date,
-        required: [true, "Verify code expiry is required"],
+        required: false,
     },
     isVerified: {
         type: Boolean,
