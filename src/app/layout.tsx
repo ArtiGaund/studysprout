@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from "@/lib/providers/next-theme-provider";
 import { UserProvider } from '@/lib/providers/user-provider';
 import ReduxProvider from '@/lib/providers/redux-provider';
+import { ModalProvider } from '@/context/ModalProvider';
 
 
 
@@ -28,6 +29,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" >
       <AuthProvider>
+        <ModalProvider>
         <body className={inter.className} >
         <ReduxProvider>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
@@ -38,6 +40,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         </ReduxProvider>
           <Toaster />
         </body>
+        </ModalProvider>
       </AuthProvider>
     </html>
   );

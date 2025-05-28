@@ -7,19 +7,21 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import axios, { AxiosError } from "axios"
 import { useParams, useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
-import React from "react"
+import React, { useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { IconCode } from "@tabler/icons-react";
 import Link from "next/link"
+import { Loader2 } from "lucide-react"
 
 const VerifyAccount = () => {
     const router = useRouter()
     // taking data from params (url)
     const params = useParams<{username: string}>()
     const { toast } = useToast()
+    const [ isSubmitting, setIsSubmitting ] = useState(false)
     
 
     // zod implementation
@@ -28,6 +30,7 @@ const VerifyAccount = () => {
   })
 
   const onSubmit = async(data: z.infer<typeof verifySchema>) => {
+     setIsSubmitting(true)
     try {
         const response = await axios.post(`/api/verify-code`, {
             username: params.username,
@@ -48,7 +51,9 @@ const VerifyAccount = () => {
             description: errorMessage,
             variant: "destructive"
         })
-    }
+    }finally{
+            setIsSubmitting(false)
+        }
   }
     return(
             <div className="flex  bg-black h-screen justify-center items-center ">
@@ -75,7 +80,16 @@ const VerifyAccount = () => {
                         </FormItem>
                     )}
                     />
-                    <Button type="submit">Submit</Button>
+                    {/* <Button type="submit">Submit</Button> */}
+                     <Button className="w-full p-2" type="submit" disabled={isSubmitting}>
+                                                        {
+                                                            isSubmitting ? (
+                                                                <>
+                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Please Wait
+                                                                </>
+                                                            ) : ('Submit')
+                                                        }
+                                                    </Button>
                 </form>
             </Form>
                                    </div>
