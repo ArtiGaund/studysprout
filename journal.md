@@ -34,15 +34,24 @@ Error in registering the user  MongoServerError: E11000 duplicate key error coll
 
 using unverified user model to store unverified users
 
-3) Login is working correctly
+3) Login is working correctly (completed)
 
-4) Dashboard is working correctly
+4) Dashboard is working correctly (completed)
 
-5) Logout is working correctly
+5) Logout is working correctly (completed)
 
 6) Deleting the workspace, files, folders from database if the user is not present in the database
 add in left menu the option of delete account, when delete account button is clicked the user all data is deleted
+(completed)
+7)Delete images from images backend folder as well as from cloudinary
 
+8) forgot password 
+For forgot password should i create where user enter the email and send the unique link or verification code if user click the link or enter verification code correctly then user can change the password, basically I want to do unique link to set the new password, as i have already done verification code part in registration process.
+
+click on forgot password link on sign-in -> visit forgot password pasge and enter email -> get email for unique reset password -> reset password
+(left -> its not showing in form that password and confirm password should be same, will do later, don't want to lose mail validity)
 
 6) Storing the data of the file: 
+
+
 

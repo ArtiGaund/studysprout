@@ -130,7 +130,7 @@ const SignIn = () => {
                 </form>
             </Form>
             <div className="flex justify-end text-xs">
-                                    <a href="#">forget password?</a>
+                                    <a href="/forgot-password">forget password?</a>
                                 </div>
                         </div>
                         </div>
