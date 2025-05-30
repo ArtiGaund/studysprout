@@ -51,6 +51,11 @@ For forgot password should i create where user enter the email and send the uniq
 click on forgot password link on sign-in -> visit forgot password pasge and enter email -> get email for unique reset password -> reset password
 (left -> its not showing in form that password and confirm password should be same, will do later, don't want to lose mail validity)
 
+
+9) Workspace page
+
+List will show list of folders inside the workspace
+
 6) Storing the data of the file: 
 
 

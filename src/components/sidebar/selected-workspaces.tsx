@@ -45,7 +45,7 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
                 <Image src={workspaceLogo} alt="workspace logo" width="26" height="26" objectFit="cover" priority={true}/>
                 <div className="flex flex-col">
                     <p className="text-lg w-[170px] overflow-hidden overflow-ellipsis whitespace-nowrap text-white">
-                        {workspace.workspaceName}
+                        {workspace.title}
                     </p>
                 </div>
         </Link>

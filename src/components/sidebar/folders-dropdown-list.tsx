@@ -52,7 +52,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                 data: undefined,
                 createdAt: new Date(),
                 title: 'Untitled',
-                iconId: '📄',
+                iconId: '📁',
                 inTrash: undefined,
                 workspaceId,
                 bannerUrl: '',
@@ -96,8 +96,15 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
 
     return(
         <>
-            <div className="flex sticky z-20 top-0 bg-background w-full h-10 group/title justify-between
+            <div className="flex sticky z-20 top-2 bg-background w-full h-10 group/title justify-between
              items-center pr-4 text-Neutrals/neutrals-8">
+                <span className="font-bold text-Neutrals-8 text-[11px]">
+                    PRIVATE
+                </span>
+                
+            </div>
+            <div className="flex sticky z-20 top-0 bg-background w-full h-10 group/title justify-between
+             items-center pr-4 text-Neutrals/neutrals-8 pl-4">
                 <span className="font-bold text-Neutrals-8 text-xs">
                     FOLDERS
                 </span>
@@ -110,6 +117,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                 </TooltipComponent>
                 </div>
                 {/* Rendering all the folder */}
+                <div className="flex pl-5">
                 <Accordion
                 type="multiple"
                 defaultValue={[ currentFolderId?.toString() || '']}
@@ -128,7 +136,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                    ))
                    }
                 </Accordion>
-            
+            </div>
         </>
     )
 }

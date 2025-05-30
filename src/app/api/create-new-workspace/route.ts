@@ -21,7 +21,7 @@ export async function POST(request: any){
         
         // Check whether same name workspace exist or not
         const existingWorkspace = await WorkSpaceModel.findOne({
-            workspaceName,
+            title:workspaceName,
             workspace_owner: userId
         })
 
@@ -49,7 +49,7 @@ export async function POST(request: any){
         // console.log("saved image id ",savedImage._id)
         // creating new workspace
         const newWorkspace = await WorkSpaceModel.create({
-            workspaceName,
+            title:workspaceName,
             workspace_owner: userId,
             logo: savedImage._id,
             iconId

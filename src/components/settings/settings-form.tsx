@@ -27,7 +27,7 @@ const SettingsForm = () => {
     const router = useRouter()
     const currentWorkspace = useSelector((state: RootState) => state.workspace.currentWorkspace)
     const [ workspaceDetails, setWorkspaceDetails ] = useState<Partial<WorkSpace>>({
-        workspaceName: currentWorkspace?.workspaceName || "",
+        title: currentWorkspace?.title || "",
         logo: currentWorkspace?.logo || undefined,
     })
     // when user want to change the workspace name, there will be timer
@@ -43,7 +43,7 @@ const SettingsForm = () => {
         if(currentWorkspace){
             setWorkspaceDetails({
                 _id: currentWorkspace._id,
-                workspaceName: currentWorkspace.workspaceName,
+                title: currentWorkspace.title,
                 logo: currentWorkspace.logo
             })
         }
@@ -56,7 +56,7 @@ const SettingsForm = () => {
         setWorkspaceDetails(newWorkspaceDetails)
         const updateWorkspace: Partial<WorkSpace> = {
             _id: workspaceId,
-            workspaceName: e.target.value
+            title: e.target.value
         }
        
             if(titleTimerRef.current) clearTimeout(titleTimerRef.current);
@@ -223,7 +223,7 @@ const SettingsForm = () => {
             </Label>
             <Input
             name="workspaceName"
-            value={workspaceDetails ? workspaceDetails.workspaceName : '' }
+            value={workspaceDetails ? workspaceDetails.title : '' }
             placeholder="Workspace Name"
             onChange={workspaceNameChange}
             className=""/>

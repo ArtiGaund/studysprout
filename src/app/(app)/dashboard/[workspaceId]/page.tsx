@@ -34,6 +34,7 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
                     dirDetails={workspaceDetails}
                 />
             )}
+            
         </div>
     )
 }

@@ -14,7 +14,7 @@ export async function POST(request: Request) {
             if(!_id){
                 return Response.json({
                     statusCode: 401,
-                    message: "Folder id is required",
+                    message: "File id is required",
                     success: false
                 })
             }

@@ -6,7 +6,7 @@ import { Folder, FolderSchema } from "./folder.model";
 export interface WorkSpace{
     _id?: string,
     workspace_owner: User,
-    workspaceName?: string,
+    title?: string,
     iconId?: string,
     data?: string,
     inTrash?: string,
@@ -20,7 +20,7 @@ export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
         type: Schema.Types.ObjectId,
         ref: "User"
     },
-    workspaceName:{
+    title:{
         type: String,
         required: [true, "workspace name is required"],
         unique: true

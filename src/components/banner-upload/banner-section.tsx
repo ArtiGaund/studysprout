@@ -88,7 +88,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
         }
         // else return new object
         return {
-            // title: dirDetails.title,
+            title: dirDetails.title,
             iconId: dirDetails.iconId,
             data: dirDetails.data,
             inTrash: dirDetails.inTrash,
@@ -289,7 +289,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
           (workspace) => workspace._id === workspaceId
         );
         const workspaceBreadCrumb = workspaceDetails
-          ? `${workspaceDetails.iconId} ${workspaceDetails.workspaceName}`
+          ? `${workspaceDetails.iconId} ${workspaceDetails.title}`
           : '';
         if (segments.length === 1) {
           return workspaceBreadCrumb;
@@ -513,6 +513,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
             }
         }
       }
+
     return(
         <>
             <div className="relative">
@@ -615,12 +616,9 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                         </Button>
                         }
                      </div>
-                     <span className="text-muted-foreground text-3xl font-bold h-9">
-                        {/* {details.title} */}
-                     </span>
-                     <span className="text-sm text-muted-foreground">
-                        {dirType.toUpperCase()}
-                     </span>
+                     <span className="text-3xl font-bold text-muted-foreground h-9">
+                        {details.title} <span className="text-sm ml-2">({dirType.toUpperCase()})</span>
+                    </span>
                 </div>
                 {/* <div 
                 id="container" 
