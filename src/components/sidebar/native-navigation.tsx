@@ -3,8 +3,8 @@ import Link from "next/link";
 import React from "react";
 import { twMerge } from "tailwind-merge";
 import CypressHomeIcon from "../icons/CypressHomeIcon";
-import CypressSettingsIcon from "../icons/CypressSettingsIcon";
 import CypressTrashIcon from "../icons/CypressTrashIcon";
+// import Settings from "../settings/settings";
 // import Settings from "../settings/settings";
 import Trash from "../trash/trash";
 

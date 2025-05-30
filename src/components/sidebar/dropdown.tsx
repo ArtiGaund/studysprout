@@ -380,7 +380,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         >
             <AccordionTrigger
                 id={listType}
-                className="hover:no-underline p-2 dark:text-muted-foreground text-sm"
+                className="hover:no-underline p-2 text-muted-foreground text-sm"
                 disabled={listType === 'file'}
             >
                 <div className={groupIdentifies}>
@@ -413,7 +413,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                             <Trash 
                                 onClick={moveToTrash}
                                 size={15}
-                                className="hover:dark:text-white dark:text-Neutrals/neutrals-7 transition-colors"
+                                className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
                             />
                         </TooltipComponent>
                         {listType === "folder" && !isEditing && (
@@ -421,7 +421,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 <PlusIcon 
                                     onClick={addNewFile}
                                     size={15}
-                                    className="hover:dark:text-white dark:text-Neutrals/neutrals-7 transition-colors"
+                                    className="hover:text-white  transition-colors"
                                 />
                             </TooltipComponent>
                         )}

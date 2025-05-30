@@ -32,7 +32,7 @@ const UserCard = () => {
 
     return(
         <article
-        className="hidden sm:flex justify-between items-center px-4 py-2 dark:bg-Neutrals/neutrals-12 rounded-3xl"
+        className="hidden sm:flex justify-between items-center px-4 py-2 bg-Neutrals/neutrals-12 rounded-3xl"
         >
             <aside
             className="flex justify-center items-center gap-2"
@@ -50,13 +50,6 @@ const UserCard = () => {
                 </div>
             </aside>
             <div className="flex items-center justify-center">
-                {/* <div className="w-[40px] h-[40px] hover:bg-zinc-800 rounded-lg cursor-pointer flex items-center justify-center">
-                    <Settings />
-                </div>
-                
-                <LogoutButton>
-                    <LogOut />
-                </LogoutButton> */}
                 {/* dropup */}
                 <div className="relative inline-block group">
                     {/* dropbtn */}
@@ -71,9 +64,10 @@ const UserCard = () => {
           {/* Profile */}
     
           {/* <button
+          {/* <button
             className="w-full hover:bg-zinc-800 p-2 rounded-md flex justify-center"
             onClick={() => {
-              openModal(<Profile/>)
+              openModal(<SettingsPage />)
                 // router.push(`/dashboard/profile/${user?._id}`)
             //   console.log('Navigate to profile');
               setIsOpen(false);

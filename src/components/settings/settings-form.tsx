@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useToast } from "../ui/use-toast";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Briefcase, LogOut, User } from "lucide-react";
 import { Separator } from "@radix-ui/react-select";

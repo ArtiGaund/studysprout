@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/lib/providers/next-theme-provider";
 import { UserProvider } from '@/lib/providers/user-provider';
 import ReduxProvider from '@/lib/providers/redux-provider';
 import { ModalProvider } from '@/context/ModalProvider';
-
+// import { ThemeProvider } from "next-themes"
 
 
 
@@ -27,7 +27,18 @@ interface RootLayoutProps {
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" >
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+         <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (!document.documentElement.classList.contains("dark")) {
+                document.documentElement.classList.add("dark");
+              }
+            `,
+          }}
+        />
+      </head>
       <AuthProvider>
         <ModalProvider>
         <body className={inter.className} >

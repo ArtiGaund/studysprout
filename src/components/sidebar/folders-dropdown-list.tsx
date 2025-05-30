@@ -105,7 +105,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                     <PlusIcon
                     onClick={addFolderHandler}
                      size={16}
-                     className="group-hover/title:inline-block hidden cursor-pointer hover:dark:text-white"/>
+                     className="group-hover/title:inline-block hidden cursor-pointer hover:text-white"/>
 
                 </TooltipComponent>
                 </div>
