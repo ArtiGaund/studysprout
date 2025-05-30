@@ -8,6 +8,7 @@ import { LogOut, Settings, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/context/ModalProvider";
 import Profile from "../ui/profile";
+import SettingsPage from "../settings/settings";
 const UserCard = () => {
     const [ isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession()
@@ -69,7 +70,7 @@ const UserCard = () => {
         <div className="absolute bottom-[45px] right-0 bg-gray-900 text-white px-0 py-1 rounded-md shadow-lg z-50 flex flex-col items-center space-y-1 min-w-[50px]">
           {/* Profile */}
     
-          <button
+          {/* <button
             className="w-full hover:bg-zinc-800 p-2 rounded-md flex justify-center"
             onClick={() => {
               openModal(<Profile/>)
@@ -79,7 +80,14 @@ const UserCard = () => {
             }}
           >
             <User2 className="w-4 h-4" />
-          </button>
+          </button> */}
+          <SettingsPage>
+                    <div 
+                    className="w-full hover:bg-zinc-800 p-2 rounded-md flex justify-center"
+                    >
+                         <User2 className="w-4 h-4" />
+                    </div>
+                </SettingsPage> 
           {/* Logout */}
           <div className="w-full hover:bg-zinc-800 p-1 rounded-md flex justify-center">
             <LogoutButton>
