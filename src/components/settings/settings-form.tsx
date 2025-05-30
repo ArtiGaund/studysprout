@@ -16,7 +16,6 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import CypressProfileIcon from "../icons/CypressProfileIcon";
 import LogoutButton from "../global/logout-button";
-import { signOut } from "next-auth/react";
 import { useModal } from "@/context/ModalProvider";
 import AccountSetting from "../account-setting";
 

@@ -7,7 +7,6 @@ import LogoutButton from "../global/logout-button";
 import { LogOut, Settings, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/context/ModalProvider";
-import Profile from "../ui/profile";
 import SettingsPage from "../settings/settings";
 const UserCard = () => {
     const [ isOpen, setIsOpen] = useState(false);
