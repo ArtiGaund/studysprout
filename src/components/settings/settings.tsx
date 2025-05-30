@@ -6,7 +6,7 @@ import SettingsForm from "./settings-form";
 interface SettingsProps{
     children: React.ReactNode
 }
-const Settings: React.FC<SettingsProps> = ({ children }) => {
+const SettingsPage: React.FC<SettingsProps> = ({ children }) => {
     return(
        <CustomDialogTrigger
         header="Settings"
@@ -17,4 +17,4 @@ const Settings: React.FC<SettingsProps> = ({ children }) => {
     )
 }
 
-export default Settings
+export default SettingsPage

@@ -16,7 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
                 className="w-screen inline-block sm:hidden"
                 />
             </MobileSidebar>
-            <div className="dark:border-neutral-12/70 border-l-[1px] w-full relative overflow-scroll">
+            <div className="border-neutral-12/70 border-l-[1px] w-full relative overflow-scroll">
                 {children}
             </div>
         </main>

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useToast } from "../ui/use-toast";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Briefcase, LogOut, User } from "lucide-react";
 import { Separator } from "@radix-ui/react-select";
@@ -16,8 +16,11 @@ import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import CypressProfileIcon from "../icons/CypressProfileIcon";
 import LogoutButton from "../global/logout-button";
+import AccountSetting from "../account-setting";
+import { useModal } from "@/context/ModalProvider";
 
 const SettingsForm = () => {
+    const { openModal, closeModal } = useModal();
     const { toast } = useToast()
     const { data: session } = useSession()
     const user=session?.user
@@ -171,6 +174,36 @@ const SettingsForm = () => {
     // get workspace details
 
     // 
+
+    const deleteAccount = async () => {
+        try {
+            const response = await axios.delete(`/api/delete-account?userId=${user?._id}`)
+    
+            if(!response.data.success){
+                    console.log("Error while deleting user account", response.data.message)
+                    toast({
+                        title: "Failed to delete account",
+                        description: response.data.message,
+                        variant: "destructive"
+                    })
+                }else{
+                    toast({
+                        title: "Success",
+                        description: "Successfully deleted account",
+                    })
+                    // Sign the user out to clear session
+                    await signOut({ callbackUrl: "/sign-up" });
+                }
+        } catch (error) {
+            console.log("Error while deleting user account", error)
+            toast({
+                title: "Failed to delete account",
+                description: "Something went wrong",
+                variant: "destructive"
+            })
+        }
+      }
+    
     return (
     <div className="flex gap-4 flex-col">
         <p className="flex items-center gap-2 mt-6">
@@ -252,6 +285,43 @@ const SettingsForm = () => {
                 />
             </div>
         </div>
+        <Alert variant={'destructive'}>
+            <AlertDescription>
+                Warning! Deleting your acount will permanantly delete all data related to this account.
+            </AlertDescription>
+            <Button
+            type="submit"
+            size={'sm'}
+            variant={'destructive'}
+            className="mt-4 text-sm bg-destructive/40 border-2 border-destructive"
+            onClick={() =>
+                        openModal(
+                          <AccountSetting className="h-[13rem] w-full max-w-md">
+                            <div className="flex flex-col justify-center items-center">
+                              <h2 className="text-xl p-3">Confirm Delete</h2>
+                              <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+                                Are you sure you want to delete your account? This action cannot be undone.
+                              </p>
+                              <div className="flex gap-4 mt-6">
+                                <button 
+                                onClick={closeModal}
+                                className="bg-gray-300 dark:bg-gray-700 px-4 py-2 rounded-md">
+                                  Cancel
+                                </button>
+                                <button 
+                                onClick={deleteAccount}
+                                className="bg-red-600 text-white px-4 py-2 rounded-md">
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </AccountSetting>
+                        )
+                      }
+            >
+                Delete Account
+            </Button>
+        </Alert>
         <LogoutButton>
             <div className="flex items-center">
                 <LogOut />

@@ -8,6 +8,8 @@ import { LogOut, Settings, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/context/ModalProvider";
 import Profile from "../ui/profile";
+import  SettingsPage  from "../settings/settings"
+import CypressSettingsIcon from "../icons/CypressSettingsIcon";
 const UserCard = () => {
     const [ isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession()
@@ -31,7 +33,7 @@ const UserCard = () => {
 
     return(
         <article
-        className="hidden sm:flex justify-between items-center px-4 py-2 dark:bg-Neutrals/neutrals-12 rounded-3xl"
+        className="hidden sm:flex justify-between items-center px-4 py-2 bg-Neutrals/neutrals-12 rounded-3xl"
         >
             <aside
             className="flex justify-center items-center gap-2"
@@ -49,13 +51,6 @@ const UserCard = () => {
                 </div>
             </aside>
             <div className="flex items-center justify-center">
-                {/* <div className="w-[40px] h-[40px] hover:bg-zinc-800 rounded-lg cursor-pointer flex items-center justify-center">
-                    <Settings />
-                </div>
-                
-                <LogoutButton>
-                    <LogOut />
-                </LogoutButton> */}
                 {/* dropup */}
                 <div className="relative inline-block group">
                     {/* dropbtn */}
@@ -69,17 +64,25 @@ const UserCard = () => {
         <div className="absolute bottom-[45px] right-0 bg-gray-900 text-white px-0 py-1 rounded-md shadow-lg z-50 flex flex-col items-center space-y-1 min-w-[50px]">
           {/* Profile */}
     
-          <button
+          {/* <button
             className="w-full hover:bg-zinc-800 p-2 rounded-md flex justify-center"
             onClick={() => {
-              openModal(<Profile/>)
+              openModal(<SettingsPage />)
                 // router.push(`/dashboard/profile/${user?._id}`)
             //   console.log('Navigate to profile');
               setIsOpen(false);
             }}
           >
             <User2 className="w-4 h-4" />
-          </button>
+          </button> */}
+          <SettingsPage>
+                    <div 
+                    className="w-full hover:bg-zinc-800 p-2 rounded-md flex justify-center"
+                    >
+                       <User2 className="w-4 h-4" />
+
+                    </div>
+                </SettingsPage>
           {/* Logout */}
           <div className="w-full hover:bg-zinc-800 p-1 rounded-md flex justify-center">
             <LogoutButton>

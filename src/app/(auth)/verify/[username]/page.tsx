@@ -60,7 +60,7 @@ const VerifyAccount = () => {
                         <div className="flex flex-row w-[60rem] h-[30.5rem] rounded-3xl bg-zinc-900">
                                     <div className="flex flex-1 items-center justify-center">
                                         <div className="flex flex-col gap-y-4">
-                                            <h2 className="text-3xl font-bold text-neutral-800 dark:text-neutral-200">
+                                            <h2 className="text-3xl font-bold text-neutral-200">
                                                 Verification code
                                             </h2>
             {/* Form */}
