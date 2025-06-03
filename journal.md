@@ -54,7 +54,8 @@ click on forgot password link on sign-in -> visit forgot password pasge and ente
 
 9) Workspace page
 
-List will show list of folders inside the workspace
+List will show list of folders and files inside the workspace, and can create folders and files from this workspace page
+
 
 6) Storing the data of the file: 
 

@@ -133,8 +133,9 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
                    workspaceFolders={folders || []}
                    workspaceId={params.workspaceId}
                    onFolderAdded={handleFolderAdded}
+                   usedWhere="sidebar"
                    /> 
-              </ScrollArea>
+              </ScrollArea> 
             </>
               
           ) : (

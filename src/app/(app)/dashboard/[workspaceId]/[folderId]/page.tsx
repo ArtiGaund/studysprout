@@ -1,5 +1,6 @@
 "use client"
 import BannerSection from '@/components/banner-upload/banner-section'
+import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
 import { Folder } from '@/model/folder.model'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
@@ -36,6 +37,16 @@ const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
                 dirDetails={folderDetails}
                 ></BannerSection>
             )}
+            <div>
+                { folderDetails && (
+                    <DashboardOverview 
+                    dirDetails={folderDetails}
+                    fileId={params.folderId}
+                    dirType='folder'
+                    params={params.folderId}
+                />
+                )}
+            </div>
         </div>
     )
 }

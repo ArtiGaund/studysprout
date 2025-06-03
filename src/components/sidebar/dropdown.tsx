@@ -50,6 +50,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     const [ currentIcon, setCurrentIcon ] = useState(iconId)
     const { data: session} = useSession()
 
+    
     useEffect(() => {
         const fetchFolders = async() => {
             try {
@@ -255,6 +256,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             iconId: '📄',
             workspaceId: workspaceId.toString(), 
             bannerUrl: '',
+            createdAt: new Date(),
         };
 
         try {
@@ -291,6 +293,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             })
         }
     };
+
 
     // move to trash
 
@@ -409,13 +412,20 @@ const Dropdown: React.FC<DropdownProps> = ({
                         />
                     </div>
                     <div className={hoverStyles}>
-                        <TooltipComponent message="Delete Folder">
+                        {(listType ==="folder" &&<TooltipComponent message="Delete Folder">
                             <Trash 
                                 onClick={moveToTrash}
                                 size={15}
                                 className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
                             />
-                        </TooltipComponent>
+                        </TooltipComponent>)}
+                        {(listType ==="file" &&<TooltipComponent message="Delete File">
+                            <Trash 
+                                onClick={moveToTrash}
+                                size={15}
+                                className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
+                            />
+                        </TooltipComponent>)}
                         {listType === "folder" && !isEditing && (
                             <TooltipComponent message="Add File">
                                 <PlusIcon 

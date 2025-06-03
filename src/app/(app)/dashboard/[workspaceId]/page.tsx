@@ -1,5 +1,6 @@
 "use client"
 import BannerSection from '@/components/banner-upload/banner-section'
+import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
 import { WorkSpace } from '@/model/workspace.model'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
@@ -8,6 +9,7 @@ import React, { useEffect, useState } from 'react'
 const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }) => {
     const router = useRouter()
     const [ workspaceDetails, setWorkspaceDetails ] = useState<WorkSpace | undefined>(undefined)
+
 
     useEffect(() => {
         const getWorkspaceDetails = async () => {
@@ -34,7 +36,16 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
                     dirDetails={workspaceDetails}
                 />
             )}
-            
+           <div>
+            { workspaceDetails && (
+                <DashboardOverview 
+                dirDetails={workspaceDetails}
+                fileId={params.workspaceId}
+                dirType='workspace'
+                params={params.workspaceId}
+                />
+            )}
+           </div>
         </div>
     )
 }

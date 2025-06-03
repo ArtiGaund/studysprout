@@ -11,6 +11,7 @@ export interface File {
     bannerUrl?: string;
     workspaceId?: string;
     folderId?: string; 
+    createdAt: Date;
 }
 export const FileSchema: Schema<File> = new Schema({
     title:{
@@ -38,11 +39,14 @@ export const FileSchema: Schema<File> = new Schema({
     folderId: {
         type: Schema.Types.ObjectId,
         ref: "Folder"
+    },
+    createdAt: {
+        type: Date,
+        required: true,
+        default: Date.now
     }
-},
-{
-    timestamps: true
-})
+}
+)
 
 const FileModel = (mongoose.models.File as mongoose.Model<File>) || (mongoose.model<File>("File", FileSchema))
 

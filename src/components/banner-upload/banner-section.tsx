@@ -626,6 +626,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                 className="max-w-[800px]"
                 >
                 </div> */}
+                
             </div>
         </>
     )

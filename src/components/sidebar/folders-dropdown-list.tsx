@@ -23,8 +23,9 @@ interface FoldersDropdownListProps{
     workspaceFolders: Folder[] | [];
     workspaceId: string; 
     onFolderAdded: () => void;
+    usedWhere: "workspacePage" | "folderPage" | "sidebar";
 }
-const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolders, workspaceId, onFolderAdded }) => {
+const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolders, workspaceId, onFolderAdded, usedWhere }) => {
     // 1) keep track of local state folders
     // set up real time updates => when another user create an update, we want real time update system setup
     // so it can create a folder for us in our localhost (i think i don't need it bz i am not doing collaborator 
@@ -98,23 +99,35 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
         <>
             <div className="flex sticky z-20 top-2 bg-background w-full h-10 group/title justify-between
              items-center pr-4 text-Neutrals/neutrals-8">
-                <span className="font-bold text-Neutrals-8 text-[11px]">
-                    PRIVATE
-                </span>
+                { usedWhere === "sidebar" && (
+                    <span className="font-bold text-Neutrals-8 text-[11px]">
+                        PRIVATE
+                    </span>
+                )}
                 
             </div>
             <div className="flex sticky z-20 top-0 bg-background w-full h-10 group/title justify-between
              items-center pr-4 text-Neutrals/neutrals-8 pl-4">
-                <span className="font-bold text-Neutrals-8 text-xs">
+                { usedWhere === "sidebar" && (
+                    <span className="font-bold text-Neutrals-8 text-xs">
+                        FOLDERS
+                    </span>
+                )}
+                { usedWhere === "workspacePage" && (
+                    <span className="font-bold text-Neutrals-8 text-lg">
                     FOLDERS
-                </span>
-                <TooltipComponent message="Create Folder">
+                    </span>
+                )}
+                { usedWhere === "sidebar" && (
+                    <TooltipComponent message="Create Folder">
                     <PlusIcon
                     onClick={addFolderHandler}
                      size={16}
                      className="group-hover/title:inline-block hidden cursor-pointer hover:text-white"/>
 
                 </TooltipComponent>
+                )}
+                
                 </div>
                 {/* Rendering all the folder */}
                 <div className="flex pl-5">
