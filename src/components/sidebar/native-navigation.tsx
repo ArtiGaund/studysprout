@@ -4,9 +4,9 @@ import React from "react";
 import { twMerge } from "tailwind-merge";
 import CypressHomeIcon from "../icons/CypressHomeIcon";
 import CypressTrashIcon from "../icons/CypressTrashIcon";
-// import Settings from "../settings/settings";
-// import Settings from "../settings/settings";
 import Trash from "../trash/trash";
+import Search from "../search/search";
+import CypressSearchIcon from "../icons/CypressSearchIcon";
 
 
 interface NativeNavigationProps{
@@ -20,6 +20,15 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
     return(
         <nav className={twMerge('my-2',className)}>
             <ul className="flex flex-col gap-2">
+                {/* <Search> */}
+                    <li 
+                    className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2 cursor-pointer"
+                    >
+                        {/* <CypressSettingsIcon /> */}
+                        <CypressSearchIcon />
+                        <span>Search</span>
+                    </li>
+                {/* </Search> */}
                 <li>
                     <Link 
                     className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2"
@@ -29,14 +38,6 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
                         <span>My Workspace</span>
                     </Link>
                 </li>
-                {/* <Settings>
-                    <li 
-                    className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2 cursor-pointer"
-                    >
-                        <CypressSettingsIcon />
-                        <span>Settings</span>
-                    </li>
-                </Settings> */}
                     <Trash>
                         <li 
                         className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2"

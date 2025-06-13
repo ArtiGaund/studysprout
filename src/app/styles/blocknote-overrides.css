@@ -1,0 +1,28 @@
+
+
+/* Target the main editor container */
+.bn-editor {
+  background-color: transparent !important;
+}
+
+/* Target the content area where text is typed */
+.bn-editor .bn-content {
+  background-color: transparent !important;
+}
+
+/* If using Mantine, also target its wrapping components if they have a background */
+/* You'll need to inspect your specific Mantine wrapper classes */
+.mantine-Paper-root[data-blocknotemantine-editor] { /* Example Mantine class */
+  background-color: transparent !important;
+}
+/* Add other Mantine specific classes if you find them wrapping the editor */
+
+/* Ensure dark mode also respects transparency */
+.dark .bn-editor,
+.dark .bn-editor .bn-content,
+.dark .mantine-Paper-root[data-blocknotemantine-editor] {
+  background-color: transparent !important;
+}
+.bn-mantine .bn-suggestion-menu {
+  background-color: #02000E !important;
+}

@@ -5,7 +5,6 @@ import { WorkSpace } from "@/model/workspace.model";
 import { RootState } from "@/store/store";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import 'quill/dist/quill.snow.css';
 import { Button } from "../ui/button";
 import axios from "axios";
 import { useToast } from "../ui/use-toast";
@@ -56,7 +55,6 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
     const folderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
     const dispatch = useDispatch()
-    const [ quill, setQuill ] = useState<any>()
     const { toast } = useToast()
     const pathname = usePathname()
     const [ saving, setSaving ] = useState(false)
@@ -124,25 +122,6 @@ const BannerSection: React.FC<BannerSectionProps> = ({
         }
     }, [dirDetails.bannerUrl]);
 
-    // quill need window object
-    const wrapperRef = useCallback((wrapper: HTMLDivElement | null) => {
-        if (typeof window !== "undefined") {
-            if (wrapper === null) return
-            wrapper.innerHTML = '';
-            const editor = document.createElement('div')
-            wrapper.append(editor)
-            import('quill').then(QuillModule => {
-                const Quill = QuillModule.default
-                const q = new Quill(editor, {
-                    theme: 'snow',
-                    modules: {
-                        toolbar: TOOLBAR_OPTIONS,
-                    },
-                })
-                setQuill(q)
-            })
-        }
-    }, [])
 
 
     const restoreFileHandler = async() => {
@@ -620,12 +599,6 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                         {details.title} <span className="text-sm ml-2">({dirType.toUpperCase()})</span>
                     </span>
                 </div>
-                {/* <div 
-                id="container" 
-                ref={wrapperRef}
-                className="max-w-[800px]"
-                >
-                </div> */}
                 
             </div>
         </>

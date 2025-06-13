@@ -56,6 +56,9 @@ click on forgot password link on sign-in -> visit forgot password pasge and ente
 
 List will show list of folders and files inside the workspace, and can create folders and files from this workspace page
 
+10) using BlockNote for the text editor
+
+
 
 6) Storing the data of the file: 
 

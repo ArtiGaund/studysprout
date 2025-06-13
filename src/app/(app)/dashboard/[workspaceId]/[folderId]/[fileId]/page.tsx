@@ -1,6 +1,7 @@
 "use client"
 import BannerSection from '@/components/banner-upload/banner-section'
-import TextEditor from '@/components/text-editor/text-editor'
+import TextEditor from '@/components/editor/editor'
+import Editor from '@/components/editor/editor'
 import { File } from '@/model/file.model'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
@@ -45,6 +46,8 @@ const FilePage: React.FC<{ params : { fileId: string }}> = ({ params }) => {
                     fileDetails={fileDetails}
                     onChange= {onChangeHandler}
                     />
+                    {/* <Editor /> */}
+                    
                 </>
             )}
         </div>
