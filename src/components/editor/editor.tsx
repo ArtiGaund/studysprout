@@ -2,7 +2,7 @@
 "use client"
 
 import { File } from "@/model/file.model";
-import React, { useEffect } from "react"
+import React, { useCallback, useEffect } from "react"
 import {
      BlockNoteEditor,
       BlockNoteSchema,
@@ -20,6 +20,9 @@ import "@blocknote/core/style.css"
 import "@blocknote/mantine/style.css"
 import "@/app/styles/blocknote-overrides.css"
 import { useTheme } from "next-themes";
+import axios from "axios";
+import { useDebounce } from "@/utils/hooks/useDebounce";
+import { useToast } from "../ui/use-toast";
 
 
 interface TextEditorProps{
@@ -38,6 +41,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
     initialContent
 }) => {
     const { resolvedTheme } = useTheme()
+    const { toast } = useToast();
 
 
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
@@ -131,6 +135,54 @@ const TextEditor: React.FC<TextEditorProps> = ({
             //     }),
         },
     });
+
+    // 1. define the actual function that sends data to your backend
+    const saveContentToBackend = useCallback(async (content: string) => {
+        // console.log("Attempting to save content for file ",fileId);
+
+        try {
+            const parsedContent = JSON.parse(content);
+            console.log("parsedContent ",parsedContent);
+            const response = await axios.post(`/api/update-file`, {
+                _id: fileId,
+                data: parsedContent,
+                lastUpdated: new Date()
+            })
+            if(!response.data.success){
+                console.log("Error while updating file ",response.data.message);
+                toast({
+                    title: "Failed to update file",
+                    description: response.data.message,
+                    variant: "destructive"
+                })
+            }else{
+                console.log("Content saved successfully for file ",fileId);
+            }
+        } catch (error) {
+            console.log("Error while saving content for file ",error);
+            toast({
+                title: "Failed to save content",
+                description: "Something went wrong",
+                variant: "destructive"
+            })
+        }
+    }, [fileId])
+
+    // 2. Create a debounced version of your save function
+    // This will call 'saveContentToBackend' 1000ms (1 second) after the last change
+    const debouncedSave = useDebounce(saveContentToBackend, 1000);
+
+    // 3. Attach the debounced save to the editor's content change listener
+   useEffect(() => {
+        if (!editor) return;
+
+        editor.onEditorContentChange(() => {
+            const currentContent = JSON.stringify(editor.topLevelBlocks);
+            debouncedSave(currentContent);
+            onChange(currentContent);
+        });
+
+    }, [editor, debouncedSave, onChange]); // Dependencies: editor, debouncedSave, onChange
     return(
         <div className="p-5">
             <BlockNoteView  

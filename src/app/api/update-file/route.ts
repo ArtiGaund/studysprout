@@ -11,6 +11,7 @@ export async function POST(request: Request) {
         const updatedData = await request.json();
            
             const { _id, ...updates } = updatedData;
+            console.log("updated data ",updatedData);
             if(!_id){
                 return Response.json({
                     statusCode: 401,

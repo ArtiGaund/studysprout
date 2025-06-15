@@ -6,12 +6,13 @@ export interface File {
     _id?: string;
     title: string;
     iconId?: string;
-    data?: string;
+    data?: any; //store actual JSON
     inTrash?: string;
     bannerUrl?: string;
     workspaceId?: string;
     folderId?: string; 
     createdAt: Date;
+    lastUpdated: Date;
 }
 export const FileSchema: Schema<File> = new Schema({
     title:{
@@ -23,9 +24,10 @@ export const FileSchema: Schema<File> = new Schema({
         // required: [true, "Title is required"],
         // unique: true
     },
-    data:{
-        type: String,
-    },
+    data: {
+    type: [mongoose.Schema.Types.Mixed],
+    default: [],
+  },
     inTrash: {
         type: String,
     },
@@ -44,10 +46,19 @@ export const FileSchema: Schema<File> = new Schema({
         type: Date,
         required: true,
         default: Date.now
+    },
+    lastUpdated: {
+        type: Date,
+        default: Date.now
     }
+
 }
 )
 
-const FileModel = (mongoose.models.File as mongoose.Model<File>) || (mongoose.model<File>("File", FileSchema))
+// const FileModel = (mongoose.models.File as mongoose.Model<File>) || (mongoose.model<File>("File", FileSchema))
+if (mongoose.models.File) {
+  delete mongoose.models.File;
+}
+const FileModel = mongoose.model<File>('File', FileSchema);
 
 export default FileModel

@@ -12,7 +12,7 @@ export interface Folder{
     inTrash?: string | undefined,
     bannerUrl?: string,
     workspaceId?: string,
-    files?: File [],
+    files?: [{ type: mongoose.Schema.Types.ObjectId, ref: "File" }]
 }
 
 export const FolderSchema: Schema<Folder> = new Schema({
@@ -43,6 +43,10 @@ export const FolderSchema: Schema<Folder> = new Schema({
     files: [ FileSchema ]
 })
 
-const FolderModel = (mongoose.models.Folder as mongoose.Model<Folder>) || (mongoose.model<Folder>("Folder", FolderSchema))
+// const FolderModel = (mongoose.models.Folder as mongoose.Model<Folder>) || (mongoose.model<Folder>("Folder", FolderSchema))
+if (mongoose.models.Folder) {
+  delete mongoose.models.Folder;
+}
+const FolderModel = mongoose.model<Folder>("Folder", FolderSchema);
 
 export default FolderModel;

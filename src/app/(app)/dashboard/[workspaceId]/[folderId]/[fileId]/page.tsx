@@ -14,7 +14,7 @@ const FilePage: React.FC<{ params : { fileId: string }}> = ({ params }) => {
     const [ fileDetails, setFileDetails ] = useState<File | undefined>(undefined)
 
     const onChangeHandler = ( content: string ) => {
-        
+        console.log("Live updated content of file ",content);
     }
     useEffect(() => {
         const getFileDetails = async() => {
@@ -45,6 +45,8 @@ const FilePage: React.FC<{ params : { fileId: string }}> = ({ params }) => {
                     fileId={params.fileId}
                     fileDetails={fileDetails}
                     onChange= {onChangeHandler}
+                    initialContent={JSON.stringify(fileDetails.data)}
+                    editable={true}
                     />
                     {/* <Editor /> */}
                     

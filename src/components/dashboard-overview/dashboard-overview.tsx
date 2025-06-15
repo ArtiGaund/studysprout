@@ -54,11 +54,11 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     }
     }, [params, dirType]);
 
-    console.log("Rendered with params:", params, "and dirType:", dirType);
-    useEffect(() => {
-  console.log("Params:", params);
-  console.log("DirType:", dirType);
-}, []);
+//     console.log("Rendered with params:", params, "and dirType:", dirType);
+//     useEffect(() => {
+//   console.log("Params:", params);
+//   console.log("DirType:", dirType);
+// }, []);
     useEffect(() => {
   if (params && dirType === "folder") {
     console.log("Effect runs: ", params, dirType);
@@ -169,6 +169,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             workspaceId: workspaceId.toString(), 
             bannerUrl: '',
             createdAt: new Date(),
+            lastUpdated: new Date(),
         };
 
         try {
