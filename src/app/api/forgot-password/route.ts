@@ -1,6 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import PasswordResetTokenModel from "@/model/password-reset-token.model";
-import UserModel from "@/model/user.model";
+import {UserModel} from "@/model/index";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { sendResetEmail } from "@/lib/sendResetEmail";

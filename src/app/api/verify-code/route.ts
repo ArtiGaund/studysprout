@@ -1,6 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import unverifiedUserModel from "@/model/unverified-user.model";
-import UserModel from "@/model/user.model";
+import {UserModel} from "@/model/index";
 
 export async function POST( request: Request){
     await dbConnect()

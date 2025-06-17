@@ -1,7 +1,5 @@
 import dbConnect from "@/lib/dbConnect";
-import FileModel from "@/model/file.model";
-import FolderModel from "@/model/folder.model";
-import WorkSpaceModel from "@/model/workspace.model";
+import {FileModel, FolderModel, WorkSpaceModel} from "@/model/index";
 import mongoose from "mongoose";
 
 
@@ -11,98 +9,62 @@ export async function POST(request: Request) {
         const updatedData = await request.json();
            
             const { _id, ...updates } = updatedData;
-            console.log("updated data ",updatedData);
-            if(!_id){
+            // console.log("updated data ",updatedData);
+            // 1. Validate File ID
+            if(!_id || !mongoose.Types.ObjectId.isValid(_id)){
                 return Response.json({
-                    statusCode: 401,
-                    message: "File id is required",
+                    statusCode: 400, // Bad Request
+                    message: "Bad Request: File ID is required and must be a valid ObjectId.",
                     success: false
-                })
+                }, { status: 400 });
             }
             const fileId = new mongoose.Types.ObjectId(_id);
-            // updating file
+            // 2. Update the File document directly
             const file = await FileModel.findByIdAndUpdate(
                 fileId,
-                updates,
-                { new: true }
-            )
+                updates,  // Pass the entire updates object directly
+                { new: true, runValidators: true } // Return updated document, run schema validators
+            ).lean();
 
             if(!file){
                 return Response.json({
-                    statusCode: 405,
-                    message: "Failed to update data in folder",
-                    success: false
-                })
+                statusCode: 404, // Not Found
+                message: "File not found in the database.",
+                success: false
+            }, { status: 404 });
             }
-            // Update folder
-        const folder = await FolderModel.findOneAndUpdate(
-            { "files._id": fileId },
-            {
-                $set: {
-                    "files.$.title": updates.title,
-                    "files.$.iconId": updates.iconId,
-                    "files.$.data": updates.data,
-                    "files.$.banner": updates.banner,
-                    "files.$.inTrash": updates.inTrash
-                }
-            },
-            { new: true }
-        );
-            if(!folder){
-                return Response.json({
-                    statusCode: 405,
-                    message: "Folder to update data in folder",
-                    success: false
-                })
-            }   
-
-           
-
-             // Update workspace
-        const workspace = await WorkSpaceModel.findOneAndUpdate(
-            { "folders._id": folder._id },
-            {
-                $set: {
-                    "folders.$.title": folder.title,
-                    "folders.$.files": folder.files
-                }
-            },
-            { new: true }
-        );
-
-            if(!workspace){
-                return Response.json({
-                    statusCode: 405,
-                    message: "Failed to update folder data in workspace",
-                    success: false
-                })
-            }
-            
-            // I am saving data in folder later because if saved before and failed to update the workspace, 
-            // then it won't save the updated value for folder as well. otherwise there will be inconsistency in code
-            // folder collection will be updated but workspace didn't
-
-            // save file
-            await file.save()
-
-             // save updated folder
-             await folder.save()
-
-            //  save updated workspace 
-            await workspace.save()
-
-            return Response.json({
+        
+             return Response.json({
                 statusCode: 200,
-                message: "Updated data in folder sucessfully. ",
+                message: "File updated successfully.",
                 success: true,
-                data: { file, folder, workspace }
-            })
-    } catch (error) {
-        console.log("Error while updating the folder ",error);
+                data: { file } 
+            }, { status: 200 });
+    } catch (error: any) {
+        console.error("Error while updating the file:", error);
+
+        // Handle specific Mongoose validation errors
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map((err: any) => err.message);
+            return Response.json({
+                statusCode: 400,
+                message: `Validation Error: ${messages.join(', ')}`,
+                success: false
+            }, { status: 400 });
+        }
+        // Handle CastError for invalid ObjectId if it wasn't caught earlier
+        if (error.name === 'CastError' && error.path === '_id') {
+             return Response.json({
+                statusCode: 400,
+                message: "Bad Request: Invalid file ID format provided.",
+                success: false
+            }, { status: 400 });
+        }
+
         return Response.json({
-            statusCode: 505,
-            message: "Error while updating the folder",
+            statusCode: 500, // Internal Server Error
+            message: `Internal Server Error: ${error.message || 'An unknown error occurred.'}`,
             success: false
-        })
+        }, { status: 500 });
     }
 }

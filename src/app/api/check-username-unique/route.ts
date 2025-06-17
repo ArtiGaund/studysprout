@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import dbConnect from "@/lib/dbConnect";
-import UserModel from "@/model/user.model";
+import {UserModel} from "@/model/index";
 import { z } from "zod";
 
 // Schema for username validation

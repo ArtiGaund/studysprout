@@ -1,106 +1,88 @@
 import dbConnect from "@/lib/dbConnect";
-import { deleteImageFromCloud } from "@/lib/upload-image";
-import FolderModel from "@/model/folder.model";
+// import { deleteImageFromCloud } from "@/lib/image-handler/upload-and-delete-image-cloudinary";
+import {FolderModel, WorkSpaceModel} from "@/model/index";
 import ImageModel from "@/model/image.model";
-import WorkSpaceModel from "@/model/workspace.model";
+import mongoose from "mongoose";
+import { imageDeletion } from "@/lib/image-handler/imageDeletion";
 
 
 export async function DELETE(request:Request) {
     await dbConnect()
     const { searchParams } = new URL(request.url)
     const folderId = searchParams.get('folderId')
-    if(!folderId){
+      // 1. Validate folderId
+    if(!folderId || !mongoose.Types.ObjectId.isValid(folderId)){
         return Response.json({
             statusCode: 400,
             message: "Folder id required",
             success:false
-        })
+        }, { status: 400 })
     }
     try {
-        // taking out folder
+        // 2. Find the folder to get its current bannerUrl (ImageModel _id)
+       
         const folder = await FolderModel.findById(folderId)
 
         if(!folder){
             return Response.json({
-                statusCode: 401,
+                statusCode: 404,
                 message: "folder not found in database",
                 success: false
-            })
+            }, { status: 404 })
         }
 
-        const imageId = folder.bannerUrl
-
-        const image = await ImageModel.findById(imageId)
-
-        if(!image){
+        const imageToDelete = folder.bannerUrl;
+        if(!imageToDelete){
             return Response.json({
-                statusCode: 401,
-                message: "Image not found in database",
-                success: false
-            })
+                statusCode: 200,
+                message: "Folder has no banner image to delete.",
+                success: true
+            }, { status: 200 });
         }
 
-        const public_id = image.public_id
 
-        // deleting image from cloud
-        if(public_id){
-            const deleteFromCloud = await deleteImageFromCloud(public_id)
-            if(!deleteFromCloud){
-                return Response.json({
-                    statusCode: 401,
-                    message: "Failed to delete image from cloudinary",
-                    success: false
-                })
-            }
+        // 3. Resolve ImageModel _id to Cloudinary public_id and delete image
+        const publicIdsToProcess: (string | mongoose.Types.ObjectId)[] = [imageToDelete];
+        const imageModels = await ImageModel.find({ _id: { $in: publicIdsToProcess.filter(id =>
+             mongoose.Types.ObjectId.isValid(id)) } }).select('public_id').lean();
+        const actualCloudinaryPublicIds = imageModels.map(img => img.public_id);
+        if(actualCloudinaryPublicIds.length > 0){
+            await imageDeletion(actualCloudinaryPublicIds);
+        }else{
+            console.warn(`Folder ${folderId} had bannerUrl ${imageToDelete} but no corresponding ImageModel found.`);
         }
 
-        const deleteImage = await ImageModel.findByIdAndDelete(image._id)
-        if(!deleteImage){
+
+        // 4. update the folder
+        const updatedFolder = await FolderModel.findOneAndUpdate(
+            new mongoose.Types.ObjectId(folderId),
+            { $set: { bannerUrl: null } },
+            { new: true }
+        ).lean();
+
+        if (!updatedFolder) {
+            // This case should ideally not happen if file was found initially, but good as a safeguard
             return Response.json({
-                statusCode: 401,
-                message: "Failed to delete image from database",
+                statusCode: 500, // Internal Server Error
+                message: "Failed to clear bannerUrl on the folder document.",
                 success: false
-            })
+            }, { status: 500 });
         }
-
-        folder.bannerUrl = ""
-
-       // update the workspace
-       const workspace = await WorkSpaceModel.findOneAndUpdate(
-        { "folders._id": folder._id },
-        {
-            $set: {
-                "folders.$.bannerUrl": folder.bannerUrl
-            }
-        }
-    )
-
-    if(!workspace){
-        return Response.json({
-            statusCode: 405,
-            message: "Failed to update in workspace",
-            success: false
-        })
-    }
-
-    //  save the folder
-    await folder.save()
-
-    // save the workspace
-    await workspace.save()
+      
 
     return Response.json({
         statusCode: 200,
         message: "Successfully deleted banner for the folder",
         success: true,
-        data: { folder, workspace }
+        data: updatedFolder
     })
-    } catch (error) {
-        console.log("Error while deleting banner for the folder ",error)
+    } catch (error: any) {
+         console.error("Error while deleting file banner:", error);
+        // Log the error and return a generic 500
         return Response.json({
             statusCode: 500,
-            message: "Error while deleting banner for the folder",
+            message: `Internal Server Error: ${error.message || 'An unknown error occurred.'}`,
             success: false
-        })
+        }, { status: 500 });
     }
 }

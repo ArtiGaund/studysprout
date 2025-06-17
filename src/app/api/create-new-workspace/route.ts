@@ -1,9 +1,9 @@
 
 import dbConnect from "@/lib/dbConnect";
-import { deleteImageFromCloud, uploadImage } from "@/lib/upload-image";
+import { deleteImageFromCloudinary, uploadImageToCloudinary } from "@/lib/image-handler/upload-and-delete-image-cloudinary";
 import ImageModel from "@/model/image.model";
-import UserModel from "@/model/user.model";
-import WorkSpaceModel from "@/model/workspace.model";
+import {UserModel, WorkSpaceModel} from "@/model/index";
+
 
 
 
@@ -33,7 +33,7 @@ export async function POST(request: any){
             })
         }
         // uploading image in cloudinary
-        const imageData = await uploadImage(image, "studysprout") as { secure_url: string ,public_id: string }
+        const imageData = await uploadImageToCloudinary(image, "studysprout") as { secure_url: string ,public_id: string }
         
         // console.log("image Data",imageData)
 
@@ -66,12 +66,12 @@ export async function POST(request: any){
         // console.log("workspace have been added into user model ",user)
         if(!newWorkspace){
             // deleting from cloudinary first
-            const deleteImageFromCloudinary = await deleteImageFromCloud(savedImage?.public_id)
-            console.log("Deleted image from cloudinary ",deleteImageFromCloudinary)
+            const deleteImageFromCloud = await deleteImageFromCloudinary(savedImage?.public_id)
+            console.log("Deleted image from cloudinary ",deleteImageFromCloud)
             // deleting from image schema database
             const deleteImage = await ImageModel.findByIdAndDelete(savedImage._id)
             console.log("Deleted image from image schema database ",deleteImage)
-            if(deleteImageFromCloudinary && deleteImage){
+            if(deleteImageFromCloud && deleteImage){
                 console.log("Deleted image from cloudinary and from image schema database")
             }
             return Response.json({
