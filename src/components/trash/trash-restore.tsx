@@ -1,37 +1,44 @@
 "use client"
-import { File } from "@/model/file.model";
-import { Folder } from "@/model/folder.model";
 import { RootState } from "@/store/store";
+import { Folder } from "@/types/folder";
+import { File } from "@/types/file";
 import { FileIcon, FolderIcon } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 const TrashRestore = () => {
-    const state = useSelector((state: RootState) => state.workspace)
-    const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
-    const folderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
-    const dispatch = useDispatch()
+    // const state = useSelector((state: RootState) => state.workspace)
+    // const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
+    // const folderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
+    // const dispatch = useDispatch()
+    const allFolders = useSelector((state: RootState) => state.folder.folders)
+    const allFiles = useSelector((state: RootState) => state.file.files)
     const [ folders, setFolders ] = useState<Folder[] | []>([])
     const [ files, setFiles ] = useState<File[] | []>([])
 
-    useEffect(() => {
-        const stateWorkspace = state.workspaces.find((workspace) => workspace._id === workspaceId)
-        const stateFolder = stateWorkspace?.folders?.filter((folder) => folder.inTrash) || []
-        setFolders(stateFolder)
+    // useEffect(() => {
+    //     const stateWorkspace = state.workspaces.find((workspace) => workspace._id === workspaceId)
+    //     const stateFolder = stateWorkspace?.folders?.filter((folder) => folder.inTrash) || []
+    //     setFolders(stateFolder)
 
-        let stateFiles: File[] = []
-        const folderForFiles = stateWorkspace
-        ?.folders?.forEach(folder => 
-            folder.files?.forEach(file => {
-                if(file.inTrash){
-                    stateFiles.push(file)
-                }
-            }))
+    //     let stateFiles: File[] = []
+    //     const folderForFiles = stateWorkspace
+    //     ?.folders?.forEach(folder => 
+    //         folder.files?.forEach(file => {
+    //             if(file.inTrash){
+    //                 stateFiles.push(file)
+    //             }
+    //         }))
         
-        setFiles(stateFiles)
-    }, [state, workspaceId ])
+    //     setFiles(stateFiles)
+    // }, [state, workspaceId ])
+    useEffect(() => {
+        setFolders(allFolders.filter(folder => folder.inTrash));
+        setFiles(allFiles.filter(file => file.inTrash));
+    }, [allFolders, allFiles])
 
+    
     return(
         <section>{folders.length && (
             <>
