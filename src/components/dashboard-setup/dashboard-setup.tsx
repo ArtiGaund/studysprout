@@ -16,15 +16,19 @@ import { Label } from "../ui/label"
 import { v4 as uuid4 } from "uuid";
 import { useDispatch } from "react-redux"
 import { ADD_WORKSPACE } from "@/store/slices/workspaceSlice"
+import { useWorkspace } from "@/hooks/useWorkspace"
 
 const DashboardSetup = () => {
     const { data: session, status } = useSession()
-    const [ isLoading, setIsLoading ] = useState(false)
+    // const [ isLoading, setIsLoading ] = useState(false)
     const [ isSubmitting, setIsSubmitting ] = useState(false)
     const [selectedEmoji, setSelectedEmoji] = useState('💼');
     const [ selectedImage, setSelectedImage ] = useState(null)
     const [workspaceTitle, setWorkspaceTitle ] = useState('')
-    const dispatch = useDispatch()
+
+    const { isLoadingWorkspaces, workspaceError, createWorkspace} = useWorkspace();
+
+    // const dispatch = useDispatch()
     
     const { register  } = useForm()
 
@@ -41,9 +45,25 @@ const DashboardSetup = () => {
     const handleSubmit = async(data:any) => {
        
         data.preventDefault()
+        if (!workspaceTitle.trim()) {
+            toast({
+                title: "Validation Error",
+                description: "Workspace name cannot be empty.",
+                variant: "destructive"
+            });
+            return;
+        }
+         if (status !== "authenticated" || !session?.user?._id) {
+            toast({
+                title: "Authentication Error",
+                description: "You must be logged in to create a workspace.",
+                variant: "destructive"
+            });
+            return;
+        }
         try {
             setIsSubmitting(true)
-            setIsLoading(true)
+            // setIsLoading(true)
             const formData = new FormData()
             // const id = uuid4()
             // formData.append("_id",id)
@@ -63,40 +83,47 @@ const DashboardSetup = () => {
             if(selectedEmoji){
                 formData.append('iconId',selectedEmoji)
             }
-            const response = await axios.post(`/api/create-new-workspace`, formData)
+            const response = await createWorkspace(formData)
             // console.log("Response success ",response.data.success)
            
-            if(!response.data.success){
+            if (response.success && response.data) {
+                toast({
+                    title: "Workspace created successfully",
+                    description: "Moving to your workspace"
+                });
+                router.push(`/dashboard/${response.data._id}`);
+            } else {
                 toast({
                     title: "Failed to create workspace",
-                    description: response.data.message
-                })
+                    description: response.error || "Please try again",
+                    variant: "destructive"
+                });
             }
-            const newWorkspace = response.data.data
-            dispatch(ADD_WORKSPACE(newWorkspace))
+            // const newWorkspace = response.data.data
+            // dispatch(ADD_WORKSPACE(newWorkspace))
             // dispatch({
             //     type: 'ADD_WORKSPACE',
             //     payload: { ...newWorkspace, folders: [] },
             // })
             // console.log("Response Data ",response.data)
-            const  workspaceId  = newWorkspace._id
+            // const  workspaceId  = newWorkspace._id
             // console.log("workspace ",workspaceId)
             // const workspaceId = workspace._id
             // console.log("workspace id ",workspaceId)
-            toast({
-                title:"Workspace created successfully",
-                description: "Moving to your workspace"
-            })
-            router.push(`/dashboard/${workspaceId}`)
+            // toast({
+            //     title:"Workspace created successfully",
+            //     description: "Moving to your workspace"
+            // })
+            // router.push(`/dashboard/${workspaceId}`)
         } catch (error) {
-            console.log("Error while creating new workspace ",error)
+           console.error("Unexpected error during workspace creation:", error);
             toast({
-                title: "Failed to create workspace",
-                description: "Please try again",
+                title: "Unexpected Error",
+                description: "An unexpected error occurred. Please try again.",
                 variant: "destructive"
-            })
+            });
         } finally{
-            setIsLoading(false)
+            // setIsLoading(false)
             setIsSubmitting(false)
         }
     }
@@ -129,7 +156,7 @@ const DashboardSetup = () => {
                                     </Label>
                                     <Input 
                                     placeholder="Workspace name"
-                                    disabled={isLoading || isSubmitting}
+                                    disabled={isLoadingWorkspaces || isSubmitting}
                                     {...register("workspaceName", {required: true})}
                                     onChange={onChangeWorkspaceNameHandler}
                                     />
@@ -146,7 +173,7 @@ const DashboardSetup = () => {
                                     placeholder="Workspace Logo"
                                     type="file"
                                     accept="image/*"
-                                    disabled={isLoading || isSubmitting}
+                                    disabled={isLoadingWorkspaces || isSubmitting}
                                     {...register("logo")}
                                     onChange={onChangeImageHandler}
                                     />
@@ -159,10 +186,10 @@ const DashboardSetup = () => {
                         </CardContent>
                         <CardFooter className="self-end">
                             <Button
-                            disabled={isLoading}
+                            disabled={isLoadingWorkspaces}
                             type="submit"
                             >
-                            {!isLoading ? 'Create Workspace' : <Loader2 className="h-5 w-5 animate-spin"/>}    
+                            {!isLoadingWorkspaces ? 'Create Workspace' : <Loader2 className="h-5 w-5 animate-spin"/>}    
                              </Button>
                         </CardFooter>
                     </form>
