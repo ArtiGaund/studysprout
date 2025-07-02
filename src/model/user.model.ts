@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import { WorkSpace, WorkspaceSchema } from './workspace.model';
 import { Folder, FolderSchema } from './folder.model';
 import { File, FileSchema } from './file.model';
+import { Types } from "mongoose";
 
 // creating User interface
 export interface User{
@@ -11,10 +12,10 @@ export interface User{
     verifyCode?: string;
     verifyCodeExpiry?: Date;
     isVerified: boolean;
-    workspace?: WorkSpace[],
+    workspace?: Types.ObjectId[];
 }
 
-const UserSchema: Schema<User> = new Schema({
+export const UserSchema: Schema<User> = new Schema({
     username: {
         type: String,
         required: [true, "Username is required"],
@@ -44,12 +45,16 @@ const UserSchema: Schema<User> = new Schema({
         type: Boolean,
         default: false
     },
-    workspace: [ WorkspaceSchema ],
+   workspace: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "WorkSpace"
+        }]
+
 },{
     timestamps: true
 })
 
 // exporting models -> check if it already created or not, if not then create it else create it
-const UserModel = (mongoose.models.User as mongoose.Model<User>) || (mongoose.model<User>("User", UserSchema))
 
-export default UserModel
+
+// export default UserModel

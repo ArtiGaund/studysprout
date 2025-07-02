@@ -25,9 +25,9 @@ export const FileSchema: Schema<File> = new Schema({
         // unique: true
     },
     data: {
-    type: [mongoose.Schema.Types.Mixed],
-    default: [],
-  },
+        type: [mongoose.Schema.Types.Mixed],
+        default: [],
+    },
     inTrash: {
         type: String,
     },
@@ -55,10 +55,3 @@ export const FileSchema: Schema<File> = new Schema({
 }
 )
 
-// const FileModel = (mongoose.models.File as mongoose.Model<File>) || (mongoose.model<File>("File", FileSchema))
-if (mongoose.models.File) {
-  delete mongoose.models.File;
-}
-const FileModel = mongoose.model<File>('File', FileSchema);
-
-export default FileModel

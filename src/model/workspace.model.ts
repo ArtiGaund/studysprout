@@ -1,24 +1,25 @@
-import mongoose, { Schema, Document, ObjectId } from "mongoose";
+import mongoose, { Schema, Document, ObjectId, Types } from "mongoose";
 import { User } from "./user.model";
 import { Image } from "./image.model";
 import { Folder, FolderSchema } from "./folder.model";
 
 export interface WorkSpace{
-    _id?: string,
-    workspace_owner: User,
+    _id: Types.ObjectId |string,
+    workspace_owner: Types.ObjectId | string,
     title?: string,
     iconId?: string,
     data?: string,
     inTrash?: string,
-    logo?: Image | undefined,
+    logo?: Types.ObjectId | string,
     bannerUrl?: string,
-    folders?: Folder[],
+    folders?: Types.ObjectId[] | string[],
 }
 
 export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
     workspace_owner:{
         type: Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+         required: true
     },
     title:{
         type: String,
@@ -43,12 +44,15 @@ export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
     bannerUrl:{
         type: String,
     },
-    folders: [ FolderSchema ],
+    folders: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Folder"
+            }]
 },
 {
     timestamps: true
 })
 
-const WorkSpaceModel = (mongoose.models.WorkSpace as mongoose.Model<WorkSpace>) || (mongoose.model<WorkSpace>("WorkSpace", WorkspaceSchema))
+// const WorkSpaceModel = (mongoose.models.WorkSpace as mongoose.Model<WorkSpace>) || (mongoose.model<WorkSpace>("WorkSpace", WorkspaceSchema))
 
-export default WorkSpaceModel
+// export default WorkSpaceModel
