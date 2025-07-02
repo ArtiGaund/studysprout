@@ -1,6 +1,13 @@
 import mongoose from "mongoose";
 import { DB_NAME } from "@/constants"
 
+// import  FolderModel  from "@/model/folder.model";
+// import  FileModel  from "@/model/file.model";
+// import  WorkSpaceModel  from "@/model/workspace.model";
+// import UserModel from "@/model/user.model";
+// import ImageModel from "@/model/image.model";
+import * as models from "@/model/index";
+
 type ConnectionObject = {
     isConnected?: number
 }
