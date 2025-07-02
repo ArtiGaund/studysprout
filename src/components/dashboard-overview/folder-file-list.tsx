@@ -1,6 +1,6 @@
 "use client";
 
-import { File } from "@/model/file.model";
+import { File as MongooseFile} from "@/model/file.model";
 import { RootState } from "@/store/store";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,9 +9,11 @@ import Dropdown from "../sidebar/dropdown";
 import { Accordion } from "../ui/accordion";
 import axios from "axios";
 import { SET_CURRENT_FILES, SET_FILES } from "@/store/slices/fileSlice";
+import { useFile } from "@/hooks/useFile";
+import { ReduxFile } from "@/types/state.type";
 
 interface FolderFileListProps {
-    folderFiles: File[] | [];
+    folderFiles: ReduxFile[] | [];
     folderId: string;
     onFileAdded: () => void;
 }
@@ -23,8 +25,9 @@ const FolderFileList: React.FC<FolderFileListProps> = ({
 }) => {
 
 
-    const files = useSelector((state:RootState) => state.file.files);
-    const currentFileId = useSelector((state:RootState) => state.file.currentFile?._id);
+    // const files = useSelector((state:RootState) => state.file.files);
+    // const currentFileId = useSelector((state:RootState) => state.file.currentFile?._id);
+    const { files, currentFile, getFiles } = useFile();
     const { toast } = useToast();
     const dispatch = useDispatch();
     console.log("Files in folder file list ",files);
@@ -41,20 +44,40 @@ const FolderFileList: React.FC<FolderFileListProps> = ({
 
      const fetchFiles = async ( folderId : string) => {
                     try {
-                        const response = await axios.get(`/api/get-all-folder-files?folderId=${folderId}`);
-                        console.log("Response of folder file list ",response.data.data);
-                        if(!response.data.success){
+                        // const response = await axios.get(`/api/get-all-folder-files?folderId=${folderId}`);
+                        // console.log("Response of folder file list ",response.data.data);
+                        // if(!response.data.success){
+                        //     toast({
+                        //         title: "Failed to fetch files",
+                        //         description: "Please try again later",
+                        //         variant: "destructive"
+                        //     })
+                        // }
+                        // const list = response.data.data  as File[];;
+                        // dispatch(SET_FILES(list));
+                        // if(list.length > 0 && !currentFileId){
+                        //     dispatch(SET_CURRENT_FILES(list[0]));
+                        // }
+                        const allFiles = await getFiles(folderId);
+                        if(!allFiles.success){
                             toast({
                                 title: "Failed to fetch files",
-                                description: "Please try again later",
+                                description: allFiles.error,
                                 variant: "destructive"
                             })
                         }
-                        const list = response.data.data  as File[];;
-                        dispatch(SET_FILES(list));
-                        if(list.length > 0 && !currentFileId){
-                            dispatch(SET_CURRENT_FILES(list[0]));
+                        const fetchedFiles = allFiles.data;
+                        if(Array.isArray(fetchedFiles)){
+                            dispatch(SET_FILES(fetchedFiles));
+                        }else if(fetchedFiles && typeof fetchedFiles === "object"){
+                            dispatch(SET_FILES([fetchedFiles]));
+                        }else{
+                            dispatch(SET_FILES([]));
                         }
+                        toast({
+                            title: "Successfully fetched files",
+                            description: "You can now add files to this folder",
+                        })
                     } catch (error) {
                         console.error("Error loading files ",error);
                         toast({
@@ -76,11 +99,11 @@ const FolderFileList: React.FC<FolderFileListProps> = ({
              <div className="flex pl-5">
                 <Accordion
                                 type="multiple"
-                                defaultValue={[ currentFileId?.toString() || '']}
+                                defaultValue={[ currentFile?._id?.toString() || '']}
                                 className="pb-20"
                                 >
                                     {
-                                   files.filter((file:File) => !file.inTrash)
+                                   files.filter((file:ReduxFile) => !file.inTrash)
                                    .map((file) => (
                                         <Dropdown 
                                         key={file?._id?.toString()} // Ensure key is a string
