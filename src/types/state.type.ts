@@ -10,14 +10,14 @@ export interface ReduxFile{
     bannerUrl?: string;
     workspaceId?: string;
     folderId?: string;
-    createdAt: Date;
-    lastUpdated: Date;
+    createdAt: string;
+    lastUpdated: string;
 }
 
 // Folder document
 export interface ReduxFolder{
     _id: string;
-    createdAt: Date;
+    createdAt: string;
     title: string;
     iconId?: string;
     data?: string;
@@ -83,6 +83,7 @@ export interface FilesState {
     allIds: string[]; 
     loading: boolean;
     error: string | null;
+    currentFile: string | null;
 }
 
 export interface FoldersState {
@@ -90,6 +91,7 @@ export interface FoldersState {
     allIds: string[];
     loading: boolean;
     error: string | null;
+    currentFolder: string | null;
 }
 
 export interface ImagesState {
@@ -121,7 +123,7 @@ export interface UsersState {
 export interface WorkspacesState {
     byId: { [id: string]: ReduxWorkSpace }; 
     allIds: string[];
-    currentWorkspaceId: string | null; 
+    currentWorkspace: string | null; 
     loading: boolean;
     error: string | null;
 }
