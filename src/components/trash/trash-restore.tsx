@@ -1,22 +1,33 @@
 "use client"
+import { useFile } from "@/hooks/useFile";
+import { useFolder } from "@/hooks/useFolder";
 import { RootState } from "@/store/store";
-import { Folder } from "@/types/folder";
-import { File } from "@/types/file";
+// import { Folder } from "@/types/folder";
+// import { File } from "@/types/file";
+import { ReduxFolder, ReduxFile } from "@/types/state.type";
 import { FileIcon, FolderIcon } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
+
 
 const TrashRestore = () => {
     // const state = useSelector((state: RootState) => state.workspace)
     // const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
     // const folderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
     // const dispatch = useDispatch()
-    const allFolders = useSelector((state: RootState) => state.folder.folders)
-    const allFiles = useSelector((state: RootState) => state.file.files)
-    const [ folders, setFolders ] = useState<Folder[] | []>([])
-    const [ files, setFiles ] = useState<File[] | []>([])
+    // const allFolders = useSelector((state: RootState) => state.folder.folders)
+    // const allFiles = useSelector((state: RootState) => state.file.files)
+    const [ folders, setFolders ] = useState<ReduxFolder[] | []>([])
+    const [ files, setFiles ] = useState<ReduxFile[] | []>([])
 
+    const {
+        folders: allFolders,
+    } = useFolder();
+    const {
+        files: allFiles,
+    } = useFile();
     // useEffect(() => {
     //     const stateWorkspace = state.workspaces.find((workspace) => workspace._id === workspaceId)
     //     const stateFolder = stateWorkspace?.folders?.filter((folder) => folder.inTrash) || []
