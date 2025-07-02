@@ -83,7 +83,7 @@ export function useFolder(){
                 dispatch(SET_FOLDER_ERROR(errorMessage));
                 return { success: false, error: errorMessage };
             }finally{
-                SET_FOLDER_LOADING(false);
+                dispatch(SET_FOLDER_LOADING(false));
             }
     }
 
