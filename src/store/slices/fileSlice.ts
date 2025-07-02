@@ -1,56 +1,71 @@
 
+// import { File } from "@/types/file"
 import { File } from "@/model/file.model"
+import { FilesState, ReduxFile } from "@/types/state.type"
+import { transformFile } from "@/utils/data-transformers"
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit"
 
 
 
-interface FileState{
-    files: File[],
-    currentFile: File | null,
-}
-
-const initialState: FileState = {
-    files:[],
+const initialState: FilesState = {
+    byId: {},
+    allIds: [],
     currentFile: null,
+    loading: false,
+    error: null,
 }
 
 const fileSlice = createSlice({
     name: "file",
     initialState,
     reducers: {
-        ADD_FILE: ( state, action: PayloadAction<File> ) => {
-            state.files.push(action.payload as Draft<File>)
+        ADD_FILE: (state, action: PayloadAction<File>) => {
+            const transformed = transformFile(action.payload);
+            state.byId[transformed._id] = transformed;
+            state.allIds.push(transformed._id);
         },
-        DELETE_FILE: ( state, action: PayloadAction<string>) => {
-            state.files = state.files.filter(
-                (file) => file._id?.toString() !== action.payload
-            )
+        DELETE_FILE: (state, action: PayloadAction<string>) => {
+                    const idToDelete = action.payload;
+        
+                    // Remove from byId dictionary
+                    delete state.byId[idToDelete];
+        
+                    // Remove from allIds array (immutable update)
+                    state.allIds = state.allIds.filter((id: string) => id !== idToDelete); // Explicitly typed 'id' here
+        
+                    // If the deleted workspace was the current one, clear currentWorkspace
+                    if (state.currentFile === idToDelete) {
+                        state.currentFile = null;
+                    }
+                },
+        UPDATE_FILE: (state, action: PayloadAction<Partial<ReduxFile>>) => {
+            const { _id, ...update } = action.payload;
+                        if(_id && state.byId[_id]){
+                            state.byId[_id] = {
+                                ...state.byId[_id],
+                                ...update,
+                            } as ReduxFile;
+                        }
         },
-        UPDATE_FILE: (state, action: PayloadAction<Partial<File>>) => {
-            const updatedFile = action.payload;
-            const fileIndex = state.files.findIndex(file => file._id === updatedFile._id);
-            if (fileIndex !== -1) {
-                state.files[fileIndex] = {
-                    ...state.files[fileIndex],
-                    ...updatedFile,
-                };
-            }
+        SET_FILES: (state, action: PayloadAction<File[]>) => {
+            state.byId = {};
+            state.allIds = [];
+            action.payload.forEach(f => {
+                const transformed = transformFile(f);
+                state.byId[transformed._id] = transformed;
+                state.allIds.push(transformed._id);
+            });
+            state.loading = false;
         },
-        // UPDATE_FILE: ( state, action:PayloadAction<Partial<File>>) => {
-        //     const { _id, ...data } = action.payload
-        //     const index = state.files.findIndex(
-        //         (file) => file._id === action.payload._id
-        //     )
-        //     if(index !== -1){
-        //         state.files[index] = { ...state.files[index], ...(data as Draft<File>) }
-        //     }
-        // },
-        SET_FILES: ( state, action: PayloadAction<File[]>) => {
-            state.files = action.payload as Draft<File[]> 
+        SET_CURRENT_FILES: (state, action: PayloadAction<string | null>) => {
+            state.currentFile = action.payload;
         },
-        SET_CURRENT_FILES: ( state, action: PayloadAction<File>) => {
-            state.currentFile = action.payload as Draft<File>
-        }
+         SET_FILE_LOADING: (state, action: PayloadAction<boolean>) => {
+            state.loading = action.payload;
+        },
+        SET_FILE_ERROR: (state, action: PayloadAction<string | null>) => {
+            state.error = action.payload;
+        },
     }
 })
 
@@ -59,7 +74,9 @@ export const {
     DELETE_FILE,
     UPDATE_FILE,
     SET_FILES,
-    SET_CURRENT_FILES
+    SET_CURRENT_FILES,
+     SET_FILE_LOADING,
+    SET_FILE_ERROR,
 } = fileSlice.actions
 
 export default fileSlice.reducer;

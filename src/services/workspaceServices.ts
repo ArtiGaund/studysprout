@@ -5,7 +5,7 @@ import axios from "axios";
 
 // add workspace
 
-export async function addWorkspace(newWorkspace:WorkSpace){
+export async function addWorkspace(newWorkspace:FormData){
     const { data } = await axios.post(`/api/create-new-workspace`, newWorkspace);
     if(!data.success) throw new Error(data.message);
     return data.data;
@@ -41,7 +41,7 @@ export async function updateWorkspace(newTitle: string, workspaceId:string) {
         _id: workspaceId,
         title: newTitle,
     }
-    const { data } =  await axios.post(`/api/update-workspace`, updateWorkspace);
+    const { data } =  await axios.post(`/api/update-workspace`, updatedData);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }

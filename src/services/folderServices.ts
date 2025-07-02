@@ -2,6 +2,7 @@ import { Folder } from "@/model/folder.model";
 import axios from "axios"
 
 
+
 export async function getCurrentFolder(folderId:string) {
     const { data } = await axios.get(`/api/get-current-folder?folderId=${folderId}`);
     if(!data.success) throw new Error(data.message);
@@ -21,4 +22,9 @@ export async function addFolder(newFolder:Folder) {
     return data.data;
 }
 
+// export async function updateFolder(updateData:Partial<Folder>) {
+//     const { data } = await axios.post('/api/update-folder', updateData);
+//     if(!data.success) throw new Error(data.message);
+//     return data.data;
+// }
  

@@ -1,7 +1,10 @@
 "use client"
 import BannerSection from '@/components/banner-upload/banner-section'
 import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
-import { Folder } from '@/model/folder.model'
+import { useFolder } from '@/hooks/useFolder'
+import { ReduxFolder } from '@/types/state.type'
+import { transformFolder } from '@/utils/data-transformers'
+// import { Folder } from '@/model/folder.model'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { RootProps } from 'postcss'
@@ -10,16 +13,23 @@ import { useSelector } from 'react-redux'
 
 const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
     const router = useRouter()
-    const [ folderDetails, setFolderDetails ] = useState<Folder | undefined>(undefined)
+    const [ folderDetails, setFolderDetails ] = useState<ReduxFolder | undefined>(undefined)
+    const { currentFolderDetail } = useFolder();
 
     useEffect(() => {
         const getFolderDetails = async() => {
             try {
-                const response = await axios.get(`/api/get-current-folder?folderId=${params.folderId}`)
-                if(!response.data.success){
+                // const response = await axios.get(`/api/get-current-folder?folderId=${params.folderId}`)
+                const response = await currentFolderDetail(params.folderId)
+                if(!response.success){
                     router.push('/dashboard')
                 }else{
-                    setFolderDetails(response.data.data)
+                    if(response.data){
+                        const folder = transformFolder(response.data);
+                        setFolderDetails(folder);
+                    }else{
+                        setFolderDetails(undefined);
+                    }
                 }
             } catch (error) {
                 console.log("Error while fetching all the folders details ",error)
@@ -28,6 +38,7 @@ const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
         }
         getFolderDetails()
     }, [params.folderId, router])
+
     return (
         <div className='relative'>
             { folderDetails && (

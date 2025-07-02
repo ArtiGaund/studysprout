@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document, ObjectId } from "mongoose";
+import mongoose, { Schema, Document, ObjectId, Types } from "mongoose";
 import { WorkSpace } from "./workspace.model";
-import { File, FileSchema } from "./file.model";
+// import { File, FileSchema } from "./file.model";
+
 // import dbConnect from "@/lib/dbConnect";
 
 export interface Folder{
@@ -12,8 +13,10 @@ export interface Folder{
     inTrash?: string | undefined,
     bannerUrl?: string,
     workspaceId?: string,
-    files?: [{ type: mongoose.Schema.Types.ObjectId, ref: "File" }]
+    files?: Types.ObjectId[],
 }
+
+
 
 export const FolderSchema: Schema<Folder> = new Schema({
     createdAt: {
@@ -40,13 +43,10 @@ export const FolderSchema: Schema<Folder> = new Schema({
     workspaceId:{
         type: String
     },
-    files: [ FileSchema ]
+   files: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "File"
+    }]
 })
 
-// const FolderModel = (mongoose.models.Folder as mongoose.Model<Folder>) || (mongoose.model<Folder>("Folder", FolderSchema))
-if (mongoose.models.Folder) {
-  delete mongoose.models.Folder;
-}
-const FolderModel = mongoose.model<Folder>("Folder", FolderSchema);
 
-export default FolderModel;

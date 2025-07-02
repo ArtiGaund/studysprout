@@ -21,13 +21,14 @@ import "@blocknote/mantine/style.css"
 import "@/app/styles/blocknote-overrides.css"
 import { useTheme } from "next-themes";
 import axios from "axios";
-import { useDebounce } from "@/utils/hooks/useDebounce";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "../ui/use-toast";
+import { ReduxFile } from "@/types/state.type";
 
 
 interface TextEditorProps{
     fileId: string;
-    fileDetails: File;
+    fileDetails: ReduxFile;
     onChange: (value: string) => void;
     editable?:boolean;
     initialContent?: string;

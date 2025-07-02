@@ -11,45 +11,52 @@ import {
     AccordionItem,
     AccordionTrigger,
   } from "@/components/ui/accordion"
-import { Folder } from "@/model/folder.model";
 import { useDispatch, useSelector } from "react-redux";
 import { ADD_FOLDER, SET_FOLDERS } from "@/store/slices/folderSlice";
 import { RootState } from "@/store/store";
 import Dropdown from "./dropdown";
 import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
+import { Folder as MongooseFolder} from "@/model/folder.model";
+import { useFolder } from "@/hooks/useFolder";
+import { ReduxFolder } from "@/types/state.type";
   
 
+
 interface FoldersDropdownListProps{
-    workspaceFolders: Folder[] | [];
+    workspaceFolders: ReduxFolder[] | [];
     workspaceId: string; 
     onFolderAdded: () => void;
     usedWhere: "workspacePage" | "folderPage" | "sidebar";
 }
-const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolders, workspaceId, onFolderAdded, usedWhere }) => {
+const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({  workspaceId, onFolderAdded, usedWhere }) => {
     // 1) keep track of local state folders
     // set up real time updates => when another user create an update, we want real time update system setup
     // so it can create a folder for us in our localhost (i think i don't need it bz i am not doing collaborator 
     // part)
     // console.log("Workspace id ",workspaceId)
     // console.log("Workspace Folders ",workspaceFolders)
-    const folders = useSelector((state: RootState) => state.folder.folders)
-    const currentFolderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
+    // const folders = useSelector((state: RootState) => state.folder.folders)
+    // const currentFolderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
+    const { folders, currentFolder, folderError,  createFolder } = useFolder();
     const { toast } = useToast()
     const dispatch = useDispatch()
     // 2)effect set initial state server app state
-    useEffect(() => {
-        // console.log("inside use effect for set folders")
-        if (workspaceFolders.length > 0) {
-            dispatch(SET_FOLDERS(workspaceFolders))
-        }
-      }, [ workspaceFolders, workspaceId, dispatch ]);
+    // useEffect(() => {
+    //     // console.log("inside use effect for set folders")
+    //     if (workspaceFolders.length > 0) {
+    //         dispatch(SET_FOLDERS(workspaceFolders))
+    //     }else{
+    //         dispatch(SET_FOLDERS([]))
+    //     }
+    //   }, [ workspaceFolders, workspaceId, dispatch ]);
     
     // 4) add folders
 
     const addFolderHandler = async () => {
-       
+            // const date = ;
+            // const dateToString = date.toISOString();
             // this will create a visible folder quickly for the user on the frontend
-            const newFolder: Folder = {
+            const newFolder: MongooseFolder = {
                 data: undefined,
                 createdAt: new Date(),
                 title: 'Untitled',
@@ -58,39 +65,61 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                 workspaceId,
                 bannerUrl: '',
               };
-           
-        try {
-            //   creating new folder on the server
-            const createFolder = await axios.post('/api/create-folder', newFolder)
-            // console.log("Create Folder ",createFolder)
-            if(!createFolder.data.success){
+
+             try {
+                 const folder = await createFolder(newFolder as MongooseFolder);
+                if(!folder.success){
+                    toast({
+                        title: "Failed to create folder",
+                        description: "Please try again later",
+                        variant: "destructive"
+                    })
+                }
+                toast({
+                    title: "Successfully created folder",
+                    description: "You can now add files to this folder",
+                })
+             } catch (error) {
+                console.log("Error while creating a folder in workspace ",error)
                 toast({
                     title: "Failed to create folder",
                     description: "Please try again later",
                     variant: "destructive"
                 })
-            }
-            else{
-                toast({
-                    title: "Successfully created folder",
-                    description: "You can now add files to this folder",
-                 })
-                 const folderData =createFolder.data.data.folder
-                  //   adding folder to a local states
-                 dispatch(ADD_FOLDER(folderData))
-                 const updatedWorkspace = createFolder.data.data.updatedWorkspace
-                 dispatch(UPDATE_WORKSPACE(updatedWorkspace))
-                //  console.log("Folder data",createFolder.data.data)
-                 onFolderAdded()
-            }
-        } catch (error) {
-            console.log("Error while creating a folder in workspace ",error)
-            toast({
-                title: "Failed to create folder",
-                description: "Please try again later",
-                variant: "destructive"
-            })
-        }
+             }
+           
+        // try {
+        //     //   creating new folder on the server
+        //     const createFolder = await axios.post('/api/create-folder', newFolder)
+        //     // console.log("Create Folder ",createFolder)
+        //     if(!createFolder.data.success){
+        //         toast({
+        //             title: "Failed to create folder",
+        //             description: "Please try again later",
+        //             variant: "destructive"
+        //         })
+        //     }
+        //     else{
+        //         toast({
+        //             title: "Successfully created folder",
+        //             description: "You can now add files to this folder",
+        //          })
+        //          const folderData =createFolder.data.data.folder
+        //           //   adding folder to a local states
+        //          dispatch(ADD_FOLDER(folderData))
+        //          const updatedWorkspace = createFolder.data.data.updatedWorkspace
+        //          dispatch(UPDATE_WORKSPACE(updatedWorkspace))
+        //         //  console.log("Folder data",createFolder.data.data)
+        //          onFolderAdded()
+        //     }
+        // } catch (error) {
+        //     console.log("Error while creating a folder in workspace ",error)
+        //     toast({
+        //         title: "Failed to create folder",
+        //         description: "Please try again later",
+        //         variant: "destructive"
+        //     })
+        // }
         
     }
     // console.log("folders from state ",folders)
@@ -133,7 +162,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({ workspaceFolde
                 <div className="flex pl-5">
                 <Accordion
                 type="multiple"
-                defaultValue={[ currentFolderId?.toString() || '']}
+                defaultValue={[ currentFolder?.toString() || '']}
                 className="pb-20"
                 >
                    {

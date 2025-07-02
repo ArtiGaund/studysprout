@@ -7,7 +7,7 @@ type DirType = "workspace" | "folder" | "file";
 
 
 
-export async function restorDir(
+export async function restoreDir(
     dirType: DirType,
     dirId: string,
 ) {
@@ -57,15 +57,15 @@ export async function uploadBanner(
 }
 // icon
 
-export async function updateIcon(
+export async function updateDirIcon(
     dirType: DirType,
     dirId: string,
     icon: string,
-    payload: Partial<WorkSpace | Folder | File>
+    // payload: Partial<WorkSpace | Folder | File>
 ) {
     const updatedData: Partial<WorkSpace | Folder | File> = {
         _id: dirId,
-        ...payload, 
+        // ...payload, 
         iconId: icon,
     }
     const { data } = await axios.post(`/api/update-${dirType}`,updatedData);

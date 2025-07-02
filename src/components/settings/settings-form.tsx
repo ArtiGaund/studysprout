@@ -18,6 +18,9 @@ import CypressProfileIcon from "../icons/CypressProfileIcon";
 import LogoutButton from "../global/logout-button";
 import { useModal } from "@/context/ModalProvider";
 import AccountSetting from "../account-setting";
+import { ReduxWorkSpace } from "@/types/state.type";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { useDir } from "@/hooks/useDir";
 
 const SettingsForm = () => {
      const { openModal, closeModal } = useModal();
@@ -25,22 +28,39 @@ const SettingsForm = () => {
     const { data: session } = useSession()
     const user=session?.user
     const router = useRouter()
-    const currentWorkspace = useSelector((state: RootState) => state.workspace.currentWorkspace)
-    const [ workspaceDetails, setWorkspaceDetails ] = useState<Partial<WorkSpace>>({
+    const {
+        currentWorkspace,
+        updateWorkspaceTitle,
+        updateWorkspaceLogo,
+    } = useWorkspace();
+
+    const {
+        handleDelete: handleDeleteWorkspace,
+        isLoading: isDeletingWorkspace,
+    } = useDir({
+        dirType: "workspace",
+        dirId: currentWorkspace?._id || "",
+    })
+    // const [ workspaceTitle, setWorkspaceTitle ] = useState(currentWorkspace?.title || "")
+    // const currentWorkspace = useSelector((state: RootState) => state.workspace.currentWorkspace)
+    const [ workspaceDetails, setWorkspaceDetails ] = useState<Partial<ReduxWorkSpace>>({
         title: currentWorkspace?.title || "",
         logo: currentWorkspace?.logo || undefined,
     })
     // when user want to change the workspace name, there will be timer
     const titleTimerRef = useRef<ReturnType<typeof setTimeout>>()
     const [ uploadingProfilePic, setUploadingProfilePic ] = useState(false)
-    const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
+    // const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
     const dispatch = useDispatch()
     const [uploadingLogo, setUploadingLogo] = useState(false)
     const workspaces = useSelector((state: RootState) => state.workspace.workspaces)
 
+
     // will change the value of workspace when there is any change in name 
     useEffect(() => {
         if(currentWorkspace){
+            // const workspace = currentWorkspaceDetails(currentWorkspace);
+            
             setWorkspaceDetails({
                 _id: currentWorkspace._id,
                 title: currentWorkspace.title,
@@ -287,6 +307,7 @@ const SettingsForm = () => {
             </div>
             
         </div>
+
         <Alert variant={'destructive'}>
             <AlertDescription>
                 Warning! Deleting your account will permanantly delete all data related to this account.

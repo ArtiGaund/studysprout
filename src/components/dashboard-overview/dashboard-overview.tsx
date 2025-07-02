@@ -246,18 +246,33 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             }
             // add new file
     const addNewFile = async () => {
-        if (!workspaceId) return;
-        // const fId = new mongoose.Types.ObjectId(id);
-        const newFile: File = {
-            folderId: currentFolderId,
-            data: undefined,
-            inTrash: undefined,
-            title: 'Untitled',
-            iconId: '📄',
-            workspaceId: workspaceId.toString(), 
-            bannerUrl: '',
-            createdAt: new Date(),
-        };
+        if (!workspaceId){
+            toast({
+                title: "Missing Workspace ID",
+                description: "Cannot create file without a workspace.",
+                variant: "destructive"
+            });
+            return;
+        }
+        if (!currentFolder || typeof currentFolder._id === 'undefined') { // Ensure currentFolder and its _id are defined
+            toast({
+                title: "No Folder Selected",
+                description: "Please select a folder to add a file to.",
+                variant: "destructive"
+            });
+            return;
+        }
+        const newFile: MongooseFile = {
+                    folderId: currentFolder?._id.toString(),
+                    data: undefined,
+                    inTrash: undefined,
+                    title: 'Untitled',
+                    iconId: '📄',
+                    workspaceId: workspaceId, 
+                    bannerUrl: '',
+                    createdAt: new Date(),
+                    lastUpdated: new Date(),
+                };
 
         try {
             const file = await createFile(newFile);

@@ -1,6 +1,7 @@
 "use client"
 import ImageModel from "@/model/image.model";
-import WorkSpaceModel, { WorkSpace } from "@/model/workspace.model";
+import  { WorkSpace } from "@/model/workspace.model";
+import { WorkSpaceModel } from "@/model/index";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
