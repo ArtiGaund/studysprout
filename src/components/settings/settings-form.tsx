@@ -32,6 +32,7 @@ const SettingsForm = () => {
         currentWorkspace,
         updateWorkspaceTitle,
         updateWorkspaceLogo,
+        workspaces: allWorkspacesArray,
     } = useWorkspace();
 
     const {
@@ -53,7 +54,7 @@ const SettingsForm = () => {
     // const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
     const dispatch = useDispatch()
     const [uploadingLogo, setUploadingLogo] = useState(false)
-    const workspaces = useSelector((state: RootState) => state.workspace.workspaces)
+    // const workspaces = useSelector((state: RootState) => state.workspace.workspaces)
 
 
     // will change the value of workspace when there is any change in name 
@@ -71,32 +72,33 @@ const SettingsForm = () => {
 
     // onChange workspace title
     const workspaceNameChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-        if(!workspaceId || !e.target.value) return
+        if(!currentWorkspace || !e.target.value) return
         const newWorkspaceDetails = { ...workspaceDetails, workspaceName: e.target.value}
         setWorkspaceDetails(newWorkspaceDetails)
-        const updateWorkspace: Partial<WorkSpace> = {
-            _id: workspaceId,
+        const updateWorkspacePayload: Partial<ReduxWorkSpace> = {
+            _id: currentWorkspace?._id,
             title: e.target.value
         }
        
             if(titleTimerRef.current) clearTimeout(titleTimerRef.current);
             titleTimerRef.current = setTimeout( async() => {
                 try {
-                const response = await axios.post(`/api/update-workspace`, updateWorkspace)
-                if(!response.data.success){
+                const response = await updateWorkspaceTitle(currentWorkspace._id, e.target.value)
+                if(!response.success){
                     toast({
                         title: "Failed to update workspace name",
                         description: "Please try again later",
                         variant: "destructive",
                     })
                 }else{
-                    const workspace = response.data.data
-                    dispatch(UPDATE_WORKSPACE(workspace))
-                    toast({
-                        title: "Successfully updated workspace name",
-                        description: "Workspace name updated successfully",
-                    })
-                   
+                    const workspace = response.data
+                    if(workspace){
+                        dispatch(UPDATE_WORKSPACE(workspace))
+                        toast({
+                            title: "Successfully updated workspace name",
+                            description: "Workspace name updated successfully",
+                        })
+                    }
                 }
                 } catch (error) {
                     console.log("Error while updating the workspace name ",error)
@@ -110,7 +112,7 @@ const SettingsForm = () => {
     }
 
     const onChangeWorkspaceLogo = async(e: React.ChangeEvent<HTMLInputElement>) => {
-        if(!workspaceId) return
+        if(!currentWorkspace) return
 
         const file = e.target.files?.[0]
 
@@ -118,24 +120,26 @@ const SettingsForm = () => {
 
         setUploadingLogo(true)
         
-       const formData = new FormData()
-       formData.append("_id",workspaceId.toString())
-       formData.append("newLogo",file)
+    //    const formData = new FormData()
+    //    formData.append("_id",currentWorkspace._id.toString())
+    //    formData.append("newLogo",file)
        try {
-            const response = await axios.post(`/api/update-workspace-logo`, formData)
-            if(!response.data.success){
+            const response = await updateWorkspaceLogo(currentWorkspace._id, file)
+            if(!response.success){
                 toast({
                     title: "Failed to update the workspace logo",
                     description: "Please try again later",
                     variant: "destructive",
                 })
             }else{
-                const workspace = response.data.data
-                dispatch(UPDATE_WORKSPACE(workspace))
-                toast({
-                    title: "Successfully updated the workspace logo",
-                    description: "Workspace logo updated successfully",
-                })
+                const workspace = response.data
+                if(workspace){
+                    dispatch(UPDATE_WORKSPACE(workspace))
+                    toast({
+                        title: "Successfully updated the workspace logo",
+                        description: "Workspace logo updated successfully",
+                    })
+                }
             }
        } catch (error) {
         console.log("Error while updating the workspace logo ",error)
@@ -148,41 +152,27 @@ const SettingsForm = () => {
 
     } 
 
-    // onClicks
-    const deleteWorkspace = async () => {
-        if(!workspaceId) return
-        try {
-            const response = await axios.delete(`/api/delete-workspace?workspaceId=${workspaceId}`)
-            if(!response.data.success){
-                toast({
-                    title: "Failed to delete the workspace",
-                    description: "Please try again later",
-                    variant: "destructive",
-                })
-            }else{
-                dispatch(DELETE_WORKSPACE(workspaceId.toString()))
-                toast({
-                    title: "Successfully deleted the workspace",
-                    description: "Workspace deleted successfully",
-                })
 
-                // checking if there is remaining workspace
-                const remainingWorkspaces = workspaces.filter((workspace:WorkSpace) => workspace._id !==workspaceId)
-                if(remainingWorkspaces.length > 0){
-                    const nextWorkspace = remainingWorkspaces[0]
-                    dispatch(UPDATE_WORKSPACE(nextWorkspace))
-                    router.push(`/dashboard/${nextWorkspace._id}`)
-                }else{
-                    router.push('/dashboard')
-                }
-            }
-        } catch (error) {
-            console.log("Error while deleting the workspace ",error)
+    // onClicks
+    const onDeleteWorkspaceClick = async () => {
+        if(!currentWorkspace || !currentWorkspace._id) {
             toast({
-                title: "Failed to delete the workspace",
-                description: "Error while deleting the workspace",
+                title: "Error",
+                description: "No workspace selected for deletion",
                 variant: "destructive",
-            })
+            });
+            return;
+        }
+        await handleDeleteWorkspace();
+        const remainingWorkspaces = allWorkspacesArray.filter(
+            (workspace: WorkSpace) => workspace._id !== currentWorkspace._id
+        )
+
+        if(remainingWorkspaces.length > 0){
+            const nextWorkspace = remainingWorkspaces[0];
+            router.push(`/dashboard/${nextWorkspace._id}`);
+        }else{
+            router.push(`/dashboard`);
         }
     }
 
@@ -271,7 +261,7 @@ const SettingsForm = () => {
             size={'sm'}
             variant={'destructive'}
             className="mt-4 text-sm bg-destructive/40 border-2 border-destructive"
-            onClick={deleteWorkspace}
+            onClick={onDeleteWorkspaceClick}
             >
                 Delete Workspace
             </Button>
