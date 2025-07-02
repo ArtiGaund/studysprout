@@ -1,49 +1,69 @@
 import { Folder } from "@/model/folder.model"
+import { FoldersState, ReduxFolder } from "@/types/state.type"
+import { transformFolder } from "@/utils/data-transformers"
+// import { Folder } from "@/types/folder"
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit"
 import mongoose from "mongoose"
 
-
-
-interface FolderState{
-    folders: Folder[],
-    currentFolder: Folder | null,
-}
-
-const initialState: FolderState = {
-    folders:[],
+const initialState: FoldersState = {
+    byId: {},
+    allIds: [],
     currentFolder: null,
+    loading: false,
+    error: null,
 }
 
 const folderSlice = createSlice({
     name: "folder",
     initialState,
     reducers: {
-        ADD_FOLDER: ( state, action: PayloadAction<Folder> ) => {
-            state.folders.push(action.payload as Draft<Folder>)
+        ADD_FOLDER: (state, action: PayloadAction<Folder>) => {
+            const transformed = transformFolder(action.payload);
+            state.byId[transformed._id] = transformed;
+            state.allIds.push(transformed._id);
         },
-        DELETE_FOLDER: ( state, action: PayloadAction<string>) => {
-            state.folders = state.folders.filter(
-                (folder) => folder._id?.toString() !== action.payload
-            )
-        },
-        UPDATE_FOLDER: ( state, action:PayloadAction<Partial<Folder>>) => {
-           const updatedFolder = action.payload
-            const index = state.folders.findIndex(
-                (folder) => folder._id?.toString() === updatedFolder._id
-            )
-            if(index !== -1){
-                state.folders[index] = {
-                     ...state.folders[index], 
-                     ...updatedFolder
-                }
+        DELETE_FOLDER: (state, action: PayloadAction<string>) => {
+                    const idToDelete = action.payload;
+        
+                    // Remove from byId dictionary
+                    delete state.byId[idToDelete];
+        
+                    // Remove from allIds array (immutable update)
+                    state.allIds = state.allIds.filter((id: string) => id !== idToDelete); // Explicitly typed 'id' here
+        
+                    // If the deleted workspace was the current one, clear currentWorkspace
+                    if (state.currentFolder === idToDelete) {
+                        state.currentFolder = null;
+                    }
+                },
+        UPDATE_FOLDER: (state, action: PayloadAction<Partial<ReduxFolder>>) => {
+            const { _id, ...update } = action.payload;
+            if(_id && state.byId[_id]){
+                state.byId[_id] = {
+                    ...state.byId[_id],
+                    ...update,
+                } as ReduxFolder;
             }
         },
-        SET_FOLDERS: ( state, action: PayloadAction<Folder[]>) => {
-            state.folders = action.payload as Draft<Folder[]> 
+        SET_FOLDERS: (state, action: PayloadAction<Folder[]>) => {
+            state.byId = {};
+            state.allIds = [];
+            action.payload.forEach(f => {
+                const transformed = transformFolder(f);
+                state.byId[transformed._id] = transformed;
+                state.allIds.push(transformed._id);
+            });
+            state.loading = false;
         },
-        SET_CURRENT_FOLDERS: ( state, action: PayloadAction<Folder>) => {
-            state.currentFolder = action.payload as Draft<Folder>
-        }
+         SET_CURRENT_FOLDERS: (state, action: PayloadAction<string | null>) => {
+            state.currentFolder = action.payload;
+        },
+         SET_FOLDER_LOADING: (state, action: PayloadAction<boolean>) => {
+            state.loading = action.payload;
+        },
+        SET_FOLDER_ERROR: (state, action: PayloadAction<string | null>) => {
+            state.error = action.payload;
+        },
     }
 })
 
@@ -52,7 +72,9 @@ export const {
     DELETE_FOLDER,
     UPDATE_FOLDER,
     SET_FOLDERS,
-    SET_CURRENT_FOLDERS
+    SET_CURRENT_FOLDERS,
+    SET_FOLDER_LOADING,
+    SET_FOLDER_ERROR
 } = folderSlice.actions
 
 export default folderSlice.reducer;
