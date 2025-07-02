@@ -24,7 +24,7 @@ export function useWorkspace() {
 
     
     // function to fetch all user workspaces and dispatch to Redux
-    const getWorkspaces = async() => {
+    const getWorkspaces = useCallback(async() => {
         // only proceed if session  is authenticated and userId is available
         if(status !== "authenticated" || !session?.user?._id) return;
        
@@ -51,10 +51,10 @@ export function useWorkspace() {
         } finally {
             dispatch(SET_WORKSPACE_LOADING(false)); // Clear loading state in Redux
         }
-    }
+    }, [dispatch, session?.user?._id, status ])
 
     // function to fetch current workspace
-    const fetchCurrentWorkspace = async ( workspaceId: string ) => {
+    const fetchCurrentWorkspace = useCallback(async ( workspaceId: string ) => {
         if(!workspaceId) return;
         
         dispatch(SET_WORKSPACE_LOADING(true));
@@ -69,10 +69,10 @@ export function useWorkspace() {
         } finally{
             dispatch(SET_WORKSPACE_LOADING(false));
         }
-    }
+    }, [ dispatch])
 
     // function to create new workspace
-    const createWorkspace = async ( formData: FormData ): Promise<{
+    const createWorkspace = useCallback(async ( formData: FormData ): Promise<{
          success: boolean; 
          data?: MongooseWorkSpace;
           error?: string
@@ -100,8 +100,8 @@ export function useWorkspace() {
         }finally{
             dispatch(SET_WORKSPACE_LOADING(false));
         }
-    }
-    const currentWorkspaceDetails = async (workspaceId: string): Promise<{
+    }, [dispatch, session?.user?._id, status])
+    const currentWorkspaceDetails = useCallback(async (workspaceId: string): Promise<{
         success: boolean;
         data?: MongooseWorkSpace;
         error?: string
@@ -134,7 +134,7 @@ export function useWorkspace() {
         }finally{
             dispatch(SET_WORKSPACE_LOADING(false));
         }
-    }
+    }, [dispatch])
     const updateWorkspaceTitle = useCallback(async (workspaceId: string, newTitle: string): Promise<{
         success: boolean;
         data?: MongooseWorkSpace;
@@ -247,7 +247,7 @@ export function useWorkspace() {
         if(status === "authenticated" && session?.user?._id && allWorkspaceIds.length === 0){
             getWorkspaces();
         } 
-    },[ session, status, allWorkspaceIds.length]);
+    },[ session, status, allWorkspaceIds.length, getWorkspaces]);
 
      // --- Derived States ---
     const currentWorkspaceObject = currentWorkspaceId ? workspacesById[currentWorkspaceId] : undefined;

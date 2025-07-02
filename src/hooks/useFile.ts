@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { File as MongooseFile } from "@/model/file.model";
@@ -19,7 +20,7 @@ export function useFile() {
      const fileLoading = useSelector(( state: RootState ) => state.file.loading);
      const fileError = useSelector(( state: RootState ) => state.file.error);
 
-     const createFile = async (fileData: MongooseFile): Promise<{
+     const createFile = useCallback(async (fileData: MongooseFile): Promise<{
         success: boolean,
         data?: MongooseFile,
         error?: string
@@ -46,9 +47,9 @@ export function useFile() {
             }finally{
                 dispatch(SET_FILE_LOADING(false));
             }
-     }
+     }, [dispatch]);
 
-     const updateFile = async (fileId: string, updatedData: Partial<MongooseFile>): Promise<{
+     const updateFile = useCallback(async (fileId: string, updatedData: Partial<MongooseFile>): Promise<{
         success: boolean,
         data?: MongooseFile,
         error?: string
@@ -81,8 +82,8 @@ export function useFile() {
         } finally{
             dispatch(SET_FILE_LOADING(false));
         }
-     }
-     const getFiles = async (folderId: string): Promise<{
+     }, [dispatch]);
+     const getFiles = useCallback(async (folderId: string): Promise<{
         success: boolean,
         data?: MongooseFile[],
         error?: string
@@ -116,8 +117,8 @@ export function useFile() {
         }finally{
             dispatch(SET_FILE_LOADING(false));
         }
-     }
-     const currentFileDetails = async (fileId: string): Promise<{
+     }, [dispatch]);
+     const currentFileDetails = useCallback(async (fileId: string): Promise<{
         success: boolean,
         data?: MongooseFile,
         error?: string
@@ -150,7 +151,7 @@ export function useFile() {
      }finally{
         dispatch(SET_FILE_LOADING(false));
      }
-    }
+    }, [dispatch]);
       // --- Derived States ---
      const allFilesArray: ReduxFile[] = allFileIds.map(id => filesById[id]);
     const currentFileObject = currentFileId ? filesById[currentFileId] : undefined; 

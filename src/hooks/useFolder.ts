@@ -1,5 +1,5 @@
 "use client";
-
+import { useCallback } from "react";
 import { RootState } from "@/store/store";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,7 +22,7 @@ export function useFolder(){
     const folderLoading = useSelector(( state: RootState ) => state.folder.loading);
     const folderError = useSelector(( state: RootState ) => state.folder.error);
 
-    const getFolders = async( workspaceId: string): Promise<{
+    const getFolders = useCallback(async( workspaceId: string): Promise<{
         success: boolean,
         data?: MongooseFolder[],
         error?: string
@@ -55,9 +55,9 @@ export function useFolder(){
             dispatch(SET_FOLDER_LOADING(false));
         }
 
-    }
+    }, [dispatch])
 
-    const createFolder = async( folderData: MongooseFolder ): Promise<{
+    const createFolder = useCallback(async( folderData: MongooseFolder ): Promise<{
         success: boolean,
         data?: MongooseFolder,
         error?: string
@@ -85,9 +85,9 @@ export function useFolder(){
             }finally{
                 dispatch(SET_FOLDER_LOADING(false));
             }
-    }
+    }, [dispatch])
 
-    const updateFolder = async(folderId: string, updatedData: Partial<MongooseFolder>): Promise<{
+    const updateFolder = useCallback(async(folderId: string, updatedData: Partial<MongooseFolder>): Promise<{
         success: boolean,
         data?: MongooseFolder,
         error?: string
@@ -120,8 +120,8 @@ export function useFolder(){
         }finally{
             dispatch(SET_FOLDER_LOADING(false));
         }
-    }
-    const currentFolderDetail = async (folderId: string): Promise<{
+    }, [dispatch ])
+    const currentFolderDetail = useCallback(async (folderId: string): Promise<{
         success: boolean,
         data?: MongooseFolder,
         error?: string
@@ -154,7 +154,7 @@ export function useFolder(){
         }finally{
             dispatch(SET_FOLDER_LOADING(false));
         }
-    }
+    }, [dispatch])
      // --- Derived States ---
      const allFoldersArray: ReduxFolder[] = allFolderIds.map(id => foldersById[id]);
      const currentFolderObject = currentFolderId ? foldersById[currentFolderId] : undefined;
