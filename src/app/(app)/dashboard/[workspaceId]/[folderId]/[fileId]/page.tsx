@@ -2,28 +2,39 @@
 import BannerSection from '@/components/banner-upload/banner-section'
 import TextEditor from '@/components/editor/editor'
 import Editor from '@/components/editor/editor'
+import { useFile } from '@/hooks/useFile'
 import { File } from '@/model/file.model'
+import { ReduxFile } from '@/types/state.type'
+import { transformFile } from '@/utils/data-transformers'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { RootProps } from 'postcss'
 import React, { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 
+
 const FilePage: React.FC<{ params : { fileId: string }}> = ({ params }) => {
     const router = useRouter()
-    const [ fileDetails, setFileDetails ] = useState<File | undefined>(undefined)
+    const [ fileDetails, setFileDetails ] = useState<ReduxFile | undefined>(undefined)
 
+    const { currentFileDetails } = useFile();
     const onChangeHandler = ( content: string ) => {
         console.log("Live updated content of file ",content);
     }
     useEffect(() => {
         const getFileDetails = async() => {
             try {
-                const response = await axios.get(`/api/get-current-file?fileId=${params.fileId}`)
-                if(!response.data.success){
+                const response = await currentFileDetails(params.fileId)
+                if(!response.success){
                     router.push('/dashboard')
                 }else{
-                    setFileDetails(response.data.data)
+                    if(response.data){
+                        const file = transformFile(response.data);
+                        setFileDetails(file);
+                    }else{
+                        setFileDetails(undefined)
+                    }
+                    
                 }
             } catch (error) {
                 console.log("Error while fetching all the file details ",error)
