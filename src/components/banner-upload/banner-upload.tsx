@@ -1,15 +1,17 @@
 "use client"
-import { File } from "@/model/file.model";
+// import { File } from "@/model/file.model";
 import { Folder } from "@/model/folder.model";
 import { WorkSpace } from "@/model/workspace.model";
-import React from "react"
+import React, { useState } from "react"
 import CustomDialogTrigger from "../global/custom-dialog";
 import BannerUploadForm from "./banner-upload-form";
+import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
+import { useDir } from "@/hooks/useDir";
 
 interface BannerUploadProps{
     children: React.ReactNode;
     className?: string;
-    details: WorkSpace | Folder | File;
+    details: ReduxWorkSpace | ReduxFolder | ReduxFile;
     dirType: 'workspace' | 'folder' | 'file';
     id: string;
 }
@@ -21,14 +23,23 @@ const BannerUpload: React.FC<BannerUploadProps> = ({
     dirType,
     id
 }) => {
+    const [ isOpen, setIsOpen ] = useState(false);
+    const { handleBannerUpload, isSaving} = useDir({
+        dirType,
+        dirId: id,
+    })
+
+    const handleUploadComplete = async (file: File) => {
+        await handleBannerUpload(file);
+        setIsOpen(false);
+    }
     return(
        <CustomDialogTrigger 
        header="Upload Banner"
-       content={<BannerUploadForm 
-       details={details}
-       dirType={dirType}
-       id={id}
-       ></BannerUploadForm>}
+       content={<BannerUploadForm
+                    onUpload={handleUploadComplete}
+                    isUploading={isSaving} // Pass isSaving from useDir as isUploading
+                />}
        className={className}
        >
         {children}
