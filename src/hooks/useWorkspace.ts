@@ -1,8 +1,9 @@
 "use client";
 
 import { WorkSpace as MongooseWorkSpace} from "@/model/workspace.model";
-import { addWorkspace, getCurrentWorkspace, getUserWorkspaces, updateWorkspace } from "@/services/workspaceServices";
-import { ADD_WORKSPACE, SET_CURRENT_WORKSPACE, SET_WORKSPACE_ERROR, SET_WORKSPACE_LOADING, SET_WORKSPACES, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
+import { hardDeleteDir } from "@/services/dirServices";
+import { addWorkspace, getCurrentWorkspace, getUserWorkspaces, updateLogo, updateWorkspace } from "@/services/workspaceServices";
+import { ADD_WORKSPACE, DELETE_WORKSPACE, SET_CURRENT_WORKSPACE, SET_WORKSPACE_ERROR, SET_WORKSPACE_LOADING, SET_WORKSPACES, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { RootState } from "@/store/store";
 import { ReduxWorkSpace } from "@/types/state.type";
 import { useSession } from "next-auth/react";
@@ -139,6 +140,8 @@ export function useWorkspace() {
         data?: MongooseWorkSpace;
         error?: string
     }> => {
+        dispatch(SET_WORKSPACE_LOADING(true));
+        dispatch(SET_WORKSPACE_ERROR(null));
         try {
             const updateData: Partial<ReduxWorkSpace> = {_id: workspaceId, title: newTitle};
             dispatch(UPDATE_WORKSPACE(updateData as ReduxWorkSpace));
@@ -149,6 +152,7 @@ export function useWorkspace() {
                      error: response.message
                  }
              }
+             dispatch(UPDATE_WORKSPACE(response.data as MongooseWorkSpace));
              return {
                  success: true,
                  data: response.data
@@ -156,16 +160,88 @@ export function useWorkspace() {
         } catch (error: any) {
             console.error("Error while updating the workspace name ", error);
             const errorMessage = error.message || "Failed to update current workspace";
+            dispatch(SET_WORKSPACE_ERROR(errorMessage));
             return {
                 success: false,
                 error: errorMessage
             }
+        }finally {
+            dispatch(SET_WORKSPACE_LOADING(false));
         }
     }, [dispatch]);
 
-    const updateWorkspaceLogo = useCallback(async (workspaceId: string, logo: File) => {
+    const updateWorkspaceLogo = useCallback(async (workspaceId: string, logo: File): Promise<{
+        success: boolean;
+        data?: MongooseWorkSpace;
+        error?: string
+    }> => {
+        dispatch(SET_WORKSPACE_LOADING(true));
+        dispatch(SET_WORKSPACE_ERROR(null));
+        try {
+            const updateWorkspace = await updateLogo(workspaceId, logo);
+            if(!updateWorkspace.success){
+                const errorMessage = updateWorkspace.message || "Failed to update current workspace";
+                dispatch(SET_WORKSPACE_ERROR(errorMessage));
+                return {
+                    success: false,
+                    error: updateWorkspace.message
+                }
+            }
+            const workspace = updateWorkspace.data as MongooseWorkSpace;
+            dispatch(UPDATE_WORKSPACE(workspace));
+            return {
+                success: true,
+                data: workspace,
+            }
 
-    }, [])
+        } catch (error: any) {
+            console.error("Error while updating the workspace logo ", error);
+            const errorMessage = error.message || "Failed to update current workspace";
+            dispatch(SET_WORKSPACE_ERROR(errorMessage));
+            return {
+                success: false,
+                error: errorMessage
+            }
+            
+        }finally {
+            dispatch(SET_WORKSPACE_LOADING(false));
+        }
+    }, [dispatch])
+
+    // const deleteWorkspace = useCallback(async (workspaceId: string): Promise<{
+    //     success: boolean;
+    //     data?: MongooseWorkSpace;
+    //     error?: string
+    // }> => {
+    //         dispatch(SET_WORKSPACE_LOADING(true));
+    //         dispatch(SET_WORKSPACE_ERROR(null));
+    //         try {
+    //             const response = await hardDeleteDir("workspace",workspaceId);
+    //             if(!response.success){
+    //                 const errorMessage = response.message || "Failed to delete current workspace";
+    //                 return {
+    //                     success: false,
+    //                     error: errorMessage
+    //                 }
+    //             }
+    //             dispatch(DELETE_WORKSPACE(workspaceId));
+    //             return {
+    //                 success: true,
+    //                 data: response.data
+    //             }
+    //         } catch (error: any) {
+    //             console.error("Error while deleting the workspace ", error);
+    //             const errorMessage = error.message || "Failed to delete current workspace";
+    //             dispatch(SET_WORKSPACE_ERROR(errorMessage));
+    //             return {
+    //                 success: false,
+    //                 error: errorMessage
+    //             }
+            
+    //         }finally {
+    //         dispatch(SET_WORKSPACE_LOADING(false));
+    //     }
+    // },[dispatch])
       // --- EFFECT: Trigger initial fetch of all user workspaces ---
     useEffect(()=> {
         if(status === "authenticated" && session?.user?._id && allWorkspaceIds.length === 0){
@@ -194,6 +270,7 @@ export function useWorkspace() {
         fetchCurrentWorkspace,
         currentWorkspaceDetails,
         updateWorkspaceTitle,
-        updateWorkspaceLogo
+        updateWorkspaceLogo,
+        // deleteWorkspace,
     }
 }
