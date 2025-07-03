@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { File as MongooseFile } from "@/model/file.model";
@@ -153,8 +153,14 @@ export function useFile() {
      }
     }, [dispatch]);
       // --- Derived States ---
-     const allFilesArray: ReduxFile[] = allFileIds.map(id => filesById[id]);
-    const currentFileObject = currentFileId ? filesById[currentFileId] : undefined; 
+    //  const allFilesArray: ReduxFile[] = allFileIds.map(id => filesById[id]);
+    const allFilesArray: ReduxFile[] = useMemo(() => {
+        return allFileIds.map(id => filesById[id]);
+    }, [ allFileIds, filesById ]);
+    // const currentFileObject = currentFileId ? filesById[currentFileId] : undefined; 
+    const currentFileObject = useMemo(() => {
+        return currentFileId ? filesById[currentFileId] : undefined;
+    }, [ currentFileId, filesById ])
      return {
          // Data drived from redux store
          files: allFilesArray,

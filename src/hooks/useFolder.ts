@@ -1,5 +1,5 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { RootState } from "@/store/store";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
@@ -156,8 +156,17 @@ export function useFolder(){
         }
     }, [dispatch])
      // --- Derived States ---
-     const allFoldersArray: ReduxFolder[] = allFolderIds.map(id => foldersById[id]);
-     const currentFolderObject = currentFolderId ? foldersById[currentFolderId] : undefined;
+    //  allFoldersArray is created on every render whenever useFolder runs, thats why infinite loop is coming here 
+    //  const allFoldersArray: ReduxFolder[] = allFolderIds.map(id => foldersById[id]);
+    // To resolve above issue, use useMemo
+    const allFoldersArray: ReduxFolder[] = useMemo(() => {
+        return allFolderIds.map(id => foldersById[id]);
+    },[ allFolderIds, foldersById]);
+    //  const currentFolderObject = currentFolderId ? foldersById[currentFolderId] : undefined;
+    // same for the above one
+    const currentFolderObject = useMemo(() => {
+        return currentFolderId ? foldersById[currentFolderId] : undefined;
+    }, [ currentFolderId, foldersById ]);
 
      return{
         // Data drived from redux store
