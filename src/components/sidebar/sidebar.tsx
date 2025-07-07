@@ -67,98 +67,13 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
         }
       },[params.workspaceId, getFolders])
 
-    // console.log("Workspace id in Params in sidebar ",params.workspaceId)
-
     
-  //  console.log("Folders in sidebar ",folders)
-    // useEffect(() => {
-    //   fetchFolders(params.workspaceId);
-    // }, [params.workspaceId]);
-    
-    // const userId = session?.user._id
-    // useEffect(() => {
-    //     if(session && session.user && session.user._id){
-    //       const fetchAllWorkspaces = async() => {
-    //         const userId = session?.user._id
-    //         // console.log("user id in sidebar ",userId)
-    //         try {
-    //           const response = await axios.get(`/api/get-all-workspaces?userId=${userId}`)
-    //           const fetchedWorkspaces = response.data.data
-    //           // console.log("fetchedWorkspaces ",fetchedWorkspaces)
-    //           if(fetchedWorkspaces){
-    //             setAllWorkspaces(fetchedWorkspaces)
-    //             dispatch(SET_WORKSPACES(fetchedWorkspaces))
-    //           }
-    //         } catch (err) {
-    //           console.log("Error while fetching all the workspaces for user ",err)
-    //           setError(true)
-    //         }
-    //       }
-    //       fetchAllWorkspaces()
-    //     }
-            
-    //   }, [session, dispatch]);
-
-      // setting the current workspace 
-      // useEffect(() => {
-      //   const getCurrentWorkspace = async () => {
-      //     try {
-      //       const currentWorkspaceId = params.workspaceId
-      //     const response = await axios.get(`/api/get-current-workspace?workspaceId=${currentWorkspaceId}`)
-      //     // console.log("Response for current workspace ",response.data.data)
-      //     setCurrentWorkspace(response.data.data)
-      //     dispatch(SET_CURRENT_WORKSPACES(response.data.data))
-      //     } catch (error) {
-      //       console.log("Error while fetching current workspace ",error)
-      //     }
-
-      //   }
-      //   getCurrentWorkspace()
-      // }, [params.workspaceId, dispatch])
-    // getting all the folders for the workspace
-
-    // its an callback method, when folder is added from folder-dropdown-list component, this method is called 
-    // to update the workspaceFolders props
     const handleFolderAdded = async () => {
       getFolders(params.workspaceId);
       // await fetchFolders(params.workspaceId)
     }
 
-    // const fetchFolders = async (workspaceId: string) => {
-    //   try {
-    //     // console.log("Inside fetchFolders")
-    //     const response = await axios.get(`/api/get-all-workspace-folders?workspaceId=${workspaceId}`);
-    //     console.log("Response for fetch folders ",response.data.data)
-    //     const fetchedFolders = response.data.data
-
-    //     // const sanitizedFolders = fetchedFolders.map((folder: any) => ({
-    //     //   ...folder,
-    //     //   files: folder.files ? folder.files.map((file: any) => ({ ...file })) : [],
-    //     // }))
-    //     // console.log("fetchedFolders ",fetchedFolders)
-        
-    //     if(fetchedFolders){
-    //         dispatch(SET_FOLDERS(fetchedFolders))
-    //         if(fetchedFolders.length >0){
-    //           dispatch(SET_CURRENT_FOLDERS(fetchedFolders[0]))
-    //         }else{
-    //           dispatch(SET_CURRENT_FOLDERS(null));
-    //         }
-    //     }
-    //   } catch (err) {
-    //     console.log("Error fetching the folders ",err)
-    //     setError(true)
-    //   }
-    // }
-      
-
-     // 4. Handle Loading and Error States from the hook
-
-    // user is not login
-    // if(!session) return
-    
-
-    // check for the error
+   
     if(workspaceError) router.replace('/dashboard')
 
     // check for user, check for folders, check for error, get all the workspaces which is private collaborating 

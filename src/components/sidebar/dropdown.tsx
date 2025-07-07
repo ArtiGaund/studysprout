@@ -348,16 +348,21 @@ const Dropdown: React.FC<DropdownProps> = ({
         <AccordionItem 
             value={id} 
             className={listStyles!}
-            onClick={(e) => {
-                e.stopPropagation();
-                navigatePage(id, listType);
-            }}
+            
         >
             <AccordionTrigger
                 id={listType}
                 className="hover:no-underline p-2 text-muted-foreground text-sm"
                 disabled={listType === 'file'}
             >
+                <div className="flex gap-4 items-center justify-center overflow-hidden w-full cursor-pointer"
+                    onClick={(e) => {
+                    e.stopPropagation();
+                    navigatePage(id, listType);
+                }}
+                >
+
+                
                 <div className={groupIdentifies}>
                     <div className="flex gap-4 items-center justify-center overflow-hidden">
                         <div className="relative">
@@ -408,6 +413,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                             </TooltipComponent>
                         )}
                     </div>
+                </div>
                 </div>
             </AccordionTrigger>
             {/* It will show files for the folders */}

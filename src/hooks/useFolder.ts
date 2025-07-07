@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { RootState } from "@/store/store";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,6 +10,7 @@ import { ReduxFolder } from "@/types/state.type";
 import { addFolder, getCurrentFolder } from "@/services/folderServices";
 // import { updateFolder as updateFolderService } from "@/services/folderServices";
 import { updateDir } from "@/services/dirServices";
+
 
 export function useFolder(){
     const { data: session, status } = useSession();

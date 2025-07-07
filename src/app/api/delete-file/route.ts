@@ -29,6 +29,7 @@ export async function DELETE(request: Request){
     try {
         // Find the file first to get its details, including any associated images, before deleting it
         const fileToDelete = await FileModel.findById(fileId).lean();
+        console.log("File to delete ",fileToDelete);
         if(!fileToDelete){
              return Response.json({
                 statusCode: 404,

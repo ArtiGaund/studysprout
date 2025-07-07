@@ -5,7 +5,7 @@ import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { File as MongooseFile } from "@/model/file.model";
 import { ADD_FILE, SET_CURRENT_FILES, SET_FILE_ERROR, SET_FILE_LOADING, SET_FILES, UPDATE_FILE } from "@/store/slices/fileSlice";
-import { addFile, getCurrentFile } from "@/services/fileServices";
+import { addFile, getAllFilesByWorkspaceId, getCurrentFile } from "@/services/fileServices";
 import { ReduxFile } from "@/types/state.type";
 import { updateDir } from "@/services/dirServices";
 import { getAllFiles } from "@/services/folderServices";
@@ -83,6 +83,42 @@ export function useFile() {
             dispatch(SET_FILE_LOADING(false));
         }
      }, [dispatch]);
+     const getWorkspaceFiles = useCallback(async(workspaceId: string): Promise<{
+        success: boolean,
+        data?: MongooseFile[],
+        error?: string
+     }> => {
+         if(!workspaceId){
+                return {
+                    success: false,
+                    error: "Workspace id required"
+                }
+            }
+        try {
+           
+            dispatch(SET_FILE_LOADING(true));
+            dispatch(SET_FILE_ERROR(null));
+            const fetchFiles = await getAllFilesByWorkspaceId(workspaceId);
+            if(Array.isArray(fetchFiles)){
+                dispatch(SET_FILES(fetchFiles));
+            }else if(fetchFiles && typeof fetchFiles === "object"){
+                dispatch(SET_FILES([fetchFiles as MongooseFile]));
+            }else{
+                dispatch(SET_FILES([]));
+            }
+            return {
+                success: true,
+                data: fetchFiles
+            }
+        } catch (error: any) {   
+             console.error('Error while fetching workspace files in hook:', error); // Updated message
+            const errorMessage = error.message || "Failed to fetch all the files of workspace"; // Updated message
+            dispatch(SET_FILE_ERROR(errorMessage));
+            return { success: false, error: errorMessage };
+        }finally{
+            dispatch(SET_FILE_LOADING(false));
+        }
+     }, [dispatch])
      const getFiles = useCallback(async (folderId: string): Promise<{
         success: boolean,
         data?: MongooseFile[],
@@ -175,5 +211,6 @@ export function useFile() {
          updateFile,
         getFiles,
         currentFileDetails,
+        getWorkspaceFiles
      }
 }

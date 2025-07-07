@@ -13,3 +13,10 @@ export async function getCurrentFile(fileId:string){
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
+
+// get all files by workspace id
+export async function getAllFilesByWorkspaceId(workspaceId: string){
+    const { data } = await axios.get(`/api/get-workspace-all-files?workspaceId=${workspaceId}`);
+    if(!data.success) throw new Error(data.message);
+    return data.data;
+}
