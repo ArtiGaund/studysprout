@@ -51,16 +51,17 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     fileId,
     dirType
 }) => {
-    
+     console.log("BannerSection mounted, fileId prop:", fileId, "dirType:", dirType);
     const workspaceState = useSelector((state: RootState) => state.workspace)
     const folderState = useSelector((state:RootState) => state.folder)
     const fileState = useSelector((state:RootState) => state.file)
-    const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace)
-    const folderId = useSelector((state: RootState) => state.folder.currentFolder)
+    const currentWorkspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace)
+    const currentFolderId = useSelector((state: RootState) => state.folder.currentFolder)
+    const currentFileId = useSelector((state: RootState) => state.file.currentFile)
 
-    const { currentWorkspace, workspaces } = useWorkspace();
-    const { currentFolder } = useFolder();
-    const { currentFile } = useFile();
+    const { workspaces } = useWorkspace();
+    // const { currentFolder } = useFolder();
+    // const { currentFile } = useFile();
     const dispatch = useDispatch()
     const { toast } = useToast()
     const pathname = usePathname()
@@ -84,241 +85,22 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     } = useDir({
         dirType,
         dirId: fileId,
-        currentWorkspaceId: currentWorkspace?._id,
-        currentFolderId: currentFolder?._id,
-        currentFileId: currentFile?._id
+        currentWorkspaceId: currentWorkspaceId?.toString(),
+        currentFolderId: currentFolderId?.toString(),
+        currentFileId: currentFileId?.toString()
     })
-    // to collect data from server side and client side
-//    const details = useMemo(() => {
-//     let selectedDir: ReduxWorkSpace | ReduxFolder | ReduxFile | undefined;
-//     if(dirType === "file"){
-//         selectedDir = fileState.files.find((file) => file._id?.toString() === fileId)
-//     }
-//     if(dirType === "folder"){
-//         selectedDir = folderState.folders.find((folder) => folder._id?.toString() === fileId)
-//     }
-//     if(dirType === "workspace"){
-//         selectedDir = workspaceState.workspaces
-//             .filter((workspace): workspace is ReduxWorkSpace => typeof workspace._id === "string")
-//             .find((workspace) => workspace._id === fileId);
-//     }
+ 
 
-//     if(selectedDir){
-//         return selectedDir
-//     }
-//     // else return new object
-//     return {
-//         title: dirDetails.title,
-//         iconId: dirDetails.iconId,
-//         data: dirDetails.data,
-//         inTrash: dirDetails.inTrash,
-//         bannerUrl: dirDetails.bannerUrl
-//         // createdAt: dirDetails.createdAt
-//     } as ReduxWorkSpace | ReduxFolder | ReduxFile
-// }, [fileState.files, folderState.folders, workspaceState.workspaces, fileId, dirDetails, dirType]) // Corrected dependencies
+    
 
-
-    // const fetchBanner = async () => {
-    //     if(!details.bannerUrl) return
-    //     try {
-    //         const response = await axios.get(`/api/get-image?imageId=${details.bannerUrl}`)
-    //         if(!response.data.success){
-    //             console.log("Error while fetching banner", response.data.message)
-    //         }else{
-    //             const imageUrl = response.data.data
-    //             setImageUrl(imageUrl)
-    //         }
-    //     } catch (error) {
-    //         console.log("Error while fetching banner", error)
-    //     }
-    // }
-
-    // useEffect(() => {
-    //     fetchBanner()
-    // }, [details.bannerUrl])
-
-    // Update details when dirDetails changes
-    // useEffect(() => {
-    //     if (dirDetails.bannerUrl) {
-    //        fetchBanner()
-    //     }
-    // }, [dirDetails.bannerUrl]);
-
-
-
-    // const restoreFileHandler = async() => {
-        
-    //     if(dirType === "file"){
-    //         if(!folderId) return
-    //         const updateFile: Partial<ReduxFile> = {
-    //             _id: fileId,
-    //             inTrash: '',
-    //         }
-    //        dispatch(UPDATE_FILE(updateFile))
-    //         try {
-    //             const response = await axios.post(`/api/update-file`, updateFile)
-    //             if(!response.data.success){
-    //                 toast({
-    //                     title: "Failed to restore file",
-    //                     description: response.data.message,
-    //                     variant: "destructive"
-    //                 })
-    //             }else{
-    //                 const file= response.data.data.file as ReduxFile;
-    //                 const folder = response.data.data.folder as ReduxFolder;
-    //                 const workspace = response.data.data.workspace as ReduxWorkSpace;
-    //                 dispatch(UPDATE_FILE(file))
-    //                 dispatch(UPDATE_FOLDER(folder))
-    //                 dispatch(UPDATE_WORKSPACE(workspace))
-    //                 toast({
-    //                     title: "File restored successfully",
-    //                     description: "File is removed from trash",
-    //                 })
-    //             }
-    //         } catch (error) {
-    //             console.log("Error while restoring file ",error)
-    //             toast({
-    //                 title: "Failed to restore file",
-    //                 description: "Something went wrong",
-    //                 variant: "destructive"
-    //             })
-    //         }
-    //     }
-    //     if(dirType === "folder"){
-    //         const updateFolder: Partial<ReduxFolder> = {
-    //             _id: fileId,
-    //             inTrash: '',
-    //         }
-    //         dispatch(UPDATE_FOLDER(updateFolder))
-    //         try {
-    //             const response = await axios.post(`/api/update-folder`, updateFolder)
-    //             if(!response.data.success){
-    //                 toast({
-    //                     title: "Failed to restore folder",
-    //                     description: response.data.message,
-    //                     variant: "destructive"
-    //                 })
-    //             }else{
-    //                 const folder = response.data.data.folder as ReduxFolder;
-    //                 const workspace = response.data.data.workspace as ReduxWorkSpace;
-    //                 dispatch(UPDATE_FOLDER(folder))
-    //                 dispatch(UPDATE_WORKSPACE(workspace))
-    //                 toast({
-    //                     title: "Folder restored successfully",
-    //                     description: "Folder is removed from trash",
-    //                 })
-    //             }
-    //         } catch (error) {
-    //             console.log("Error while restoring folder ",error)
-    //             toast({
-    //                 title: "Failed to restore folder",
-    //                 description: "Something went wrong",
-    //                 variant: "destructive"
-    //             })
-    //         }
-    //     }
-       
-    // }
-
-    // const deleteFile = async() => {
-        
-        // if(dirType === "file"){
-        //     try {
-        //         const response = await axios.delete(`/api/delete-file?fileId=${fileId}`)
-        //         if(!response.data.success){
-        //             toast({
-        //                 title: "Failed to delete file",
-        //                 description: response.data.message,
-        //                 variant: "destructive"
-        //             })
-        //         }else{
-        //             const folder = response.data.data.folderUpdate as ReduxFolder;
-        //             const workspace = response.data.data.workspaceUpdate as ReduxWorkSpace; 
-        //             dispatch(DELETE_FILE(fileId))
-        //             dispatch(UPDATE_FOLDER(folder))
-        //             dispatch(UPDATE_WORKSPACE(workspace))
-        //             toast({
-        //                 title: "File deleted successfully",
-        //                 description: "File is premanantly deleted",
-        //             })
-        //             router.replace(`/dashboard/${workspaceId}/${folderId}`)
-        //         }
-        //     } catch (error) {
-        //         console.log("Error while deleting file ",error)
-        //         toast({
-        //             title: "Failed to delete file",
-        //             description: "Something went wrong",
-        //             variant: "destructive"
-        //         })
-        //     }
-        // }
-        // if(dirType === "folder"){
-        //     try {
-        //         const response = await axios.delete(`/api/delete-folder?folderId=${fileId}`)
-        //         if(!response.data.success){
-        //             toast({
-        //                 title: "Failed to delete folder",
-        //                 description: response.data.message,
-        //                 variant: "destructive"
-        //             })
-        //         }else{
-        //             const workspace = response.data.data as ReduxWorkSpace;
-        //             dispatch(DELETE_FOLDER(fileId))
-        //             dispatch(UPDATE_WORKSPACE(workspace))
-        //             toast({
-        //                 title: "Folder deleted successfully",
-        //                 description: "Folder is premanantly deleted",
-        //             })
-        //             router.replace(`/dashboard/${workspaceId}`)
-        //         }
-        //     } catch (error) {
-        //         console.log("Error while deleting folder ",error)
-        //         toast({
-        //             title: "Failed to delete folder",
-        //             description: "Something went wrong",
-        //             variant: "destructive"
-        //         })
-        //     }
-        // } 
-      
-    // }
+    
     const breadCrumbs = useMemo(() => {
-        // if (!pathname || !workspaceState.workspaces || !workspaceId) return;
-        // const segments = pathname
-        //   .split('/')
-        //   .filter((val) => val !== 'dashboard' && val);
-        // const workspaceDetails = workspaceState.workspaces.find( workspace => workspace._id === workspaceId);
-        // const workspaceBreadCrumb = workspaceDetails
-        //   ? `${workspaceDetails.iconId} ${workspaceDetails.title}`
-        //   : '';
-        // if (segments.length === 1) {
-        //   return workspaceBreadCrumb;
-        // }
-    
-        // const folderSegment = segments[1];
-        // const folderDetails = folderState.folders?.find(
-        //   (folder) => folder._id === folderSegment
-        // )
-        // const folderBreadCrumb = folderDetails
-        //   ? `/ ${folderDetails.iconId} ${folderDetails.title}`
-        //   : '';
-    
-        // if (segments.length === 2) {
-        //   return `${workspaceBreadCrumb} ${folderBreadCrumb}`;
-        // }
-    
-        // const fileSegment = segments[2];
-        // const fileDetails = fileState.files?.find((file) => file._id === fileSegment)
-        // const fileBreadCrumb = fileDetails
-        //   ? `/ ${fileDetails.iconId} ${fileDetails.title}`
-        //   : '';
-    
-        // return `${workspaceBreadCrumb} ${folderBreadCrumb} ${fileBreadCrumb}`;
-        if(!pathname || !workspaceState.allIds || !workspaceId) return;
+       
+        if(!pathname || !workspaceState.allIds || !currentWorkspaceId) return;
         const segments = pathname.split('/').filter((val) => val !== 'dashboard' && val);
 
         // access byId for more efficiency lookup
-        const workspaceDetails = workspaceState.byId[workspaceId];
+        const workspaceDetails = workspaceState.byId[currentWorkspaceId];
         const workspaceBreadCrumb = workspaceDetails 
         ? `${workspaceDetails.iconId} ${workspaceDetails.title}`
         : '';
@@ -326,7 +108,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
             return workspaceBreadCrumb;
         }
         const folderSegment = segments[1];
-        const folderDetails = folderState.byId[folderId!];
+        const folderDetails = folderState.byId[currentFolderId!];
         const folderBreadCrumb = folderDetails
         ? `/ ${folderDetails.iconId} ${folderDetails.title}`
         : '';
@@ -344,136 +126,12 @@ const BannerSection: React.FC<BannerSectionProps> = ({
         return `${workspaceBreadCrumb} ${folderBreadCrumb} ${fileBreadCrumb}`;
       }, [
          pathname,
-          workspaceId,
+          currentWorkspaceId,
           workspaceState.byId,
           folderState.byId,
           fileState.byId,
     ]);
 
-//       const iconOnChange = async (icon: string) => {
-//             if (!fileId) return; // fileId is the ID of the current entity
-
-//             setSaving(true); // Indicate saving state
-//             let updatePayload: Partial<ReduxWorkSpace | ReduxFolder | ReduxFile>;
-//             let apiUrl: string;
-//             let successMessage: string;
-
-//             if (dirType === "workspace") {
-//             updatePayload = { _id: fileId, iconId: icon };
-//             apiUrl = `/api/update-workspace`;
-//             successMessage = "Successfully changed the icon for the workspace";
-//             } else if (dirType === "folder") {
-//             updatePayload = { _id: fileId, iconId: icon };
-//             apiUrl = `/api/update-folder`;
-//             successMessage = "Successfully changed the icon for the folder";
-//             } else if (dirType === "file") {
-//             updatePayload = { _id: fileId, iconId: icon };
-//             apiUrl = `/api/update-file`;
-//             successMessage = "Successfully changed the icon for the file";
-//             } else {
-//             setSaving(false);
-//             return; // Should not happen with valid dirType
-//             }
-
-//             try {
-//             const response = await axios.post(apiUrl, updatePayload);
-//             if (!response.data.success) {
-//                 toast({
-//                 title: "Failed to change the icon",
-//                 description: response.data.message || "Please try again later",
-//                 variant: "destructive",
-//                 });
-//             } else {
-//                 // Assuming API returns updated full objects, cast them
-//                 if (dirType === "file") {
-//                 dispatch(UPDATE_FILE(response.data.data.file as ReduxFile));
-//                 dispatch(UPDATE_FOLDER(response.data.data.folder as ReduxFolder));
-//                 dispatch(UPDATE_WORKSPACE(response.data.data.workspace as ReduxWorkSpace));
-//                 } else if (dirType === "folder") {
-//                 dispatch(UPDATE_FOLDER(response.data.data.folder as ReduxFolder));
-//                 dispatch(UPDATE_WORKSPACE(response.data.data.workspace as ReduxWorkSpace));
-//                 } else if (dirType === "workspace") {
-//                 dispatch(UPDATE_WORKSPACE(response.data.data as ReduxWorkSpace)); // Assuming direct workspace object
-//                 }
-//                 toast({
-//                 title: "Success",
-//                 description: successMessage,
-//                 });
-//             }
-//             } catch (error) {
-//             console.log(`Error while changing the icon of ${dirType} `, error);
-//             toast({
-//                 title: `Failed to change the icon of ${dirType}.`,
-//                 description: "Something went wrong",
-//                 variant: "destructive",
-//             });
-//             } finally {
-//             setSaving(false);
-//             }
-//     };
-
-//        const deleteBanner = async () => {
-//     if (!fileId) return;
-
-//     setRemovingBanner(true);
-//     let apiUrl: string;
-//     let successMessage: string;
-//     let errorMessage: string;
-
-//     if (dirType === "file") {
-//       apiUrl = `/api/delete-file-banner?fileId=${fileId}`;
-//       successMessage = "Successfully removed banner for the file.";
-//       errorMessage = "Failed to remove banner for the file.";
-//     } else if (dirType === "folder") {
-//       apiUrl = `/api/delete-folder-banner?folderId=${fileId}`;
-//       successMessage = "Successfully removed banner for the folder.";
-//       errorMessage = "Failed to remove banner for the folder.";
-//     } else if (dirType === "workspace") {
-//       apiUrl = `/api/delete-workspace-banner?workspaceId=${fileId}`;
-//       successMessage = "Successfully removed banner for the workspace.";
-//       errorMessage = "Failed to remove banner for the workspace.";
-//     } else {
-//       setRemovingBanner(false);
-//       return;
-//     }
-
-//     try {
-//       const response = await axios.delete(apiUrl);
-//       if (!response.data.success) {
-//         toast({
-//           title: "Failed",
-//           description: response.data.message || `${errorMessage} Please try again later.`,
-//           variant: "destructive",
-//         });
-//       } else {
-//         // Dispatch updates based on what the API returns.
-//         // Assuming it returns the updated entity (e.g., file with bannerUrl removed)
-//         if (dirType === "file") {
-//           dispatch(UPDATE_FILE(response.data.data.file as ReduxFile));
-//           dispatch(UPDATE_FOLDER(response.data.data.folder as ReduxFolder));
-//           dispatch(UPDATE_WORKSPACE(response.data.data.workspace as ReduxWorkSpace));
-//         } else if (dirType === "folder") {
-//           dispatch(UPDATE_FOLDER(response.data.data.folder as ReduxFolder));
-//           dispatch(UPDATE_WORKSPACE(response.data.data.workspace as ReduxWorkSpace));
-//         } else if (dirType === "workspace") {
-//           dispatch(UPDATE_WORKSPACE(response.data.data.workspace as ReduxWorkSpace));
-//         }
-//         toast({
-//           title: "Success",
-//           description: successMessage,
-//         });
-//       }
-//     } catch (error) {
-//       console.log(`Error while removing banner for ${dirType} `, error);
-//       toast({
-//         title: "Failed",
-//         description: `${errorMessage} Something went wrong.`,
-//         variant: "destructive",
-//       });
-//     } finally {
-//       setRemovingBanner(false);
-//     }
-//   };
 
   if (isLoading || !details) {
         return (
@@ -499,13 +157,18 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                             className="bg-transparent border-white text-white
                              hover:bg-white hover:text-[#EB5757]"
                              onClick={handleRestore}
+                             disabled={isLoading || !details}
                              >Restore</Button>
                              <Button
                              size={"sm"} 
                              variant={"outline"}
                              className="bg-transparent border-white text-white
                               hover:bg-white hover:text-[#EB5757]"
-                              onClick={handleDelete}
+                              onClick={() => {
+                                    console.log("Delete button clicked!"); // <--- ADD THIS
+                                    handleDelete();
+                                }}
+                              disabled={isLoading || !details}
                              >Delete</Button>
                         </div>
                         <span className="text-sm text-white">

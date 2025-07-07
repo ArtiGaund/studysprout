@@ -25,7 +25,8 @@ export async function hardDeleteDir(
     dirType: DirType,
     dirId: string,
 ) {
-    const { data } =  await axios.delete(`/api/delete-${dirType}?${dirType}=${dirId}`);
+    console.log(`Deleting ${dirType} ${dirId}`);
+    const { data } =  await axios.delete(`/api/delete-${dirType}?${dirType}Id=${dirId}`);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
@@ -41,7 +42,7 @@ export async function deleteBanner(
     dirType: DirType,
     dirId: string,
 ) {
-    const { data } = await axios.delete(`/api/delete-${dirType}-banner?${dirType}=${dirId}`);
+    const { data } = await axios.delete(`/api/delete-${dirType}-banner?${dirType}Id=${dirId}`);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }

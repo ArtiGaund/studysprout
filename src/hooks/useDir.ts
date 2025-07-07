@@ -9,8 +9,11 @@ import { RootState } from "@/store/store";
 import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
 import { dir } from "console";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useFile } from "./useFile";
+import { useFolder } from "./useFolder";
+import { useWorkspace } from "./useWorkspace";
 
 type DirType = "workspace" | "folder" | "file";
 
@@ -28,27 +31,97 @@ export function useDir({
     currentFolderId,
     currentFileId
 }: UseDirOptions){
+    //  console.log("useDir hook initialized with dirId:", dirId, "dirType:", dirType);
     const dispatch = useDispatch();
     const router = useRouter();
     const { toast } = useToast();
 
-    // select relevant state based on dirType
-    const details = useSelector((state: RootState) => {
-        if(dirType === "workspace")
-             return state.workspace.byId[dirId] as ReduxWorkSpace | undefined;
-        if(dirType === "folder") 
-            return state.folder.byId[dirId] as ReduxFolder | undefined;
-        if(dirType === "file") 
-            return state.file.byId[dirId] as ReduxFile | undefined;
-        return undefined;
-    })
+    //  Hooks to fetch individual directory details if they are not already in Redux
+    // This is crucial for initial load if Redux state is empty
+    const { currentFileDetails } = useFile();
+    const { currentFolderDetail } = useFolder();
+    const { currentWorkspaceDetails } = useWorkspace();
+
+    // Use a state to hold the details that is being worked on.
+    // Initialize it with the prop if available, but primarily rely on fetching.
+    const [details, setDetails] = useState<ReduxWorkSpace | ReduxFolder | ReduxFile | undefined>(undefined);
 
     const [ isLoading, setIsLoading ] = useState(false);
     const [ isSaving, setIsSaving ] = useState(false);
     const [ isRemovingBanner, setIsRemovingBanner ] = useState(false);
     const [ bannerImageUrl, setBannerImageUrl ] = useState<string | undefined>(undefined);
 
-    
+    console.log("DirFileId ",dirId);
+    // This ref will help us to prevent fetching if a deletion/navigation is in progress
+    const isNavigatingAfterDeleteRef = useRef(false);
+
+    // Effect to fetch and set details on initial load or dirId change
+    useEffect(() => {
+        // if already navigating away after a deletion, no need to fetch details 
+        if(isNavigatingAfterDeleteRef.current){
+            console.log("useDir: Skipping fetchDetails because navigation after deletion is in progress.");
+            setIsLoading(false);
+            return;
+        }
+        if(!dirId || typeof dirId !== "string") {
+            console.warn(`usDir: Invalid dirId received (${dirId}): `,dirId);
+            setDetails(undefined);
+            setIsLoading(false);
+            return;
+        }
+        const fetchDetails = async () => {
+            setIsLoading(true);
+            try {
+                let response: any;
+                if(dirType === "workspace"){
+                    response = await currentWorkspaceDetails(dirId);
+                }else if(dirType === "folder"){
+                    response = await currentFolderDetail(dirId);
+                }else if(dirType === "file"){
+                    response = await currentFileDetails(dirId);
+                }
+
+                if(response?.success && response.data){
+                    setDetails(response.data);
+                }else{
+                    console.error(`useDir: Failed to fetch ${dirType} details for Id: ${dirId}`, response.error);
+                    setDetails(undefined);
+                    if(dirType === "file" && currentWorkspaceId && currentFolderId){
+                        router.replace(`/dashboard/${currentWorkspaceId}/${currentFolderId}`);
+                    }else if(dirType === "folder" && currentWorkspaceId){
+                        router.replace(`/dashboard/${currentWorkspaceId}`);
+                    }else {
+                        router.replace(`/dashboard`);
+                    }
+                }
+            } catch (error) {
+                console.error(`useDir: Error fetching ${dirType} details for Id: ${dirId}`, error);
+                setDetails(undefined);
+                if(dirType === "file" && currentWorkspaceId && currentFolderId){
+                    router.replace(`/dashboard/${currentWorkspaceId}/${currentFolderId}`);
+                }else if(dirType === "folder" && currentWorkspaceId){
+                    router.replace(`/dashboard/${currentWorkspaceId}`);
+                }else {
+                    router.replace(`/dashboard`);
+                }
+            }finally{
+                setIsLoading(false);
+            }
+        
+        
+        };
+        fetchDetails();
+    }, [
+        dirId,
+        dirType,
+        currentWorkspaceId,
+        currentFolderId,
+        currentFileId,
+        currentFileDetails,
+        currentFolderDetail,
+        currentWorkspaceDetails,
+        router
+    ])
     // fetch the banner image url if available
     useEffect(() => {
         if(details?.bannerUrl){
@@ -68,16 +141,16 @@ export function useDir({
     }, [details?.bannerUrl]);
 
     const handleRestore = useCallback(async() => {
-        if(!details?.inTrash) return; //only restore if its in trash
-        if(!dirId){
+        if(!dirId || !details?.inTrash){
             toast({
                 title: "Error",
                 description: "Item ID is missing for restoration",
                 variant: "destructive"
-            })
+            });
+            return;
         }
 
-        setIsLoading(true);
+       setIsSaving(true);
         try {
             const todayDate = new Date();
             const lastUpdated = todayDate.toString();
@@ -132,14 +205,18 @@ export function useDir({
     },[ dirType, dirId, details, dispatch, toast])
 
     const handleDelete = useCallback( async () => {
+        console.log("Attempting to hard delete dirId:", dirId, "of type:", dirType);
         if(!dirId){
             toast({
                 title: "Error",
                 description: `${dirType} ID is missing for deletion`,
                 variant: "destructive"
             })
+            return; 
         }
+        console.log("DirId inside delete methond ",dirId);
         setIsLoading(true);
+        isNavigatingAfterDeleteRef.current = true;
         try {
             const response = await hardDeleteDir(dirType, dirId);
             if(dirType === "workspace"){
@@ -171,6 +248,8 @@ export function useDir({
                 description: error.message || "Something went wrong",
                 variant: "destructive",
             });
+             // If deletion fails, reset the flag so `useEffect` can try fetching again if user stays on page.
+            isNavigatingAfterDeleteRef.current = false;
         } finally {
       setIsLoading(false);
     }
