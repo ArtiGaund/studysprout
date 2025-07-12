@@ -101,11 +101,19 @@ export function useFolder(){
             dispatch(SET_FOLDER_LOADING(true));
             dispatch(SET_FOLDER_ERROR(null));
         try {
-            const folder = await updateDir("folder", folderId , updatedData);
-            if(!updateFolder){
+            const result = await updateDir("folder", folderId , updatedData);
+            const folder = result.folder;
+            console.log("Updated folder in useFolder hook ",folder);
+            if(!result){
                 return {
                     success: false,
-                    error: "Failed to update folder"
+                    error:"Failed to update folder"
+                }
+            }
+            if( !folder){
+                return {
+                    success: false,
+                    error: result?.error || "Failed to update folder or invalid response from service"
                 }
             }
             dispatch(UPDATE_FOLDER(folder));

@@ -51,7 +51,7 @@ export function useDir({
     const [ isRemovingBanner, setIsRemovingBanner ] = useState(false);
     const [ bannerImageUrl, setBannerImageUrl ] = useState<string | undefined>(undefined);
 
-    console.log("DirFileId ",dirId);
+    // console.log("DirFileId ",dirId);
     // This ref will help us to prevent fetching if a deletion/navigation is in progress
     const isNavigatingAfterDeleteRef = useRef(false);
 
@@ -59,12 +59,12 @@ export function useDir({
     useEffect(() => {
         // if already navigating away after a deletion, no need to fetch details 
         if(isNavigatingAfterDeleteRef.current){
-            console.log("useDir: Skipping fetchDetails because navigation after deletion is in progress.");
+            // console.log("useDir: Skipping fetchDetails because navigation after deletion is in progress.");
             setIsLoading(false);
             return;
         }
         if(!dirId || typeof dirId !== "string") {
-            console.warn(`usDir: Invalid dirId received (${dirId}): `,dirId);
+            // console.warn(`usDir: Invalid dirId received (${dirId}): `,dirId);
             setDetails(undefined);
             setIsLoading(false);
             return;
@@ -205,7 +205,7 @@ export function useDir({
     },[ dirType, dirId, details, dispatch, toast])
 
     const handleDelete = useCallback( async () => {
-        console.log("Attempting to hard delete dirId:", dirId, "of type:", dirType);
+        // console.log("Attempting to hard delete dirId:", dirId, "of type:", dirType);
         if(!dirId){
             toast({
                 title: "Error",
@@ -214,7 +214,7 @@ export function useDir({
             })
             return; 
         }
-        console.log("DirId inside delete methond ",dirId);
+        // console.log("DirId inside delete methond ",dirId);
         setIsLoading(true);
         isNavigatingAfterDeleteRef.current = true;
         try {

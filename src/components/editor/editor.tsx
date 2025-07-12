@@ -39,11 +39,23 @@ const TextEditor: React.FC<TextEditorProps> = ({
     fileDetails,
     onChange,
     editable,
-    initialContent
+    // initialContent
 }) => {
     const { resolvedTheme } = useTheme()
     const { toast } = useToast();
 
+    let effectiveInitialContent: PartialBlock[] | undefined = undefined;    
+
+    if(fileDetails && fileDetails.data){
+        try {
+            const parsed = JSON.parse(fileDetails.data);
+            if(Array.isArray(parsed) && parsed.length > 0){
+                effectiveInitialContent = parsed as PartialBlock[];
+            }
+        } catch (error) {
+            console.log("Error parsing initial content ",error);
+        }
+    }
 
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
         console.log("File upload triggered:", file.name);
@@ -51,10 +63,9 @@ const TextEditor: React.FC<TextEditorProps> = ({
         return ""
     }
 
+
     const editor: BlockNoteEditor = useCreateBlockNote({
-        initialContent: initialContent 
-        ? JSON.parse(initialContent) as PartialBlock[] 
-        : undefined,
+        initialContent: effectiveInitialContent,
         uploadFile: handleUpload,
         tables: {
             splitCells: true,

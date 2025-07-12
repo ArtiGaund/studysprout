@@ -62,11 +62,19 @@ export function useFile() {
             dispatch(SET_FILE_LOADING(true));
             dispatch(SET_FILE_ERROR(null));
         try {
-            const file = await updateDir("file",fileId, updatedData);
-            if(!file){
+            const result = await updateDir("file",fileId, updatedData);
+            const file = result.file
+            console.log("Updated file:", result.file);
+            if(!result){
                 return {
                     success: false,
                     error: "Failed to update file"
+                }
+            }
+            if(!file){
+                return {
+                    success: false,
+                    error: result.error || "Failed to update file or invalid response from service"
                 }
             }
             dispatch(UPDATE_FILE(file));

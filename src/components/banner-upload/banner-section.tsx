@@ -20,6 +20,9 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
 import { useDir } from "@/hooks/useDir";
+import { setEditingItem, updateEditingItemTitle } from "@/store/slices/uiSlice";
+import { useTitleEditing } from "@/hooks/useTitleEditing";
+import clsx from "clsx";
 
 
 
@@ -51,7 +54,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     fileId,
     dirType
 }) => {
-     console.log("BannerSection mounted, fileId prop:", fileId, "dirType:", dirType);
+    //  console.log("BannerSection mounted, fileId prop:", fileId, "dirType:", dirType);
     const workspaceState = useSelector((state: RootState) => state.workspace)
     const folderState = useSelector((state:RootState) => state.folder)
     const fileState = useSelector((state:RootState) => state.file)
@@ -60,16 +63,27 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     const currentFileId = useSelector((state: RootState) => state.file.currentFile)
 
     const { workspaces } = useWorkspace();
-    // const { currentFolder } = useFolder();
-    // const { currentFile } = useFile();
+    
     const dispatch = useDispatch()
     const { toast } = useToast()
     const pathname = usePathname()
-    // const [ saving, setSaving ] = useState(false)
-    // const [ imageUrl, setImageUrl ] = useState('')
-    // const [ removingBanner, setRemovingBanner ] = useState(false)
-    // const router = useRouter()
     
+    const router = useRouter()
+    
+
+    const {
+        isCurrentlyEditingThisItem,
+        displayedTitle,
+        handleKeyDown,
+        handleSaveTitle,
+        handleStartEditing,
+        handleTitleChange,
+        inputRef
+    } = useTitleEditing({
+        id: fileId,
+        dirType,
+        originalTitle: dirDetails?.title
+    })
 
     const {
         details,
@@ -82,6 +96,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
         handleRestore,
         handleDeleteBanner,
         handleIconChange,
+        
     } = useDir({
         dirType,
         dirId: fileId,
@@ -128,10 +143,40 @@ const BannerSection: React.FC<BannerSectionProps> = ({
          pathname,
           currentWorkspaceId,
           workspaceState.byId,
+          currentFolderId,
           folderState.byId,
+          fileId,
           fileState.byId,
+          workspaceState.allIds
     ]);
 
+    const handleDoubleClick = useCallback(() => {
+        if(details?.inTrash){
+            toast({
+                title: "Cannot edit",
+                description: `This ${dirType} is in trash and cannot be edited. Restore it first`,
+                variant: "destructive"
+            })
+            return;
+        }
+       handleStartEditing();
+    }, [
+        details?.inTrash,
+         dirType, 
+         handleStartEditing, 
+         toast
+    ]);
+
+    // const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     dispatch(updateEditingItemTitle(e.target.value));
+    // }
+
+    // const handleBlur = async () => {
+    //     if(!isCurrentlyEditingThisItem) return;
+
+    //     const originalTitle = editingItem.originalTitle;
+    //     const newTitle = editingItem.tempTitle.trim();
+    // }
 
   if (isLoading || !details) {
         return (
@@ -248,9 +293,29 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                         </Button>
                         }
                      </div>
-                     <span className="text-3xl font-bold text-muted-foreground h-9">
+                    {/* Title Editing / Display */}
+                    { isCurrentlyEditingThisItem ? (
+                        <input 
+                        ref={inputRef}
+                        type="text"
+                        value={displayedTitle ?? ''}
+                        className={clsx(
+                                'outline-none text-3xl font-bold text-muted-foreground bg-muted',
+                                'w-full h-9 overflow-hidden'
+                            )}
+                        onBlur={handleSaveTitle}
+                        onChange={handleTitleChange}
+                        onKeyDown={handleKeyDown}
+                        autoFocus
+                        />
+                    ): (
+                        <span className="text-3xl font-bold text-muted-foreground h-9"
+                        onDoubleClick={handleDoubleClick}
+                        >
                         {details.title} <span className="text-sm ml-2">({dirType.toUpperCase()})</span>
                     </span>
+                    )}
+                     
                 </div>
                 
             </div>

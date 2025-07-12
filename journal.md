@@ -63,4 +63,8 @@ List will show list of folders and files inside the workspace, and can create fo
 6) Storing the data of the file: 
 
 
+11) now files are getting deleting from trash banner section, but there is some problem regarding relocating after 
+deleting the files
 
+
+12) Core feature of synchronizing in real-time as you type title 

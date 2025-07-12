@@ -38,14 +38,23 @@ const fileSlice = createSlice({
                         state.currentFile = null;
                     }
                 },
-        UPDATE_FILE: (state, action: PayloadAction<Partial<ReduxFile>>) => {
-            const { _id, ...update } = action.payload;
-                        if(_id && state.byId[_id]){
-                            state.byId[_id] = {
-                                ...state.byId[_id],
-                                ...update,
-                            } as ReduxFile;
-                        }
+        UPDATE_FILE: (state, action: PayloadAction<File>) => {
+            // const { _id, ...update } = action.payload;
+            //             if(_id && state.byId[_id]){
+            //                 state.byId[_id] = {
+            //                     ...state.byId[_id],
+            //                     ...update,
+            //                 } as ReduxFile;
+            //             }
+            const updatedMongooseFile = action.payload;
+            const transformedReduxFile = transformFile(updatedMongooseFile);
+            
+            if(transformedReduxFile._id && state.byId[transformedReduxFile._id]){
+                state.byId[transformedReduxFile._id] = {
+                    ...state.byId[transformedReduxFile._id],
+                    ...transformedReduxFile,
+                };
+            }
         },
         SET_FILES: (state, action: PayloadAction<File[]>) => {
             state.byId = {};
