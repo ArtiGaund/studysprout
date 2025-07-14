@@ -9,6 +9,7 @@ import { addFile, getAllFilesByWorkspaceId, getCurrentFile } from "@/services/fi
 import { ReduxFile } from "@/types/state.type";
 import { updateDir } from "@/services/dirServices";
 import { getAllFiles } from "@/services/folderServices";
+import { transformFile } from "@/utils/data-transformers";
 
 export function useFile() {
     const dispatch = useDispatch();
@@ -34,7 +35,9 @@ export function useFile() {
             dispatch(SET_FILE_ERROR(null));
             try {
                 const newFile = await addFile(fileData);
-                dispatch(ADD_FILE(newFile));
+
+                const transformedFile = transformFile(newFile);
+                dispatch(ADD_FILE(transformedFile));
                 return {
                     success: true,
                     data: newFile
@@ -107,12 +110,24 @@ export function useFile() {
             dispatch(SET_FILE_LOADING(true));
             dispatch(SET_FILE_ERROR(null));
             const fetchFiles = await getAllFilesByWorkspaceId(workspaceId);
-            if(Array.isArray(fetchFiles)){
-                dispatch(SET_FILES(fetchFiles));
-            }else if(fetchFiles && typeof fetchFiles === "object"){
-                dispatch(SET_FILES([fetchFiles as MongooseFile]));
+
+            const transformedFiles = (Array.isArray(fetchFiles)
+            ? fetchFiles
+            : [fetchFiles]
+            ).filter(Boolean).map(file => transformFile(file as MongooseFile));
+            
+            if(transformedFiles.length > 0){
+                dispatch(SET_FILES(transformedFiles));
+                if(!currentFileId && !transformedFiles.some(file => file._id === currentFileId)){
+                    const firstFile = transformedFiles[0];
+                    if(firstFile && firstFile._id){
+                         dispatch(SET_CURRENT_FILES(firstFile._id));
+                    }
+                   
+                }
             }else{
                 dispatch(SET_FILES([]));
+                dispatch(SET_CURRENT_FILES(null));
             }
             return {
                 success: true,
@@ -126,7 +141,10 @@ export function useFile() {
         }finally{
             dispatch(SET_FILE_LOADING(false));
         }
-     }, [dispatch])
+     }, [
+        dispatch,
+        currentFileId,
+    ])
      const getFiles = useCallback(async (folderId: string): Promise<{
         success: boolean,
         data?: MongooseFile[],
@@ -141,12 +159,24 @@ export function useFile() {
         dispatch(SET_FILE_ERROR(null));
         try {
             const fetchFiles = await getAllFiles(folderId);
-            if(Array.isArray(fetchFiles)){
-                dispatch(SET_FILES(fetchFiles));
-            }else if(fetchFiles && typeof fetchFiles === "object"){
-                dispatch(SET_FILES([fetchFiles as MongooseFile]));
+
+            const transformedFiles = (Array.isArray(fetchFiles)
+            ? fetchFiles
+            : [fetchFiles]
+            ).filter(Boolean).map(file => transformFile(file as MongooseFile));
+           
+             if(transformedFiles.length > 0){
+                dispatch(SET_FILES(transformedFiles));
+                if(!currentFileId && !transformedFiles.some(file => file._id === currentFileId)){
+                    const firstFile = transformedFiles[0];
+                    if(firstFile && firstFile._id){
+                         dispatch(SET_CURRENT_FILES(firstFile._id));
+                    }
+                   
+                }
             }else{
                 dispatch(SET_FILES([]));
+                dispatch(SET_CURRENT_FILES(null));
             }
             return {
                 success: true,
@@ -161,7 +191,10 @@ export function useFile() {
         }finally{
             dispatch(SET_FILE_LOADING(false));
         }
-     }, [dispatch]);
+     }, [
+        dispatch,
+        currentFileId
+    ]);
      const currentFileDetails = useCallback(async (fileId: string): Promise<{
         success: boolean,
         data?: MongooseFile,

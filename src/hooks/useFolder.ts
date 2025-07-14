@@ -10,6 +10,7 @@ import { ReduxFolder } from "@/types/state.type";
 import { addFolder, getCurrentFolder } from "@/services/folderServices";
 // import { updateFolder as updateFolderService } from "@/services/folderServices";
 import { updateDir } from "@/services/dirServices";
+import { transformFolder } from "@/utils/data-transformers";
 
 
 export function useFolder(){
@@ -34,13 +35,24 @@ export function useFolder(){
         dispatch(SET_FOLDER_ERROR(null));
         try {
             const fetchFolders = await getAllFolders(workspaceId);
-            if(Array.isArray(fetchFolders)){
-                dispatch(SET_FOLDERS(fetchFolders));
-            }else if(fetchFolders && typeof fetchFolders === 'object'){
-                dispatch(SET_FOLDERS([fetchFolders as MongooseFolder]));
+            
+            const transformedFolders = (Array.isArray(fetchFolders) 
+            ? fetchFolders
+            : [fetchFolders]
+            ).filter(Boolean)
+            .map(folder => transformFolder(folder as MongooseFolder))
+           
+             if(transformedFolders.length > 0){
+                dispatch(SET_FOLDERS(transformedFolders));
+                if(!currentFolderId || !transformedFolders.some((folder) => folder._id === currentFolderId)){
+                const firstFolder = transformedFolders[0];
+                if(firstFolder && firstFolder._id){
+                    dispatch(SET_CURRENT_FOLDERS(firstFolder._id));
+                    }
+                }
             }else{
-                console.warn("getAllFolders returned unexpected data:",fetchFolders);
                 dispatch(SET_FOLDERS([]));
+                dispatch(SET_CURRENT_FOLDERS(null));
             }
             return{
                 success: true,
@@ -56,7 +68,10 @@ export function useFolder(){
             dispatch(SET_FOLDER_LOADING(false));
         }
 
-    }, [dispatch])
+    }, [
+        dispatch,
+        currentFolderId
+    ])
 
     const createFolder = useCallback(async( folderData: MongooseFolder ): Promise<{
         success: boolean,
@@ -72,8 +87,11 @@ export function useFolder(){
             dispatch(SET_FOLDER_ERROR(null));
             try {
                 const newFolder = await addFolder(folderData);
-                dispatch(ADD_FOLDER(newFolder));
-                dispatch(SET_CURRENT_FOLDERS(newFolder._id?.toString()));
+
+                const transformedFolder = transformFolder(newFolder as MongooseFolder);
+
+                dispatch(ADD_FOLDER(transformedFolder));
+                dispatch(SET_CURRENT_FOLDERS(transformedFolder._id?.toString()));
                 return {
                     success: true,
                     data: newFolder,
@@ -116,7 +134,17 @@ export function useFolder(){
                     error: result?.error || "Failed to update folder or invalid response from service"
                 }
             }
-            dispatch(UPDATE_FOLDER(folder));
+            const transformedReduxFolder = transformFolder(folder);
+
+            dispatch(UPDATE_FOLDER({
+                id: transformedReduxFolder._id,
+                updates: transformedReduxFolder
+            }));
+
+            console.log("Dispatched UPDATE_FOLDER with payload: ",{
+                id: transformedReduxFolder._id,
+                updates: transformedReduxFolder
+            });
             return {
                 success: true,
                 data: folder,
