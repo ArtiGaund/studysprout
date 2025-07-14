@@ -11,17 +11,20 @@ import axios from "axios";
 import { SET_CURRENT_FILES, SET_FILES } from "@/store/slices/fileSlice";
 import { useFile } from "@/hooks/useFile";
 import { ReduxFile } from "@/types/state.type";
+import { transformFile } from "@/utils/data-transformers";
 
 interface FolderFileListProps {
     folderFiles: ReduxFile[] | [];
     folderId: string;
     onFileAdded: () => void;
+    globalEditingItems?: RootState['ui']['editingItem'];
 }
 
-const FolderFileList: React.FC<FolderFileListProps> = ({
+const FolderFileListInner: React.FC<FolderFileListProps> = ({
     folderFiles,
     folderId,
-    onFileAdded
+    onFileAdded,
+    globalEditingItems
 }) => {
 
 
@@ -67,13 +70,24 @@ const FolderFileList: React.FC<FolderFileListProps> = ({
                             })
                         }
                         const fetchedFiles = allFiles.data;
-                        if(Array.isArray(fetchedFiles)){
-                            dispatch(SET_FILES(fetchedFiles));
-                        }else if(fetchedFiles && typeof fetchedFiles === "object"){
-                            dispatch(SET_FILES([fetchedFiles]));
-                        }else{
-                            dispatch(SET_FILES([]));
+
+                        const transformedFiles = (Array.isArray(fetchedFiles)
+                        ? fetchedFiles
+                        : [fetchedFiles]
+                        ).filter(Boolean).map((file) => transformFile(file as MongooseFile));
+
+                       if(transformedFiles.length > 0){
+                        dispatch(SET_FILES(transformedFiles));
+                        if(!currentFile || !transformedFiles.some((file) => file._id === currentFile._id)){
+                            const firstFile = transformedFiles[0];
+                            if(firstFile && firstFile._id){
+                                dispatch(SET_CURRENT_FILES(firstFile._id));
+                            }
                         }
+                       }else{
+                        dispatch(SET_FILES([]));
+                        dispatch(SET_CURRENT_FILES(null));
+                       }
                         toast({
                             title: "Successfully fetched files",
                             description: "You can now add files to this folder",
@@ -121,4 +135,5 @@ const FolderFileList: React.FC<FolderFileListProps> = ({
     )
 }
 
+const FolderFileList = React.memo(FolderFileListInner);
 export default FolderFileList;
