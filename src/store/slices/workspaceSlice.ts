@@ -1,9 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { WorkSpace } from "@/model/workspace.model";
 import { Draft } from 'immer';
-import { WorkspacesState } from "@/types/state.type";
-import { transformWorkspace } from "@/utils/data-transformers";
-
+import { ReduxWorkSpace, WorkspacesState } from "@/types/state.type";
 
 const initialState: WorkspacesState = {
     byId: {},
@@ -18,11 +16,9 @@ const workspaceSlice = createSlice({
     name: "workspace",
     initialState,
     reducers: {
-        ADD_WORKSPACE: (state, action: PayloadAction<WorkSpace>) => {
-            const transformed = transformWorkspace(action.payload);
-            // Add to byId and allIds
-            state.byId[transformed._id] = transformed;
-            state.allIds.push(transformed._id);
+        ADD_WORKSPACE: (state, action: PayloadAction<ReduxWorkSpace>) => {
+            state.byId[action.payload._id] = action.payload;
+            state.allIds.push(action.payload._id);
         },
         DELETE_WORKSPACE: (state, action: PayloadAction<string>) => {
             const idToDelete = action.payload;
@@ -38,23 +34,19 @@ const workspaceSlice = createSlice({
                 state.currentWorkspace = null;
             }
         },
-        UPDATE_WORKSPACE: (state, action: PayloadAction<WorkSpace>) => { // Expect full WorkSpace or Partial<WorkSpace> for consistent transform
-            // Assuming action.payload is the *updated* WorkSpace object from API
-            const transformed = transformWorkspace(action.payload);
+        UPDATE_WORKSPACE: (state, action: PayloadAction<ReduxWorkSpace>) => { // Expect full WorkSpace or Partial<WorkSpace> for consistent transfor
             // Update in byId directly
-            if (state.byId[transformed._id]) { // Check if it exists
-                state.byId[transformed._id] = transformed;
+            if (state.byId[action.payload._id]) { // Check if it exists
+                state.byId[action.payload._id] = action.payload;
             }
         },
-        SET_WORKSPACES: (state, action: PayloadAction<WorkSpace[]>) => {
+        SET_WORKSPACES: (state, action: PayloadAction<ReduxWorkSpace[]>) => {
             // Clear existing state for a fresh set
             state.byId = {};
             state.allIds = [];
             action.payload.forEach(ws => {
-                // Transform each incoming Mongoose WorkSpace to a ReduxWorkSpace
-                const transformed = transformWorkspace(ws);
-                state.byId[transformed._id] = transformed;
-                state.allIds.push(transformed._id);
+                state.byId[ws._id] = ws;
+                state.allIds.push(ws._id);
             });
             state.loading = false; // Set loading to false after data is set
             state.error = null;

@@ -1,7 +1,5 @@
 import { Folder } from "@/model/folder.model"
 import { FoldersState, ReduxFolder } from "@/types/state.type"
-import { transformFolder } from "@/utils/data-transformers"
-// import { Folder } from "@/types/folder"
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit"
 import mongoose from "mongoose"
 
@@ -17,10 +15,9 @@ const folderSlice = createSlice({
     name: "folder",
     initialState,
     reducers: {
-        ADD_FOLDER: (state, action: PayloadAction<Folder>) => {
-            const transformed = transformFolder(action.payload);
-            state.byId[transformed._id] = transformed;
-            state.allIds.push(transformed._id);
+        ADD_FOLDER: (state, action: PayloadAction<ReduxFolder>) => {
+            state.byId[action.payload._id] = action.payload;
+            state.allIds.push(action.payload._id);
         },
         DELETE_FOLDER: (state, action: PayloadAction<string>) => {
                     const idToDelete = action.payload;
@@ -46,13 +43,13 @@ const folderSlice = createSlice({
                         // console.log(`Redux: Folder ${id} title updated to "${state.byId[id].title}". New Object ref: `,state.byId[id]);
                     }
                 },
-        SET_FOLDERS: (state, action: PayloadAction<Folder[]>) => {
+
+        SET_FOLDERS: (state, action: PayloadAction<ReduxFolder[]>) => {
             state.byId = {};
             state.allIds = [];
             action.payload.forEach(f => {
-                const transformed = transformFolder(f);
-                state.byId[transformed._id] = transformed;
-                state.allIds.push(transformed._id);
+                state.byId[f._id] = f;
+                state.allIds.push(f._id);
             });
             state.loading = false;
         },

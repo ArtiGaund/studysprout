@@ -2,7 +2,6 @@
 // import { File } from "@/types/file"
 import { File } from "@/model/file.model"
 import { FilesState, ReduxFile } from "@/types/state.type"
-import { transformFile } from "@/utils/data-transformers"
 import { Draft, PayloadAction, createSlice } from "@reduxjs/toolkit"
 
 
@@ -19,10 +18,9 @@ const fileSlice = createSlice({
     name: "file",
     initialState,
     reducers: {
-        ADD_FILE: (state, action: PayloadAction<File>) => {
-            const transformed = transformFile(action.payload);
-            state.byId[transformed._id] = transformed;
-            state.allIds.push(transformed._id);
+        ADD_FILE: (state, action: PayloadAction<ReduxFile>) => {
+            state.byId[action.payload._id] = action.payload;
+            state.allIds.push(action.payload._id);
         },
         DELETE_FILE: (state, action: PayloadAction<string>) => {
                     const idToDelete = action.payload;
@@ -47,13 +45,12 @@ const fileSlice = createSlice({
                             } 
                         }
         },
-        SET_FILES: (state, action: PayloadAction<File[]>) => {
+        SET_FILES: (state, action: PayloadAction<ReduxFile[]>) => {
             state.byId = {};
             state.allIds = [];
             action.payload.forEach(f => {
-                const transformed = transformFile(f);
-                state.byId[transformed._id] = transformed;
-                state.allIds.push(transformed._id);
+                state.byId[f._id] = f;
+                state.allIds.push(f._id);
             });
             state.loading = false;
         },
