@@ -36,24 +36,16 @@ const folderSlice = createSlice({
                         state.currentFolder = null;
                     }
                 },
-        UPDATE_FOLDER: (state, action: PayloadAction<Folder>) => {
-            // const { _id, ...update } = action.payload;
-            // if(_id && state.byId[_id]){
-            //     state.byId[_id] = {
-            //         ...state.byId[_id],
-            //         ...update,
-            //     } as ReduxFolder;
-            // }
-            const updatedMongooseFolder = action.payload;
-            const transformedReduxFolder = transformFolder(updatedMongooseFolder);
-
-            if(transformedReduxFolder._id && state.byId[transformedReduxFolder._id]){
-                state.byId[transformedReduxFolder._id] = {
-                    ...state.byId[transformedReduxFolder._id],
-                    ...transformedReduxFolder,
-                };
-            }
-        },
+                UPDATE_FOLDER: ( state, action: PayloadAction<{ id: string; updates: Partial<ReduxFolder>}>) => {
+                    const { id, updates } = action.payload;
+                    if(id && state.byId[id]){
+                        state.byId[id] = {
+                            ...state.byId[id],
+                            ...updates,
+                        }
+                        // console.log(`Redux: Folder ${id} title updated to "${state.byId[id].title}". New Object ref: `,state.byId[id]);
+                    }
+                },
         SET_FOLDERS: (state, action: PayloadAction<Folder[]>) => {
             state.byId = {};
             state.allIds = [];
