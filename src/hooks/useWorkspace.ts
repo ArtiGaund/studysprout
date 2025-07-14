@@ -6,6 +6,7 @@ import { addWorkspace, getCurrentWorkspace, getUserWorkspaces, updateLogo, updat
 import { ADD_WORKSPACE, DELETE_WORKSPACE, SET_CURRENT_WORKSPACE, SET_WORKSPACE_ERROR, SET_WORKSPACE_LOADING, SET_WORKSPACES, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { RootState } from "@/store/store";
 import { ReduxWorkSpace } from "@/types/state.type";
+import { transformWorkspace } from "@/utils/data-transformers";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,16 +34,23 @@ export function useWorkspace() {
 
         try {
             const response = await getUserWorkspaces(session.user._id);
-            if(Array.isArray(response)){
-                dispatch(SET_WORKSPACES(response))
-                // setWorkspaces(response);
-            }else if (response && typeof response === 'object') {
-                dispatch(SET_WORKSPACES([response as MongooseWorkSpace]))
-                // setWorkspaces([response]);
-            }else {
-                
-               console.warn("getUserWorkspaces returned unexpected data:",response);
+
+            const transformedWorkspace = (Array.isArray(response)
+            ? response
+            : [response]
+            ).filter(Boolean).map(workspace => transformWorkspace(workspace as MongooseWorkSpace));
+
+            if(transformedWorkspace.length > 0){
+                dispatch(SET_WORKSPACES(transformedWorkspace));
+                if(!currentWorkspaceId && !transformedWorkspace.some(workspace => workspace._id === currentWorkspaceId)){
+                    const firstWorkspace = transformedWorkspace[0];
+                    if(firstWorkspace && firstWorkspace._id){
+                        dispatch(SET_CURRENT_WORKSPACE(firstWorkspace._id));
+                    }
+                }
+            }else{
                 dispatch(SET_WORKSPACES([]));
+                dispatch(SET_CURRENT_WORKSPACE(null));
             }
             // setWorkspaces(workspaces);
         } catch (error: any) {
@@ -51,7 +59,12 @@ export function useWorkspace() {
         } finally {
             dispatch(SET_WORKSPACE_LOADING(false)); // Clear loading state in Redux
         }
-    }, [dispatch, session?.user?._id, status ])
+    }, [
+        dispatch, 
+        session?.user?._id, 
+        status,
+        currentWorkspaceId
+     ])
 
     // function to fetch current workspace
     const fetchCurrentWorkspace = useCallback(async ( workspaceId: string ) => {
@@ -86,8 +99,10 @@ export function useWorkspace() {
                 formData.append("userId", session.user._id);
             }
             const newWorkspace = await addWorkspace(formData);
-            dispatch(ADD_WORKSPACE(newWorkspace));
-            dispatch(SET_CURRENT_WORKSPACE(newWorkspace._id.toString()));
+
+            const transformedWorkspace = transformWorkspace(newWorkspace as MongooseWorkSpace);
+            dispatch(ADD_WORKSPACE(transformedWorkspace));
+            dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace._id));
             return {
                 success: true,
                 data: newWorkspace
@@ -152,7 +167,9 @@ export function useWorkspace() {
                      error: response.message
                  }
              }
-             dispatch(UPDATE_WORKSPACE(response.data as MongooseWorkSpace));
+
+             const transformedWorkspace = transformWorkspace(response.data as MongooseWorkSpace);
+             dispatch(UPDATE_WORKSPACE(transformedWorkspace));
              return {
                  success: true,
                  data: response.data
@@ -188,7 +205,9 @@ export function useWorkspace() {
                 }
             }
             const workspace = updateWorkspace.data as MongooseWorkSpace;
-            dispatch(UPDATE_WORKSPACE(workspace));
+
+            const transformedWorkspace = transformWorkspace(workspace as MongooseWorkSpace);
+            dispatch(UPDATE_WORKSPACE(transformedWorkspace));
             return {
                 success: true,
                 data: workspace,

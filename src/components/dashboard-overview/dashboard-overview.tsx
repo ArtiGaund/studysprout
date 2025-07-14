@@ -3,7 +3,7 @@
 import { Folder as MongooseFolder } from "@/model/folder.model";
 import { WorkSpace as MongooseWorkspace} from "@/model/workspace.model";
 import { File as MongooseFile} from "@/model/file.model";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "../sidebar/folders-dropdown-list";
 import { useDispatch, useSelector } from "react-redux";
@@ -38,12 +38,14 @@ import {
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
+import { transformFile, transformFolder } from "@/utils/data-transformers";
 
 interface DashboardOverviewProps{
     dirDetails: ReduxWorkSpace | ReduxFolder;
     fileId: string;
     dirType: "workspace" | "folder";
     params: string;
+    globalEditingItem?: RootState['ui']['editingItem'];
 }
 
 
@@ -52,19 +54,10 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     dirDetails,
     fileId,
     dirType,
-    params
+    params,
+    globalEditingItem,
 }) => {
-    // selector for normalized state
-    // const workspaceState = useSelector((state:RootState) => state.workspace)
-    // const currentWorkspaceId = workspaceState.currentWorkspace;
-
-    // const folderState = useSelector((state: RootState) => state.folder);
-    // const folders = folderState.allIds.map(id => folderState.byId[id]);
-    // const currentFolderId = folderState.currentFolder;
     
-    // const filesState = useSelector((state: RootState) => state.file);
-    // const files = filesState.allIds.map(id => filesState.byId[id]);
-    // const currentFileId = filesState.currentFile;
 
     // const [ error, setError ] = useState(false)
     const { currentWorkspace } = useWorkspace();
@@ -73,24 +66,19 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
      const workspaceId = currentWorkspace?._id.toString() ?? "";
     const dispatch = useDispatch()
 
-    // Helper to get current workspace or folder by ID from normalized state
-    // const currentWorkspace = currentWorkspaceId ? workspaceState.byId[currentWorkspaceId] : undefined;
-    // const currentFolder = currentFolderId ? folderState.byId[currentFolderId] : undefined;
-    // const handleFolderAdded = async () => {
-    //   await fetchFolders(params)
-    // }
-    // console.log("Dir type ",dirType);
-    console.log("params ",params);
-   
-
-    console.log("Rendered with params:", params, "and dirType:", dirType);
-//     useEffect(() => {
-//   console.log("Params:", params);
-//   console.log("DirType:", dirType);
-// }, []);
+    // Refs to track fetched IDs to prevent infinite loops
+    const fetchedWorkspaceRef = useRef<Set<string>>(new Set());
+    const fetchedFoldersForFilesRef = useRef<Set<string>>(new Set());
+    
     
 
     const fetchFolders = useCallback(async (workspaceId: string) => {
+
+        // Prevent re-fetching if this workspace's folders have already been loaded
+        if(fetchedWorkspaceRef.current.has(workspaceId)){
+            console.log(`[DashboardOvierview] Skipping fetchedFolders for workspace ${workspaceId}: already fetched.`);
+            return;
+        }
         if(!workspaceId){
             toast({
                 title: "Failed to fetch all folders of workspace",
@@ -100,18 +88,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             return;
         }
           try {
-            // console.log("Inside fetchFolders")
-            // const response = await axios.get(`/api/get-all-workspace-folders?workspaceId=${workspaceId}`);
-            // console.log("Response for fetch folders ",response)
-            // const fetchedFolders: MongooseFolder[] = response.data.data
-            // console.log("fetchedFolders ",fetchedFolders)
             
-            // if(fetchedFolders){
-            //     dispatch(SET_FOLDERS(fetchedFolders))
-            //     if(fetchedFolders.length > 0 && !currentFolderId ){
-            //       dispatch(SET_CURRENT_FOLDERS(fetchedFolders[0]._id?.toString()))
-            //     }
-            // }
 
             const allFolders = await getFolders(workspaceId);
             if(!allFolders.success){
@@ -126,56 +103,31 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             }
             
             const fetchedFolders = allFolders.data;
-             if(Array.isArray(fetchedFolders)){
-                        dispatch(SET_FOLDERS(fetchedFolders));
-                        if (
-                            fetchedFolders.length > 0 &&
-                            (!currentFolder || !fetchedFolders.some((f) => f._id === currentFolder._id))
-                        ) {
-                            const firstFolder = fetchedFolders[0];
-                            if (firstFolder && firstFolder._id) {
-                                dispatch(SET_CURRENT_FOLDERS(firstFolder._id.toString()));
-                            }
-                        } else if (fetchedFolders.length === 0) {
-                            // If no folders are fetched, ensure currentFolder is null
-                            dispatch(SET_CURRENT_FOLDERS(null));
-                        }
-                     }else if(fetchedFolders && typeof fetchedFolders === "object"){
-                        // Explicitly type fetchedFolders as MongooseFolder to avoid 'never' type error
-                        const folderObj = fetchedFolders as MongooseFolder;
-                        dispatch(SET_FOLDERS([folderObj]));
-                        dispatch(SET_CURRENT_FOLDERS(folderObj._id?.toString() ?? null));
-                     }else{
-                        dispatch(SET_FOLDERS([]));
-                        dispatch(SET_CURRENT_FOLDERS(null));
-                     }
-                     toast({
-                        title: "Successfully fetched folders",
-                        description: "You can now add files to this folder",
-                     })
 
-            // fetching all files for each folder
-            // const allFiles = await Promise.all(
-            //     fetchedFolders.map( async (folder: Folder) => 
-            //     await axios.get(`/api/get-all-folder-files?folderId=${folder._id}`)
-            //     )
-            // );
+            // Transform fetched data to Redux-compatible format before dispatch 
+            const transformedFolders = (Array.isArray(fetchedFolders) 
+            ? fetchedFolders
+            : [fetchedFolders]
+            ).filter(Boolean)
+            .map( folder => transformFolder(folder as MongooseFolder));
 
-        //    const allFiles = fetchFolders.map(async (folder: ReduxFolder) => await getFiles(folder._id));
-
-            // if(!allFiles){
-            //     console.log("Not able to fetch files for each folder")
-            // }
-
-            // console.log("All files ",allFiles)
-            // const filesList = allFiles
-            // .map(res=> res.data.data || [])
-            // .flat();
-
-            // dispatch(SET_FILES(filesList))
-            // if(filesList.length > 0 && !currentFileId){
-            //             dispatch(SET_CURRENT_FILES(filesList[0]));
-            //         }
+             if(transformedFolders.length > 0){
+                dispatch(SET_FOLDERS(transformedFolders));
+                if(!currentFolder || !transformedFolders.some((folder) => folder._id === currentFolder._id)){
+                    const firstFolder = transformedFolders[0];
+                    if(firstFolder && firstFolder._id){
+                        dispatch(SET_CURRENT_FOLDERS(firstFolder._id));
+                    }
+                }
+             }else{
+                dispatch(SET_FOLDERS([]));
+                dispatch(SET_CURRENT_FOLDERS(null));
+             }
+             toast({
+                title: "Successfully fetched folders",
+                description: "You can now add files in the folder",
+             })
+             fetchedWorkspaceRef.current.add(workspaceId);
           } catch (error: any) {
               console.error("Error loading folders ",error);
                     toast({
@@ -189,13 +141,84 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             // console.log("Error fetching the Files ",err)
             // setError(true)
           }
-        }, [getFolders])
+        }, [
+            getFolders,
+            dispatch,
+            currentFolder
+        ])
+         const fetchFiles = useCallback(async ( folderId : string) => {
+
+            if(fetchedFoldersForFilesRef.current.has(folderId)){
+                console.log(`[DashboardOverview] Skipping fetchfiles for folders ${folderId}: already fetched.`);
+                return;
+            }
+                try {
+                  
+                     const allFiles = await getFiles(folderId);
+                     if(!allFiles.success){
+                        toast({
+                            title: "Failed to fetch files",
+                            description: allFiles.error,
+                            variant: "destructive"
+                        })
+                         dispatch(SET_FILES([])); // Set to empty to avoid stale data
+                        return;
+                     }
+                     const fetchedFiles = allFiles.data;
+                    //  Transform fetched files to Redux compatible format
+                    const transformedFiles = (Array.isArray(fetchedFiles)
+                     ? fetchedFiles
+                     : [fetchedFiles]
+                    ).filter(Boolean)
+                    .map(file => transformFile(file as MongooseFile))
+                    
+                    if(transformedFiles.length > 0){
+                        dispatch(SET_FILES(transformedFiles));
+                        if(!currentFile || !transformedFiles.find(file => file._id === currentFile._id)){
+                            const firstFile = transformedFiles[0];
+                            if(firstFile && firstFile._id){
+                                dispatch(SET_CURRENT_FILES(firstFile._id));
+                            }
+                        }
+                    }else{
+                        dispatch(SET_FILES([]));
+                        dispatch(SET_CURRENT_FILES(null));
+                    }
+                     toast({
+                        title: "Successfully fetched files",
+                        description: "You can now add files to this folder",
+                     })
+                     fetchedFoldersForFilesRef.current.add(folderId);
+                } catch (error) {
+                    console.error("Error loading files ",error);
+                    toast({
+                        title: "Failed to fetch files",
+                        description: "Please try again later",
+                        variant: "destructive"
+                    })
+                    dispatch(SET_FILES([])); // Clear files on error
+                    dispatch(SET_CURRENT_FILES(null)); // Clear current file on error
+                    // setError(error);
+                }
+            }, [ 
+                getFiles,
+                dispatch,
+                currentFile
+            ])
          useEffect(() => {
-        // Fetch folders when dirType is workspace
-    if (params && dirType === "workspace") {
-        fetchFolders(params);
-    }
-    }, [params, dirType, fetchFolders]);
+                // Fetch folders when dirType is workspace
+            if (params && dirType === "workspace") {
+                console.log(`[DashboardOvierview] useEffect for workspaces: params=${params}, dirType=${dirType}`);
+                fetchFolders(params);
+            }
+            }, [params, dirType, fetchFolders]);
+       useEffect(() => {
+                // Fetch folders when dirType is workspace
+        if (params && dirType === "folder") {
+            console.log(`[DashboardOverview] useEffect for folders: params=${params}, dirType=${dirType}`);
+            fetchFiles(params);         
+        }
+        }, [params, dirType, fetchFiles]);
 
          const addFolderHandler = useCallback(async () => {
                 if(!workspaceId){
@@ -206,9 +229,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     });
                     return;
                 }
-                    // const date = ;
-                    // const dateToString = date.toISOString();
-                    // this will create a visible folder quickly for the user on the frontend
+                    
                    
                     const newFolder: MongooseFolder = {
                         data: undefined,
@@ -242,39 +263,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         })
                      }
                    
-                // try {
-                //     //   creating new folder on the server
-                //     const createFolder = await axios.post('/api/create-folder', newFolder)
-                //     // console.log("Create Folder ",createFolder)
-                //     if(!createFolder.data.success){
-                //         toast({
-                //             title: "Failed to create folder",
-                //             description: "Please try again later",
-                //             variant: "destructive"
-                //         })
-                //     }
-                //     else{
-                //         toast({
-                //             title: "Successfully created folder",
-                //             description: "You can now add files to this folder",
-                //          })
-                //          const folderData =createFolder.data.data.folder
-                //           //   adding folder to a local states
-                //          dispatch(ADD_FOLDER(folderData))
-                //          const updatedWorkspace = createFolder.data.data.updatedWorkspace
-                //          dispatch(UPDATE_WORKSPACE(updatedWorkspace))
-                //         //  console.log("Folder data",createFolder.data.data)
-                //          onFolderAdded()
-                //     }
-                // } catch (error) {
-                //     console.log("Error while creating a folder in workspace ",error)
-                //     toast({
-                //         title: "Failed to create folder",
-                //         description: "Please try again later",
-                //         variant: "destructive"
-                //     })
-                // }
-                
+               
             }, [createFolder, workspaceId])
             // add new file
     const addNewFile = useCallback(async () => {
@@ -319,30 +308,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 title: "Successfully created new file",
                 description: "Start working on it",
             })
-            // create new file on the server
-            // const createFile = await axios.post(`/api/create-file`,newFile)
-            // console.log("Created file ",createFile)
-            // if(!createFile.data.success){
-            //     toast({
-            //         title: "Failed to create file",
-            //         description: "Please try again later",
-            //         variant: "destructive"
-            //     })
-            // }else{
-            //     const fileData = createFile.data.data.file
-            //     const updatedFolder = createFile.data.data.updatedFolder
-            //     const updatedWorkspace = createFile.data.data.updatedWorkspace
-            //     dispatch(ADD_FILE(fileData))
-            //     dispatch(SET_FILES(fileData))
-            //     dispatch(SET_CURRENT_FILES(fileData))
-            //     dispatch(UPDATE_FOLDER(updatedFolder))
-            //     dispatch(UPDATE_WORKSPACE(updatedWorkspace))
-            //     toast({
-            //         title: "Successfully created new file",
-            //         description: "Start working on it",
-            //     })
-            // }
-             
+           
         } catch (error) {
             console.log("Error while creating file in folder ",error)
             toast({
@@ -361,80 +327,20 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   }, [fetchFolders, params]);
 
            
-            const fetchFiles = useCallback(async ( folderId : string) => {
-                try {
-                    // const response = await axios.get(`/api/get-all-folder-files?folderId=${folderId}`);
-                    // console.log("Response of files in folder page ",response.data.data);
-                    // const list = response.data.data as File[] || [];
-                    // // dispatch(SET_FILES(list));
-                    // if(Array.isArray(list)){
-                    //     if(list.length === 0){
-                    //         console.log("No files found, but not an error" );
-                    //     }else if(!currentFileId){
-                    //         dispatch(SET_CURRENT_FILES(list[0]));
-                    //     }
-                    // }else{
-                    //     toast({
-                    //         title: "Failed to fetch files",
-                    //         description: "Please try again later",
-                    //         variant: "destructive"
-                    //     })
-                    // }
-                     const allFiles = await getFiles(folderId);
-                     if(!allFiles.success){
-                        toast({
-                            title: "Failed to fetch files",
-                            description: allFiles.error,
-                            variant: "destructive"
-                        })
-                         dispatch(SET_FILES([])); // Set to empty to avoid stale data
-                        return;
-                     }
-                     const fetchedFiles = allFiles.data;
-                     if(Array.isArray(fetchedFiles)){
-                        dispatch(SET_FILES(fetchedFiles));
-                        if (fetchedFiles.length > 0 && (!currentFile || !fetchedFiles.find(f => f._id === currentFile._id))) {
-                            const firstFile = fetchedFiles[0];
-                            if (firstFile && firstFile._id) {
-                                dispatch(SET_CURRENT_FILES(firstFile._id.toString()));
-                            }
-                        }
-                     }else if(fetchedFiles && typeof fetchedFiles === "object"){
-                        const fileObj = fetchedFiles as MongooseFile;
-                        dispatch(SET_FILES([fileObj]));
-                        dispatch(SET_CURRENT_FILES(fileObj._id?.toString() ?? null));
-                     }else{
-                        dispatch(SET_FILES([]));
-                        dispatch(SET_CURRENT_FILES(null));
-                     }
-                     toast({
-                        title: "Successfully fetched files",
-                        description: "You can now add files to this folder",
-                     })
-                } catch (error) {
-                    console.error("Error loading files ",error);
-                    toast({
-                        title: "Failed to fetch files",
-                        description: "Please try again later",
-                        variant: "destructive"
-                    })
-                    dispatch(SET_FILES([])); // Clear files on error
-                    dispatch(SET_CURRENT_FILES(null)); // Clear current file on error
-                    // setError(error);
-                }
-            }, [ getFiles])
-            useEffect(() => {
-        // Fetch folders when dirType is workspace
-  if (params && dirType === "folder") {
-    console.log("Effect runs: ", params, dirType);
-    fetchFiles(params);         
-  }
-}, [params, dirType, fetchFiles]);
+           
+         
  const handleFileAdded = useCallback(async () => {
     // This will trigger the useEffect for files if params hasn't changed.
     // If createFile already updates Redux, this might not be strictly necessary.
     await fetchFiles(params); // Assuming params is the folderId when dirType is 'folder'
   }, [fetchFiles, params]);
+
+  const filteredFiles = useMemo(() => {
+    if(Array.isArray(files) && params){
+        return files.filter(file => file.folderId === params);
+    }
+    return []
+  },[ files, params ])
     return(
         <div className='flex flex-row w-full items-center gap-2 pl-[5rem] p-[2rem]'>
             {/* Activity section */}
@@ -474,6 +380,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                                 workspaceId={params}
                                 onFolderAdded={handleFolderAdded}
                                 usedWhere = "workspacePage"
+                                globalEditingItems={globalEditingItem}
                             />): (
                                 <div> This Workspace is empty.</div>
                             )}
@@ -483,11 +390,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         <ScrollArea className="overflow-scroll relative h-[450px]">
                              <div className="w-full pointer-events-none absolute bottom-0 h-20 bg-gradient-to-t
                                 from-background to-transparent z-40"/>
-                                { Array.isArray(files) && files.length > 0 ? (
+                                { filteredFiles.length > 0 ? (
                                     <FolderFileList
                                     folderFiles={files.filter(file => file.folderId === params)}
                                     folderId={params}
                                     onFileAdded={handleFileAdded}
+                                    globalEditingItems={globalEditingItem}
                                     />
                                 ) :(
                                     <div>Folder is empty</div>
