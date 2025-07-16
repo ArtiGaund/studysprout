@@ -3,7 +3,7 @@
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { twMerge } from "tailwind-merge";
 import WorkspaceDropdown from "./workspace-dropdown";
 import { WorkSpace } from "@/model/workspace.model";
@@ -24,14 +24,7 @@ interface SidebarProps{
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
-    // const { data: session } = useSession()
-    // const folders: Folder[] = useSelector((state: RootState) => state.folder.folders);
-    // const currentFolderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
-    // const [ isLoading, setIsLoading ] = useState(false)
-    // const [ error, setError ] = useState(false)
-    // const [ allWorkspaces, setAllWorkspaces ] = useState([] as any)
-    // const [ currenntWorkspace, setCurrentWorkspace ] = useState()
-    // const dispatch = useDispatch()
+
 
     // 1. Call hooks
     const {
@@ -53,28 +46,84 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
 
     const router = useRouter()
 
+   // Refs to track fetched states for this specific Sidebar component instance
+    const hasFetchedCurrentWorkspaceInSidebarRef = useRef<Set<string>>(new Set());
+    const hasFetchedFoldersInSidebarRef = useRef<Set<string>>(new Set());
+
+
       // 2. Effect for setting current workspace based on URL param
       useEffect(() => {
+        console.log(`[Sidebar] useEffect (fetchCurrentWrorkspace) triggered. params.workspaceId = ${params.workspaceId}` )
         if(params.workspaceId){
-          fetchCurrentWorkspace(params.workspaceId)
+          if (hasFetchedCurrentWorkspaceInSidebarRef.current.has(params.workspaceId)) {
+                console.log(`[Sidebar] Skipping fetchCurrentWorkspace for ${params.workspaceId}: already fetched by this Sidebar instance.`);
+                return;
+            }
+
+            const fetchWorkspace = async () => {
+              console.log(`[Sidebar] Initiating API call for fetchCurrentWorkspace for ${params.workspaceId}`);
+              const response = await fetchCurrentWorkspace(params.workspaceId);
+              if(!response.success){
+                console.log(`[Sidebar] Failed to fetch current workspace ${params.workspaceId}: `, response.error);
+                router.replace(`/dashboard`);
+              }else{
+                hasFetchedCurrentWorkspaceInSidebarRef.current.add(params.workspaceId);
+              }
+            }
+          fetchWorkspace();
         }
-      },[params.workspaceId, fetchCurrentWorkspace])
+      },[
+        params.workspaceId, 
+        fetchCurrentWorkspace,
+        router
+      ])
 
     //   3. Effect for fetching folders based on workspaceId
       useEffect(()=> {
+        console.log(`[Sidebar] useEffect (getFolders) triggered. params.workspaceId=${params.workspaceId}`);
         if(params.workspaceId){
-          getFolders(params.workspaceId)
+          if (hasFetchedFoldersInSidebarRef.current.has(params.workspaceId)) {
+                console.log(`[Sidebar] Skipping getFolders for workspace ${params.workspaceId}: already fetched by this Sidebar instance.`);
+                return;
+            }
+
+            const fetchFolders = async () => {
+              console.log(`[Sidebar] Initiating API call for getFolders for ${params.workspaceId}`);
+              const response = await getFolders(params.workspaceId);
+              if(!response.success){
+                console.log(`[Sidebar] Failed to fetch folders for workspace ${params.workspaceId}: `, response.error);
+              }else{
+                hasFetchedFoldersInSidebarRef.current.add(params.workspaceId);
+              }
+            }
+          fetchFolders();
         }
       },[params.workspaceId, getFolders])
 
     
     const handleFolderAdded = async () => {
+       console.log(`[Sidebar] handleFolderAdded triggered. Clearing ref and re-fetching folders for ${params.workspaceId}`);
+        hasFetchedFoldersInSidebarRef.current.delete(params.workspaceId); // Clear the ref
       getFolders(params.workspaceId);
       // await fetchFolders(params.workspaceId)
     }
 
    
-    if(workspaceError) router.replace('/dashboard')
+    if(workspaceError) {
+      console.error("[Sidebar] Workspace error detected, redirecting to dashboard:", workspaceError);
+      router.replace('/dashboard')
+      return null;
+    }
+
+    // Show loading state if workspaces are still loading
+    if (isLoadingWorkspaces) {
+        return (
+            <aside className={twMerge('hidden sm:flex sm:flex-col w-[280px] shrink-0 p-4 md:gap-4 !justify-between', className)}>
+                <p>Loading workspaces...</p>
+            </aside>
+        );
+    }
+
 
     // check for user, check for folders, check for error, get all the workspaces which is private collaborating 
     // and shared workspaces
