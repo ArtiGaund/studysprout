@@ -4,11 +4,11 @@ import { RootState } from "@/store/store";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../ui/button";
-import axios from "axios";
+// import axios from "axios";
 import { useToast } from "../ui/use-toast";
-import { DELETE_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
-import { DELETE_FOLDER, UPDATE_FOLDER } from "@/store/slices/folderSlice";
-import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
+// import { DELETE_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
+// import { DELETE_FOLDER, UPDATE_FOLDER } from "@/store/slices/folderSlice";
+// import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { usePathname, useRouter } from "next/navigation";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
@@ -20,7 +20,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
 import { useDir } from "@/hooks/useDir";
-import { setEditingItem, updateEditingItemTitle } from "@/store/slices/uiSlice";
+// import { setEditingItem, updateEditingItemTitle } from "@/store/slices/uiSlice";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
 import clsx from "clsx";
 
@@ -30,7 +30,7 @@ interface BannerSectionProps{
     dirDetails: ReduxWorkSpace | ReduxFolder | ReduxFile;
     fileId: string;
     dirType: "workspace" | "folder" | "file";
-
+   
 }
 
 var TOOLBAR_OPTIONS = [
@@ -52,17 +52,14 @@ var TOOLBAR_OPTIONS = [
 const BannerSection: React.FC<BannerSectionProps> = ({
     dirDetails,
     fileId,
-    dirType
+    dirType,
 }) => {
-    //  console.log("BannerSection mounted, fileId prop:", fileId, "dirType:", dirType);
-    const workspaceState = useSelector((state: RootState) => state.workspace)
-    const folderState = useSelector((state:RootState) => state.folder)
-    const fileState = useSelector((state:RootState) => state.file)
-    const currentWorkspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace)
-    const currentFolderId = useSelector((state: RootState) => state.folder.currentFolder)
-    const currentFileId = useSelector((state: RootState) => state.file.currentFile)
+   
 
-    const { workspaces } = useWorkspace();
+    const { updateWorkspaceTitle,currentWorkspace, workspaces } = useWorkspace();
+    const { currentFolder, updateFolder, folders } = useFolder();
+    const { currentFile, updateFile, files } = useFile();
+    
     
     const dispatch = useDispatch()
     const { toast } = useToast()
@@ -100,9 +97,9 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     } = useDir({
         dirType,
         dirId: fileId,
-        currentWorkspaceId: currentWorkspaceId?.toString(),
-        currentFolderId: currentFolderId?.toString(),
-        currentFileId: currentFileId?.toString()
+        currentWorkspaceId: currentWorkspace?._id?.toString(),
+        currentFolderId: currentFolder?._id.toString(),
+        currentFileId: currentFile?._id.toString()
     })
  
 
@@ -111,43 +108,51 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     
     const breadCrumbs = useMemo(() => {
        
-        if(!pathname || !workspaceState.allIds || !currentWorkspaceId) return;
+        if(!pathname ||  !currentWorkspace) return;
         const segments = pathname.split('/').filter((val) => val !== 'dashboard' && val);
 
-        // access byId for more efficiency lookup
-        const workspaceDetails = workspaceState.byId[currentWorkspaceId];
-        const workspaceBreadCrumb = workspaceDetails 
-        ? `${workspaceDetails.iconId} ${workspaceDetails.title}`
-        : '';
+        let workspaceTitle = currentWorkspace.title ?? '';
+        let workspaceIconId = currentWorkspace.iconId ?? '';
+        if(dirType === 'workspace' && isCurrentlyEditingThisItem){
+            workspaceTitle = displayedTitle ?? '';
+        }
+        const workspaceBreadCrumb = `${workspaceIconId} ${currentWorkspace.title}`;
         if(segments.length === 1){
             return workspaceBreadCrumb;
         }
-        const folderSegment = segments[1];
-        const folderDetails = folderState.byId[currentFolderId!];
-        const folderBreadCrumb = folderDetails
-        ? `/ ${folderDetails.iconId} ${folderDetails.title}`
+       
+        let folderTitle = currentFolder?.title ?? '';
+        let folderIconId = currentFile?.iconId ?? '';
+        if(dirType === 'folder' && isCurrentlyEditingThisItem){
+            folderTitle = displayedTitle ?? '';
+        }
+        const folderBreadCrumb = folderTitle
+        ? `/ ${folderIconId} ${folderTitle}`
         : '';
 
         if(segments.length === 2){
             return `${workspaceBreadCrumb} ${folderBreadCrumb}`;
         }
 
-        const fileSegment = segments[2];
-        const fileDetails = fileState.byId[fileId];
-        const fileBreadCrumb = fileDetails 
-        ? `/ ${fileDetails.iconId} ${fileDetails.title}`
+    //   const fileSegment = segments[2];
+        let fileTitle = currentFile?.title ?? '';
+        let fileIconId = currentFile?.iconId ?? '';
+        if(dirType === 'file' && isCurrentlyEditingThisItem){
+            fileTitle = displayedTitle ?? '';
+        }
+        const fileBreadCrumb = fileTitle 
+        ? `/ ${fileIconId} ${fileTitle}`
         : '';
 
         return `${workspaceBreadCrumb} ${folderBreadCrumb} ${fileBreadCrumb}`;
       }, [
-         pathname,
-          currentWorkspaceId,
-          workspaceState.byId,
-          currentFolderId,
-          folderState.byId,
-          fileId,
-          fileState.byId,
-          workspaceState.allIds
+        pathname,
+        currentWorkspace,
+        currentFolder,
+        currentFile,
+        dirType,
+        isCurrentlyEditingThisItem,
+        displayedTitle
     ]);
 
     const handleDoubleClick = useCallback(() => {
@@ -310,9 +315,9 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                         />
                     ): (
                         <span className="text-3xl font-bold text-muted-foreground h-9"
-                        onDoubleClick={handleDoubleClick}
+                         onDoubleClick={handleDoubleClick}
                         >
-                        {details.title} <span className="text-sm ml-2">({dirType.toUpperCase()})</span>
+                        {displayedTitle} <span className="text-sm ml-2">({dirType.toUpperCase()})</span>
                     </span>
                     )}
                      
