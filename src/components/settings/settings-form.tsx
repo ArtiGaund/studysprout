@@ -21,6 +21,7 @@ import AccountSetting from "../account-setting";
 import { ReduxWorkSpace } from "@/types/state.type";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useDir } from "@/hooks/useDir";
+import { transformWorkspace } from "@/utils/data-transformers";
 
 const SettingsForm = () => {
      const { openModal, closeModal } = useModal();
@@ -93,7 +94,8 @@ const SettingsForm = () => {
                 }else{
                     const workspace = response.data
                     if(workspace){
-                        dispatch(UPDATE_WORKSPACE(workspace))
+                        const transformedWorkspace = transformWorkspace(workspace)
+                        dispatch(UPDATE_WORKSPACE(transformedWorkspace))
                         toast({
                             title: "Successfully updated workspace name",
                             description: "Workspace name updated successfully",
@@ -134,7 +136,8 @@ const SettingsForm = () => {
             }else{
                 const workspace = response.data
                 if(workspace){
-                    dispatch(UPDATE_WORKSPACE(workspace))
+                    const transformedWorkspace = transformWorkspace(workspace)
+                        dispatch(UPDATE_WORKSPACE(transformedWorkspace))
                     toast({
                         title: "Successfully updated the workspace logo",
                         description: "Workspace logo updated successfully",
