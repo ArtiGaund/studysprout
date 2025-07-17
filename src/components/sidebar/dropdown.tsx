@@ -48,17 +48,15 @@ const Dropdown: React.FC<DropdownProps> = ({
     const { updateFolder } = useFolder(); 
     const { files, createFile, updateFile } = useFile();
 
-    // NEW: Local state for folder editing
-    const [isEditingFolderLocally, setIsEditingFolderLocally] = useState(false);
+    //  Local state for folder editing
+    const [isEditingLocally, setIsEditingLocally] = useState(false);
+    // Local state for file editing
+    // const [isEditingFileLocally, setIsEditingFileLocally] = useState(false);
 
     // Callback for useTitleEditing to signal when editing should stop
     const handleEditingStop = useCallback(() => {
-        if (listType === 'folder') {
-            setIsEditingFolderLocally(false);
-            console.log(`[${title}] handleEditingStop: Local folder editing stopped.`);
-        }
-        // For files/workspaces, the hook will handle clearing the global state itself.
-        // No need to dispatch clearEditingItem here, as the hook already does it globally.
+         setIsEditingLocally(false);
+        console.log(`[${title}] handleEditingStop: Local editing stopped for ${listType}.`);
     }, [listType, title]);
 
     const {
@@ -74,16 +72,14 @@ const Dropdown: React.FC<DropdownProps> = ({
         id,
         dirType: listType,
         originalTitle: title,
-        isEditingLocally: isEditingFolderLocally, // Pass local state for folders
+        isEditingLocally: isEditingLocally,
         onEditingStop: handleEditingStop // Pass the new callback
     });
 
     // Adjust handleStartEditing for Dropdown component
     const handleStartEditing = useCallback(() => {
-        if (listType === 'folder') {
-            setIsEditingFolderLocally(true);
-            console.log(`[${title}] handleStartEditing: Local folder editing started.`);
-        }
+        setIsEditingLocally(true); // Set local state to true immediately
+        console.log(`[${title}] handleStartEditing: Local editing started for ${listType}.`);
         // Always dispatch to Redux for global awareness (e.g., to disable other editing)
         handleStartEditingFromHook(); 
     }, [listType, handleStartEditingFromHook, title]);
@@ -192,7 +188,8 @@ const Dropdown: React.FC<DropdownProps> = ({
                 }
             }, 300); // Increased delay for folders to 300ms
         } else {
-            // For files, start editing immediately as before
+            // For files, start editing immediately as before, but ensure local state is set
+            console.log(`[${title}] handleCombinedDoubleClick: File detected. Starting editing immediately.`); // NEW log
             if (!isCurrentlyEditingFromHook) { // Use effective state from hook
                 handleStartEditing(); // Call the local handleStartEditing
             } else {
@@ -267,7 +264,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       );
 
     const groupIdentifies = clsx(
-        'dark:text-white whitespace-nowrap flex justify-between items-center w-full relative',
+        'dark:text-white whitespace-nowrap flex justify-between items-center w-[12rem] relative',
         {
           'group/folder': isFolder,
           'group/file': !isFolder,
@@ -404,16 +401,17 @@ const Dropdown: React.FC<DropdownProps> = ({
         )
     })
 
-    if(isFolder){
+   
         return (
         <AccordionItem 
             value={id} 
             className={clsx(listStyles, "relative")} 
+             data-editable-container
         >
             <AccordionTrigger
                 id={listType}
                 className="hover:no-underline p-2 text-muted-foreground text-sm flex items-center justify-between" 
-                disabled={disabled} 
+                disabled={listType === 'file'} 
                 onMouseDownCapture={(e) => {
                     if (e.detail === 2) { 
                         e.preventDefault(); 
@@ -427,7 +425,10 @@ const Dropdown: React.FC<DropdownProps> = ({
             >
                 {/* This div now contains both the icon/input and the action buttons */}
                 {/* Ensure this container has a defined max-width or flex-basis to prevent overflow */}
-                <div className={clsx(groupIdentifies, 'flex-grow flex items-center gap-4 overflow-hidden')}> {/* Added overflow-hidden */}
+                <div className={clsx(
+                    groupIdentifies,
+                     'flex-grow flex items-center gap-4 overflow-hidden',
+                     )}> {/* Added overflow-hidden */}
                     <div className="relative z-10"> 
                         <EmojiPicker getValue={onChangeEmoji}>
                             {currentIcon}
@@ -450,7 +451,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                             onFocus={handleInputFocus} 
                             onChange={handleTitleChange}
                             onKeyDown={handleKeyDown}
-                            autoFocus={isCurrentlyEditingFromHook} 
+                            // autoFocus={isCurrentlyEditingFromHook} 
                         />
                     ) : (
                         <span
@@ -497,60 +498,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             </AccordionContent>
         </AccordionItem>
         );
-    } else{
-          return(
-            <div
-            className={clsx(listStyles, "flex items-center hover:bg-muted p-2 rounded-sm cursor-pointer")}
-            onClick={handleCombinedClick}
-            onDoubleClick={handleCombinedDoubleClick}
-            >
-                <div className={groupIdentifies}>
-                    <div className="flex gap-4 items-center justify-center overflow-hidden">
-                        <div className="relative">
-                            <EmojiPicker getValue={onChangeEmoji}>
-                                {currentIcon}
-                            </EmojiPicker>
-                        </div>
-                        {isCurrentlyEditingFromHook ? ( 
-                            <input
-                            ref={inputRef}
-                            type="text"
-                            value={displayedTitle ?? ''}
-                            className={clsx(
-                                'outline-none bg-muted cursor-text overflow-hidden w-[140px] text-Neutrals/neutrals-7',
-                                'relative z-10'
-                            )}
-                            readOnly={false}
-                            onDoubleClick={(e) => e.stopPropagation()}
-                            onClick={(e) => e.stopPropagation()}
-                            onBlur={handleInputBlur}
-                            onFocus={handleInputFocus} 
-                            onChange={handleTitleChange}
-                            onKeyDown={handleKeyDown}
-                            autoFocus={isCurrentlyEditingFromHook} 
-                            />
-                        ) : (
-                               <span
-                                    className="cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis w-[140px]"
-                                >
-                                    {displayedTitle}
-                                </span>
-                        )}
-                        
-                    </div>
-                    <div className={hoverStyles}>
-                        <TooltipComponent message="Delete File">
-                            <Trash
-                                onClick={(e) => { e.stopPropagation(); moveToTrash(e); }}
-                                size={15}
-                                className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
-                            />
-                        </TooltipComponent>
-                    </div>
-                </div>
-            </div>
-          )
-    }
+   
 };
 
 export default Dropdown;

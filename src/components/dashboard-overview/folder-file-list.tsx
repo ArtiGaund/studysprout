@@ -33,34 +33,17 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
     const { files, currentFile, getFiles } = useFile();
     const { toast } = useToast();
     const dispatch = useDispatch();
-    console.log("Files in folder file list ",files);
+    // console.log("Files in folder file list ",files);
 
     useEffect(() => {
         fetchFiles(folderId);
     }, [folderId])
 
-    // useEffect(() => {
-    //     if(onFileAdded){
-    //         fetchFiles(folderId);
-    //     }
-    // }, [onFileAdded])
+    
 
      const fetchFiles = async ( folderId : string) => {
                     try {
-                        // const response = await axios.get(`/api/get-all-folder-files?folderId=${folderId}`);
-                        // console.log("Response of folder file list ",response.data.data);
-                        // if(!response.data.success){
-                        //     toast({
-                        //         title: "Failed to fetch files",
-                        //         description: "Please try again later",
-                        //         variant: "destructive"
-                        //     })
-                        // }
-                        // const list = response.data.data  as File[];;
-                        // dispatch(SET_FILES(list));
-                        // if(list.length > 0 && !currentFileId){
-                        //     dispatch(SET_CURRENT_FILES(list[0]));
-                        // }
+                        
                         const allFiles = await getFiles(folderId);
                         if(!allFiles.success){
                             toast({
@@ -69,25 +52,7 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
                                 variant: "destructive"
                             })
                         }
-                        const fetchedFiles = allFiles.data;
-
-                        const transformedFiles = (Array.isArray(fetchedFiles)
-                        ? fetchedFiles
-                        : [fetchedFiles]
-                        ).filter(Boolean).map((file) => transformFile(file as MongooseFile));
-
-                       if(transformedFiles.length > 0){
-                        dispatch(SET_FILES(transformedFiles));
-                        if(!currentFile || !transformedFiles.some((file) => file._id === currentFile._id)){
-                            const firstFile = transformedFiles[0];
-                            if(firstFile && firstFile._id){
-                                dispatch(SET_CURRENT_FILES(firstFile._id));
-                            }
-                        }
-                       }else{
-                        dispatch(SET_FILES([]));
-                        dispatch(SET_CURRENT_FILES(null));
-                       }
+                       
                         toast({
                             title: "Successfully fetched files",
                             description: "You can now add files to this folder",
@@ -114,7 +79,7 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
                 <Accordion
                                 type="multiple"
                                 defaultValue={[ currentFile?._id?.toString() || '']}
-                                className="pb-20"
+                                className="pb-20 w-full"
                                 >
                                     {
                                    files.filter((file:ReduxFile) => !file.inTrash)
