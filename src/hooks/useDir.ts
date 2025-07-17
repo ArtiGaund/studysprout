@@ -14,6 +14,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { useFile } from "./useFile";
 import { useFolder } from "./useFolder";
 import { useWorkspace } from "./useWorkspace";
+import { WorkSpace as MongooseWorkspace } from "@/model/workspace.model";
+import { Folder as MongooseFolder } from "@/model/folder.model";
+import { File as MongooseFile } from "@/model/file.model";
 
 type DirType = "workspace" | "folder" | "file";
 
@@ -152,28 +155,39 @@ export function useDir({
 
        setIsSaving(true);
         try {
-            const todayDate = new Date();
-            const lastUpdated = todayDate.toString();
+            // const todayDate = new Date();
+            // const lastUpdated = todayDate.toString();
             const updatePayload: Partial<ReduxWorkSpace | ReduxFolder | ReduxFile> = {
-                _id: dirId,
                 inTrash: "",
-                lastUpdated
+                lastUpdated: new Date().toISOString(),
             }
             if(dirType === "workspace")
                 dispatch(UPDATE_WORKSPACE(updatePayload as ReduxWorkSpace));
             if(dirType === "folder")
-                dispatch(UPDATE_FOLDER(updatePayload as ReduxFolder));
+                dispatch(UPDATE_FOLDER({
+                id: dirId,
+                updates: updatePayload as ReduxFolder
+            }));
             if(dirType === "file")
-                dispatch(UPDATE_FILE(updatePayload as ReduxFile));
+                dispatch(UPDATE_FILE({
+                    id: dirId,
+                    updates: updatePayload as ReduxFile
+                }));
             
             const response = await restoreDir(dirType, dirId);
             // Dispatch full updated objects from api response
             if(dirType === "workspace")
                 dispatch(UPDATE_WORKSPACE(response as ReduxWorkSpace));
             if(dirType === "folder")
-                dispatch(UPDATE_FOLDER(response as ReduxFolder));
+                dispatch(UPDATE_FOLDER({
+                    id: dirId,
+                    updates: response as ReduxFolder
+                }));
             if(dirType === "file")
-                dispatch(UPDATE_FILE(response as ReduxFile));
+                dispatch(UPDATE_FILE({
+            id: dirId,
+            updates: response as ReduxFile
+        }));
             toast({
                 title: `Successfully restored ${dirType}`,
                 description: `Restored ${dirType} from trash`
@@ -195,9 +209,15 @@ export function useDir({
                 if(dirType === 'workspace')
                     dispatch(UPDATE_WORKSPACE(previousPayload as ReduxWorkSpace));
                 if(dirType === 'folder')
-                    dispatch(UPDATE_FOLDER(previousPayload as ReduxFolder));
+                    dispatch(UPDATE_FOLDER({
+                id: dirId,
+                updates: previousPayload as ReduxFolder
+            }));
                 if(dirType === 'file')
-                    dispatch(UPDATE_FILE(previousPayload as ReduxFile));
+                    dispatch(UPDATE_FILE({
+                id: dirId,
+                updates: previousPayload as ReduxFile
+            }));
             }
         }finally{
             setIsLoading(false);
@@ -278,9 +298,15 @@ export function useDir({
             if(dirType === "workspace") 
                 dispatch(UPDATE_WORKSPACE(updateDir as ReduxWorkSpace));
             if(dirType === "folder")
-                dispatch(UPDATE_FOLDER(updateDir as ReduxFolder));
+                dispatch(UPDATE_FOLDER({
+            id: dirId,
+            updates: updateDir as ReduxFolder
+        }));
             if(dirType === "file")
-                dispatch(UPDATE_FILE(updateDir as ReduxFile));
+                dispatch(UPDATE_FILE({
+            id: dirId,
+            updates: updateDir as ReduxFile
+        }));
             toast({
                 title: "Success",
                 description: `${dirType.charAt(0).toUpperCase() + dirType.slice(1)} icon updated successfully`
@@ -321,9 +347,15 @@ export function useDir({
             if(dirType === "workspace") 
                 dispatch(UPDATE_WORKSPACE(updateDir as ReduxWorkSpace));
             if(dirType === "folder")
-                dispatch(UPDATE_FOLDER(updateDir as ReduxFolder));
+                dispatch(UPDATE_FOLDER({
+                    id: dirId,
+                    updates: updateDir as ReduxFolder
+                }));
             if(dirType === "file")
-                dispatch(UPDATE_FILE(updateDir as ReduxFile));
+                dispatch(UPDATE_FILE({
+            id: dirId,
+            updates: updateDir as ReduxFile
+        }));
             toast({
                 title: "Success",
                 description: `${dirType.charAt(0).toUpperCase() + dirType.slice(1)} banner updated successfully`
@@ -361,9 +393,15 @@ export function useDir({
             if(dirType === "workspace") 
                 dispatch(UPDATE_WORKSPACE(updatedDir as ReduxWorkSpace));
             if(dirType === "folder")
-                dispatch(UPDATE_FOLDER(updatedDir as ReduxFolder));
+                dispatch(UPDATE_FOLDER({
+            id: dirId,
+            updates: updatedDir as ReduxFolder
+        }));
             if(dirType === "file")
-                dispatch(UPDATE_FILE(updatedDir as ReduxFile));
+                dispatch(UPDATE_FILE({
+            id: dirId,
+            updates: updatedDir as ReduxFile
+        }));
             toast({
                 title: "Success",
                 description: `${dirType.charAt(0).toUpperCase() + dirType.slice(1)} banner removed successfully`
