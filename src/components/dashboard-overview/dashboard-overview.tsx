@@ -102,27 +102,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 return;
             }
             
-            const fetchedFolders = allFolders.data;
-
-            // Transform fetched data to Redux-compatible format before dispatch 
-            const transformedFolders = (Array.isArray(fetchedFolders) 
-            ? fetchedFolders
-            : [fetchedFolders]
-            ).filter(Boolean)
-            .map( folder => transformFolder(folder as MongooseFolder));
-
-             if(transformedFolders.length > 0){
-                dispatch(SET_FOLDERS(transformedFolders));
-                if(!currentFolder || !transformedFolders.some((folder) => folder._id === currentFolder._id)){
-                    const firstFolder = transformedFolders[0];
-                    if(firstFolder && firstFolder._id){
-                        dispatch(SET_CURRENT_FOLDERS(firstFolder._id));
-                    }
-                }
-             }else{
-                dispatch(SET_FOLDERS([]));
-                dispatch(SET_CURRENT_FOLDERS(null));
-             }
+            
              toast({
                 title: "Successfully fetched folders",
                 description: "You can now add files in the folder",
@@ -144,7 +124,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         }, [
             getFolders,
             dispatch,
-            currentFolder
         ])
          const fetchFiles = useCallback(async ( folderId : string) => {
 
@@ -164,26 +143,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                          dispatch(SET_FILES([])); // Set to empty to avoid stale data
                         return;
                      }
-                     const fetchedFiles = allFiles.data;
-                    //  Transform fetched files to Redux compatible format
-                    const transformedFiles = (Array.isArray(fetchedFiles)
-                     ? fetchedFiles
-                     : [fetchedFiles]
-                    ).filter(Boolean)
-                    .map(file => transformFile(file as MongooseFile))
-                    
-                    if(transformedFiles.length > 0){
-                        dispatch(SET_FILES(transformedFiles));
-                        if(!currentFile || !transformedFiles.find(file => file._id === currentFile._id)){
-                            const firstFile = transformedFiles[0];
-                            if(firstFile && firstFile._id){
-                                dispatch(SET_CURRENT_FILES(firstFile._id));
-                            }
-                        }
-                    }else{
-                        dispatch(SET_FILES([]));
-                        dispatch(SET_CURRENT_FILES(null));
-                    }
                      toast({
                         title: "Successfully fetched files",
                         description: "You can now add files to this folder",
@@ -203,7 +162,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             }, [ 
                 getFiles,
                 dispatch,
-                currentFile
             ])
          useEffect(() => {
                 // Fetch folders when dirType is workspace
@@ -249,7 +207,16 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                                 description: "Please try again later",
                                 variant: "destructive"
                             })
-                        }
+                        }else {
+                        toast({
+                            title: "Successfully created folder",
+                            description: "You can now add files to this folder",
+                        });
+                        // After creating a new folder, force a re-fetch of the folder list
+                        // by clearing the ref for the current workspace
+                        fetchedWorkspaceRef.current.delete(workspaceId);
+                        fetchFolders(workspaceId); // Re-fetch to update the list
+                    }
                         toast({
                             title: "Successfully created folder",
                             description: "You can now add files to this folder",
@@ -264,7 +231,11 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                      }
                    
                
-            }, [createFolder, workspaceId])
+            }, [
+                createFolder, 
+                workspaceId,
+                fetchFolders
+            ])
             // add new file
     const addNewFile = useCallback(async () => {
         if (!workspaceId){
@@ -303,6 +274,14 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     description: "Please try again later",
                     variant: "destructive"
                 })
+            }else {
+                toast({
+                    title: "Successfully created new file",
+                    description: "Start working on it",
+                });
+                // After creating a new file, force a re-fetch of the file list for the current folder
+                fetchedFoldersForFilesRef.current.delete(currentFolder._id.toString());
+                fetchFiles(currentFolder._id.toString()); // Re-fetch to update the list
             }
             toast({
                 title: "Successfully created new file",
@@ -317,12 +296,19 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 variant: "destructive"
             })
         }
-    }, [createFile, currentFolder, workspaceId]);
+    }, [
+        createFile, 
+        currentFolder, 
+        workspaceId,
+        fetchFiles
+    ]);
 
      const handleFolderAdded = useCallback(async () => {
     // This will trigger the useEffect for folders if params hasn't changed.
     // If createFolder already updates Redux, this might not be strictly necessary,
     // but it ensures consistency by re-fetching.
+
+    fetchedWorkspaceRef.current.delete(params);
     await fetchFolders(params);
   }, [fetchFolders, params]);
 
@@ -333,6 +319,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     // This will trigger the useEffect for files if params hasn't changed.
     // If createFile already updates Redux, this might not be strictly necessary.
     await fetchFiles(params); // Assuming params is the folderId when dirType is 'folder'
+    fetchedFoldersForFilesRef.current.delete(params);
   }, [fetchFiles, params]);
 
   const filteredFiles = useMemo(() => {
