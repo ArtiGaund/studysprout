@@ -44,11 +44,11 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
         setIsOpen(false);
     }
 
-    const allWorkspaces = workspaceState.allIds.map(id => workspaceState.byId[id]);
+    const allWorkspaces = workspaceState.allIds.map(id => workspaceState.byId[id]).filter(Boolean) as ReduxWorkSpace[];
     return(
-    <div className="relative inline-block text-left">
+    <div className="relative inline-block text-left w-full">
         <div>
-            <span onClick={() => setIsOpen(!isOpen)}>
+            <span onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
                 { selectedOption ?
                  <SelectedWorkspaces workspace={selectedOption} /> 
                  : 
@@ -57,15 +57,16 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
             </span>
         </div>
         { isOpen && (
-            <div className="origin-top-right absolute w-full rounded-md shadow-md z-50 h-[190px] bg-black/10 backdrop-blur-lg group overflow-scroll border-[1px] border-muted">
+            <div className="origin-top-right absolute w-full rounded-md shadow-md z-50 bg-black/10
+             backdrop-blur-lg group overflow-scroll border-[1px] border-muted p-2">
                 <div className="rounded-md flex flex-col">
                     <div className="!p-2">
                         {allWorkspaces.length > 0 && (
                             
                             <>
-                                <p className="text-muted-foreground">All Workspace</p>
-                                <hr></hr>
-                                {workspaces.map((option,index) => (
+                                <p className="text-muted-foreground text-sm mb-1">All Workspace</p>
+                                <hr className="border-x-muted-foreground/20 mb-2"></hr>
+                                {allWorkspaces.map((option,index) => (
                                     <SelectedWorkspaces 
                                     // key={option._id}
                                     key={index}
@@ -80,7 +81,7 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
                      content={<DashboardSetup />}
                       >
                         <div className="flex transition-all hover:bg-muted justify-center items-center
-                         gap-2 p-2 w-full">
+                         gap-2 p-2 w-full rounded-lg">
                             <article className="text-slate-500 rounded-full bg-slate-800 w-4 h-4 flex
                              items-center justify-center">
                                 +

@@ -40,26 +40,31 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
             if(onClick) 
                 onClick(workspace)
             }}
-            className="flex rounded-md hover:bg-muted transition-all flex-row p-2 gap-4 
-            justify-center cursor-pointer items-center my-2"
+            className="flex rounded-md hover:bg-muted transition-all flex-row p-2 gap-2 
+            justify-start cursor-pointer items-center my-1 group/item overflow-hidden"
             >
                 { workspaceLogo ? (
-                    <Image 
-                    src={workspaceLogo}
-                     alt="workspace logo"
-                      width="26" 
-                      height="26" 
-                      objectFit="cover" 
-                      priority={true}
-                      />
+                    <div className="relative w-[26px] h-[26px] flex-shrink-0 rounded-full overflow-hidden">
+                        <Image 
+                        src={workspaceLogo}
+                        alt="workspace logo"
+                        width="26" 
+                        height="26" 
+                        objectFit="cover" 
+                        priority={true}
+                        style={{ objectFit: 'cover'}}
+                        className="rounded-full"
+                        />
+                      </div>
                 ): (
-                    <div className="w-[26px] h-[26px] flex items-center justify-center bg-gray-200
+                    <div className="w-[26px] h-[26px] flex-shrink-0 items-center justify-center bg-gray-200
                      text-gray-700 rounded-full text-sm font-bold">
                         {workspace.title?.toUpperCase() || 'W'}
                     </div>
                 )}
-                <div className="flex flex-col">
-                    <p className="text-lg w-[170px] overflow-hidden overflow-ellipsis whitespace-nowrap text-white">
+                <div className="flex flex-col flex-grow min-w-0">
+                    <p className="text-lg w-[170px] overflow-hidden
+                     whitespace-nowrap text-white text-ellipsis">
                         {workspace.title}
                     </p>
                 </div>
