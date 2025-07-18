@@ -46,29 +46,23 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
 
     const router = useRouter()
 
-   // Refs to track fetched states for this specific Sidebar component instance
-    const hasFetchedCurrentWorkspaceInSidebarRef = useRef<Set<string>>(new Set());
-    const hasFetchedFoldersInSidebarRef = useRef<Set<string>>(new Set());
 
 
       // 2. Effect for setting current workspace based on URL param
       useEffect(() => {
         console.log(`[Sidebar] useEffect (fetchCurrentWrorkspace) triggered. params.workspaceId = ${params.workspaceId}` )
         if(params.workspaceId){
-          if (hasFetchedCurrentWorkspaceInSidebarRef.current.has(params.workspaceId)) {
-                console.log(`[Sidebar] Skipping fetchCurrentWorkspace for ${params.workspaceId}: already fetched by this Sidebar instance.`);
-                return;
-            }
-
             const fetchWorkspace = async () => {
               console.log(`[Sidebar] Initiating API call for fetchCurrentWorkspace for ${params.workspaceId}`);
               const response = await fetchCurrentWorkspace(params.workspaceId);
               if(!response.success){
                 console.log(`[Sidebar] Failed to fetch current workspace ${params.workspaceId}: `, response.error);
-                router.replace(`/dashboard`);
-              }else{
-                hasFetchedCurrentWorkspaceInSidebarRef.current.add(params.workspaceId);
+                if(response.error && response.error !=='Workspace id required'){
+                  router.replace(`/dashboard`);
+                }
+                
               }
+              
             }
           fetchWorkspace();
         }
@@ -82,30 +76,27 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
       useEffect(()=> {
         console.log(`[Sidebar] useEffect (getFolders) triggered. params.workspaceId=${params.workspaceId}`);
         if(params.workspaceId){
-          if (hasFetchedFoldersInSidebarRef.current.has(params.workspaceId)) {
-                console.log(`[Sidebar] Skipping getFolders for workspace ${params.workspaceId}: already fetched by this Sidebar instance.`);
-                return;
-            }
-
+         
             const fetchFolders = async () => {
               console.log(`[Sidebar] Initiating API call for getFolders for ${params.workspaceId}`);
               const response = await getFolders(params.workspaceId);
               if(!response.success){
                 console.log(`[Sidebar] Failed to fetch folders for workspace ${params.workspaceId}: `, response.error);
-              }else{
-                hasFetchedFoldersInSidebarRef.current.add(params.workspaceId);
               }
             }
           fetchFolders();
         }
       },[params.workspaceId, getFolders])
 
+      useEffect(() => {
+        getWorkspaces();
+      },[
+        getWorkspaces
+      ])
     
     const handleFolderAdded = async () => {
        console.log(`[Sidebar] handleFolderAdded triggered. Clearing ref and re-fetching folders for ${params.workspaceId}`);
-        hasFetchedFoldersInSidebarRef.current.delete(params.workspaceId); // Clear the ref
       getFolders(params.workspaceId);
-      // await fetchFolders(params.workspaceId)
     }
 
    

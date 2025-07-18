@@ -94,9 +94,9 @@ export function useWorkspace() {
         dispatch, 
         session?.user?._id, 
         status,
-        currentWorkspaceId,
-        allWorkspaceIds,
-        workspacesById
+        // currentWorkspaceId,
+        // allWorkspaceIds,
+        // workspacesById
      ])
 
     // function to fetch current workspace
@@ -153,8 +153,8 @@ export function useWorkspace() {
         }
     }, [
          dispatch,
-         currentWorkspaceId,
-         workspacesById
+        //  currentWorkspaceId,
+        //  workspacesById
         ])
 
     // function to create new workspace
@@ -179,9 +179,9 @@ export function useWorkspace() {
 
             if (session.user._id) {
                 hasFetchedAllWorkspaceRef.current.delete(session.user._id);
-                hasFetchedCurrentWorkspaceDetailsRef.current.delete(transformedWorkspace._id); 
                 hasCheckedUserWorkspaceStatusRef.current.delete(session.user._id);
             }
+            hasFetchedCurrentWorkspaceDetailsRef.current.delete(transformedWorkspace._id); 
             return {
                 success: true,
                 data: transformedWorkspace
@@ -227,7 +227,7 @@ export function useWorkspace() {
            const transformedWorkspace = transformWorkspace(workspace);
             dispatch(UPDATE_WORKSPACE(transformedWorkspace)); // Ensure this specific workspace is in the byId map
             dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace._id)); // Also set it as current if not already
-
+            hasFetchedCurrentWorkspaceDetailsRef.current.add(workspaceId);
             return{
                 success: true,
                 data: transformedWorkspace // Return transformed Redux data
@@ -242,8 +242,8 @@ export function useWorkspace() {
         }
     }, [
         dispatch,
-        currentWorkspaceId,
-        workspacesById
+        // currentWorkspaceId,
+        // workspacesById
     ])
     const updateWorkspaceTitle = useCallback(async (workspaceId: string, newTitle: string): Promise<{
         success: boolean;
@@ -265,9 +265,10 @@ export function useWorkspace() {
 
              const transformedWorkspace = transformWorkspace(response.data as MongooseWorkSpace);
              dispatch(UPDATE_WORKSPACE(transformedWorkspace));
-             if (currentWorkspaceId === workspaceId) {
-                hasFetchedCurrentWorkspaceDetailsRef.current.delete(workspaceId);
-            }
+             hasFetchedCurrentWorkspaceDetailsRef.current.delete(workspaceId);
+             if(session?.user._id){
+                hasFetchedAllWorkspaceRef.current.delete(session.user._id);
+             }
              return {
                  success: true,
                  data: transformedWorkspace
@@ -285,7 +286,7 @@ export function useWorkspace() {
         }
     }, [
         dispatch,
-        currentWorkspaceId
+        session?.user._id
     ]);
 
     const updateWorkspaceLogo = useCallback(async (workspaceId: string, logo: File): Promise<{
@@ -309,8 +310,9 @@ export function useWorkspace() {
 
             const transformedWorkspace = transformWorkspace(workspace as MongooseWorkSpace);
             dispatch(UPDATE_WORKSPACE(transformedWorkspace));
-            if (currentWorkspaceId === workspaceId) {
-                hasFetchedCurrentWorkspaceDetailsRef.current.delete(workspaceId);
+            hasFetchedCurrentWorkspaceDetailsRef.current.delete(workspaceId);
+            if(session?.user._id){
+                hasFetchedAllWorkspaceRef.current.delete(session.user._id);
             }
             return {
                 success: true,
@@ -331,7 +333,7 @@ export function useWorkspace() {
         }
     }, [
         dispatch,
-        currentWorkspaceId
+        session?.user._id
     ])
 
     // const deleteWorkspace = useCallback(async (workspaceId: string): Promise<{

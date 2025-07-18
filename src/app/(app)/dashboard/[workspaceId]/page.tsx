@@ -13,10 +13,9 @@ import { useSelector } from 'react-redux'
 
 const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }) => {
     const router = useRouter()
-    // const [ workspaceDetails, setWorkspaceDetails ] = useState<ReduxWorkSpace | undefined>(undefined)
 
     const {
-         currentWorkspaceDetails, 
+        //  currentWorkspaceDetails, 
          currentWorkspace, 
          isLoadingWorkspaces,
          fetchCurrentWorkspace
@@ -24,38 +23,28 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
 
     const globalEditingItems = useSelector((state: RootState) => state.ui.editingItem);
 
-    const hasFetchedWorkspaceDetails = useRef<Set<string>>(new Set());
     useEffect(() => {
-        const getWorkspaceDetails = async () => {
-            // Only proceed if workspaceId is valid
+         console.log(`[WorkspacePage] useEffect triggered. params.workspaceId = ${params.workspaceId}`);
+        // Only proceed if workspaceId is valid
             if (!params.workspaceId) {
                 console.log("[WorkspacePage] No workspaceId in params, skipping fetch.");
                 return;
             }
-
-            // Check if this workspace's details have already been fetched by this component instance
-            // This prevents redundant API calls on re-renders
-            if (hasFetchedWorkspaceDetails.current.has(params.workspaceId)) {
-                console.log(`[WorkspacePage] Skipping initial fetch for workspace ${params.workspaceId}: already fetched by this page.`);
-                return;
-            }
-
-            // Only fetch workspace details if currentWorkspace is not set in Redux
-            // OR if the currentWorkspace in Redux doesn't match the workspaceId from params
-            if (!currentWorkspace || currentWorkspace._id !== params.workspaceId) {
-                console.log(`[WorkspacePage] Initiating fetch for workspace: ${params.workspaceId}`);
-                // Use fetchCurrentWorkspace from useWorkspace hook, which handles Redux dispatch internally
+        const getWorkspaceDetails = async () => {
+             console.log(`[WorkspacePage] Initiating fetch for workspace: ${params.workspaceId}`);
                 const response = await fetchCurrentWorkspace(params.workspaceId); 
                 if (!response.success) {
+                    console.log(`[WorkspacePage] Failed to fetch workspace ${params.workspaceId}: `, response.error);
                     router.push('/dashboard'); // Redirect if workspace not found
-                } else {
-                    // Mark as fetched only upon successful API call and Redux dispatch
-                    hasFetchedWorkspaceDetails.current.add(params.workspaceId);
-                }
-            }
+                } 
+               
         };
         getWorkspaceDetails();
-    }, [params.workspaceId, router, currentWorkspace, fetchCurrentWorkspace]);
+    }, [
+        params.workspaceId,
+         router,  
+         fetchCurrentWorkspace
+    ]);
 
     // Loading State
     if (isLoadingWorkspaces || !currentWorkspace || currentWorkspace._id !== params.workspaceId) {

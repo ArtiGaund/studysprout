@@ -68,3 +68,7 @@ deleting the files
 
 
 12) Core feature of synchronizing in real-time as you type title 
+
+13) working till workspace page
+
+14) moved to folder page

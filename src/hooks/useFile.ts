@@ -98,9 +98,9 @@ export function useFile() {
                 updates: transformedFile
             }));
             //  If the updated file is the current one, clear its ref to ensure fresh details next time
-            if (currentFileId === fileId) {
+            // if (currentFileId === fileId) {
                 hasFetchedCurrentFileRef.current.delete(fileId);
-            }
+            // }
             // If the file's workspace ID is available, clear the workspace files ref
             if (file.workspaceId) { // Assuming file object has workspaceId
                 hasFetchedWorkspaceFilesRef.current.delete(file.workspaceId.toString());
@@ -123,7 +123,7 @@ export function useFile() {
         }
      }, [
         dispatch,
-        currentFileId
+        // currentFileId
     ]);
      const getWorkspaceFiles = useCallback(async(workspaceId: string): Promise<{
         success: boolean,
@@ -181,9 +181,9 @@ export function useFile() {
         }
      }, [
         dispatch,
-        currentFileId,
-        filesById,
-        allFileIds
+        // currentFileId,
+        // filesById,
+        // allFileIds
     ])
      const getFiles = useCallback(async (folderId: string): Promise<{
         success: boolean,
@@ -241,9 +241,9 @@ export function useFile() {
         }
      }, [
         dispatch,
-        currentFileId,
-        filesById,
-        allFileIds
+        // currentFileId,
+        // filesById,
+        // allFileIds
     ]);
      const currentFileDetails = useCallback(async (fileId: string): Promise<{
         success: boolean,
@@ -291,8 +291,8 @@ export function useFile() {
      }
     }, [
         dispatch,
-        currentFileId,
-        filesById
+        // currentFileId,
+        // filesById
     ]);
       // --- Derived States ---
     //  const allFilesArray: ReduxFile[] = allFileIds.map(id => filesById[id]);

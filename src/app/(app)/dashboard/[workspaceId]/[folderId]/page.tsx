@@ -40,7 +40,7 @@ const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
             return;
         }
 
-        if(!folderDetailsToRender || folderDetailsToRender._id !== params.folderId){
+        // if(!folderDetailsToRender || folderDetailsToRender._id !== params.folderId){
                 const getFolderDetails = async() => {
             
                     console.log(`[FolderPage] Initiating API call for getCurrentFolder for ${params.folderId}`);
@@ -52,14 +52,14 @@ const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
                     }
             }
          getFolderDetails()
-        }
+        // }
         
        
     }, [
         params.folderId,
          router,
          currentFolderDetail,
-         folderDetailsToRender
+        //  folderDetailsToRender
         ])
 
 

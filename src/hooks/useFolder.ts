@@ -164,10 +164,7 @@ export function useFolder(){
                 updates: transformedReduxFolder
             }));
 
-             // If the updated folder is the current one, clear its ref to ensure fresh details next time
-            if (currentFolderId === folderId) {
-                hasFetchedCurrentFolderRef.current.delete(folderId);
-            }
+            hasFetchedCurrentFolderRef.current.delete(folderId);
             // If the folder's workspace ID is available, clear the workspace folders ref
             if (folder.workspaceId) { // Assuming folder object has workspaceId
                 hasFetchedFoldersByWorkspaceRef.current.delete(folder.workspaceId.toString());
@@ -190,7 +187,7 @@ export function useFolder(){
         }
     }, [
         dispatch,
-        currentFolderId,
+        // currentFolderId,
     ])
     const currentFolderDetail = useCallback(async (folderId: string): Promise<{
         success: boolean,
@@ -242,8 +239,8 @@ export function useFolder(){
         }
     }, [
         dispatch,
-        foldersById,
-        currentFolderId,
+        // foldersById,
+        // currentFolderId,
     ])
      // --- Derived States ---
     //  allFoldersArray is created on every render whenever useFolder runs, thats why infinite loop is coming here 

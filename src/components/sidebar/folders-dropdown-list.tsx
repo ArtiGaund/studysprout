@@ -47,59 +47,37 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
     const { toast } = useToast()
     const dispatch = useDispatch()
    const { currentWorkspace} = useWorkspace();
-
-    // Refs to track fetched IDs for this specific FoldersDropdownList component instance
-    const hasFetchedFoldersInListRef = useRef<Set<string>>(new Set());
-    const hasFetchedFilesForWorkspaceInListRef = useRef<Set<string>>(new Set());
-
-
-    //    useEffect for global data fetching    
+ 
     useEffect(() => {
          console.log(`[FoldersDropdownList] useEffect triggered. currentWorkspace?._id=${currentWorkspace?._id}`);
         if(currentWorkspace?._id){
             const currentWorkspaceId = currentWorkspace?._id.toString();
 
-            // Fetch folders for this workspace
-            if(!hasFetchedFoldersInListRef.current.has(currentWorkspaceId)){
-                console.log(`[FolderDropdownList] Initiating API call for getFolders for ${currentWorkspaceId}`);
-                const fetchFolders = async () => {
+                           const fetchFolders = async () => {
                     const response = await getFolders(currentWorkspaceId);
-                    if(response.success){
-                        hasFetchedFoldersInListRef.current.add(currentWorkspaceId);
-                    }else{
-                        console.log(`[FolderDropdownList] Failed to fetch folders for workspace ${currentWorkspaceId}: `, response.error);
-                        dispatch(SET_FOLDERS([]));
-                        dispatch(SET_CURRENT_FOLDERS(null));
+                    if(!response.success){
+                        console.log(`[FoldersDropdownList] Failed to fetch folders for workspace ${currentWorkspaceId}: `, response.error);
                     }
                 };
                 fetchFolders();
-            }else{
-                console.log(`[FolderDropdownList] Skipping API call for getFolders for ${currentWorkspaceId} as it has already been fetched`);
-            }
-
-            // Fetch files for this workspace
-            if(!hasFetchedFilesForWorkspaceInListRef.current.has(currentWorkspaceId)){
-                console.log(`[FolderDropdownList] Initiating API call for getWorkspaceFiles for ${currentWorkspaceId}`);
                 const fetchFiles = async () => {
                     const response = await  getWorkspaceFiles(currentWorkspace?._id);
-                    if(response.success){
-                        hasFetchedFilesForWorkspaceInListRef.current.add(currentWorkspaceId);
-                    }else{
-                        console.log(`[FolderDropdownList] Failed to fetch files for workspace ${currentWorkspaceId}: `, response.error);
+                    // if(response.success){
+                    //     hasFetchedFilesForWorkspaceInListRef.current.add(currentWorkspaceId);
+                    // }else{
+                    //     console.log(`[FolderDropdownList] Failed to fetch files for workspace ${currentWorkspaceId}: `, response.error);
+                    // }
+                    if(!response.success){
+                         console.log(`[FoldersDropdownList] Failed to fetch files for workspace ${currentWorkspaceId}: `, response.error);
                     }
                 }
                 fetchFiles();
-            }else{
-                console.log(`[FolderDropdownList] Skipping API call for getWorkspaceFiles for ${currentWorkspaceId} as it has already been fetched`);
-            }
-           
             
         }
     }, [
         currentWorkspace?._id,
          getFolders,
           getWorkspaceFiles,
-          dispatch
         ])
     const addFolderHandler = async () => {
             // const date = ;
@@ -129,9 +107,6 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                     title: "Successfully created folder",
                     description: "You can now add files to this folder",
                 });
-                // After creating a new folder, clear this component's ref for folders
-                // and notify the parent component to re-fetch its list.
-                hasFetchedFoldersInListRef.current.delete(workspaceId);
                 onFolderAdded(); // Call the prop to trigger parent re-fetch
             }
              } catch (error) {

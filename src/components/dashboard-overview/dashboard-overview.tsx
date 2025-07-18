@@ -66,19 +66,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
      const workspaceId = currentWorkspace?._id.toString() ?? "";
     const dispatch = useDispatch()
 
-    // Refs to track fetched IDs to prevent infinite loops
-    const fetchedWorkspaceRef = useRef<Set<string>>(new Set());
-    const fetchedFoldersForFilesRef = useRef<Set<string>>(new Set());
-    
-    
-
     const fetchFolders = useCallback(async (workspaceId: string) => {
-
-        // Prevent re-fetching if this workspace's folders have already been loaded
-        if(fetchedWorkspaceRef.current.has(workspaceId)){
-            console.log(`[DashboardOvierview] Skipping fetchedFolders for workspace ${workspaceId}: already fetched.`);
-            return;
-        }
         if(!workspaceId){
             toast({
                 title: "Failed to fetch all folders of workspace",
@@ -97,8 +85,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     description: allFolders.error,
                     variant: "destructive"
                 })
-                dispatch(SET_FOLDERS([]))
-                dispatch(SET_CURRENT_FOLDERS(null)); // Clear current folder
+                // dispatch(SET_FOLDERS([]))
+                // dispatch(SET_CURRENT_FOLDERS(null)); // Clear current folder
                 return;
             }
             
@@ -107,7 +95,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 title: "Successfully fetched folders",
                 description: "You can now add files in the folder",
              })
-             fetchedWorkspaceRef.current.add(workspaceId);
+             
           } catch (error: any) {
               console.error("Error loading folders ",error);
                     toast({
@@ -115,22 +103,15 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         description: "Please try again later",
                         variant: "destructive"
                     })
-                    dispatch(SET_FOLDERS([])); // Clear folders on error
-                    dispatch(SET_CURRENT_FOLDERS(null)); // Clear current folder on error
+                    // dispatch(SET_FOLDERS([])); // Clear folders on error
+                    // dispatch(SET_CURRENT_FOLDERS(null)); // Clear current folder on error
             
-            // console.log("Error fetching the Files ",err)
-            // setError(true)
           }
         }, [
             getFolders,
-            dispatch,
+            // dispatch,
         ])
          const fetchFiles = useCallback(async ( folderId : string) => {
-
-            if(fetchedFoldersForFilesRef.current.has(folderId)){
-                console.log(`[DashboardOverview] Skipping fetchfiles for folders ${folderId}: already fetched.`);
-                return;
-            }
                 try {
                   
                      const allFiles = await getFiles(folderId);
@@ -140,14 +121,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             description: allFiles.error,
                             variant: "destructive"
                         })
-                         dispatch(SET_FILES([])); // Set to empty to avoid stale data
+                        //  dispatch(SET_FILES([])); // Set to empty to avoid stale data
                         return;
                      }
                      toast({
                         title: "Successfully fetched files",
                         description: "You can now add files to this folder",
                      })
-                     fetchedFoldersForFilesRef.current.add(folderId);
                 } catch (error) {
                     console.error("Error loading files ",error);
                     toast({
@@ -155,13 +135,10 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         description: "Please try again later",
                         variant: "destructive"
                     })
-                    dispatch(SET_FILES([])); // Clear files on error
-                    dispatch(SET_CURRENT_FILES(null)); // Clear current file on error
-                    // setError(error);
+                    
                 }
             }, [ 
                 getFiles,
-                dispatch,
             ])
          useEffect(() => {
                 // Fetch folders when dirType is workspace
@@ -212,9 +189,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             title: "Successfully created folder",
                             description: "You can now add files to this folder",
                         });
-                        // After creating a new folder, force a re-fetch of the folder list
-                        // by clearing the ref for the current workspace
-                        fetchedWorkspaceRef.current.delete(workspaceId);
                         fetchFolders(workspaceId); // Re-fetch to update the list
                     }
                         toast({
@@ -279,8 +253,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     title: "Successfully created new file",
                     description: "Start working on it",
                 });
-                // After creating a new file, force a re-fetch of the file list for the current folder
-                fetchedFoldersForFilesRef.current.delete(currentFolder._id.toString());
                 fetchFiles(currentFolder._id.toString()); // Re-fetch to update the list
             }
             toast({
@@ -304,11 +276,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     ]);
 
      const handleFolderAdded = useCallback(async () => {
-    // This will trigger the useEffect for folders if params hasn't changed.
-    // If createFolder already updates Redux, this might not be strictly necessary,
-    // but it ensures consistency by re-fetching.
-
-    fetchedWorkspaceRef.current.delete(params);
+    
     await fetchFolders(params);
   }, [fetchFolders, params]);
 
@@ -316,10 +284,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
            
          
  const handleFileAdded = useCallback(async () => {
-    // This will trigger the useEffect for files if params hasn't changed.
-    // If createFile already updates Redux, this might not be strictly necessary.
-    await fetchFiles(params); // Assuming params is the folderId when dirType is 'folder'
-    fetchedFoldersForFilesRef.current.delete(params);
+   
+    await fetchFiles(params); 
   }, [fetchFiles, params]);
 
   const filteredFiles = useMemo(() => {

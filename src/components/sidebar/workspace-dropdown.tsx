@@ -23,13 +23,6 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
     const [ isOpen, setIsOpen ] = useState(false)
     const dispatch = useDispatch();
 
-    // if there is any changes done in workspace it will show changes in real time
-    // useEffect(() => {
-    //    const findSelectedWorkspace = state.workspaces.find(
-    //     (workspace) => workspace._id === defaultValue?._id
-    //    )
-    //    if(findSelectedWorkspace) setSelectedOption(findSelectedWorkspace)
-    // }, [state, defaultValue])
 
     useEffect(() => {
         const currentWorkspace = workspaceState.currentWorkspace

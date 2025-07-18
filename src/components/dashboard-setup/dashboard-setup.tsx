@@ -99,22 +99,6 @@ const DashboardSetup = () => {
                     variant: "destructive"
                 });
             }
-            // const newWorkspace = response.data.data
-            // dispatch(ADD_WORKSPACE(newWorkspace))
-            // dispatch({
-            //     type: 'ADD_WORKSPACE',
-            //     payload: { ...newWorkspace, folders: [] },
-            // })
-            // console.log("Response Data ",response.data)
-            // const  workspaceId  = newWorkspace._id
-            // console.log("workspace ",workspaceId)
-            // const workspaceId = workspace._id
-            // console.log("workspace id ",workspaceId)
-            // toast({
-            //     title:"Workspace created successfully",
-            //     description: "Moving to your workspace"
-            // })
-            // router.push(`/dashboard/${workspaceId}`)
         } catch (error) {
            console.error("Unexpected error during workspace creation:", error);
             toast({

@@ -27,21 +27,16 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
     globalEditingItems
 }) => {
 
-
-    // const files = useSelector((state:RootState) => state.file.files);
-    // const currentFileId = useSelector((state:RootState) => state.file.currentFile?._id);
     const { files, currentFile, getFiles } = useFile();
     const { toast } = useToast();
     const dispatch = useDispatch();
     // console.log("Files in folder file list ",files);
 
     useEffect(() => {
-        fetchFiles(folderId);
-    }, [folderId])
+         console.log(`[FolderFileList] useEffect triggered. folderId=${folderId}`);
 
-    
-
-     const fetchFiles = async ( folderId : string) => {
+         if(folderId){
+        const fetchFiles = async ( folderId : string) => {
                     try {
                         
                         const allFiles = await getFiles(folderId);
@@ -59,14 +54,26 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
                         })
                     } catch (error) {
                         console.error("Error loading files ",error);
-                        toast({
-                            title: "Failed to fetch files",
-                            description: "Please try again later",
-                            variant: "destructive"
-                        })
+                        // toast({
+                        //     title: "Failed to fetch files",
+                        //     description: "Please try again later",
+                        //     variant: "destructive"
+                        // })
                         // setError(error);
                     }
                 }
+
+        fetchFiles(folderId);
+            }
+    }, [
+        folderId,
+        getFiles,
+        toast
+    ])
+
+    
+    const filteredFiles = files.filter((file:ReduxFile) => !file.inTrash);
+     
     return(
         <>
              <div className="flex sticky z-20 top-0 bg-background w-full h-10 group/title justify-between
@@ -82,7 +89,7 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
                                 className="pb-20 w-full"
                                 >
                                     {
-                                   files.filter((file:ReduxFile) => !file.inTrash)
+                                   filteredFiles.length > 0 && filteredFiles
                                    .map((file) => (
                                         <Dropdown 
                                         key={file?._id?.toString()} // Ensure key is a string
