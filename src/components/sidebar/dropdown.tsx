@@ -264,12 +264,12 @@ const Dropdown: React.FC<DropdownProps> = ({
       );
 
     const groupIdentifies = clsx(
-        'dark:text-white whitespace-nowrap flex justify-between items-center w-[12rem] relative',
+        'dark:text-white whitespace-nowrap flex justify-between items-center w-[11rem] relative',
         {
           'group/folder': isFolder,
           'group/file': !isFolder,
         }
-    );
+      );
 
     const hoverStyles = useMemo(
         () =>
@@ -281,7 +281,8 @@ const Dropdown: React.FC<DropdownProps> = ({
             }
           ),
         [listType]
-    );
+      );
+    
     
 
     // add new file
@@ -405,15 +406,15 @@ const Dropdown: React.FC<DropdownProps> = ({
         return (
         <AccordionItem 
             value={id} 
-            className={clsx(listStyles, "relative")} 
+            className={listStyles} 
              data-editable-container
         >
             <AccordionTrigger
                 id={listType}
-                className="hover:no-underline p-2 text-muted-foreground text-sm flex items-center justify-between" 
+               className="hover:no-underline p-2 text-muted-foreground text-sm"
                 disabled={listType === 'file'} 
                 onMouseDownCapture={(e) => {
-                    if (e.detail === 2) { 
+                    if (e.detail === 2) {   
                         e.preventDefault(); 
                         e.stopPropagation(); 
                         console.log(`[${title}] AccordionTrigger: Preventing default onMouseDownCapture due to double-click.`);
@@ -422,14 +423,12 @@ const Dropdown: React.FC<DropdownProps> = ({
                 onClick={(e) => {
                     console.log(`[${title}] AccordionTrigger: Default onClick allowed.`);
                 }}
-            >
+            >       
                 {/* This div now contains both the icon/input and the action buttons */}
                 {/* Ensure this container has a defined max-width or flex-basis to prevent overflow */}
-                <div className={clsx(
-                    groupIdentifies,
-                     'flex-grow flex items-center gap-4 overflow-hidden',
-                     )}> {/* Added overflow-hidden */}
-                    <div className="relative z-10"> 
+                <div  className={groupIdentifies}> {/* Added overflow-hidden */}
+                    <div className="flex gap-4 items-center justify-center overflow-hidden">
+                    <div className="relative"> 
                         <EmojiPicker getValue={onChangeEmoji}>
                             {currentIcon}
                         </EmojiPicker>
@@ -464,21 +463,25 @@ const Dropdown: React.FC<DropdownProps> = ({
                     )}
                 </div>
                 {/* Action buttons remain, now correctly part of the flex container */}
-                <div className={clsx(hoverStyles, 'z-30')}> 
-                   <TooltipComponent message="Delete Folder">
+               
+                <div className={hoverStyles}> 
+
+                  <TooltipComponent message={`Delete ${listType === 'folder' ? 'Folder' : 'File'}`}>
                         <Trash 
                             onClick={(e) => { e.stopPropagation(); moveToTrash(e); }} 
                             size={15}
                             className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
                         />
                     </TooltipComponent>
-                    <TooltipComponent message="Add File">
+                    {/* Show add button only for folder title  */}
+                   { listType === 'folder' && ( <TooltipComponent message="Add File">
                         <PlusIcon 
                             onClick={(e) => { e.stopPropagation(); addNewFile(e); }} 
                             size={15}
                             className="hover:text-white transition-colors"
                         />
-                    </TooltipComponent>
+                    </TooltipComponent>)}
+                </div>
                 </div>
             </AccordionTrigger>
             
