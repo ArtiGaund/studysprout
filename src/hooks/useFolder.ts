@@ -26,7 +26,10 @@ export function useFolder(){
 
     // Refs to track fetched states for this hook's API calls
     const hasFetchedFoldersByWorkspaceRef = useRef<Set<string>>(new Set());
-    const hasFetchedCurrentFolderRef = useRef<Set<string>>(new Set());
+
+    // This ref is less needed now that `currentFolderDetail` will directly update `foldersById`
+    // and `SET_CURRENT_FOLDER` will point to it. If the folder isn't in `foldersById`, it will refetch
+    // const hasFetchedCurrentFolderRef = useRef<Set<string>>(new Set());
 
     const getFolders = useCallback(async( workspaceId: string): Promise<{
         success: boolean,
@@ -38,12 +41,19 @@ export function useFolder(){
             return { success: false, error: "Workspace id required" };
         }
 
-        if (hasFetchedFoldersByWorkspaceRef.current.has(workspaceId)) {
-            console.log(`[useFolder] Skipping getFolders for workspace ${workspaceId}: already fetched.`);
+        // checking if data for this workspace is already in Redux
+        // and if the folders array (allFolderIds) is not empty
+        // This will avoid unnecessary API calls but allows refetch if state is cleared or partially loaded
+        const existingFolders = allFolderIds
+        .map(id => foldersById[id])
+        .filter( folder => folder?.workspaceId === workspaceId);
+
+        if (hasFetchedFoldersByWorkspaceRef.current.has(workspaceId) && existingFolders.length > 0) {
+            console.log(`[useFolder] Skipping getFolders for workspace ${workspaceId}: already fetched and data present.`);
             // Return existing Redux data mapped back to Mongoose-like structure if needed by caller
             return { 
                 success: true, 
-                data: allFolderIds.map(id => foldersById[id]) as ReduxFolder[] 
+                data: existingFolders as ReduxFolder[] 
             }; 
         }
         dispatch(SET_FOLDER_LOADING(true));
@@ -58,18 +68,19 @@ export function useFolder(){
             ).filter(Boolean)
             .map(folder => transformFolder(folder as MongooseFolder))
            
-             if(transformedFolders.length > 0){
-                dispatch(SET_FOLDERS(transformedFolders));
+            dispatch(SET_FOLDERS(transformedFolders));
+            //  if(transformedFolders.length > 0){
+                
                 if(!currentFolderId || !transformedFolders.some((folder) => folder._id === currentFolderId)){
                 const firstFolder = transformedFolders[0];
                 if(firstFolder && firstFolder._id){
                     dispatch(SET_CURRENT_FOLDER(firstFolder._id));
                     }
                 }
-            }else{
-                dispatch(SET_FOLDERS([]));
-                dispatch(SET_CURRENT_FOLDER(null));
-            }
+            // }else{
+            //     dispatch(SET_FOLDERS([]));
+            //     dispatch(SET_CURRENT_FOLDER(null));
+            // }
              hasFetchedFoldersByWorkspaceRef.current.add(workspaceId);
             return{
                 success: true,
@@ -164,7 +175,7 @@ export function useFolder(){
                 updates: transformedReduxFolder
             }));
 
-            hasFetchedCurrentFolderRef.current.delete(folderId);
+            // hasFetchedCurrentFolderRef.current.delete(folderId);
             // If the folder's workspace ID is available, clear the workspace folders ref
             if (folder.workspaceId) { // Assuming folder object has workspaceId
                 hasFetchedFoldersByWorkspaceRef.current.delete(folder.workspaceId.toString());
@@ -201,19 +212,28 @@ export function useFolder(){
                 error: "Folder id required"
             }
         }
-
+        // 1. check if it's already the current folder and present in normalized state 
          if (currentFolderId === folderId && foldersById[folderId]) {
-            console.log(`[useFolder] Skipping currentFolderDetail for ${folderId}: already set.`);
+            console.log(`[useFolder] Skipping currentFolderDetail for ${folderId}: already current and in Redux.`);
             return { success: true, data: foldersById[folderId] as ReduxFolder }; // Return existing Redux data mapped back to Mongoose-like
         }
-        if (hasFetchedCurrentFolderRef.current.has(folderId)) {
-            console.log(`[useFolder] Skipping currentFolderDetail for ${folderId}: already initiated.`);
-            return { success: true, data: foldersById[folderId] as ReduxFolder };
+        // 2. check if it's just in normalized state (but not necessarily current)
+        // If it's in byId, we can directly set it as current without API call
+        if(foldersById[folderId]){
+            console.log(`[useFolder] folder ${folderId} found in Redux byId map. Setting as current`);
+            dispatch(SET_CURRENT_FOLDER(folderId));
+            return {
+                success: true,
+                data: foldersById[folderId] as ReduxFolder
+            }
         }
+
+        // If not found in Redux, proceed to fetch
         dispatch(SET_FOLDER_LOADING(true));
         dispatch(SET_FOLDER_ERROR(null));
         
         try {
+            console.log(`[useFolder] fetching current folder from API: ${folderId}`);
             const folder = await getCurrentFolder(folderId);
             if(!folder){
                 return {
@@ -222,8 +242,10 @@ export function useFolder(){
                 }
             }
             const transformedFolder = transformFolder(folder);
+            // IMPORTANT: Add the fetched folder to the normalized state
+            dispatch(ADD_FOLDER(transformedFolder));
             dispatch(SET_CURRENT_FOLDER(transformedFolder._id?.toString()));
-            hasFetchedCurrentFolderRef.current.add(folderId);
+            
             return {
                 success: true,
                 data: transformedFolder,
@@ -232,25 +254,23 @@ export function useFolder(){
              console.error('Error fetching current folder in hook:', error);
             const errorMessage = error.message || "Failed to fetch current folder";
             dispatch(SET_FOLDER_ERROR(errorMessage));
-            hasFetchedCurrentFolderRef.current.delete(folderId);
+           
             return { success: false, error: errorMessage };
         }finally{
             dispatch(SET_FOLDER_LOADING(false));
         }
     }, [
         dispatch,
-        // foldersById,
-        // currentFolderId,
+        foldersById,
+        currentFolderId,
     ])
      // --- Derived States ---
-    //  allFoldersArray is created on every render whenever useFolder runs, thats why infinite loop is coming here 
-    //  const allFoldersArray: ReduxFolder[] = allFolderIds.map(id => foldersById[id]);
+   
     // To resolve above issue, use useMemo
     const allFoldersArray: ReduxFolder[] = useMemo(() => {
         return allFolderIds.map(id => foldersById[id]);
     },[ allFolderIds, foldersById]);
-    //  const currentFolderObject = currentFolderId ? foldersById[currentFolderId] : undefined;
-    // same for the above one
+   
     const currentFolderObject = useMemo(() => {
         return currentFolderId ? foldersById[currentFolderId] : undefined;
     }, [ currentFolderId, foldersById ]);
