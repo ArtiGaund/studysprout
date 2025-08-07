@@ -56,12 +56,9 @@ const BannerSection: React.FC<BannerSectionProps> = ({
 }) => {
    
 
-    const { updateWorkspaceTitle,currentWorkspace, workspaces } = useWorkspace();
-    const { currentFolder, updateFolder, folders } = useFolder();
-    const { currentFile, updateFile, files } = useFile();
-    
-    
-    const dispatch = useDispatch()
+    const { currentWorkspace } = useWorkspace();
+    const { currentFolder } = useFolder();
+    const { currentFile } = useFile();
     const { toast } = useToast()
     const pathname = usePathname()
     
@@ -172,16 +169,8 @@ const BannerSection: React.FC<BannerSectionProps> = ({
          toast
     ]);
 
-    // const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //     dispatch(updateEditingItemTitle(e.target.value));
-    // }
-
-    // const handleBlur = async () => {
-    //     if(!isCurrentlyEditingThisItem) return;
-
-    //     const originalTitle = editingItem.originalTitle;
-    //     const newTitle = editingItem.tempTitle.trim();
-    // }
+    
+   
 
   if (isLoading || !details) {
         return (

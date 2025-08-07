@@ -12,7 +12,7 @@ import {
     AccordionTrigger,
   } from "@/components/ui/accordion"
 import { useDispatch, useSelector } from "react-redux";
-import { ADD_FOLDER, SET_CURRENT_FOLDERS, SET_FOLDERS } from "@/store/slices/folderSlice";
+import { ADD_FOLDER, SET_CURRENT_FOLDER, SET_FOLDERS } from "@/store/slices/folderSlice";
 import { RootState } from "@/store/store";
 import Dropdown from "./dropdown";
 import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";

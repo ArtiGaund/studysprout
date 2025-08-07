@@ -41,13 +41,28 @@ export function useDir({
 
     //  Hooks to fetch individual directory details if they are not already in Redux
     // This is crucial for initial load if Redux state is empty
-    const { currentFileDetails } = useFile();
-    const { currentFolderDetail } = useFolder();
-    const { currentWorkspaceDetails } = useWorkspace();
+    // const { currentFileDetails } = useFile();
+    // const { currentFolderDetail } = useFolder();
+    // const { currentWorkspaceDetails } = useWorkspace();
+
+    // select the relevant item directly from the Redux store
+    const details = useSelector((state: RootState) => {
+        if(!dirId) return;
+        switch(dirType){
+            case "workspace" :
+                return state.workspace.byId[dirId];
+            case "folder":
+                return state.folder.byId[dirId];
+            case "file":
+                return state.file.byId[dirId];
+            default: 
+                return undefined;
+        }
+    })
 
     // Use a state to hold the details that is being worked on.
     // Initialize it with the prop if available, but primarily rely on fetching.
-    const [details, setDetails] = useState<ReduxWorkSpace | ReduxFolder | ReduxFile | undefined>(undefined);
+    //  const [details, setDetails] = useState<ReduxWorkSpace | ReduxFolder | ReduxFile | undefined>(undefined);
 
     const [ isLoading, setIsLoading ] = useState(false);
     const [ isSaving, setIsSaving ] = useState(false);
@@ -59,72 +74,72 @@ export function useDir({
     const isNavigatingAfterDeleteRef = useRef(false);
 
     // Effect to fetch and set details on initial load or dirId change
-    useEffect(() => {
-        // if already navigating away after a deletion, no need to fetch details 
-        if(isNavigatingAfterDeleteRef.current){
-            // console.log("useDir: Skipping fetchDetails because navigation after deletion is in progress.");
-            setIsLoading(false);
-            return;
-        }
-        if(!dirId || typeof dirId !== "string") {
-            // console.warn(`usDir: Invalid dirId received (${dirId}): `,dirId);
-            setDetails(undefined);
-            setIsLoading(false);
-            return;
-        }
-        const fetchDetails = async () => {
-            setIsLoading(true);
-            try {
-                let response: any;
-                if(dirType === "workspace"){
-                    response = await currentWorkspaceDetails(dirId);
-                }else if(dirType === "folder"){
-                    response = await currentFolderDetail(dirId);
-                }else if(dirType === "file"){
-                    response = await currentFileDetails(dirId);
-                }
+    // useEffect(() => {
+    //     // if already navigating away after a deletion, no need to fetch details 
+    //     if(isNavigatingAfterDeleteRef.current){
+    //         // console.log("useDir: Skipping fetchDetails because navigation after deletion is in progress.");
+    //         setIsLoading(false);
+    //         return;
+    //     }
+    //     if(!dirId || typeof dirId !== "string") {
+    //         // console.warn(`usDir: Invalid dirId received (${dirId}): `,dirId);
+    //         setDetails(undefined);
+    //         setIsLoading(false);
+    //         return;
+    //     }
+    //     const fetchDetails = async () => {
+    //         setIsLoading(true);
+    //         try {
+    //             let response: any;
+    //             if(dirType === "workspace"){
+    //                 response = await currentWorkspaceDetails(dirId);
+    //             }else if(dirType === "folder"){
+    //                 response = await currentFolderDetail(dirId);
+    //             }else if(dirType === "file"){
+    //                 response = await currentFileDetails(dirId);
+    //             }
 
-                if(response?.success && response.data){
-                    setDetails(response.data);
-                }else{
-                    console.error(`useDir: Failed to fetch ${dirType} details for Id: ${dirId}`, response.error);
-                    setDetails(undefined);
-                    if(dirType === "file" && currentWorkspaceId && currentFolderId){
-                        router.replace(`/dashboard/${currentWorkspaceId}/${currentFolderId}`);
-                    }else if(dirType === "folder" && currentWorkspaceId){
-                        router.replace(`/dashboard/${currentWorkspaceId}`);
-                    }else {
-                        router.replace(`/dashboard`);
-                    }
-                }
-            } catch (error) {
-                console.error(`useDir: Error fetching ${dirType} details for Id: ${dirId}`, error);
-                setDetails(undefined);
-                if(dirType === "file" && currentWorkspaceId && currentFolderId){
-                    router.replace(`/dashboard/${currentWorkspaceId}/${currentFolderId}`);
-                }else if(dirType === "folder" && currentWorkspaceId){
-                    router.replace(`/dashboard/${currentWorkspaceId}`);
-                }else {
-                    router.replace(`/dashboard`);
-                }
-            }finally{
-                setIsLoading(false);
-            }
+    //             if(response?.success && response.data){
+    //                 setDetails(response.data);
+    //             }else{
+    //                 console.error(`useDir: Failed to fetch ${dirType} details for Id: ${dirId}`, response.error);
+    //                 setDetails(undefined);
+    //                 if(dirType === "file" && currentWorkspaceId && currentFolderId){
+    //                     router.replace(`/dashboard/${currentWorkspaceId}/${currentFolderId}`);
+    //                 }else if(dirType === "folder" && currentWorkspaceId){
+    //                     router.replace(`/dashboard/${currentWorkspaceId}`);
+    //                 }else {
+    //                     router.replace(`/dashboard`);
+    //                 }
+    //             }
+    //         } catch (error) {
+    //             console.error(`useDir: Error fetching ${dirType} details for Id: ${dirId}`, error);
+    //             setDetails(undefined);
+    //             if(dirType === "file" && currentWorkspaceId && currentFolderId){
+    //                 router.replace(`/dashboard/${currentWorkspaceId}/${currentFolderId}`);
+    //             }else if(dirType === "folder" && currentWorkspaceId){
+    //                 router.replace(`/dashboard/${currentWorkspaceId}`);
+    //             }else {
+    //                 router.replace(`/dashboard`);
+    //             }
+    //         }finally{
+    //             setIsLoading(false);
+    //         }
         
         
-        };
-        fetchDetails();
-    }, [
-        dirId,
-        dirType,
-        currentWorkspaceId,
-        currentFolderId,
-        currentFileId,
-        currentFileDetails,
-        currentFolderDetail,
-        currentWorkspaceDetails,
-        router
-    ])
+    //     };
+    //     fetchDetails();
+    // }, [
+    //     dirId,
+    //     dirType,
+    //     currentWorkspaceId,
+    //     currentFolderId,
+    //     currentFileId,
+    //     currentFileDetails,
+    //     currentFolderDetail,
+    //     currentWorkspaceDetails,
+    //     router
+    // ])
     // fetch the banner image url if available
     useEffect(() => {
         if(details?.bannerUrl){
@@ -155,12 +170,11 @@ export function useDir({
 
        setIsSaving(true);
         try {
-            // const todayDate = new Date();
-            // const lastUpdated = todayDate.toString();
             const updatePayload: Partial<ReduxWorkSpace | ReduxFolder | ReduxFile> = {
                 inTrash: "",
                 lastUpdated: new Date().toISOString(),
             }
+            // Optimistic UI update: Dispatch immediately
             if(dirType === "workspace")
                 dispatch(UPDATE_WORKSPACE(updatePayload as ReduxWorkSpace));
             if(dirType === "folder")
@@ -220,7 +234,7 @@ export function useDir({
             }));
             }
         }finally{
-            setIsLoading(false);
+            setIsSaving(false);
         }
     },[ dirType, dirId, details, dispatch, toast])
 
