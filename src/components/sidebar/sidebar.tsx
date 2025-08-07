@@ -11,7 +11,7 @@ import NativeNavigation from "./native-navigation";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "./folders-dropdown-list";
 import { useDispatch, useSelector } from "react-redux";
-import { SET_CURRENT_FOLDERS, SET_FOLDERS } from "@/store/slices/folderSlice";
+import { SET_CURRENT_FOLDER, SET_FOLDERS } from "@/store/slices/folderSlice";
 // import { SET_CURRENT_WORKSPACES, SET_WORKSPACES } from "@/store/slices/workspaceSlice";
 import { RootState } from "@/store/store";
 import UserCard from "./user-card";

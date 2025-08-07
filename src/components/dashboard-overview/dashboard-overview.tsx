@@ -12,7 +12,7 @@ import axios from "axios";
 // Import Redux actions,
 import { 
     ADD_FOLDER, 
-    SET_CURRENT_FOLDERS, 
+    SET_CURRENT_FOLDER, 
     SET_FOLDERS, 
     UPDATE_FOLDER 
 } from "@/store/slices/folderSlice";

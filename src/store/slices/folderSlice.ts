@@ -53,7 +53,7 @@ const folderSlice = createSlice({
             });
             state.loading = false;
         },
-         SET_CURRENT_FOLDERS: (state, action: PayloadAction<string | null>) => {
+         SET_CURRENT_FOLDER: (state, action: PayloadAction<string | null>) => {
             state.currentFolder = action.payload;
         },
          SET_FOLDER_LOADING: (state, action: PayloadAction<boolean>) => {
@@ -70,7 +70,7 @@ export const {
     DELETE_FOLDER,
     UPDATE_FOLDER,
     SET_FOLDERS,
-    SET_CURRENT_FOLDERS,
+    SET_CURRENT_FOLDER,
     SET_FOLDER_LOADING,
     SET_FOLDER_ERROR
 } = folderSlice.actions

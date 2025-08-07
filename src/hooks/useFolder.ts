@@ -4,7 +4,7 @@ import { RootState } from "@/store/store";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
 import { Folder as MongooseFolder } from "@/model/folder.model";
-import { ADD_FOLDER, SET_CURRENT_FOLDERS, SET_FOLDER_ERROR, SET_FOLDER_LOADING, SET_FOLDERS, UPDATE_FOLDER } from "@/store/slices/folderSlice";
+import { ADD_FOLDER, SET_CURRENT_FOLDER, SET_FOLDER_ERROR, SET_FOLDER_LOADING, SET_FOLDERS, UPDATE_FOLDER } from "@/store/slices/folderSlice";
 import { getAllFolders } from "@/services/workspaceServices";
 import { ReduxFolder } from "@/types/state.type";
 import { addFolder, getCurrentFolder } from "@/services/folderServices";
@@ -63,12 +63,12 @@ export function useFolder(){
                 if(!currentFolderId || !transformedFolders.some((folder) => folder._id === currentFolderId)){
                 const firstFolder = transformedFolders[0];
                 if(firstFolder && firstFolder._id){
-                    dispatch(SET_CURRENT_FOLDERS(firstFolder._id));
+                    dispatch(SET_CURRENT_FOLDER(firstFolder._id));
                     }
                 }
             }else{
                 dispatch(SET_FOLDERS([]));
-                dispatch(SET_CURRENT_FOLDERS(null));
+                dispatch(SET_CURRENT_FOLDER(null));
             }
              hasFetchedFoldersByWorkspaceRef.current.add(workspaceId);
             return{
@@ -110,7 +110,7 @@ export function useFolder(){
                 const transformedFolder = transformFolder(newFolder as MongooseFolder);
 
                 dispatch(ADD_FOLDER(transformedFolder));
-                dispatch(SET_CURRENT_FOLDERS(transformedFolder._id?.toString()));
+                dispatch(SET_CURRENT_FOLDER(transformedFolder._id?.toString()));
                 // Clear the ref for this workspace's folders to force re-fetch if needed
                 if (folderData.workspaceId) {
                     hasFetchedFoldersByWorkspaceRef.current.delete(folderData.workspaceId);
@@ -222,7 +222,7 @@ export function useFolder(){
                 }
             }
             const transformedFolder = transformFolder(folder);
-            dispatch(SET_CURRENT_FOLDERS(transformedFolder._id?.toString()));
+            dispatch(SET_CURRENT_FOLDER(transformedFolder._id?.toString()));
             hasFetchedCurrentFolderRef.current.add(folderId);
             return {
                 success: true,
