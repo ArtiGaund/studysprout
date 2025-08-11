@@ -6,7 +6,7 @@ export interface File {
     _id?: string;
     title: string;
     iconId?: string;
-    data?: any; //store actual JSON
+    data?: string; //store actual JSON
     inTrash?: string;
     bannerUrl?: string;
     workspaceId?: string;
@@ -25,8 +25,8 @@ export const FileSchema: Schema<File> = new Schema({
         // unique: true
     },
     data: {
-        type: [mongoose.Schema.Types.Mixed],
-        default: [],
+        type: String,
+        default: '[]',
     },
     inTrash: {
         type: String,
