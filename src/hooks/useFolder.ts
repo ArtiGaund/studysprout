@@ -98,9 +98,9 @@ export function useFolder(){
 
     }, [
         dispatch,
-        currentFolderId,
-        allFolderIds,
-        foldersById,
+        // currentFolderId,
+        // allFolderIds,
+        // foldersById,
     ])
 
     const createFolder = useCallback(async( folderData: MongooseFolder ): Promise<{

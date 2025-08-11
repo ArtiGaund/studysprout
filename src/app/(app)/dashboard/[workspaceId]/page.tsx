@@ -30,6 +30,14 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
                 console.log("[WorkspacePage] No workspaceId in params, skipping fetch.");
                 return;
             }
+
+            // If the currentWorkspace from Redux already matches the ID of params and it's not currently loading,
+            // Skip the fetch
+            if(currentWorkspace && currentWorkspace._id === params.workspaceId && !isLoadingWorkspaces){
+                console.log("[WorkspacePage] currentWorkspace already matches params.workspaceId, skipping fetch.");
+                return;
+            }
+            
         const getWorkspaceDetails = async () => {
              console.log(`[WorkspacePage] Initiating fetch for workspace: ${params.workspaceId}`);
                 const response = await fetchCurrentWorkspace(params.workspaceId); 
@@ -43,7 +51,9 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
     }, [
         params.workspaceId,
          router,  
-         fetchCurrentWorkspace
+         fetchCurrentWorkspace,
+         currentWorkspace,
+         isLoadingWorkspaces
     ]);
 
     // Loading State
