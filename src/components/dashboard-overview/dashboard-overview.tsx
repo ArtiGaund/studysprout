@@ -92,8 +92,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             
             
              toast({
-                title: "Successfully fetched folders",
-                description: "You can now add files in the folder",
+                title: "Successfully fetched all the folders",
+                description: "You can now add files in the folders or create new folders",
              })
              
           } catch (error: any) {
@@ -125,8 +125,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         return;
                      }
                      toast({
-                        title: "Successfully fetched files",
-                        description: "You can now add files to this folder",
+                        title: "Successfully fetched all the files",
+                        description: "You can now add files to the folder",
                      })
                 } catch (error) {
                     console.error("Error loading files ",error);
