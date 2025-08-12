@@ -23,11 +23,6 @@ import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { FolderIcon, FileIcon } from "lucide-react";
 import FolderFileList from "./folder-file-list";
 import { useCallback } from 'react';
-import {
-     ADD_FILE, 
-     SET_CURRENT_FILES, 
-     SET_FILES 
-    } from "@/store/slices/fileSlice";
 
 // Import Redux types 
 import { 
