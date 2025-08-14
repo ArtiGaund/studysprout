@@ -77,8 +77,13 @@ export function useFile() {
             }
             dispatch(SET_FILE_LOADING(true));
             dispatch(SET_FILE_ERROR(null));
+            // Stringify the 'data' field if it's an object/array before sending to API
+            const payloadToSend = { ...updatedData };
+            if(payloadToSend.data && typeof payloadToSend.data !== 'string'){
+                payloadToSend.data = JSON.stringify(payloadToSend.data);
+            }
         try {
-            const result = await updateDir("file",fileId, updatedData);
+            const result = await updateDir("file",fileId, payloadToSend);
             const file = result.file
             console.log("Updated file:", result.file);
             if(!result){
