@@ -75,7 +75,7 @@ export async function POST(request: Request) {
             success: true,
             data: { 
                 file: newFile.toObject(), // Convert to plain object if not already by .create()
-                updatedFolder: updatedFolder 
+                // updatedFolder: updatedFolder 
             }
         }, { status: 201 });
 

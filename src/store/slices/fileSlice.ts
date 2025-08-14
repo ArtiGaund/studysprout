@@ -54,7 +54,7 @@ const fileSlice = createSlice({
             });
             state.loading = false;
         },
-        SET_CURRENT_FILES: (state, action: PayloadAction<string | null>) => {
+        SET_CURRENT_FILE: (state, action: PayloadAction<string | null>) => {
             state.currentFile = action.payload;
         },
          SET_FILE_LOADING: (state, action: PayloadAction<boolean>) => {
@@ -71,7 +71,7 @@ export const {
     DELETE_FILE,
     UPDATE_FILE,
     SET_FILES,
-    SET_CURRENT_FILES,
+    SET_CURRENT_FILE,
      SET_FILE_LOADING,
     SET_FILE_ERROR,
 } = fileSlice.actions

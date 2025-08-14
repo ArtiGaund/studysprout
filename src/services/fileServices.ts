@@ -5,7 +5,7 @@ import axios from "axios";
 export async function addFile(newFile:File) {
     const { data } = await axios.post(`/api/create-file`,newFile);
     if(!data.success) throw new Error(data.message);
-    return data.data;
+    return data.data.file;
 }
 
 export async function getCurrentFile(fileId:string){

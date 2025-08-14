@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { File as MongooseFile } from "@/model/file.model";
-import { ADD_FILE, SET_CURRENT_FILES, SET_FILE_ERROR, SET_FILE_LOADING, SET_FILES, UPDATE_FILE } from "@/store/slices/fileSlice";
+import { ADD_FILE, SET_CURRENT_FILE, SET_FILE_ERROR, SET_FILE_LOADING, SET_FILES, UPDATE_FILE } from "@/store/slices/fileSlice";
 import { addFile, getAllFilesByWorkspaceId, getCurrentFile } from "@/services/fileServices";
 import { ReduxFile } from "@/types/state.type";
 import { updateDir } from "@/services/dirServices";
@@ -41,8 +41,9 @@ export function useFile() {
             try {
                 const newFile = await addFile(fileData);
 
-                const transformedFile = transformFile(newFile);
+                const transformedFile = transformFile(newFile as MongooseFile);
                 dispatch(ADD_FILE(transformedFile));
+                dispatch(SET_CURRENT_FILE(transformedFile._id.toString()));
                 // Clear relevant refs to force re-fetch if needed
                 if (fileData.workspaceId) {
                     hasFetchedWorkspaceFilesRef.current.delete(fileData.workspaceId);
@@ -139,7 +140,10 @@ export function useFile() {
             }
             if (hasFetchedWorkspaceFilesRef.current.has(workspaceId)) {
             console.log(`[useFile] Skipping getWorkspaceFiles for workspace ${workspaceId}: already fetched.`);
-            return { success: true, data: allFileIds.map(id => filesById[id]) as ReduxFile[] }; // Return Redux data mapped back to Mongoose-like
+            const files = allFileIds
+            .filter(id => filesById[id]?.workspaceId === workspaceId)
+            .map(id => filesById[id]);
+            return { success: true, data: files as ReduxFile[] }; // Return Redux data mapped back to Mongoose-like
         }
         try {
            
@@ -157,13 +161,13 @@ export function useFile() {
                 if(!currentFileId && !transformedFiles.some(file => file._id === currentFileId)){
                     const firstFile = transformedFiles[0];
                     if(firstFile && firstFile._id){
-                         dispatch(SET_CURRENT_FILES(firstFile._id));
+                         dispatch(SET_CURRENT_FILE(firstFile._id));
                     }
                    
                 }
             }else{
                 dispatch(SET_FILES([]));
-                dispatch(SET_CURRENT_FILES(null));
+                dispatch(SET_CURRENT_FILE(null));
             }
             hasFetchedWorkspaceFilesRef.current.add(workspaceId);
             return {
@@ -199,7 +203,10 @@ export function useFile() {
         }
         if (hasFetchedFolderFilesRef.current.has(folderId)) {
             console.log(`[useFile] Skipping getFiles for folder ${folderId}: already fetched.`);
-            return { success: true, data: allFileIds.map(id => filesById[id]) as ReduxFile[] }; // Return Redux data mapped back to Mongoose-like
+            const files = allFileIds
+            .filter(id => filesById[id]?.folderId === folderId)
+            .map(id => filesById[id]);
+            return { success: true, data: files as ReduxFile[] }; // Return Redux data mapped back to Mongoose-like
         }
         dispatch(SET_FILE_LOADING(true));
         dispatch(SET_FILE_ERROR(null));
@@ -216,13 +223,13 @@ export function useFile() {
                 if(!currentFileId && !transformedFiles.some(file => file._id === currentFileId)){
                     const firstFile = transformedFiles[0];
                     if(firstFile && firstFile._id){
-                         dispatch(SET_CURRENT_FILES(firstFile._id));
+                         dispatch(SET_CURRENT_FILE(firstFile._id));
                     }
                    
                 }
             }else{
                 dispatch(SET_FILES([]));
-                dispatch(SET_CURRENT_FILES(null));
+                dispatch(SET_CURRENT_FILE(null));
             }
             hasFetchedFolderFilesRef.current.add(folderId);
             return {
@@ -267,6 +274,7 @@ export function useFile() {
         dispatch(SET_FILE_ERROR(null));
         try {
             const file = await getCurrentFile(fileId);
+            console.log("[useFile] currentFileDetails: Fetched current file: ", file);
             if(!file){
                 return {
                     success: false,
@@ -274,7 +282,17 @@ export function useFile() {
                 }
             }
             const transformedFile = transformFile(file);
-            dispatch(SET_CURRENT_FILES(transformedFile._id.toString()));
+            dispatch(ADD_FILE(transformedFile));
+            // Parse the data field when fetching from the backend 
+            if(transformedFile.data && typeof transformedFile.data === "string"){
+                try {
+                    transformedFile.data = JSON.parse(transformedFile.data);
+                } catch (error) {
+                    console.error('Error parsing data field:', error);
+                    transformedFile.data = '[]';
+                }
+            }
+            dispatch(SET_CURRENT_FILE(transformedFile._id.toString()));
              hasFetchedCurrentFileRef.current.add(fileId);
             return {
                 success: true,
@@ -291,8 +309,8 @@ export function useFile() {
      }
     }, [
         dispatch,
-        // currentFileId,
-        // filesById
+        currentFileId,
+        filesById
     ]);
       // --- Derived States ---
     //  const allFilesArray: ReduxFile[] = allFileIds.map(id => filesById[id]);
