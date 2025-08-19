@@ -131,7 +131,7 @@ export function useFile() {
         dispatch,
         // currentFileId
     ]);
-     const getWorkspaceFiles = useCallback(async(workspaceId: string): Promise<{
+     const getWorkspaceFiles = useCallback(async(workspaceId: string, forceFetch?: boolean): Promise<{
         success: boolean,
         data?: ReduxFile[],
         error?: string
@@ -143,7 +143,7 @@ export function useFile() {
                     error: "Workspace id required"
                 }
             }
-            if (hasFetchedWorkspaceFilesRef.current.has(workspaceId)) {
+            if (hasFetchedWorkspaceFilesRef.current.has(workspaceId) && !forceFetch) {
             console.log(`[useFile] Skipping getWorkspaceFiles for workspace ${workspaceId}: already fetched.`);
             const files = allFileIds
             .filter(id => filesById[id]?.workspaceId === workspaceId)
@@ -177,7 +177,7 @@ export function useFile() {
             hasFetchedWorkspaceFilesRef.current.add(workspaceId);
             return {
                 success: true,
-                data: fetchFiles
+                data: transformedFiles
             }
         } catch (error: any) {   
              console.error('Error while fetching workspace files in hook:', error); // Updated message
@@ -236,10 +236,15 @@ export function useFile() {
                 dispatch(SET_FILES([]));
                 dispatch(SET_CURRENT_FILE(null));
             }
+            dispatch(SET_FILES(transformedFiles));
+
+            if(transformedFiles.length > 0 && transformedFiles[0].workspaceId){
+                hasFetchedWorkspaceFilesRef.current.delete(transformedFiles[0].workspaceId);
+            }
             hasFetchedFolderFilesRef.current.add(folderId);
             return {
                 success: true,
-                data: fetchFiles,
+                data: transformedFiles,
                 error: "Successfully fetched all the files of folder"
             }
         } catch (error: any) {
@@ -250,9 +255,13 @@ export function useFile() {
             return { success: false, error: errorMessage };
         }finally{
             dispatch(SET_FILE_LOADING(false));
+            // if (transformedFiles.length > 0 && transformedFiles[0].workspaceId) {
+            //     getWorkspaceFiles(transformedFiles[0].workspaceId, true); // Force fetch for workspace files
         }
-     }, [
+        }
+     , [
         dispatch,
+        // getWorkspaceFiles,
         // currentFileId,
         // filesById,
         // allFileIds
@@ -317,6 +326,27 @@ export function useFile() {
         currentFileId,
         filesById
     ]);
+
+    // function to explicitly invalidate caches
+    const invalidateFileCaches = useCallback((
+        workspaceId?: string,
+        folderId?: string
+    ) => {
+        if(workspaceId){
+            hasFetchedWorkspaceFilesRef.current.delete(workspaceId);
+            console.log(`[useFile] Invalidate: Cleared workspace files cache for ${workspaceId}`);
+        }
+        if(folderId){
+            hasFetchedFolderFilesRef.current.delete(folderId);
+            console.log(`[useFile] Invalidate: Cleared folder files cache for ${folderId}`);
+        }
+
+        if(currentFileId){
+            hasFetchedCurrentFileRef.current.delete(currentFileId);
+            console.log(`[useFile] Invalidate: Cleared current file cache for ${currentFileId}`);
+        }
+
+    },[currentFileId]);
       // --- Derived States ---
     //  const allFilesArray: ReduxFile[] = allFileIds.map(id => filesById[id]);
     const allFilesArray: ReduxFile[] = useMemo(() => {
@@ -340,6 +370,7 @@ export function useFile() {
          updateFile,
         getFiles,
         currentFileDetails,
-        getWorkspaceFiles
+        getWorkspaceFiles,
+        invalidateFileCaches,
      }
 }
