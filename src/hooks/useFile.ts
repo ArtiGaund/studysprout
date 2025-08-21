@@ -160,9 +160,10 @@ export function useFile() {
             ? fetchFiles
             : [fetchFiles]
             ).filter(Boolean).map(file => transformFile(file as MongooseFile));
+
+            dispatch(SET_FILES(transformedFiles));
             
-            if(transformedFiles.length > 0){
-                dispatch(SET_FILES(transformedFiles));
+                
                 if(!currentFileId && !transformedFiles.some(file => file._id === currentFileId)){
                     const firstFile = transformedFiles[0];
                     if(firstFile && firstFile._id){
@@ -170,10 +171,6 @@ export function useFile() {
                     }
                    
                 }
-            }else{
-                dispatch(SET_FILES([]));
-                dispatch(SET_CURRENT_FILE(null));
-            }
             hasFetchedWorkspaceFilesRef.current.add(workspaceId);
             return {
                 success: true,
@@ -362,8 +359,8 @@ export function useFile() {
          currentFile: currentFileObject,
 
           // Loading and error states
-         loading: fileLoading,
-         error: fileError,
+         fileLoading,
+         fileError,
 
          // Actions
          createFile,

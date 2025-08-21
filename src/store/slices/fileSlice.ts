@@ -19,8 +19,11 @@ const fileSlice = createSlice({
     initialState,
     reducers: {
         ADD_FILE: (state, action: PayloadAction<ReduxFile>) => {
-            state.byId[action.payload._id] = action.payload;
-            state.allIds.push(action.payload._id);
+            const file = action.payload;
+            if (!state.byId[file._id]) {
+                state.allIds.push(file._id);
+            }
+            state.byId[file._id] = file;
         },
         DELETE_FILE: (state, action: PayloadAction<string>) => {
                     const idToDelete = action.payload;
@@ -46,13 +49,22 @@ const fileSlice = createSlice({
                         }
         },
         SET_FILES: (state, action: PayloadAction<ReduxFile[]>) => {
-            state.byId = {};
-            state.allIds = [];
-            action.payload.forEach(f => {
-                state.byId[f._id] = f;
-                state.allIds.push(f._id);
+            const newIncomingIds = new Set(action.payload.map(file => file._id));
+            let updatedAllIds = [ ...state.allIds ];
+            let updatedByIds = { ...state.byId };
+
+            // add/update incoming files
+            action.payload.forEach(file => {
+                if(!updatedByIds[file._id]){
+                    updatedAllIds.push(file._id);
+                }
+                updatedByIds[file._id] = file;
             });
+
+            state.byId = updatedByIds;
+            state.allIds = updatedAllIds;
             state.loading = false;
+            state.error = null;
         },
         SET_CURRENT_FILE: (state, action: PayloadAction<string | null>) => {
             state.currentFile = action.payload;

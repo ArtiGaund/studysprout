@@ -1,25 +1,17 @@
 "use client";
 
 import { Folder as MongooseFolder } from "@/model/folder.model";
-import { WorkSpace as MongooseWorkspace} from "@/model/workspace.model";
 import { File as MongooseFile} from "@/model/file.model";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "../sidebar/folders-dropdown-list";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import axios from "axios";
-// Import Redux actions,
-import { 
-    ADD_FOLDER, 
-    SET_CURRENT_FOLDER, 
-    SET_FOLDERS, 
-    UPDATE_FOLDER 
-} from "@/store/slices/folderSlice";
+
 import TooltipComponent from "../global/tooltip-component";
-import { PlusIcon } from "lucide-react";
+
 import { toast } from "../ui/use-toast";
-import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
+
 import { FolderIcon, FileIcon } from "lucide-react";
 import FolderFileList from "./folder-file-list";
 import { useCallback } from 'react';
@@ -33,7 +25,7 @@ import {
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
-import { transformFile, transformFolder } from "@/utils/data-transformers";
+
 
 interface DashboardOverviewProps{
     dirDetails: ReduxWorkSpace | ReduxFolder;
@@ -54,10 +46,16 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 }) => {
     
 
-    // const [ error, setError ] = useState(false)
+    const [ refetchTrigger, setRefetchTrigger ] = useState(0)
     const { currentWorkspace } = useWorkspace();
     const { folders, currentFolder, getFolders, createFolder} = useFolder();
-    const { files, currentFile, getFiles, createFile } = useFile();
+    const { 
+        files,
+         currentFile, 
+         getFiles,
+          createFile,
+          getWorkspaceFiles 
+    } = useFile();
      const workspaceId = currentWorkspace?._id.toString() ?? "";
     const dispatch = useDispatch()
 
@@ -70,6 +68,16 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             })
             return;
         }
+
+        // check if folders for this workspace are already loaded
+        const hasFoldersForWorkspace = folders.some(folder => 
+            folder.workspaceId === workspaceId && 
+            folder.inTrash === undefined);
+        
+        if(hasFoldersForWorkspace){
+            console.log(`[Dashboard Overview] Skipping fetchFolders for workspace ${workspaceId}, already present.`);
+            return;
+        }
           try {
             
 
@@ -80,8 +88,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     description: allFolders.error,
                     variant: "destructive"
                 })
-                // dispatch(SET_FOLDERS([]))
-                // dispatch(SET_CURRENT_FOLDERS(null)); // Clear current folder
                 return;
             }
             
@@ -98,15 +104,30 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         description: "Please try again later",
                         variant: "destructive"
                     })
-                    // dispatch(SET_FOLDERS([])); // Clear folders on error
-                    // dispatch(SET_CURRENT_FOLDERS(null)); // Clear current folder on error
-            
           }
         }, [
             getFolders,
-            // dispatch,
+            folders
         ])
          const fetchFiles = useCallback(async ( folderId : string) => {
+            if(!folderId){
+                toast({
+                    title: "Failed to fetch files",
+                    description: "Folder id not found",
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            // check if files for this folder are already loaded
+            const hasFilesForFolder = files.some(file => 
+                file.folderId === folderId &&
+                 file.inTrash === undefined);
+
+            if(hasFilesForFolder){
+                console.log(`[Dashboard Overview] Skipping fetchFiles for folder ${folderId}, already present.`);
+                return;
+            }
                 try {
                   
                      const allFiles = await getFiles(folderId);
@@ -134,21 +155,49 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 }
             }, [ 
                 getFiles,
+                files
             ])
-         useEffect(() => {
-                // Fetch folders when dirType is workspace
-            if (params && dirType === "workspace") {
-                console.log(`[DashboardOvierview] useEffect for workspaces: params=${params}, dirType=${dirType}`);
-                fetchFolders(params);
-            }
-            }, [params, dirType, fetchFolders]);
+        //  useEffect(() => {
+        //         // Fetch folders when dirType is workspace
+        //     if (params && dirType === "workspace") {
+        //         console.log(`[DashboardOvierview] useEffect for workspaces: params=${params}, dirType=${dirType}`);
+        //         const hasFoldersForWorkspace = folders.some(folder => 
+        //             folder.workspaceId === params && 
+        //             folder.inTrash === undefined);
+        //         const hasFilesForWorkspace = files.some(file => file.workspaceId === params);
+        //         if(!hasFoldersForWorkspace){
+        //             fetchFolders(params);
+        //         }
+        //         if(!hasFilesForWorkspace){
+        //             getWorkspaceFiles(params);
+        //         }
+        //     }
+        //     }, [
+        //         params,
+        //          dirType,
+        //           fetchFolders,
+        //           folders,
+        //           refetchTrigger,
+        //           files,
+        //           getWorkspaceFiles
+        //         ]);
        useEffect(() => {
                 // Fetch folders when dirType is workspace
         if (params && dirType === "folder") {
             console.log(`[DashboardOverview] useEffect for folders: params=${params}, dirType=${dirType}`);
-            fetchFiles(params);         
+
+            const hasFilesForFolder = files.some(file => file.folderId === params && file.inTrash === undefined);
+            if(!hasFilesForFolder){
+                fetchFiles(params);    
+            }     
         }
-        }, [params, dirType, fetchFiles]);
+        }, [
+            params, 
+            dirType, 
+            fetchFiles,
+            files,
+            refetchTrigger,
+        ]);
 
          const addFolderHandler = useCallback(async () => {
                 if(!workspaceId){
@@ -186,10 +235,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         });
                         fetchFolders(workspaceId); // Re-fetch to update the list
                     }
-                        toast({
-                            title: "Successfully created folder",
-                            description: "You can now add files to this folder",
-                        })
                      } catch (error) {
                         console.log("Error while creating a folder in workspace ",error)
                         toast({
@@ -250,10 +295,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 });
                 fetchFiles(currentFolder._id.toString()); // Re-fetch to update the list
             }
-            toast({
-                title: "Successfully created new file",
-                description: "Start working on it",
-            })
            
         } catch (error) {
             console.log("Error while creating file in folder ",error)
@@ -283,9 +324,11 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     await fetchFiles(params); 
   }, [fetchFiles, params]);
 
+ 
   const filteredFiles = useMemo(() => {
     if(Array.isArray(files) && params){
-        return files.filter(file => file.folderId === params);
+        return files.filter(file => file.folderId === params && 
+            (file.inTrash === undefined || file.inTrash === null || file.inTrash === ""));
     }
     return []
   },[ files, params ])
@@ -340,7 +383,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                                 from-background to-transparent z-40"/>
                                 { filteredFiles.length > 0 ? (
                                     <FolderFileList
-                                    folderFiles={files.filter(file => file.folderId === params)}
+                                    folderFiles={filteredFiles}
                                     folderId={params}
                                     onFileAdded={handleFileAdded}
                                     globalEditingItems={globalEditingItem}

@@ -18,6 +18,7 @@ import UserCard from "./user-card";
 // import { Folder } from "@/types/folder";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useFolder } from "@/hooks/useFolder";
+import { useFile } from "@/hooks/useFile";
 interface SidebarProps{
     params: { workspaceId: string};
     className?: string;
@@ -44,6 +45,8 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
       folderError, 
     } = useFolder();
 
+    const { getWorkspaceFiles } = useFile();
+
     const router = useRouter()
 
 
@@ -52,41 +55,58 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
       useEffect(() => {
         console.log(`[Sidebar] useEffect (fetchCurrentWrorkspace) triggered. params.workspaceId = ${params.workspaceId}` )
         if(params.workspaceId){
-            const fetchWorkspace = async () => {
+
+          // async function to orchestrate multiple
+            const fetchAllSidebarData = async () => {
+              // 1. Fetch current workspace details (if not already current and in Redux)
               console.log(`[Sidebar] Initiating API call for fetchCurrentWorkspace for ${params.workspaceId}`);
-              const response = await fetchCurrentWorkspace(params.workspaceId);
-              if(!response.success){
-                console.log(`[Sidebar] Failed to fetch current workspace ${params.workspaceId}: `, response.error);
-                if(response.error && response.error !=='Workspace id required'){
+              const workspaceResponse = await fetchCurrentWorkspace(params.workspaceId);
+              if(!workspaceResponse.success){
+                console.log(`[Sidebar] Failed to fetch current workspace ${params.workspaceId}: `, workspaceResponse.error);
+                if(workspaceResponse.error && workspaceResponse.error !=='Workspace id required'){
                   router.replace(`/dashboard`);
                 }
-                
+                return;
               }
+
+              // 2. Fetch all folders for this workspace
+              console.log(`[Sidebar] Initiating fetch for all folders in workspace:  ${params.workspaceId}`);
+
+              await getFolders(params.workspaceId);
+
+              // 3. fetch all files for this workspace( across all folders)
+              console.log(`[Sidebar] Fetching all files for workspace:  ${params.workspaceId}`);
+              await getWorkspaceFiles(params.workspaceId);
               
             }
-          fetchWorkspace();
+          fetchAllSidebarData();
+
+
+          
         }
       },[
         params.workspaceId, 
         fetchCurrentWorkspace,
-        router
+        router,
+        getFolders,
+        getWorkspaceFiles
       ])
 
     //   3. Effect for fetching folders based on workspaceId
-      useEffect(()=> {
-        console.log(`[Sidebar] useEffect (getFolders) triggered. params.workspaceId=${params.workspaceId}`);
-        if(params.workspaceId){
+      // useEffect(()=> {
+      //   console.log(`[Sidebar] useEffect (getFolders) triggered. params.workspaceId=${params.workspaceId}`);
+      //   if(params.workspaceId){
          
-            const fetchFolders = async () => {
-              console.log(`[Sidebar] Initiating API call for getFolders for ${params.workspaceId}`);
-              const response = await getFolders(params.workspaceId);
-              if(!response.success){
-                console.log(`[Sidebar] Failed to fetch folders for workspace ${params.workspaceId}: `, response.error);
-              }
-            }
-          fetchFolders();
-        }
-      },[params.workspaceId, getFolders])
+      //       const fetchFolders = async () => {
+      //         console.log(`[Sidebar] Initiating API call for getFolders for ${params.workspaceId}`);
+      //         const response = await getFolders(params.workspaceId);
+      //         if(!response.success){
+      //           console.log(`[Sidebar] Failed to fetch folders for workspace ${params.workspaceId}: `, response.error);
+      //         }
+      //       }
+      //     fetchFolders();
+      //   }
+      // },[params.workspaceId, getFolders])
 
       useEffect(() => {
         getWorkspaces();
