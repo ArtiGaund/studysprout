@@ -293,21 +293,24 @@ export function useFile() {
                 }
             }
             const transformedFile = transformFile(file);
-            dispatch(ADD_FILE(transformedFile));
+            // dispatch(ADD_FILE(transformedFile));
+            // Create a mutable copy before parsing and updating
+            const mutableTransformedFile = {...transformedFile};
+            dispatch(ADD_FILE(mutableTransformedFile));
             // Parse the data field when fetching from the backend 
-            if(transformedFile.data && typeof transformedFile.data === "string"){
+            if(mutableTransformedFile.data && typeof mutableTransformedFile.data === "string"){
                 try {
-                    transformedFile.data = JSON.parse(transformedFile.data);
+                    mutableTransformedFile.data = JSON.parse(mutableTransformedFile.data);
                 } catch (error) {
                     console.error('Error parsing data field:', error);
-                    transformedFile.data = '[]';
+                    mutableTransformedFile.data = '[]';
                 }
             }
-            dispatch(SET_CURRENT_FILE(transformedFile._id.toString()));
+            dispatch(SET_CURRENT_FILE(mutableTransformedFile._id.toString()));
              hasFetchedCurrentFileRef.current.add(fileId);
             return {
                 success: true,
-                data: transformedFile
+                data: mutableTransformedFile
             }
         }catch (error: any) {
             console.error('Error fetching current file in hook:', error);
