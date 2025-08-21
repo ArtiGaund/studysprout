@@ -2,7 +2,7 @@
 "use client"
 
 import { File } from "@/model/file.model";
-import React, { useCallback, useEffect } from "react"
+import React, { useCallback, useEffect, useMemo, useRef } from "react"
 import {
      BlockNoteEditor,
       BlockNoteSchema,
@@ -20,10 +20,10 @@ import "@blocknote/core/style.css"
 import "@blocknote/mantine/style.css"
 import "@/app/styles/blocknote-overrides.css"
 import { useTheme } from "next-themes";
-import axios from "axios";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "../ui/use-toast";
 import { ReduxFile } from "@/types/state.type";
+import { useFile } from "@/hooks/useFile";
 
 
 interface TextEditorProps{
@@ -31,7 +31,7 @@ interface TextEditorProps{
     fileDetails: ReduxFile;
     onChange: (value: string) => void;
     editable?:boolean;
-    initialContent?: string;
+    // initialContent?: string;
 }
 
 const TextEditor: React.FC<TextEditorProps> = ({
@@ -44,28 +44,46 @@ const TextEditor: React.FC<TextEditorProps> = ({
     const { resolvedTheme } = useTheme()
     const { toast } = useToast();
 
-    let effectiveInitialContent: PartialBlock[] | undefined = undefined;    
+    const { updateFile } = useFile();
 
-    if(fileDetails && fileDetails.data){
-        try {
-            const parsed = JSON.parse(fileDetails.data);
-            if(Array.isArray(parsed) && parsed.length > 0){
-                effectiveInitialContent = parsed as PartialBlock[];
-            }
-        } catch (error) {
-            console.log("Error parsing initial content ",error);
-        }
-    }
+    const isUpdatingInternally = useRef(false);
+
+
 
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
         console.log("File upload triggered:", file.name);
         // file upload
-        return ""
+        // TODO: Implement actual file upload logic to your backend/storage
+        // This should return the URL of the uploaded file
+        toast({
+            title: "File Upload",
+            description: "File upload functionality is not yet implemented.",
+            variant: "default"
+        });
+        return "";
     }
+
+    // Memoize the parsed content from fileDetails.data
+    const initialContent = useMemo(() => {
+        // let content: PartialBlock[] = [{ type: "paragraph", content: ""}];
+        if(fileDetails.data && typeof fileDetails.data === "string" && fileDetails.data.trim() !== ''){
+            try {
+                const parsed = JSON.parse(fileDetails.data);
+                if(Array.isArray(parsed)){
+                    const content = parsed as PartialBlock[];
+                    return parsed.length > 0 ? parsed : [{ type: "paragraph", content: ""}];
+                }
+            } catch (error) {
+                console.error("Error parsing fileDetails.data of BlockNote initial content:: ",error);
+            }
+        }
+        return [{ type: "paragraph", content: ""}];
+        
+    },[ fileDetails.data ])
 
 
     const editor: BlockNoteEditor = useCreateBlockNote({
-        initialContent: effectiveInitialContent,
+        initialContent,
         uploadFile: handleUpload,
         tables: {
             splitCells: true,
@@ -155,30 +173,45 @@ const TextEditor: React.FC<TextEditorProps> = ({
         try {
             const parsedContent = JSON.parse(content);
             console.log("parsedContent ",parsedContent);
-            const response = await axios.post(`/api/update-file`, {
-                _id: fileId,
-                data: parsedContent,
-                lastUpdated: new Date()
-            })
-            if(!response.data.success){
-                console.log("Error while updating file ",response.data.message);
+
+            isUpdatingInternally.current = true;
+
+             // TODO: Consider using updateFile from useFile hook here instead of direct axios call
+            // This would allow useFile to manage loading/error states and Redux updates.
+            // Example:
+            // const { updateFile } = useFile();
+            // const response = await updateFile(fileId, { data: parsedContent, lastUpdated: new Date() });
+            // if (!response.success) { ... }
+
+           const response = await updateFile(fileId, {
+            data: parsedContent,
+            lastUpdated: new Date()
+           })
+            if(!response.success){
+                console.log("Error while updating file ",response.error);
                 toast({
                     title: "Failed to update file",
-                    description: response.data.message,
+                    description: response.error,
                     variant: "destructive"
                 })
             }else{
                 console.log("Content saved successfully for file ",fileId);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.log("Error while saving content for file ",error);
             toast({
                 title: "Failed to save content",
-                description: "Something went wrong",
+                description: error.message || "Something went wrong",
                 variant: "destructive"
             })
+        }finally{
+            isUpdatingInternally.current = false;
         }
-    }, [fileId])
+    }, [
+        fileId,
+        updateFile,
+        toast
+    ])
 
     // 2. Create a debounced version of your save function
     // This will call 'saveContentToBackend' 1000ms (1 second) after the last change
@@ -195,6 +228,46 @@ const TextEditor: React.FC<TextEditorProps> = ({
         });
 
     }, [editor, debouncedSave, onChange]); // Dependencies: editor, debouncedSave, onChange
+
+    const serializedFileContent = useMemo(() => {
+        return fileDetails?.data && typeof fileDetails.data === 'string' ? fileDetails.data : '';
+    },[
+        fileDetails?.data
+    ])
+
+    useEffect(() => {
+        if(!editor || !fileDetails || !fileDetails.data) return;
+
+        // If the update was initiated, don't re-synchronize immediately
+        if(isUpdatingInternally.current){
+            console.log("[TextEditor] Skipping external sync: internal update in progress");
+            return;
+        }
+
+        let latestContent: PartialBlock[] = [{ type: "paragraph", content: ""}];
+
+        if( serializedFileContent && serializedFileContent.trim() !==''){
+            try {
+                const parsed = JSON.parse(serializedFileContent);
+                if(Array.isArray(parsed) && parsed.length > 0){
+                    latestContent = parsed as PartialBlock[];
+                }   
+            } catch (error) {
+                console.error("Error parsing fileDetails.data for editor synchronization:", error);
+            }
+        }
+        const currentEditorContent = JSON.stringify(editor.topLevelBlocks);
+        const latestPropContent = JSON.stringify(latestContent);
+
+        if(currentEditorContent !== latestPropContent){
+            console.log("[TextEditor] Synchonizing editor content with latest fileDetails.data");
+            editor.replaceBlocks(editor.topLevelBlocks, latestContent);
+        }
+    },[
+        editor,
+        fileDetails,
+        serializedFileContent
+    ])
     return(
         <div className="p-5">
             <BlockNoteView  
