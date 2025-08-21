@@ -43,7 +43,7 @@ export async function GET(request: Request) {
                     path: 'files',
                     model: 'File',
                     match: { 
-                        inTrash: { $exists: false }
+                        inTrash: { $in: [undefined, null, ""]  }
                     }
                 }
             }).exec();
