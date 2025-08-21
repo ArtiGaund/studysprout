@@ -26,24 +26,22 @@ interface UseDirOptions {
     currentWorkspaceId?: string;
     currentFolderId?: string;
     currentFileId?: string;
+    onFileRestored?: () => void;
 }
 export function useDir({ 
     dirType,
     dirId,
     currentWorkspaceId,
     currentFolderId,
-    currentFileId
+    currentFileId,
+    onFileRestored
 }: UseDirOptions){
     //  console.log("useDir hook initialized with dirId:", dirId, "dirType:", dirType);
     const dispatch = useDispatch();
     const router = useRouter();
     const { toast } = useToast();
-
-    //  Hooks to fetch individual directory details if they are not already in Redux
-    // This is crucial for initial load if Redux state is empty
-    // const { currentFileDetails } = useFile();
-    // const { currentFolderDetail } = useFolder();
-    // const { currentWorkspaceDetails } = useWorkspace();
+    const { invalidateFileCaches } = useFile();
+    const { invalidateFolderCaches } = useFolder();
 
     // select the relevant item directly from the Redux store
     const details = useSelector((state: RootState) => {
@@ -60,86 +58,14 @@ export function useDir({
         }
     })
 
-    // Use a state to hold the details that is being worked on.
-    // Initialize it with the prop if available, but primarily rely on fetching.
-    //  const [details, setDetails] = useState<ReduxWorkSpace | ReduxFolder | ReduxFile | undefined>(undefined);
-
     const [ isLoading, setIsLoading ] = useState(false);
     const [ isSaving, setIsSaving ] = useState(false);
     const [ isRemovingBanner, setIsRemovingBanner ] = useState(false);
     const [ bannerImageUrl, setBannerImageUrl ] = useState<string | undefined>(undefined);
 
-    // console.log("DirFileId ",dirId);
     // This ref will help us to prevent fetching if a deletion/navigation is in progress
     const isNavigatingAfterDeleteRef = useRef(false);
 
-    // Effect to fetch and set details on initial load or dirId change
-    // useEffect(() => {
-    //     // if already navigating away after a deletion, no need to fetch details 
-    //     if(isNavigatingAfterDeleteRef.current){
-    //         // console.log("useDir: Skipping fetchDetails because navigation after deletion is in progress.");
-    //         setIsLoading(false);
-    //         return;
-    //     }
-    //     if(!dirId || typeof dirId !== "string") {
-    //         // console.warn(`usDir: Invalid dirId received (${dirId}): `,dirId);
-    //         setDetails(undefined);
-    //         setIsLoading(false);
-    //         return;
-    //     }
-    //     const fetchDetails = async () => {
-    //         setIsLoading(true);
-    //         try {
-    //             let response: any;
-    //             if(dirType === "workspace"){
-    //                 response = await currentWorkspaceDetails(dirId);
-    //             }else if(dirType === "folder"){
-    //                 response = await currentFolderDetail(dirId);
-    //             }else if(dirType === "file"){
-    //                 response = await currentFileDetails(dirId);
-    //             }
-
-    //             if(response?.success && response.data){
-    //                 setDetails(response.data);
-    //             }else{
-    //                 console.error(`useDir: Failed to fetch ${dirType} details for Id: ${dirId}`, response.error);
-    //                 setDetails(undefined);
-    //                 if(dirType === "file" && currentWorkspaceId && currentFolderId){
-    //                     router.replace(`/dashboard/${currentWorkspaceId}/${currentFolderId}`);
-    //                 }else if(dirType === "folder" && currentWorkspaceId){
-    //                     router.replace(`/dashboard/${currentWorkspaceId}`);
-    //                 }else {
-    //                     router.replace(`/dashboard`);
-    //                 }
-    //             }
-    //         } catch (error) {
-    //             console.error(`useDir: Error fetching ${dirType} details for Id: ${dirId}`, error);
-    //             setDetails(undefined);
-    //             if(dirType === "file" && currentWorkspaceId && currentFolderId){
-    //                 router.replace(`/dashboard/${currentWorkspaceId}/${currentFolderId}`);
-    //             }else if(dirType === "folder" && currentWorkspaceId){
-    //                 router.replace(`/dashboard/${currentWorkspaceId}`);
-    //             }else {
-    //                 router.replace(`/dashboard`);
-    //             }
-    //         }finally{
-    //             setIsLoading(false);
-    //         }
-        
-        
-    //     };
-    //     fetchDetails();
-    // }, [
-    //     dirId,
-    //     dirType,
-    //     currentWorkspaceId,
-    //     currentFolderId,
-    //     currentFileId,
-    //     currentFileDetails,
-    //     currentFolderDetail,
-    //     currentWorkspaceDetails,
-    //     router
-    // ])
     // fetch the banner image url if available
     useEffect(() => {
         if(details?.bannerUrl){
@@ -171,7 +97,7 @@ export function useDir({
        setIsSaving(true);
         try {
             const updatePayload: Partial<ReduxWorkSpace | ReduxFolder | ReduxFile> = {
-                inTrash: "",
+                inTrash: undefined,
                 lastUpdated: new Date().toISOString(),
             }
             // Optimistic UI update: Dispatch immediately
@@ -182,26 +108,56 @@ export function useDir({
                 id: dirId,
                 updates: updatePayload as ReduxFolder
             }));
-            if(dirType === "file")
+            if(dirType === "file"){
                 dispatch(UPDATE_FILE({
                     id: dirId,
                     updates: updatePayload as ReduxFile
                 }));
+            }
             
+
             const response = await restoreDir(dirType, dirId);
+
+            
             // Dispatch full updated objects from api response
             if(dirType === "workspace")
                 dispatch(UPDATE_WORKSPACE(response as ReduxWorkSpace));
-            if(dirType === "folder")
+            if(dirType === "folder"){
+                const restoredFolder = response as ReduxFolder;
+                if(restoredFolder.workspaceId){
+                    invalidateFolderCaches(restoredFolder.workspaceId);
+                    console.log(`[useDir] Restored Folder: Invalidating folder caches for workspace: ${restoredFolder.workspaceId}`);
+                }
+
+                // Also invalidating file caches, as files within the folder might now be visible
+                if(restoredFolder._id){
+                    invalidateFileCaches(restoredFolder.workspaceId, restoredFolder._id);
+                    console.log(`[useDir] Restored Folder: Invalidating file caches for folder: ${restoredFolder._id}`);
+                }
                 dispatch(UPDATE_FOLDER({
                     id: dirId,
-                    updates: response as ReduxFolder
+                    updates: restoredFolder
                 }));
-            if(dirType === "file")
-                dispatch(UPDATE_FILE({
-            id: dirId,
-            updates: response as ReduxFile
-        }));
+            }
+            if(dirType === "file"){
+                const restoredFile = response as ReduxFile;
+                if(restoredFile.workspaceId || restoredFile.folderId){
+                    invalidateFileCaches(restoredFile.workspaceId, restoredFile.folderId);
+                    console.log(`[useDir] Restored File: Invalidating file caches for
+                         workspaceId: ${restoredFile.workspaceId}, folderId: ${restoredFile.folderId},
+                         folderId: ${restoredFile.folderId}`);
+                    if(onFileRestored){
+                        onFileRestored();
+                    }
+                }else{
+                    console.log(`[useDir] Restored File: Could not invalidate file caches, missing workspaceId 
+                        or folderId in response.`)
+                }
+                        dispatch(UPDATE_FILE({
+                        id: dirId,
+                        updates: restoredFile
+                    }));
+                }
             toast({
                 title: `Successfully restored ${dirType}`,
                 description: `Restored ${dirType} from trash`
@@ -236,7 +192,16 @@ export function useDir({
         }finally{
             setIsSaving(false);
         }
-    },[ dirType, dirId, details, dispatch, toast])
+    },[ 
+        dirType,
+         dirId, 
+         details,
+          dispatch,
+           toast,
+           invalidateFileCaches,
+           onFileRestored,
+           invalidateFolderCaches
+        ])
 
     const handleDelete = useCallback( async () => {
         // console.log("Attempting to hard delete dirId:", dirId, "of type:", dirType);
