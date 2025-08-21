@@ -302,18 +302,20 @@ const Dropdown: React.FC<DropdownProps> = ({
         };
 
         try {
-            const file = await createFile(newFile);
-            if(!file.success){
+            const result = await createFile(newFile);
+            if(!result.success){
                 toast({
                     title: "Failed to create file",
                     description: "Please try again later",
                     variant: "destructive"
                 })
-            }
-            toast({
+            }else{
+                toast({
                 title: "Successfully created new file",
                 description: "Start working on it",
             })
+            }
+            
             
                 
         } catch (error) {
@@ -395,13 +397,17 @@ const Dropdown: React.FC<DropdownProps> = ({
         }
     }
 
-    const filesInCurrentFolder = files.filter((file) => {
-        return (
-            file.folderId?.toString() === id && // Make sure to compare string IDs if one is ObjectId
-            file.inTrash === undefined
-        )
-    })
-
+    const filesInCurrentFolder = useMemo(() => {
+        return files.filter((file) => {
+            return (
+                file.folderId?.toString() === id &&
+                file.inTrash === undefined
+            )
+        })
+    },[
+        files,
+        id
+    ])
    
         return (
         <AccordionItem 
