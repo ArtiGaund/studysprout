@@ -10,7 +10,6 @@ export async function addFile(newFile:File) {
 
 export async function getCurrentFile(fileId:string){
     const { data } = await axios.get(`/api/get-current-file?fileId=${fileId}`);
-    console.log(`[getCurrentFile] data: ${JSON.stringify(data)}`);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
