@@ -264,6 +264,14 @@ export function useFolder(){
         foldersById,
         currentFolderId,
     ])
+
+    // function to explicitly invalidates folder caches
+    const invalidateFolderCaches = useCallback((workspaceId: string) => {
+        if(workspaceId){
+            hasFetchedFoldersByWorkspaceRef.current.delete(workspaceId);
+            console.log(`[useFolder] Invalidating: Cleared workspace folders cache for ${workspaceId}`);
+        }
+    },[])
      // --- Derived States ---
    
     // To resolve above issue, use useMemo
@@ -289,6 +297,7 @@ export function useFolder(){
         createFolder,
         updateFolder,
         currentFolderDetail,
+        invalidateFolderCaches,
      }
 
 }
