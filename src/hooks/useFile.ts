@@ -103,10 +103,8 @@ export function useFile() {
                 id: transformedFile._id,
                 updates: transformedFile
             }));
-            //  If the updated file is the current one, clear its ref to ensure fresh details next time
-            // if (currentFileId === fileId) {
+        
                 hasFetchedCurrentFileRef.current.delete(fileId);
-            // }
             // If the file's workspace ID is available, clear the workspace files ref
             if (file.workspaceId) { // Assuming file object has workspaceId
                 hasFetchedWorkspaceFilesRef.current.delete(file.workspaceId.toString());
@@ -187,9 +185,6 @@ export function useFile() {
         }
      }, [
         dispatch,
-        // currentFileId,
-        // filesById,
-        // allFileIds
     ])
      const getFiles = useCallback(async (folderId: string): Promise<{
         success: boolean,
@@ -252,16 +247,10 @@ export function useFile() {
             return { success: false, error: errorMessage };
         }finally{
             dispatch(SET_FILE_LOADING(false));
-            // if (transformedFiles.length > 0 && transformedFiles[0].workspaceId) {
-            //     getWorkspaceFiles(transformedFiles[0].workspaceId, true); // Force fetch for workspace files
         }
         }
      , [
         dispatch,
-        // getWorkspaceFiles,
-        // currentFileId,
-        // filesById,
-        // allFileIds
     ]);
      const currentFileDetails = useCallback(async (fileId: string): Promise<{
         success: boolean,
@@ -293,24 +282,13 @@ export function useFile() {
                 }
             }
             const transformedFile = transformFile(file);
-            // dispatch(ADD_FILE(transformedFile));
-            // Create a mutable copy before parsing and updating
-            const mutableTransformedFile = {...transformedFile};
-            dispatch(ADD_FILE(mutableTransformedFile));
-            // Parse the data field when fetching from the backend 
-            if(mutableTransformedFile.data && typeof mutableTransformedFile.data === "string"){
-                try {
-                    mutableTransformedFile.data = JSON.parse(mutableTransformedFile.data);
-                } catch (error) {
-                    console.error('Error parsing data field:', error);
-                    mutableTransformedFile.data = '[]';
-                }
-            }
-            dispatch(SET_CURRENT_FILE(mutableTransformedFile._id.toString()));
+            console.log("[useFile] currentFileDetails: Transformed current file: ", transformedFile);
+            dispatch(ADD_FILE(transformedFile));
+            dispatch(SET_CURRENT_FILE(transformedFile._id.toString()));
              hasFetchedCurrentFileRef.current.add(fileId);
             return {
                 success: true,
-                data: mutableTransformedFile
+                data: transformedFile
             }
         }catch (error: any) {
             console.error('Error fetching current file in hook:', error);

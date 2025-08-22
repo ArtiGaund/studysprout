@@ -45,12 +45,23 @@ export const transformFolder = (folder: Folder): ReduxFolder => {
     }
 }
 
+// Helper function to safety parse JSON and return an array
+const parseDataSafety = (dataString: string | undefined): any[] => {
+    if(!dataString) return [];
+    try {
+        const parsed = JSON.parse(dataString);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.error("Error parsing JSON data field during transformation: ",error);
+        return [];
+    }
+}
 export const transformFile = (file: File): ReduxFile => {
     return{
         _id: toStr(file._id) as string,
         title: file.title || 'Untitled File',
         iconId: file.iconId || '📄',
-        data: file.data || '',
+        data: parseDataSafety(file.data),
         inTrash: file.inTrash || undefined,
         bannerUrl: file.bannerUrl || undefined,
         workspaceId: toStr(file.workspaceId) as string,

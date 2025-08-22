@@ -171,8 +171,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
         // console.log("Attempting to save content for file ",fileId);
 
         try {
-            const parsedContent = JSON.parse(content);
-            console.log("parsedContent ",parsedContent);
+            // const parsedContent = JSON.parse(content);
+            // console.log("parsedContent ",parsedContent);
 
             isUpdatingInternally.current = true;
 
@@ -184,7 +184,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
             // if (!response.success) { ... }
 
            const response = await updateFile(fileId, {
-            data: parsedContent,
+            data: content,
             lastUpdated: new Date()
            })
             if(!response.success){
