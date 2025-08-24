@@ -41,7 +41,7 @@ export async function DELETE(request: Request){
 
         // 3. collect images public_ids associated with workspace itself
         if(workspaceToDelete.logo){
-            imagePublicIdsToDelete.push(workspaceToDelete.logo._id as mongoose.Types.ObjectId);
+            imagePublicIdsToDelete.push(workspaceToDelete.logo as mongoose.Types.ObjectId);
         }
         
         //4. find all folders within the workspace and collect their images public_ids
