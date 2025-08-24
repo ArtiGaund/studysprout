@@ -24,7 +24,8 @@ export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
     title:{
         type: String,
         required: [true, "workspace name is required"],
-        unique: true
+        unique: true,
+        sparse: true, //Allow multiple workspace with same title
     },
     iconId:{
         type: String,
