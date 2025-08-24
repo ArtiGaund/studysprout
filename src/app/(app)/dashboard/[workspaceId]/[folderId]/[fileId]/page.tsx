@@ -90,7 +90,7 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
                     fileDetails={currentFile}
                     onChange= {onChangeHandler}
                     // initialContent={JSON.stringify(currentFile.data)}
-                    editable={true}
+                    editable={!currentFile.inTrash}
                     />
                     {/* <Editor /> */}
                     

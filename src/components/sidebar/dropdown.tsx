@@ -138,10 +138,10 @@ const Dropdown: React.FC<DropdownProps> = ({
         e.stopPropagation();
 
         // if currently editing, prevent any click actions
-        if(isCurrentlyEditingFromHook) { // Use effective state from hook
-            console.log(`[${title}] handleCombinedClick: Preventing click action while editing.`);
-            return;
-        }
+        // if(isCurrentlyEditingFromHook) { // Use effective state from hook
+        //     console.log(`[${title}] handleCombinedClick: Preventing click action while editing.`);
+        //     return;
+        // }
 
         clickCount.current+=1;
         if(clickCount.current === 1){

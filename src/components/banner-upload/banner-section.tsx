@@ -153,20 +153,20 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     ]);
 
     const handleDoubleClick = useCallback(() => {
-        if(details?.inTrash){
-            toast({
-                title: "Cannot edit",
-                description: `This ${dirType} is in trash and cannot be edited. Restore it first`,
-                variant: "destructive"
-            })
-            return;
-        }
+        // if(details?.inTrash){
+        //     toast({
+        //         title: "Cannot edit",
+        //         description: `This ${dirType} is in trash and cannot be edited. Restore it first`,
+        //         variant: "destructive"
+        //     })
+        //     return;
+        // }
        handleStartEditing();
     }, [
-        details?.inTrash,
-         dirType, 
+        // details?.inTrash,
+        //  dirType, 
          handleStartEditing, 
-         toast
+        //  toast
     ]);
 
     
