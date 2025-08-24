@@ -21,34 +21,21 @@ export async function GET( request: Request ){
     // console.log("Query params ",queryParams)
 
     try {
-        // Find the first workspace owned by the user
-        // Deeply populate the folders and files to return full nested objects.
-        const workspace = await WorkSpaceModel.findOne({
-            workspace_owner: queryParams.userId
-        })
-        .populate({
-            path: 'folders', //path to the folders array in workspace schema
-            model: FolderModel, //Mongoose model for folders
-            populate: {
-                path: 'files', // path to the files array within each folders
-                model: FileModel //Mongoose model for files
-            }
-        })
-        .lean(); //Convert mongoose document to a plain javascript object for efficiency
+        const hasWorkspace = await WorkSpaceModel.exists({ workspace_owner: queryParams.userId })
 
-        if(!workspace){
+        if(!hasWorkspace){
             return Response.json({
-                statusCode: 400,
+                statusCode: 201,
                 message: "No workspace found with the current user",
-                success: false
-            }, { status: 404})
+                success: true,
+                data: false,
+            },{ status: 201})
         }
-
         return Response.json({
             statusCode: 200,
             message: "Workspace is present under the current user",
             success: true,
-            data: workspace
+            data: true
         }, {status: 200})
         
     } catch (error) {
