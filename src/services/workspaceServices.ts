@@ -12,11 +12,12 @@ export async function addWorkspace(newWorkspace:FormData){
 }
 
 // users all workspaces
-export async function getUserWorkspaces(userId:string):Promise<WorkSpace[]>{
+export async function getUserWorkspaces(userId:string):Promise<boolean>{
     const { data } = await axios.get(`/api/check-user-have-created-workspace?userId=${userId}`);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
+
 
 // get current workspace
 
