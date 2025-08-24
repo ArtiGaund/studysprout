@@ -2,9 +2,6 @@
 
 import DashboardSetup from "@/components/dashboard-setup/dashboard-setup"
 import { useWorkspace } from "@/hooks/useWorkspace"
-import { WorkSpace } from "@/model/workspace.model"
-import axios from "axios"
-import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 

@@ -8,7 +8,7 @@ import { RootState } from "@/store/store";
 import { ReduxWorkSpace } from "@/types/state.type";
 import { transformWorkspace } from "@/utils/data-transformers";
 import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 export function useWorkspace() {
@@ -94,9 +94,6 @@ export function useWorkspace() {
         dispatch, 
         session?.user?._id, 
         status,
-        // currentWorkspaceId,
-        // allWorkspaceIds,
-        // workspacesById
      ])
 
     // function to fetch current workspace
@@ -397,43 +394,48 @@ export function useWorkspace() {
         dispatch(SET_WORKSPACE_ERROR(null));
 
         try {
-            console.log(`[useWorkspace] checkUserHaveCreatedWorkspace: Checking workspace existence for user ${userIDToCheck}.`);
+            // console.log(`[useWorkspace] checkUserHaveCreatedWorkspace: Checking workspace existence for user ${userIDToCheck}.`);
             const response = await getUserWorkspaces(userIDToCheck);
 
-            const hasCreated = Array.isArray(response) && response.length > 0;
-
+            console.log(`[useWorkspace] checkUserHaveCreatedWorkspace: Response for user ${userIDToCheck}:`, response);
+            
+            if(!response){
+                dispatch(SET_WORKSPACES([]));
+            }
             hasCheckedUserWorkspaceStatusRef.current.add(userIDToCheck);
             return {
                 success: true,
-                data: hasCreated
+                data: response
             }
         } catch (error: any) {
             console.error("Error checking user workspace status:", error);
             dispatch(SET_WORKSPACE_ERROR(error.message || "Failed to check workspace status"));
+            hasCheckedUserWorkspaceStatusRef.current.delete(userIDToCheck);
             return { success: false, error: error.message || "An unexpected error occurred." };
         } finally{
             dispatch(SET_WORKSPACE_LOADING(false));
         }
     },[
-        allWorkspaceIds,
+        // allWorkspaceIds,
         dispatch,
     ])
       // --- EFFECT: Trigger initial fetch of all user workspaces ---
     useEffect(()=> {
         // const userId = session?.user._id
-        if(status === "authenticated" && session?.user?._id && allWorkspaceIds.length === 0){
-            if(!hasFetchedAllWorkspaceRef.current.has(session.user._id)){
-                console.log(`[useWorkspace] useEffect: Attempting to fetch all workspaces for user ${session.user._id}.`);
-                getWorkspaces();
-            }else {
-                console.log(`[useWorkspace] useEffect: Skipping getWorkspaces for user ${session.user._id}, already fetched.`);
+        if(status === "authenticated" && session?.user?._id){
+            if(hasCheckedUserWorkspaceStatusRef.current.has(session.user._id) || hasFetchedAllWorkspaceRef.current.has(session.user._id)){
+                return;
             }
-            if (!hasCheckedUserWorkspaceStatusRef.current.has(session.user._id)) {
+            hasCheckedUserWorkspaceStatusRef.current.add(session.user._id);
+            hasFetchedAllWorkspaceRef.current.add(session.user._id);
+            
                 console.log(`[useWorkspace] useEffect: Attempting to check workspace existence for user ${session.user._id}.`);
                 checkUserHaveCreatedWorkspace(session.user._id);
-            } else {
-                console.log(`[useWorkspace] useEffect: Skipping checkUserHaveCreatedWorkspace for user ${session.user._id}, already checked.`);
-            }
+        
+            
+                console.log(`[useWorkspace] useEffect: Attempting to fetch all workspaces for user ${session.user._id}.`);
+                getWorkspaces();
+            
             
         } 
     },[ 
