@@ -1,17 +1,14 @@
 "use client";
 
-import { File as MongooseFile} from "@/model/file.model";
 import { RootState } from "@/store/store";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useToast } from "../ui/use-toast";
 import Dropdown from "../sidebar/dropdown";
 import { Accordion } from "../ui/accordion";
-import axios from "axios";
-import { SET_CURRENT_FILES, SET_FILES } from "@/store/slices/fileSlice";
 import { useFile } from "@/hooks/useFile";
 import { ReduxFile } from "@/types/state.type";
-import { transformFile } from "@/utils/data-transformers";
+
 
 interface FolderFileListProps {
     folderFiles: ReduxFile[] | [];
