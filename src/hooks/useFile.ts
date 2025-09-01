@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { File as MongooseFile } from "@/model/file.model";
@@ -10,21 +10,25 @@ import { ReduxFile } from "@/types/state.type";
 import { updateDir } from "@/services/dirServices";
 import { getAllFiles } from "@/services/folderServices";
 import { transformFile } from "@/utils/data-transformers";
+import { 
+    hasFetchedCurrentFileRef,
+    hasFetchedFolderFilesRef,
+    hasFetchedWorkspaceFilesRef
+} from "@/cache/fileCache";
 
 export function useFile() {
     const dispatch = useDispatch();
 
      // Selector for file state
-     const filesById = useSelector(( state: RootState ) => state.file.byId);
-     const allFileIds = useSelector(( state: RootState ) => state.file.allIds);
-     const currentFileId = useSelector(( state: RootState ) => state.file.currentFile);
-     const fileLoading = useSelector(( state: RootState ) => state.file.loading);
-     const fileError = useSelector(( state: RootState ) => state.file.error);
-
-     // Refs to track fetched states for this hook's API calls
-    const hasFetchedWorkspaceFilesRef = useRef<Set<string>>(new Set());
-    const hasFetchedFolderFilesRef = useRef<Set<string>>(new Set());
-    const hasFetchedCurrentFileRef = useRef<Set<string>>(new Set());
+     const {
+        byId: filesById,
+        allIds: allFileIds,
+        currentFile: currentFileId,
+        loading: fileLoading,
+        error: fileError,
+        
+     } = useSelector(( state: RootState) => state.file);
+    
 
      const createFile = useCallback(async (fileData: MongooseFile): Promise<{
         success: boolean,
@@ -46,10 +50,10 @@ export function useFile() {
                 dispatch(SET_CURRENT_FILE(transformedFile._id.toString()));
                 // Clear relevant refs to force re-fetch if needed
                 if (fileData.workspaceId) {
-                    hasFetchedWorkspaceFilesRef.current.delete(fileData.workspaceId);
+                    hasFetchedWorkspaceFilesRef.delete(fileData.workspaceId);
                 }
                 if (fileData.folderId) {
-                    hasFetchedFolderFilesRef.current.delete(fileData.folderId);
+                    hasFetchedFolderFilesRef.delete(fileData.folderId);
                 }
                 return {
                     success: true,
@@ -104,14 +108,14 @@ export function useFile() {
                 updates: transformedFile
             }));
         
-                hasFetchedCurrentFileRef.current.delete(fileId);
+                hasFetchedCurrentFileRef.delete(fileId);
             // If the file's workspace ID is available, clear the workspace files ref
             if (file.workspaceId) { // Assuming file object has workspaceId
-                hasFetchedWorkspaceFilesRef.current.delete(file.workspaceId.toString());
+                hasFetchedWorkspaceFilesRef.delete(file.workspaceId.toString());
             }
             // If the file's folder ID is available, clear the folder files ref
             if (file.folderId) { // Assuming file object has folderId
-                hasFetchedFolderFilesRef.current.delete(file.folderId.toString());
+                hasFetchedFolderFilesRef.delete(file.folderId.toString());
             }
             return {
                 success: true,
@@ -141,7 +145,7 @@ export function useFile() {
                     error: "Workspace id required"
                 }
             }
-            if (hasFetchedWorkspaceFilesRef.current.has(workspaceId) && !forceFetch) {
+            if (hasFetchedWorkspaceFilesRef.has(workspaceId) && !forceFetch) {
             console.log(`[useFile] Skipping getWorkspaceFiles for workspace ${workspaceId}: already fetched.`);
             const files = allFileIds
             .filter(id => filesById[id]?.workspaceId === workspaceId)
@@ -169,7 +173,7 @@ export function useFile() {
                     }
                    
                 }
-            hasFetchedWorkspaceFilesRef.current.add(workspaceId);
+            hasFetchedWorkspaceFilesRef.add(workspaceId);
             return {
                 success: true,
                 data: transformedFiles
@@ -178,7 +182,7 @@ export function useFile() {
              console.error('Error while fetching workspace files in hook:', error); // Updated message
             const errorMessage = error.message || "Failed to fetch all the files of workspace"; // Updated message
             dispatch(SET_FILE_ERROR(errorMessage));
-            hasFetchedWorkspaceFilesRef.current.delete(workspaceId);
+            hasFetchedWorkspaceFilesRef.delete(workspaceId);
             return { success: false, error: errorMessage };
         }finally{
             dispatch(SET_FILE_LOADING(false));
@@ -198,7 +202,7 @@ export function useFile() {
                 error: "Folder id required"
             }
         }
-        if (hasFetchedFolderFilesRef.current.has(folderId)) {
+        if (hasFetchedFolderFilesRef.has(folderId)) {
             console.log(`[useFile] Skipping getFiles for folder ${folderId}: already fetched.`);
             const files = allFileIds
             .filter(id => filesById[id]?.folderId === folderId)
@@ -231,9 +235,9 @@ export function useFile() {
             dispatch(SET_FILES(transformedFiles));
 
             if(transformedFiles.length > 0 && transformedFiles[0].workspaceId){
-                hasFetchedWorkspaceFilesRef.current.delete(transformedFiles[0].workspaceId);
+                hasFetchedWorkspaceFilesRef.delete(transformedFiles[0].workspaceId);
             }
-            hasFetchedFolderFilesRef.current.add(folderId);
+            hasFetchedFolderFilesRef.add(folderId);
             return {
                 success: true,
                 data: transformedFiles,
@@ -243,7 +247,7 @@ export function useFile() {
             console.error('Error while fetching  folder files in hook in hook:', error);
             const errorMessage = error.message || "Failed to fetch all the files of folder";
             dispatch(SET_FILE_ERROR(errorMessage));
-            hasFetchedFolderFilesRef.current.delete(folderId);
+            hasFetchedFolderFilesRef.delete(folderId);
             return { success: false, error: errorMessage };
         }finally{
             dispatch(SET_FILE_LOADING(false));
@@ -266,7 +270,7 @@ export function useFile() {
             console.log(`[useFile] Skipping currentFileDetails for ${fileId}: already set.`);
             return { success: true, data: filesById[fileId] as ReduxFile }; // Return Redux data mapped back to Mongoose-like
         }
-        if (hasFetchedCurrentFileRef.current.has(fileId)) {
+        if (hasFetchedCurrentFileRef.has(fileId)) {
             console.log(`[useFile] Skipping currentFileDetails for ${fileId}: already initiated.`);
             return { success: true, data: filesById[fileId] as ReduxFile };
         }
@@ -285,7 +289,7 @@ export function useFile() {
             console.log("[useFile] currentFileDetails: Transformed current file: ", transformedFile);
             dispatch(ADD_FILE(transformedFile));
             dispatch(SET_CURRENT_FILE(transformedFile._id.toString()));
-             hasFetchedCurrentFileRef.current.add(fileId);
+             hasFetchedCurrentFileRef.add(fileId);
             return {
                 success: true,
                 data: transformedFile
@@ -294,7 +298,7 @@ export function useFile() {
             console.error('Error fetching current file in hook:', error);
             const errorMessage = error.message || "Failed to fetch current file";
             dispatch(SET_FILE_ERROR(errorMessage));
-            hasFetchedCurrentFileRef.current.delete(fileId);
+            hasFetchedCurrentFileRef.delete(fileId);
             return { success: false, error: errorMessage };
      }finally{
         dispatch(SET_FILE_LOADING(false));
@@ -311,16 +315,16 @@ export function useFile() {
         folderId?: string
     ) => {
         if(workspaceId){
-            hasFetchedWorkspaceFilesRef.current.delete(workspaceId);
+            hasFetchedWorkspaceFilesRef.delete(workspaceId);
             console.log(`[useFile] Invalidate: Cleared workspace files cache for ${workspaceId}`);
         }
         if(folderId){
-            hasFetchedFolderFilesRef.current.delete(folderId);
+            hasFetchedFolderFilesRef.delete(folderId);
             console.log(`[useFile] Invalidate: Cleared folder files cache for ${folderId}`);
         }
 
         if(currentFileId){
-            hasFetchedCurrentFileRef.current.delete(currentFileId);
+            hasFetchedCurrentFileRef.delete(currentFileId);
             console.log(`[useFile] Invalidate: Cleared current file cache for ${currentFileId}`);
         }
 

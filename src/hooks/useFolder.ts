@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { RootState } from "@/store/store";
 import { useSession } from "next-auth/react";
 import { useDispatch, useSelector } from "react-redux";
@@ -11,6 +11,7 @@ import { addFolder, getCurrentFolder } from "@/services/folderServices";
 // import { updateFolder as updateFolderService } from "@/services/folderServices";
 import { updateDir } from "@/services/dirServices";
 import { transformFolder } from "@/utils/data-transformers";
+import { hasFetchedFoldersByWorkspaceRef } from "@/cache/folderCache";
 
 
 export function useFolder(){
@@ -18,18 +19,14 @@ export function useFolder(){
     const dispatch = useDispatch();
 
     // Selector for folder state
-    const foldersById = useSelector(( state: RootState ) => state.folder.byId);
-    const allFolderIds = useSelector(( state: RootState ) => state.folder.allIds);
-    const currentFolderId = useSelector(( state: RootState ) => state.folder.currentFolder);
-    const folderLoading = useSelector(( state: RootState ) => state.folder.loading);
-    const folderError = useSelector(( state: RootState ) => state.folder.error);
-
-    // Refs to track fetched states for this hook's API calls
-    const hasFetchedFoldersByWorkspaceRef = useRef<Set<string>>(new Set());
-
-    // This ref is less needed now that `currentFolderDetail` will directly update `foldersById`
-    // and `SET_CURRENT_FOLDER` will point to it. If the folder isn't in `foldersById`, it will refetch
-    // const hasFetchedCurrentFolderRef = useRef<Set<string>>(new Set());
+    const {
+        byId: foldersById,
+        allIds: allFolderIds,
+        currentFolder: currentFolderId,
+        loading: folderLoading,
+        error: folderError,
+        // hasFetchedFoldersByWorkspaceRef
+    } = useSelector(( state: RootState) => state.folder);
 
     const getFolders = useCallback(async( workspaceId: string): Promise<{
         success: boolean,
@@ -48,7 +45,7 @@ export function useFolder(){
         .map(id => foldersById[id])
         .filter( folder => folder?.workspaceId === workspaceId);
 
-        if (hasFetchedFoldersByWorkspaceRef.current.has(workspaceId) && existingFolders.length > 0) {
+        if (hasFetchedFoldersByWorkspaceRef.has(workspaceId) && existingFolders.length > 0) {
             console.log(`[useFolder] Skipping getFolders for workspace ${workspaceId}: already fetched and data present.`);
             // Return existing Redux data mapped back to Mongoose-like structure if needed by caller
             return { 
@@ -81,7 +78,7 @@ export function useFolder(){
             //     dispatch(SET_FOLDERS([]));
             //     dispatch(SET_CURRENT_FOLDER(null));
             // }
-             hasFetchedFoldersByWorkspaceRef.current.add(workspaceId);
+             hasFetchedFoldersByWorkspaceRef.add(workspaceId);
             return{
                 success: true,
                 data: transformedFolders,
@@ -90,7 +87,7 @@ export function useFolder(){
              console.error('Error while fetching workspace folders in hook in hook:', error);
             const errorMessage = error.message || "Failed to fetch all the folders of workspace";
             dispatch(SET_FOLDER_ERROR(errorMessage));
-            hasFetchedFoldersByWorkspaceRef.current.delete(workspaceId);
+            hasFetchedFoldersByWorkspaceRef.delete(workspaceId);
             return { success: false, error: errorMessage };
         }finally{
             dispatch(SET_FOLDER_LOADING(false));
@@ -124,7 +121,7 @@ export function useFolder(){
                 dispatch(SET_CURRENT_FOLDER(transformedFolder._id?.toString()));
                 // Clear the ref for this workspace's folders to force re-fetch if needed
                 if (folderData.workspaceId) {
-                    hasFetchedFoldersByWorkspaceRef.current.delete(folderData.workspaceId);
+                    hasFetchedFoldersByWorkspaceRef.delete(folderData.workspaceId);
                 }
                 return {
                     success: true,
@@ -178,7 +175,7 @@ export function useFolder(){
             // hasFetchedCurrentFolderRef.current.delete(folderId);
             // If the folder's workspace ID is available, clear the workspace folders ref
             if (folder.workspaceId) { // Assuming folder object has workspaceId
-                hasFetchedFoldersByWorkspaceRef.current.delete(folder.workspaceId.toString());
+                hasFetchedFoldersByWorkspaceRef.delete(folder.workspaceId.toString());
             }
             console.log("Dispatched UPDATE_FOLDER with payload: ",{
                 id: transformedReduxFolder._id,
@@ -268,7 +265,7 @@ export function useFolder(){
     // function to explicitly invalidates folder caches
     const invalidateFolderCaches = useCallback((workspaceId: string) => {
         if(workspaceId){
-            hasFetchedFoldersByWorkspaceRef.current.delete(workspaceId);
+            hasFetchedFoldersByWorkspaceRef.delete(workspaceId);
             console.log(`[useFolder] Invalidating: Cleared workspace folders cache for ${workspaceId}`);
         }
     },[])

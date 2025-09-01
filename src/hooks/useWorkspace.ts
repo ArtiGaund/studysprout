@@ -8,24 +8,26 @@ import { RootState } from "@/store/store";
 import { ReduxWorkSpace } from "@/types/state.type";
 import { transformWorkspace } from "@/utils/data-transformers";
 import { useSession } from "next-auth/react";
-import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo} from "react";
 import { useDispatch, useSelector } from "react-redux";
+import {
+    hasFetchedAllWorkspaceRef,
+    hasCheckedUserWorkspaceStatusRef,
+    hasFetchedCurrentWorkspaceDetailsRef
+} from "@/cache/workspaceCache";
 
 export function useWorkspace() {
     const { data: session, status } = useSession();
     const dispatch = useDispatch(); 
 
     // selector for workspace state
-    const workspacesById = useSelector((state: RootState) => state.workspace.byId);
-    const allWorkspaceIds = useSelector((state: RootState) => state.workspace.allIds);
-    const currentWorkspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace);
-    const loadingFromRedux = useSelector((state: RootState) => state.workspace.loading);
-    const errorFromRedux = useSelector((state: RootState) => state.workspace.error);
-
-    // Refs to track fetched states for this hook's API call
-    const hasFetchedAllWorkspaceRef = useRef<Set<string>>(new Set());
-    const hasCheckedUserWorkspaceStatusRef = useRef<Set<string>>(new Set());
-    const hasFetchedCurrentWorkspaceDetailsRef = useRef<Set<string>>(new Set());
+    const {
+        byId: workspacesById,
+        allIds: allWorkspaceIds,
+        currentWorkspace: currentWorkspaceId,
+        loading: loadingFromRedux,
+        error: errorFromRedux,
+    } = useSelector((state: RootState) => state.workspace);
     
     // function to fetch all user workspaces and dispatch to Redux
     const getWorkspaces = useCallback(async(): Promise<{
@@ -33,6 +35,15 @@ export function useWorkspace() {
         data?: ReduxWorkSpace[];
         error?: string;
     }> => {
+
+        // Handling auth logic inside the function
+        if(!session?.user?._id || status !== "authenticated"){
+            console.log(`[useWorkspace] getWorkspaces: Not authenticated.`);
+            return {
+                success: false,
+                error: "User not authenticated."
+            }
+        }
         // only proceed if session  is authenticated and userId is available
         if(status !== "authenticated" || !session?.user?._id) {
             console.log("[useWorkspace] getWorkspaces: Not authenticated or no user ID");
@@ -43,8 +54,9 @@ export function useWorkspace() {
         }
        
         // Guards against redundant calls for this specific fetch
-        if(hasFetchedAllWorkspaceRef.current.has(session.user._id)){
+        if(hasFetchedAllWorkspaceRef.has(session.user._id)){
             console.log(`[useWorkspace] Skipping getWorkspaces for userID ${session.user._id}: already fetched.`);
+            console.log(`[useWorkspace] getWorkspaces: workspacesById: `, workspacesById);
             return {
                 success: true,
                 data: allWorkspaceIds.map(id => workspacesById[id]).filter(Boolean) as ReduxWorkSpace[]
@@ -57,15 +69,22 @@ export function useWorkspace() {
             console.log(`[useWorkspace] Fetching all workspaces for user ID: ${session.user._id}`);
             const response = await getUserWorkspaces(session.user._id);
 
+            // const workspaces = Array.isArray(response) 
+
+            console.log(`[useWorkspace] getWorkspaces: response: `,response);
+
             const transformedWorkspace = (Array.isArray(response)
             ? response
             : [response]
             ).filter(Boolean).map(workspace => transformWorkspace(workspace as MongooseWorkSpace));
 
+            console.log(`[useWorkspace] getWorkspaces: transformedWorkspace: `, transformedWorkspace);
+
             if(transformedWorkspace.length > 0){
                 dispatch(SET_WORKSPACES(transformedWorkspace));
                 if(!currentWorkspaceId && !transformedWorkspace.some(workspace => workspace._id === currentWorkspaceId)){
                     const firstWorkspace = transformedWorkspace[0];
+                    console.log(`[useWorkspace] getWorkspaces: firstWorkspace: `, firstWorkspace);
                     if(firstWorkspace && firstWorkspace._id){
                         dispatch(SET_CURRENT_WORKSPACE(firstWorkspace._id));
                     }
@@ -74,7 +93,7 @@ export function useWorkspace() {
                 dispatch(SET_WORKSPACES([]));
                 dispatch(SET_CURRENT_WORKSPACE(null));
             }
-            hasFetchedAllWorkspaceRef.current.add(session.user._id);
+            hasFetchedAllWorkspaceRef.add(session.user._id);
             return {
                 success: true,
                 data: transformedWorkspace
@@ -91,10 +110,13 @@ export function useWorkspace() {
             dispatch(SET_WORKSPACE_LOADING(false)); // Clear loading state in Redux
         }
     }, [
-        dispatch, 
-        session?.user?._id, 
+        session?.user?._id,
         status,
-     ])
+        // allWorkspaceIds,
+        // workspacesById,
+        // currentWorkspaceId,
+        dispatch
+    ])
 
     // function to fetch current workspace
     const fetchCurrentWorkspace = useCallback(async ( workspaceId: string ): Promise<{
@@ -175,10 +197,10 @@ export function useWorkspace() {
             dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace._id));
 
             if (session.user._id) {
-                hasFetchedAllWorkspaceRef.current.delete(session.user._id);
-                hasCheckedUserWorkspaceStatusRef.current.delete(session.user._id);
+                hasFetchedAllWorkspaceRef.delete(session.user._id);
+                hasCheckedUserWorkspaceStatusRef.delete(session.user._id);
             }
-            hasFetchedCurrentWorkspaceDetailsRef.current.delete(transformedWorkspace._id); 
+            hasFetchedCurrentWorkspaceDetailsRef.delete(transformedWorkspace._id); 
             return {
                 success: true,
                 data: transformedWorkspace
@@ -207,7 +229,7 @@ export function useWorkspace() {
             return { success: true, data: workspacesById[workspaceId] }; // Return Redux data from store
         }
         // NEW: Add useRef guard for this specific function call
-        if (hasFetchedCurrentWorkspaceDetailsRef.current.has(workspaceId)) {
+        if (hasFetchedCurrentWorkspaceDetailsRef.has(workspaceId)) {
             console.log(`[useWorkspace] Skipping currentWorkspaceDetails for ${workspaceId}: already initiated.`);
             return { success: true, data: workspacesById[workspaceId] }; // Return Redux data from store
         }
@@ -224,7 +246,7 @@ export function useWorkspace() {
            const transformedWorkspace = transformWorkspace(workspace);
             dispatch(UPDATE_WORKSPACE(transformedWorkspace)); // Ensure this specific workspace is in the byId map
             dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace._id)); // Also set it as current if not already
-            hasFetchedCurrentWorkspaceDetailsRef.current.add(workspaceId);
+            hasFetchedCurrentWorkspaceDetailsRef.add(workspaceId);
             return{
                 success: true,
                 data: transformedWorkspace // Return transformed Redux data
@@ -262,9 +284,9 @@ export function useWorkspace() {
 
              const transformedWorkspace = transformWorkspace(response.data as MongooseWorkSpace);
              dispatch(UPDATE_WORKSPACE(transformedWorkspace));
-             hasFetchedCurrentWorkspaceDetailsRef.current.delete(workspaceId);
+             hasFetchedCurrentWorkspaceDetailsRef.delete(workspaceId);
              if(session?.user._id){
-                hasFetchedAllWorkspaceRef.current.delete(session.user._id);
+                hasFetchedAllWorkspaceRef.delete(session.user._id);
              }
              return {
                  success: true,
@@ -307,9 +329,9 @@ export function useWorkspace() {
 
             const transformedWorkspace = transformWorkspace(workspace as MongooseWorkSpace);
             dispatch(UPDATE_WORKSPACE(transformedWorkspace));
-            hasFetchedCurrentWorkspaceDetailsRef.current.delete(workspaceId);
+            hasFetchedCurrentWorkspaceDetailsRef.delete(workspaceId);
             if(session?.user._id){
-                hasFetchedAllWorkspaceRef.current.delete(session.user._id);
+                hasFetchedAllWorkspaceRef.delete(session.user._id);
             }
             return {
                 success: true,
@@ -381,7 +403,7 @@ export function useWorkspace() {
             }
         }
 
-        if(hasCheckedUserWorkspaceStatusRef.current.has(userIDToCheck)){
+        if(hasCheckedUserWorkspaceStatusRef.has(userIDToCheck)){
             console.log(`[useWorkspace] checkUserHaveCreatedWorkspace: Skipping checkUserHaveCreatedWorkspace
              for user ${userIDToCheck}, already checked.`);
             return {
@@ -397,53 +419,67 @@ export function useWorkspace() {
             // console.log(`[useWorkspace] checkUserHaveCreatedWorkspace: Checking workspace existence for user ${userIDToCheck}.`);
             const response = await getUserWorkspaces(userIDToCheck);
 
+            const hasWorkspaces = Array.isArray(response) && response.length > 0;
+
             console.log(`[useWorkspace] checkUserHaveCreatedWorkspace: Response for user ${userIDToCheck}:`, response);
             
             if(!response){
                 dispatch(SET_WORKSPACES([]));
             }
-            hasCheckedUserWorkspaceStatusRef.current.add(userIDToCheck);
+            hasCheckedUserWorkspaceStatusRef.add(userIDToCheck);
             return {
                 success: true,
-                data: response
+                data: hasWorkspaces
             }
         } catch (error: any) {
             console.error("Error checking user workspace status:", error);
             dispatch(SET_WORKSPACE_ERROR(error.message || "Failed to check workspace status"));
-            hasCheckedUserWorkspaceStatusRef.current.delete(userIDToCheck);
+            hasCheckedUserWorkspaceStatusRef.delete(userIDToCheck);
             return { success: false, error: error.message || "An unexpected error occurred." };
         } finally{
             dispatch(SET_WORKSPACE_LOADING(false));
         }
     },[
-        // allWorkspaceIds,
-        dispatch,
+        session?.user._id,
+        status,
+        // allWorkspaceIds.length,
+        dispatch
     ])
       // --- EFFECT: Trigger initial fetch of all user workspaces ---
     useEffect(()=> {
         // const userId = session?.user._id
-        if(status === "authenticated" && session?.user?._id){
-            if(hasCheckedUserWorkspaceStatusRef.current.has(session.user._id) || hasFetchedAllWorkspaceRef.current.has(session.user._id)){
-                return;
+        const fetchWorkspaces = async () => {
+           
+            if(status !== "authenticated" || !session?.user?._id) return;
+            const user = session.user._id as string;
+            // if(hasCheckedUserWorkspaceStatusRef.current.has(user) || hasFetchedAllWorkspaceRef.current.has(user)){
+            //     return;
+            // }
+             
+            // Only call checkUserHaveCreatedWorkspace if not checked
+            if(!hasCheckedUserWorkspaceStatusRef.has(user)){
+                const checkResult = await checkUserHaveCreatedWorkspace(user);
+                if(checkResult.success){
+                    hasCheckedUserWorkspaceStatusRef.add(user);
+                }
             }
-            hasCheckedUserWorkspaceStatusRef.current.add(session.user._id);
-            hasFetchedAllWorkspaceRef.current.add(session.user._id);
             
-                console.log(`[useWorkspace] useEffect: Attempting to check workspace existence for user ${session.user._id}.`);
-                checkUserHaveCreatedWorkspace(session.user._id);
-        
+            // Only call getWorkspace if not fetched
+            if(!hasFetchedAllWorkspaceRef.has(user)){
+                console.log(`[useWorkspace] useEffect: Attempting to fetch all workspaces for user ${user}.`);
+                const fetchResult = await getWorkspaces();
+                if(fetchResult.success){
+                    hasFetchedAllWorkspaceRef.add(user);
+                }
+            }
             
-                console.log(`[useWorkspace] useEffect: Attempting to fetch all workspaces for user ${session.user._id}.`);
-                getWorkspaces();
-            
-            
-        } 
+        }
+        fetchWorkspaces();
     },[ 
-        session, 
-        status, 
-        allWorkspaceIds.length,
-         getWorkspaces,
-         checkUserHaveCreatedWorkspace
+        session?.user._id, 
+        status,
+        //  getWorkspaces,
+        //  checkUserHaveCreatedWorkspace
         ]);
 
      // --- Derived States ---
