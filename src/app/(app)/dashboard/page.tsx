@@ -2,6 +2,7 @@
 
 import DashboardSetup from "@/components/dashboard-setup/dashboard-setup"
 import { useWorkspace } from "@/hooks/useWorkspace"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -16,17 +17,32 @@ const DashboardPage = () => {
         } = useWorkspace();
     const router = useRouter()
 
-    useEffect(() => {
-        console.log("[DashboardPage] useEffect: Calling getWorkspaces for initial data sync.");
-        getWorkspaces();
-    },[getWorkspaces])
+    const { status } = useSession();
 
+     useEffect(() => {
+        if(status !== "authenticated") return;
+        const fetchAndRedirect = async () => {
+            console.log("[DashboardPage] Initial workspace fetch.");
+            const response = await getWorkspaces();
+            if (!response.success) {
+                console.log(`[DashboardPage] Failed to fetch workspaces: `, response.error);
+            }
+        }
+        fetchAndRedirect();
+        },[
+            status
+        ])
+    
     // 1. Redirection Logic (triggered by useEffect once data is ready)
    useEffect(() => {
         // If workspaces are loaded and there's at least one, redirect to the first one
         // This useEffect will run when `workspaces` (from Redux) changes.
+        console.log(`[DashboardPage] workspaces:`, workspaces);
+        console.log(`[DashboardPage] isLoadingWorkspaces:`, isLoadingWorkspaces);
+        console.log(`[DashboardPage] hasWorkspaces:`, hasWorkspaces);
         if (!isLoadingWorkspaces && hasWorkspaces && workspaces.length > 0 && workspaces[0]?._id) {
-            router.push(`/dashboard/${workspaces[0]._id}`);
+            console.log(`[DashboardPage] Redirecting to workspace: ${workspaces[0]._id}`);
+            router.replace(`/dashboard/${workspaces[0]._id}`);
         }
     }, [
         hasWorkspaces,
@@ -34,6 +50,8 @@ const DashboardPage = () => {
          router,
          isLoadingWorkspaces
         ]); 
+
+       
 
     
     // 2. Initial Loading State (session or data)
