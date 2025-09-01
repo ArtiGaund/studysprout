@@ -355,40 +355,40 @@ export function useWorkspace() {
         session?.user._id
     ])
 
-    // const deleteWorkspace = useCallback(async (workspaceId: string): Promise<{
-    //     success: boolean;
-    //     data?: MongooseWorkSpace;
-    //     error?: string
-    // }> => {
-    //         dispatch(SET_WORKSPACE_LOADING(true));
-    //         dispatch(SET_WORKSPACE_ERROR(null));
-    //         try {
-    //             const response = await hardDeleteDir("workspace",workspaceId);
-    //             if(!response.success){
-    //                 const errorMessage = response.message || "Failed to delete current workspace";
-    //                 return {
-    //                     success: false,
-    //                     error: errorMessage
-    //                 }
-    //             }
-    //             dispatch(DELETE_WORKSPACE(workspaceId));
-    //             return {
-    //                 success: true,
-    //                 data: response.data
-    //             }
-    //         } catch (error: any) {
-    //             console.error("Error while deleting the workspace ", error);
-    //             const errorMessage = error.message || "Failed to delete current workspace";
-    //             dispatch(SET_WORKSPACE_ERROR(errorMessage));
-    //             return {
-    //                 success: false,
-    //                 error: errorMessage
-    //             }
+    const deleteWorkspace = useCallback(async (workspaceId: string): Promise<{
+        success: boolean;
+        data?: MongooseWorkSpace;
+        error?: string
+    }> => {
+            dispatch(SET_WORKSPACE_LOADING(true));
+            dispatch(SET_WORKSPACE_ERROR(null));
+            try {
+                const response = await hardDeleteDir("workspace",workspaceId);
+                if(!response.success){
+                    const errorMessage = response.message || "Failed to delete current workspace";
+                    return {
+                        success: false,
+                        error: errorMessage
+                    }
+                }
+                dispatch(DELETE_WORKSPACE(workspaceId));
+                return {
+                    success: true,
+                    data: response.data
+                }
+            } catch (error: any) {
+                console.error("Error while deleting the workspace ", error);
+                const errorMessage = error.message || "Failed to delete current workspace";
+                dispatch(SET_WORKSPACE_ERROR(errorMessage));
+                return {
+                    success: false,
+                    error: errorMessage
+                }
             
-    //         }finally {
-    //         dispatch(SET_WORKSPACE_LOADING(false));
-    //     }
-    // },[dispatch])
+            }finally {
+            dispatch(SET_WORKSPACE_LOADING(false));
+        }
+    },[dispatch])
 
     const checkUserHaveCreatedWorkspace = useCallback( async (userIDToCheck: string): Promise<{
         success: boolean;
@@ -515,6 +515,6 @@ export function useWorkspace() {
         updateWorkspaceTitle,
         updateWorkspaceLogo,
         checkUserHaveCreatedWorkspace,
-        // deleteWorkspace,
+        deleteWorkspace,
     }
 }
