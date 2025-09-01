@@ -21,21 +21,14 @@ export async function GET( request: Request ){
     // console.log("Query params ",queryParams)
 
     try {
-        const hasWorkspace = await WorkSpaceModel.exists({ workspace_owner: queryParams.userId })
+        const workspaces = await WorkSpaceModel.find({ workspace_owner: queryParams.userId }).lean();
+        // console.log("[route] check-user-have-created-workspace: workspaces:", workspaces);
 
-        if(!hasWorkspace){
-            return Response.json({
-                statusCode: 201,
-                message: "No workspace found with the current user",
-                success: true,
-                data: false,
-            },{ status: 201})
-        }
         return Response.json({
             statusCode: 200,
             message: "Workspace is present under the current user",
             success: true,
-            data: true
+            data: workspaces
         }, {status: 200})
         
     } catch (error) {
