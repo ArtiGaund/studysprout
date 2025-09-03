@@ -2,11 +2,15 @@
 
 import DashboardSetup from "@/components/dashboard-setup/dashboard-setup"
 import { useWorkspace } from "@/hooks/useWorkspace"
-import { useSession } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useUser } from "@/lib/providers/user-provider"
 
 const DashboardPage = () => {
+    const { user } = useUser();
+    
+
     
     const {
          workspaces,
@@ -19,8 +23,26 @@ const DashboardPage = () => {
 
     const { status } = useSession();
 
+    useEffect(() => {
+        if (!user) {
+            // signOut();
+            router.replace("/sign-up");
+        }
+    }, [user, router]);
+
+   
+
      useEffect(() => {
-        if(status !== "authenticated") return;
+        // if(!user){
+        //     router.replace("/sign-up");
+        //     return;
+        // }
+        console.log("[DashboardPage] User status: ", status);
+        if(status !== "authenticated"){
+            console.log(`[DashboardPage] User not login/don't have account. Redirecting to sign up.`);
+            router.replace("/sign-up");
+            return;
+        }
         const fetchAndRedirect = async () => {
             console.log("[DashboardPage] Initial workspace fetch.");
             const response = await getWorkspaces();
@@ -30,16 +52,17 @@ const DashboardPage = () => {
         }
         fetchAndRedirect();
         },[
-            status
+            status,
+            user
         ])
     
     // 1. Redirection Logic (triggered by useEffect once data is ready)
    useEffect(() => {
         // If workspaces are loaded and there's at least one, redirect to the first one
         // This useEffect will run when `workspaces` (from Redux) changes.
-        console.log(`[DashboardPage] workspaces:`, workspaces);
-        console.log(`[DashboardPage] isLoadingWorkspaces:`, isLoadingWorkspaces);
-        console.log(`[DashboardPage] hasWorkspaces:`, hasWorkspaces);
+        // console.log(`[DashboardPage] workspaces:`, workspaces);
+        // console.log(`[DashboardPage] isLoadingWorkspaces:`, isLoadingWorkspaces);
+        // console.log(`[DashboardPage] hasWorkspaces:`, hasWorkspaces);
         if (!isLoadingWorkspaces && hasWorkspaces && workspaces.length > 0 && workspaces[0]?._id) {
             console.log(`[DashboardPage] Redirecting to workspace: ${workspaces[0]._id}`);
             router.replace(`/dashboard/${workspaces[0]._id}`);
@@ -52,7 +75,10 @@ const DashboardPage = () => {
         ]); 
 
        
-
+ if (!user) {
+        // Prevent workspace logic and rendering if user is missing
+        return null;
+    }
     
     // 2. Initial Loading State (session or data)
     if (isLoadingWorkspaces) {
