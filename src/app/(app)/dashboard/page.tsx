@@ -33,10 +33,6 @@ const DashboardPage = () => {
    
 
      useEffect(() => {
-        // if(!user){
-        //     router.replace("/sign-up");
-        //     return;
-        // }
         console.log("[DashboardPage] User status: ", status);
         if(status !== "authenticated"){
             console.log(`[DashboardPage] User not login/don't have account. Redirecting to sign up.`);
@@ -58,11 +54,6 @@ const DashboardPage = () => {
     
     // 1. Redirection Logic (triggered by useEffect once data is ready)
    useEffect(() => {
-        // If workspaces are loaded and there's at least one, redirect to the first one
-        // This useEffect will run when `workspaces` (from Redux) changes.
-        // console.log(`[DashboardPage] workspaces:`, workspaces);
-        // console.log(`[DashboardPage] isLoadingWorkspaces:`, isLoadingWorkspaces);
-        // console.log(`[DashboardPage] hasWorkspaces:`, hasWorkspaces);
         if (!isLoadingWorkspaces && hasWorkspaces && workspaces.length > 0 && workspaces[0]?._id) {
             console.log(`[DashboardPage] Redirecting to workspace: ${workspaces[0]._id}`);
             router.replace(`/dashboard/${workspaces[0]._id}`);
