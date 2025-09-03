@@ -44,9 +44,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <body className={inter.className} >
         <ReduxProvider>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <UserProvider>
+          {/* <UserProvider> */}
             {children}
-          </UserProvider>
+          {/* </UserProvider> */}
         </ThemeProvider>
         </ReduxProvider>
           <Toaster />
