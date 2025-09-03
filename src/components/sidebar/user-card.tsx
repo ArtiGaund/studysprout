@@ -15,6 +15,7 @@ const UserCard = () => {
     const user = session?.user
     const { openModal } = useModal()
     const menuRef = useRef<HTMLDivElement>(null);
+    
     useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {

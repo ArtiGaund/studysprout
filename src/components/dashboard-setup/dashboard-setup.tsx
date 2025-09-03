@@ -17,6 +17,7 @@ import { v4 as uuid4 } from "uuid";
 import { useDispatch } from "react-redux"
 import { ADD_WORKSPACE } from "@/store/slices/workspaceSlice"
 import { useWorkspace } from "@/hooks/useWorkspace"
+import UserCard from "../sidebar/user-card"
 
 const DashboardSetup = () => {
     const { data: session, status } = useSession()
@@ -26,7 +27,11 @@ const DashboardSetup = () => {
     const [ selectedImage, setSelectedImage ] = useState(null)
     const [workspaceTitle, setWorkspaceTitle ] = useState('')
 
-    const { isLoadingWorkspaces, workspaceError, createWorkspace} = useWorkspace();
+    const {
+         isLoadingWorkspaces,
+          workspaceError,
+         createWorkspace
+        } = useWorkspace();
 
     // const dispatch = useDispatch()
     
@@ -35,6 +40,7 @@ const DashboardSetup = () => {
     const { toast } = useToast()
 
     const router = useRouter()
+
 
     const onChangeImageHandler = (e:any) => {
         setSelectedImage(e.target.files[0]);
@@ -179,6 +185,11 @@ const DashboardSetup = () => {
                     </form>
 
         </Card>
+        </div>
+
+        {/* User can delete account as well as logout from here */}
+        <div className="absolute bottom-4 right-4">
+            <UserCard />
         </div>
         </div>
     )

@@ -34,6 +34,7 @@ const SettingsForm = () => {
         updateWorkspaceTitle,
         updateWorkspaceLogo,
         workspaces: allWorkspacesArray,
+        hasWorkspaces
     } = useWorkspace();
 
     const {
@@ -43,8 +44,7 @@ const SettingsForm = () => {
         dirType: "workspace",
         dirId: currentWorkspace?._id || "",
     })
-    // const [ workspaceTitle, setWorkspaceTitle ] = useState(currentWorkspace?.title || "")
-    // const currentWorkspace = useSelector((state: RootState) => state.workspace.currentWorkspace)
+   
     const [ workspaceDetails, setWorkspaceDetails ] = useState<Partial<ReduxWorkSpace>>({
         title: currentWorkspace?.title || "",
         logo: currentWorkspace?.logo || undefined,
@@ -52,10 +52,9 @@ const SettingsForm = () => {
     // when user want to change the workspace name, there will be timer
     const titleTimerRef = useRef<ReturnType<typeof setTimeout>>()
     const [ uploadingProfilePic, setUploadingProfilePic ] = useState(false)
-    // const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
     const dispatch = useDispatch()
     const [uploadingLogo, setUploadingLogo] = useState(false)
-    // const workspaces = useSelector((state: RootState) => state.workspace.workspaces)
+   
 
 
     // will change the value of workspace when there is any change in name 
@@ -220,7 +219,9 @@ const SettingsForm = () => {
     
     return (
     <div className="flex gap-4 flex-col">
-        <p className="flex items-center gap-2 mt-6">
+        {hasWorkspaces && (
+            <div>
+                <p className="flex items-center gap-2 mt-6">
             <Briefcase 
             size={20}
             />
@@ -263,12 +264,14 @@ const SettingsForm = () => {
             type="submit"
             size={'sm'}
             variant={'destructive'}
-            className="mt-4 text-sm bg-destructive/40 border-2 border-destructive"
+            className="mt-4 text-sm bg-destructive/40 border-2 border-destructive cursor-pointer"
             onClick={onDeleteWorkspaceClick}
             >
                 Delete Workspace
             </Button>
         </Alert>
+            </div>
+        )}
         <p className="flex items-center gap-2 mt-6">
             <User size={20}/> Profile
         </p>
@@ -309,7 +312,7 @@ const SettingsForm = () => {
             type="submit"
             size={'sm'}
             variant={'destructive'}
-            className="mt-4 text-sm bg-destructive/40 border-2 border-destructive"
+            className="mt-4 text-sm bg-destructive/40 border-2 border-destructive cursor-pointer"
             onClick={() =>
                         openModal(
                           <AccountSetting className="h-[13rem] w-full max-w-md">
