@@ -24,11 +24,18 @@ const DashboardPage = () => {
     const { status } = useSession();
 
     useEffect(() => {
-        if (!user) {
-            // signOut();
+        if(status === "loading" ) return;
+        
+        if(status === "unauthenticated"){
             router.replace("/sign-up");
+            return;
         }
-    }, [user, router]);
+
+
+    }, [
+        status,
+        router
+    ]);
 
    
 
@@ -66,10 +73,24 @@ const DashboardPage = () => {
         ]); 
 
        
- if (!user) {
-        // Prevent workspace logic and rendering if user is missing
-        return null;
-    }
+
+        if (status === "loading" || (status === "authenticated" && user === null)) {
+    return <div>Loading...</div>;
+}
+
+if (status === "authenticated" && !user) {
+    return (
+        <div className="flex flex-col justify-center items-center h-screen text-red-600 space-y-4">
+            <p className="text-xl font-bold">Account Not Found</p>
+            <p className="text-base">Your account was not found in our database.</p>
+            <p className="text-sm text-gray-500">Please contact support or try signing up again.</p>
+        </div>
+    );
+}
+//  if (!user) {
+//         // Prevent workspace logic and rendering if user is missing
+//         return null;
+//     }
     
     // 2. Initial Loading State (session or data)
     if (isLoadingWorkspaces) {
