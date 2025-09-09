@@ -29,8 +29,6 @@ interface UserProviderProps {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const { data: session, status } = useSession();
     const [ user, setUser ] = useState<User | null>(null)
-    // const { data: session, status } = useSession()
-    // const [ session, setSession ] = useState<Session | null>(null)
     const [redirect, setRedirect] = useState(false);
 
 
@@ -41,22 +39,16 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
         if(status === "loading") return; //wait for session to be determined
 
-        if(!session || !session.user){
+        if( status === "unauthenticated"){
             setRedirect(true);
             return;
         }
+        if(!session || !session.user){
+            // setRedirect(true);
+            return;
+        }
        const getUser =  async() => {
-            // const sessionData = await getSession()
-            // console.log("Session in user provider ",sessionData)
-            // setSession(sessionData)
-
-            // if(!sessionData || !sessionData.user){
-            //     setRedirect(true);
-            //     return;
-            // }
-
-            // if(sessionData && sessionData.user){
-            //     console.log("Coming inside the if block")
+           
                 try {
                     const userId = session.user._id
                     const response = await axios.get(`/api/get-user?userId=${userId}`)
@@ -100,17 +92,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         status
     ])
 
-    useEffect(() => {
-        if(redirect && window.location.pathname !== "/sign-up"){
-            console.log("Redirect effect running");
-            // signOut();
-                        router.replace("/sign-up");
-            // window.location.href = "/sign-up";
-        }
-    },[
-        redirect,
-        router
-    ])
+   useEffect(() => {
+    if (redirect && window.location.pathname !== "/sign-up") {
+        router.replace("/sign-up");
+    }
+}, [redirect, router]);
+
+
     return(
         <UserContext.Provider value={{ user, session}}>
             {children}
