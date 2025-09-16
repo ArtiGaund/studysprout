@@ -52,7 +52,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 try {
                     const userId = session.user._id
                     const response = await axios.get(`/api/get-user?userId=${userId}`)
-                    console.log("[User-provider] User data", response);
                     const userData = response.data.data 
                     if(!userData){
                         toast({
