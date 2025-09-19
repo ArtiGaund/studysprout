@@ -3,6 +3,8 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { BookOpen, HardDrive, Users   } from "lucide-react";
+import ComingSoonRibbon from "@/components/global/coming-soon-ribbon";
+
 
 export default function Home() {
   const router = useRouter()
@@ -70,6 +72,10 @@ export default function Home() {
         {/* Card 1 */}
         <div className="w-[15rem] p-4 rounded-lg bg-gradient-to-br from-gray-900 via-gray-700 to-gray-800 text-white shadow-lg">
           <BookOpen className="w-6 h-6 text-purple-400 mb-2" />
+          <div className="relative top-[-45px] right-[-15px]">
+              <ComingSoonRibbon />
+          </div>
+          
           <h3 className="text-lg font-semibold mb-2">Smart Learning Tools</h3>
           <div className="text-sm space-y-1 text-gray-300">
             <p>📚 Flashcards for revision</p>
@@ -81,6 +87,9 @@ export default function Home() {
         {/* Card 2 */}
         <div className="w-[15rem] p-4 rounded-lg bg-gradient-to-br from-gray-900 via-gray-700 to-gray-800 text-white shadow-lg">
           <HardDrive className="w-6 h-6 text-blue-400 mb-2" />
+          <div className="relative top-[-45px] right-[-15px]">
+              <ComingSoonRibbon />
+          </div>
           <h3 className="text-lg font-semibold mb-2">Seamless Accessibility</h3>
           <div className="text-sm space-y-1 text-gray-300">
             <p>📶 Offline usage</p>
@@ -92,6 +101,9 @@ export default function Home() {
         {/* Card 3 */}
         <div className="w-[15rem] p-4 rounded-lg bg-gradient-to-br from-gray-900 via-gray-700 to-gray-800 text-white shadow-lg">
           <Users className="w-6 h-6 text-green-400 mb-2" />
+          <div className="relative top-[-45px] right-[-15px]">
+              <ComingSoonRibbon />
+          </div>
           <h3 className="text-lg font-semibold mb-2">Collaboration & Sync</h3>
           <div className="text-sm space-y-1 text-gray-300">
             <p>🤝 Real-time collaboration</p>
