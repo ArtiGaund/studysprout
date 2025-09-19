@@ -24,7 +24,7 @@ import { useDir } from "@/hooks/useDir";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
 import clsx from "clsx";
 
-
+import Feedback from "../feedback/feedback";
 
 interface BannerSectionProps{
     dirDetails: ReduxWorkSpace | ReduxFolder | ReduxFile;
@@ -33,21 +33,21 @@ interface BannerSectionProps{
    
 }
 
-var TOOLBAR_OPTIONS = [
-    ['bold', 'italic', 'underline', 'strike'],
-    ['blockquote', 'code-block'],
-    [{ header: 1 }, { header: 2 }],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    [{ script: 'sub' }, { script: 'super' }],
-    [{ indent: '-1' }, { indent: '+1' }],
-    [{ direction: 'rtl' }],
-    [{ size: ['small', false, 'large', 'huge'] }],
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    [{ color: [] }, { background: [] }],
-    [{ font: [] }],
-    [{ align: [] }],
-    ['clean'],
-  ];
+// var TOOLBAR_OPTIONS = [
+//     ['bold', 'italic', 'underline', 'strike'],
+//     ['blockquote', 'code-block'],
+//     [{ header: 1 }, { header: 2 }],
+//     [{ list: 'ordered' }, { list: 'bullet' }],
+//     [{ script: 'sub' }, { script: 'super' }],
+//     [{ indent: '-1' }, { indent: '+1' }],
+//     [{ direction: 'rtl' }],
+//     [{ size: ['small', false, 'large', 'huge'] }],
+//     [{ header: [1, 2, 3, 4, 5, 6, false] }],
+//     [{ color: [] }, { background: [] }],
+//     [{ font: [] }],
+//     [{ align: [] }],
+//     ['clean'],
+//   ];
   
 const BannerSection: React.FC<BannerSectionProps> = ({
     dirDetails,
@@ -215,10 +215,12 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                         </span>
                      </article>
                 )}
+
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-between
                  justify-center sm:items-center sm:p-2 p-8">
                     <div>{breadCrumbs}</div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <Feedback />
                         { isSaving ? (
                             <Badge
                             variant="secondary"
