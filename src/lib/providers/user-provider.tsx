@@ -43,8 +43,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             setRedirect(true);
             return;
         }
-        if(!session || !session.user){
-            // setRedirect(true);
+        if(!session || !session.user || !session.user._id){
+            setRedirect(true);
+            setUser(null);
             return;
         }
        const getUser =  async() => {
@@ -60,6 +61,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                             variant: "destructive",
                         })
                         setUser(null);
+                        setRedirect(true);
                         return;
                     }
                     
@@ -73,7 +75,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                         // Make sure router is ready, then push
                         
                         setUser(null);
-                        // setRedirect(true);
+                        signOut({ callbackUrl: "/sign-up"});
                         return;
                     }
                     console.log("Error while fetching user from the database ", error)
@@ -82,6 +84,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                         description: "Error while fetching user from the database ",
                         variant: "destructive",
                     })
+                    signOut({ callbackUrl: "/sign-in" });
                 }
             }
         getUser()

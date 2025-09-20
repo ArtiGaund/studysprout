@@ -23,26 +23,29 @@ const DashboardPage = () => {
 
     const { status } = useSession();
 
-    useEffect(() => {
-        if(status === "loading" ) return;
+    // useEffect(() => {
+    //     if(status === "loading" ) return;
         
-        if(status === "unauthenticated"){
-            router.replace("/sign-up");
-            return;
-        }
+    //     if(status === "unauthenticated" || !user){
+    //         router.replace("/sign-up");
+    //         return;
+    //     }
 
 
-    }, [
-        status,
-        router
-    ]);
+    // }, [
+    //     status,
+    //     router,
+    //     user
+    // ])
 
    
 
      useEffect(() => {
+         if(status === "loading" ) return;
         console.log("[DashboardPage] User status: ", status);
-        if(status !== "authenticated"){
+        if(status !== "authenticated" || !user){
             console.log(`[DashboardPage] User not login/don't have account. Redirecting to sign up.`);
+            signOut({ callbackUrl: "/sign-up" });
             router.replace("/sign-up");
             return;
         }
@@ -56,7 +59,8 @@ const DashboardPage = () => {
         fetchAndRedirect();
         },[
             status,
-            user
+            user,
+            router
         ])
     
     // 1. Redirection Logic (triggered by useEffect once data is ready)
