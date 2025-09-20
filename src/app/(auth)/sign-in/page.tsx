@@ -13,7 +13,7 @@ import { signInSchema } from "@/schemas/signInSchema";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import Image from "next/image"
-import { IconMail, IconLock } from "@tabler/icons-react";
+import { IconMail, IconLock, IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
 
 const SignIn = () => {
     const [ isSubmitting, setIsSubmitting ] = useState(false)
@@ -74,8 +74,8 @@ const SignIn = () => {
     return(
         <div className="flex  bg-black h-screen justify-center items-center ">
             <div className="flex flex-row w-[60rem] h-[30.5rem] rounded-3xl bg-zinc-900">
-                        <div className="flex flex-1 items-center justify-center">
-                            <div className="flex flex-col gap-y-4">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                            <div className="flex flex-col gap-y-4 m-[3rem]">
                                 <h2 className="text-3xl font-bold text-neutral-200">
                                     Welcome Back on StudySprout
                                 </h2>
@@ -129,13 +129,56 @@ const SignIn = () => {
 
                 </form>
             </Form>
+            
             <div className="flex justify-end text-xs">
                                     <a href="/forgot-password">forget password?</a>
                                 </div>
                         </div>
+                        <div className="flex flex-row items-center mt-[-2rem]">
+                            <div className="w-[5rem] h-[1px] bg-gray-400 mx-2"/>
+                            <span className="text-sm px-2">OR</span>
+                             <div className="w-[5rem] h-[1px] bg-gray-400 mx-2"/>
                         </div>
-                        <div className="flex-1 w-full h-full rounded-r-3xl overflow-hidden">
-                            <Image src="/images/login.PNG" width={500} height={400} alt="signup" />
+                        {/* Social handle */}
+                        <div className="flex flex-row items-center gap-x-3">
+                            <div className="flex w-[2rem] h-[2rem] rounded-full overflow-hidden relative">
+                                <button
+                                className="cursor-pointer"
+                                onClick={() => signIn('google') }
+                                >
+                                    <Image 
+                                    src="/images/google.svg"
+                                    fill
+                                    alt="google image"
+                                    style={{ objectFit: "cover"}}
+                                    className="absolute inset-0"
+                                    />
+                                </button>
+                            </div>
+                           <div className="flex w-[2.5rem] h-[2.5rem] rounded-full overflow-hidden relative">
+                             <button
+                                className="cursor-pointer"
+                                onClick={() => signIn('github')}
+                                >
+                                    <Image 
+                                    src="/images/github.svg"
+                                    fill
+                                    alt="google image"
+                                    style={{ objectFit: "cover"}}
+                                    className="absolute inset-0"
+                                    />
+                                </button>
+                            </div>
+                        </div>
+                        </div>
+                        <div className="flex-1 w-full h-full rounded-r-3xl overflow-hidden relative">
+                            <Image 
+                            src="/images/login.PNG"
+                            fill
+                              alt="signup"
+                              style={{ objectFit: "cover"}}
+                              className="absolute inset-0"
+                              />
                         </div>
                     </div>
         </div>

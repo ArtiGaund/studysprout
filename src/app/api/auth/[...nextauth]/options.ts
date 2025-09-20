@@ -4,6 +4,9 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import dbConnect from "@/lib/dbConnect";
 import {UserModel} from "@/model/index";
+import GithubProvider from "next-auth/providers/github"
+import GoogleProvider from "next-auth/providers/google"
+import crypto from "crypto"
  
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -47,9 +50,40 @@ export const authOptions: NextAuthOptions = {
                     throw new Error(err)
                 }
               }
+        }),
+        GithubProvider({
+            clientId: process.env.GITHUB_ID as string,
+            clientSecret: process.env.GITHUB_SECRET as string
+        }),
+        GoogleProvider({
+            clientId: process.env.GOOGLE_ID as string,
+            clientSecret: process.env.GOOGLE_SECRET as string
         })
     ],
     callbacks: {
+        async signIn({ user, account }){
+            await dbConnect();
+
+            // for Github login, ensure user exists in DB
+            if(account?.provider === 'github' || account?.provider === 'google'){
+                let existingUser = await UserModel.findOne({ email: user.email });
+
+                if(!existingUser){
+                    existingUser = await UserModel.create({
+                        email: user.email,
+                        image: user.image,
+                        isVerified: true,
+                         username: user.name?.replace(/\s+/g, "").toLowerCase(),
+                         password: crypto.randomBytes(16).toString("hex"),
+                    })
+                }
+
+                user._id = existingUser._id.toString();
+                user.isVerified = existingUser.isVerified;
+                user.username = existingUser.username;
+            }
+            return true;
+        },
         // adding maximum data in this token => then add this data in session through token (either have token 
             // access or session access I can fetch values from it anytime) 
        
