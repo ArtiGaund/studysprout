@@ -40,12 +40,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         if(status === "loading") return; //wait for session to be determined
 
         if( status === "unauthenticated"){
-            setRedirect(true);
+            setUser(null);
+            router.replace("/sign-up");
             return;
         }
         if(!session || !session.user || !session.user._id){
-            setRedirect(true);
+            // setRedirect(true);
             setUser(null);
+            router.replace("/sign-up");
             return;
         }
        const getUser =  async() => {
@@ -61,7 +63,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                             variant: "destructive",
                         })
                         setUser(null);
-                        setRedirect(true);
+                        signOut({ callbackUrl: "/sign-up"});
                         return;
                     }
                     
@@ -84,6 +86,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                         description: "Error while fetching user from the database ",
                         variant: "destructive",
                     })
+                    setUser(null);
                     signOut({ callbackUrl: "/sign-in" });
                 }
             }
@@ -91,14 +94,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }, [
         toast,
         session,
-        status
+        status,
+        router
     ])
 
-   useEffect(() => {
-    if (redirect && window.location.pathname !== "/sign-up") {
-        router.replace("/sign-up");
-    }
-}, [redirect, router]);
 
 
     return(

@@ -2,7 +2,7 @@
 
 import DashboardSetup from "@/components/dashboard-setup/dashboard-setup"
 import { useWorkspace } from "@/hooks/useWorkspace"
-import { signOut, useSession } from "next-auth/react"
+import {  useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useUser } from "@/lib/providers/user-provider"
@@ -22,31 +22,13 @@ const DashboardPage = () => {
     const router = useRouter()
 
     const { status } = useSession();
-
-    // useEffect(() => {
-    //     if(status === "loading" ) return;
-        
-    //     if(status === "unauthenticated" || !user){
-    //         router.replace("/sign-up");
-    //         return;
-    //     }
-
-
-    // }, [
-    //     status,
-    //     router,
-    //     user
-    // ])
-
-   
+ 
 
      useEffect(() => {
          if(status === "loading" ) return;
         console.log("[DashboardPage] User status: ", status);
         if(status !== "authenticated" || !user){
             console.log(`[DashboardPage] User not login/don't have account. Redirecting to sign up.`);
-            signOut({ callbackUrl: "/sign-up" });
-            router.replace("/sign-up");
             return;
         }
         const fetchAndRedirect = async () => {
@@ -60,7 +42,7 @@ const DashboardPage = () => {
         },[
             status,
             user,
-            router
+            getWorkspaces
         ])
     
     // 1. Redirection Logic (triggered by useEffect once data is ready)
@@ -91,10 +73,6 @@ if (status === "authenticated" && !user) {
         </div>
     );
 }
-//  if (!user) {
-//         // Prevent workspace logic and rendering if user is missing
-//         return null;
-//     }
     
     // 2. Initial Loading State (session or data)
     if (isLoadingWorkspaces) {
