@@ -1,15 +1,9 @@
 "use client"
 
-import { RootState } from "@/store/store";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useCallback, useMemo } from "react";
 import { Button } from "../ui/button";
-// import axios from "axios";
 import { useToast } from "../ui/use-toast";
-// import { DELETE_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
-// import { DELETE_FOLDER, UPDATE_FOLDER } from "@/store/slices/folderSlice";
-// import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
 import EmojiPicker from "../global/emoji-picker";
@@ -20,7 +14,6 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
 import { useDir } from "@/hooks/useDir";
-// import { setEditingItem, updateEditingItemTitle } from "@/store/slices/uiSlice";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
 import clsx from "clsx";
 
@@ -33,22 +26,7 @@ interface BannerSectionProps{
    
 }
 
-// var TOOLBAR_OPTIONS = [
-//     ['bold', 'italic', 'underline', 'strike'],
-//     ['blockquote', 'code-block'],
-//     [{ header: 1 }, { header: 2 }],
-//     [{ list: 'ordered' }, { list: 'bullet' }],
-//     [{ script: 'sub' }, { script: 'super' }],
-//     [{ indent: '-1' }, { indent: '+1' }],
-//     [{ direction: 'rtl' }],
-//     [{ size: ['small', false, 'large', 'huge'] }],
-//     [{ header: [1, 2, 3, 4, 5, 6, false] }],
-//     [{ color: [] }, { background: [] }],
-//     [{ font: [] }],
-//     [{ align: [] }],
-//     ['clean'],
-//   ];
-  
+
 const BannerSection: React.FC<BannerSectionProps> = ({
     dirDetails,
     fileId,
@@ -61,10 +39,8 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     const { currentFile } = useFile();
     const { toast } = useToast()
     const pathname = usePathname()
-    
-    const router = useRouter()
-    
 
+    const isEditable = !dirDetails.inTrash;
     const {
         isCurrentlyEditingThisItem,
         displayedTitle,
@@ -153,20 +129,20 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     ]);
 
     const handleDoubleClick = useCallback(() => {
-        // if(details?.inTrash){
-        //     toast({
-        //         title: "Cannot edit",
-        //         description: `This ${dirType} is in trash and cannot be edited. Restore it first`,
-        //         variant: "destructive"
-        //     })
-        //     return;
-        // }
+        if(details?.inTrash){
+            toast({
+                title: "Cannot edit",
+                description: `This ${dirType} is in trash and cannot be edited. Restore it first`,
+                variant: "destructive"
+            })
+            return;
+        }
        handleStartEditing();
     }, [
-        // details?.inTrash,
-        //  dirType, 
+        details?.inTrash,
+         dirType, 
          handleStartEditing, 
-        //  toast
+         toast
     ]);
 
     
@@ -220,7 +196,11 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                  justify-center sm:items-center sm:p-2 p-8">
                     <div>{breadCrumbs}</div>
                     <div className="flex items-center gap-3">
-                        <Feedback />
+                        {isEditable ? 
+                        <Feedback editable={true}/> 
+                        : 
+                        <Feedback editable={false}/>
+                        }
                         { isSaving ? (
                             <Badge
                             variant="secondary"
@@ -259,16 +239,17 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                     <div
                      className="text-[80px]"
                      >
-                        <EmojiPicker getValue={handleIconChange}>
-                            <div className="w-[100px] cursor-pointer transition-colors h-[100px] flex
-                             items-center justify-center hover:bg-muted rounded-xl">
+                        <EmojiPicker getValue={handleIconChange} editable={isEditable}>
+                            <div className={`w-[100px] ${isEditable ? "cursor-pointer" : "cursor-not-allowed"} 
+                            transition-colors h-[100px] flex
+                             items-center justify-center hover:bg-muted rounded-xl`}>
                                 {details.iconId}
                             </div>
                         </EmojiPicker>
                      </div>
                      {/* for banner */}
                      <div className="flex">
-                        <BannerUpload
+                        {isEditable && (<BannerUpload
                         details={details}
                         id={fileId}
                         dirType={dirType}
@@ -276,8 +257,8 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                          transition-all rounded-md"
                         >
                             {details.bannerUrl ? "Update Banner" : "Add Banner"}
-                        </BannerUpload>
-                        {details.bannerUrl && 
+                        </BannerUpload>)}
+                        {details.bannerUrl && isEditable &&
                         <Button
                         variant="ghost"
                         className="gap-2 hover:bg-background flex items-center justify-center mt-2

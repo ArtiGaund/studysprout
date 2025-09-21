@@ -59,6 +59,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
      const workspaceId = currentWorkspace?._id.toString() ?? "";
     const dispatch = useDispatch()
 
+    const isEditable = !dirDetails.inTrash;
+
     const fetchFolders = useCallback(async (workspaceId: string) => {
         if(!workspaceId){
             toast({
@@ -157,30 +159,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 getFiles,
                 files
             ])
-        //  useEffect(() => {
-        //         // Fetch folders when dirType is workspace
-        //     if (params && dirType === "workspace") {
-        //         console.log(`[DashboardOvierview] useEffect for workspaces: params=${params}, dirType=${dirType}`);
-        //         const hasFoldersForWorkspace = folders.some(folder => 
-        //             folder.workspaceId === params && 
-        //             folder.inTrash === undefined);
-        //         const hasFilesForWorkspace = files.some(file => file.workspaceId === params);
-        //         if(!hasFoldersForWorkspace){
-        //             fetchFolders(params);
-        //         }
-        //         if(!hasFilesForWorkspace){
-        //             getWorkspaceFiles(params);
-        //         }
-        //     }
-        //     }, [
-        //         params,
-        //          dirType,
-        //           fetchFolders,
-        //           folders,
-        //           refetchTrigger,
-        //           files,
-        //           getWorkspaceFiles
-        //         ]);
+       
        useEffect(() => {
                 // Fetch folders when dirType is workspace
         if (params && dirType === "folder") {
@@ -200,6 +179,15 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         ]);
 
          const addFolderHandler = useCallback(async () => {
+
+                if(!isEditable){
+                    toast({
+                        title: "Cannot create folder",
+                        description: "This folder is in trash and cannot be edited",
+                        variant: "destructive"
+                    });
+                    return;
+                }
                 if(!workspaceId){
                     toast({
                         title: "Cannot create folder",
@@ -248,10 +236,19 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             }, [
                 createFolder, 
                 workspaceId,
-                fetchFolders
+                fetchFolders,
+                isEditable
             ])
             // add new file
     const addNewFile = useCallback(async () => {
+        if (!isEditable) {
+            toast({
+                title: "Cannot create file",
+                description: "This folder is in trash and cannot be edited",
+                variant: "destructive"
+            });
+            return;
+        }
         if (!workspaceId){
             toast({
                 title: "Missing Workspace ID",
@@ -308,7 +305,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         createFile, 
         currentFolder, 
         workspaceId,
-        fetchFiles
+        fetchFiles,
+        isEditable
     ]);
 
      const handleFolderAdded = useCallback(async () => {
@@ -349,7 +347,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                                  <TooltipComponent message="Create Folder">
                                     <FolderIcon
                                     onClick={addFolderHandler}
-                                    className="relative right-[-5rem] w-[2rem] h-[2rem]"
+                                    className={`relative right-[-5rem] w-[2rem] h-[2rem]
+                                    ${isEditable ? "cursor-pointer" : "cursor-not-allowed"}`}
                                     />
                            </TooltipComponent>
                             )}
@@ -357,7 +356,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             { dirType === "folder" &&(<TooltipComponent message="Create File">
                             <FileIcon 
                              onClick={addNewFile}
-                            className="w-[2rem] h-[2rem]"
+                            className={`w-[2rem] h-[2rem] ${isEditable ? "cursor-pointer" : "cursor-not-allowed"}`}
                             />
                             </TooltipComponent>)}
                          </div>

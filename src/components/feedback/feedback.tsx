@@ -5,18 +5,18 @@ import TooltipComponent from "../global/tooltip-component";
 import { MessageCircleQuestionIcon} from "lucide-react";
 import FeedbackForm from "./feedback-form";
 
-const Feedback = () => {
+const Feedback = ({ editable }: { editable?: boolean}) => {
     return(
-        <div className="flex items-center gap-2 cursor-pointer">
+        <div className={`flex items-center gap-2 ${editable} ? 'cursor-pointer' : 'cursor-not-allowed'`}>
             {/* Feedback icon */}
-            <CustomDialogTrigger
+           { editable && (<CustomDialogTrigger
             header="Feedback"
             content={<FeedbackForm />}
             >
                 <TooltipComponent message="Feedback">
                     <MessageCircleQuestionIcon className="text-blue-500 hover:text-purple-700" />
                 </TooltipComponent>
-            </CustomDialogTrigger>
+            </CustomDialogTrigger> )}
         </div>
     )
 }
