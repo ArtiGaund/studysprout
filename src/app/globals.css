@@ -139,3 +139,7 @@ ul {
     display: none;
 }
 
+:focus{
+  outline: none;
+}
+
