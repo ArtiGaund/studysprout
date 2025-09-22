@@ -67,10 +67,7 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
         getFiles,
         toast
     ])
-
-    
-    const filteredFiles = files.filter((file:ReduxFile) => !file.inTrash);
-     
+         
     return(
         <>
              <div className="flex sticky z-20 top-0 bg-background w-full h-10 group/title justify-between
@@ -86,7 +83,7 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
                                 className="pb-20 w-full"
                                 >
                                     {
-                                   filteredFiles.length > 0 && filteredFiles
+                                   folderFiles.length > 0 && folderFiles
                                    .map((file) => (
                                         <Dropdown 
                                         key={file?._id?.toString()} // Ensure key is a string
