@@ -1,5 +1,6 @@
 
 
+import config from "@/config/config";
 import { ApiError, ApiResponse } from "@/types/api.interface";
 import nodemailer from "nodemailer";
 export async function sendResetEmail(
@@ -11,8 +12,8 @@ export async function sendResetEmail(
     host: "smtp-relay.brevo.com",
     port: 587,
     auth: {
-      user: process.env.BREVO_SMTP_USER,
-      pass: process.env.BREVO_SMTP_PASS,
+      user: config.BREVO_SMTP_USER,
+      pass: config.BREVO_SMTP_PASS,
     },
   });
     const mailOptions = {

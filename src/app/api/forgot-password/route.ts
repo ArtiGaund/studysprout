@@ -4,6 +4,7 @@ import {UserModel} from "@/model/index";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { sendResetEmail } from "@/lib/sendResetEmail";
+import config from "@/config/config";
 
 
 export async function POST( request: Request ){
@@ -36,7 +37,7 @@ export async function POST( request: Request ){
         
 
         // / Send email with reset link
-         const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${rawToken}&id=${user._id}`;
+         const resetLink = `${config.NEXT_PUBLIC_APP_URL}/reset-password?token=${rawToken}&id=${user._id}`;
 
          const resetEmail = await sendResetEmail(user.username, user.email, resetLink);
 

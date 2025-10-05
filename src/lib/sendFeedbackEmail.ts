@@ -1,3 +1,4 @@
+import config from "@/config/config";
 import { ApiResponse } from "@/types/api.interface";
 import nodemailer from "nodemailer";
 
@@ -14,8 +15,8 @@ export async function sendFeedbackEmail(
         host: "smtp-relay.brevo.com",
         port: 587,
         auth: {
-          user: process.env.BREVO_SMTP_USER,
-          pass: process.env.BREVO_SMTP_PASS,
+          user: config.BREVO_SMTP_USER,
+          pass: config.BREVO_SMTP_PASS,
         }
     });
 
@@ -26,8 +27,8 @@ export async function sendFeedbackEmail(
     )
     .join("");
     const mailOptions = {
-    from: `"Studysprout Feedback" <${process.env.OWNER_EMAIL}>`,
-    to: process.env.OWNER_EMAIL,
+    from: `"Studysprout Feedback" <${config.OWNER_EMAIL}>`,
+    to: config.OWNER_EMAIL,
     subject: "User Feedback",
     html: `<p><strong>From user:</strong> ${email}</p>${feedbackHtml}`,
     replyTo: email

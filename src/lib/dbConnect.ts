@@ -7,6 +7,7 @@ import { DB_NAME } from "@/constants"
 // import UserModel from "@/model/user.model";
 // import ImageModel from "@/model/image.model";
 import * as models from "@/model/index";
+import config from "@/config/config";
 
 type ConnectionObject = {
     isConnected?: number
@@ -20,7 +21,7 @@ async function dbConnect(): Promise<void> {
         return;
     }
     try {
-        const db = await mongoose.connect(`${process.env.MONGO_URL}/${DB_NAME}`)
+        const db = await mongoose.connect(`${config.MONGO_CONNECTION}/${DB_NAME}`)
         connection.isConnected= db.connections[0].readyState
 
         console.log("DB connected successfully!");

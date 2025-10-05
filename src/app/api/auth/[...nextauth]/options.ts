@@ -7,6 +7,7 @@ import {UserModel} from "@/model/index";
 import GithubProvider from "next-auth/providers/github"
 import GoogleProvider from "next-auth/providers/google"
 import crypto from "crypto"
+import config from "@/config/config";
  
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -52,12 +53,12 @@ export const authOptions: NextAuthOptions = {
               }
         }),
         GithubProvider({
-            clientId: process.env.GITHUB_ID as string,
-            clientSecret: process.env.GITHUB_SECRET as string
+            clientId: config.GITHUB_ID as string,
+            clientSecret: config.GITHUB_SECRET as string
         }),
         GoogleProvider({
-            clientId: process.env.GOOGLE_ID as string,
-            clientSecret: process.env.GOOGLE_SECRET as string
+            clientId: config.GOOGLE_ID as string,
+            clientSecret: config.GOOGLE_SECRET as string
         })
     ],
     callbacks: {
@@ -112,7 +113,7 @@ export const authOptions: NextAuthOptions = {
     session: {
         strategy: "jwt"
     },
-    secret: process.env.NEXTAUTH_SECRET
+    secret: config.NEXTAUTH_SECRET
 }
 
 
