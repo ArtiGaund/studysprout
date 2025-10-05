@@ -114,6 +114,7 @@ const config = {
         'dark-purple': '#301934',
         'jungle-green': '#29AB87',
         'dark-cyan': '#008B8B',
+        'slate-gray': '#1E293B',
       },
       borderRadius: {
         lg: "var(--radius)",

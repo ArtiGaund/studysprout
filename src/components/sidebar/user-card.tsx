@@ -8,6 +8,7 @@ import { LogOut, Settings, User2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/context/ModalProvider";
 import SettingsPage from "../settings/settings";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 const UserCard = () => {
     const [ isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession()
@@ -15,6 +16,8 @@ const UserCard = () => {
     const user = session?.user
     const { openModal } = useModal()
     const menuRef = useRef<HTMLDivElement>(null);
+
+    const { isRevisionSidebarOpen } = useRevisionSidebar();
     
     useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -32,9 +35,10 @@ const UserCard = () => {
 
     return(
         <article
-        className="hidden sm:flex justify-between items-center px-4 py-2 bg-Neutrals/neutrals-12 rounded-3xl"
+        className={`hidden sm:flex justify-between items-center px-4 py-2
+           ${!isRevisionSidebarOpen && 'bg-Neutrals/neutrals-12'}  rounded-3xl`}
         >
-            <aside
+           {!isRevisionSidebarOpen && ( <aside
             className="flex justify-center items-center gap-2"
             >
                 <Avatar>
@@ -48,14 +52,15 @@ const UserCard = () => {
                         {user ? user?.username : ''}
                     </small>
                 </div>
-            </aside>
+            </aside>)}
             <div className="flex items-center justify-center">
                 {/* dropup */}
                 <div className="relative inline-block group">
                     {/* dropbtn */}
                     <button
                     onClick={toggleMenu}
-                     className="w-[40px] h-[40px] border-none hover:bg-zinc-800 rounded-lg cursor-pointer flex items-center justify-center">
+                     className={`w-[40px] h-[40px] border-none hover:bg-zinc-800 rounded-lg cursor-pointer flex items-center justify-center
+                     ${isRevisionSidebarOpen && 'bottom-4 ml-[-15px] mt-[-10px]'}`}>
                         <Settings />
                     </button>
                      {/* Dropdown */}

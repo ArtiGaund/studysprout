@@ -21,6 +21,9 @@ import { useFolder } from "@/hooks/useFolder";
 import { ReduxFolder } from "@/types/state.type";
 import { useFile } from "@/hooks/useFile";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
+import { HoverCard, HoverCardTrigger } from "../ui/hover-card";
+import DisabledHoverMessage from "../ui/disabled-hover-message";
   
 
 
@@ -47,6 +50,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
     const { toast } = useToast()
     const dispatch = useDispatch()
    const { currentWorkspace} = useWorkspace();
+   const { isRevisionSidebarOpen } = useRevisionSidebar();
  
     useEffect(() => {
          console.log(`[FoldersDropdownList] useEffect triggered. currentWorkspace?._id=${currentWorkspace?._id}`);
@@ -127,8 +131,10 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
     },[folders])
     return(
         <>
-            <div className="flex sticky z-20 top-2 bg-background w-full h-10 group/title justify-between
-             items-center pr-4 text-Neutrals/neutrals-8">
+        
+            <div className={`flex sticky z-20 top-2 bg-background w-full h-10 group/title justify-between
+             items-center pr-4 text-Neutrals/neutrals-8 
+             `}>
                 { usedWhere === "sidebar" && (
                     <span className="font-bold text-Neutrals-8 text-[11px]">
                         PRIVATE
@@ -136,10 +142,15 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                 )}
                 
             </div>
-            <div className="flex sticky z-20 top-0 bg-background w-full h-10 group/title justify-between
-             items-center pr-4 text-Neutrals/neutrals-8 pl-4">
+            <HoverCard>
+                <HoverCardTrigger asChild>
+            <div className={`${usedWhere === "sidebar" && isRevisionSidebarOpen ?
+                 'bg-slate-gray cursor-not-allowed rounded-lg  w-[3rem] mt-2' : ''}`}>
+            <div className="flex sticky z-20 top-0 w-full h-10 group/title justify-between
+             items-center pr-4 text-Neutrals/neutrals-8 pl-4 m-1">
                 { usedWhere === "sidebar" && (
-                    <span className="font-bold text-Neutrals-8 text-xs">
+                    <span className={`font-bold text-Neutrals-8 
+                     ${isRevisionSidebarOpen ? 'flex ml-[-17.5px] text-[9px] text-gray-300' : 'text-xs'}`}>
                         FOLDERS
                     </span>
                 )}
@@ -148,7 +159,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                     FOLDERS
                     </span>
                 )}
-                { usedWhere === "sidebar" && (
+                { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
                     <TooltipComponent message="Create Folder">
                     <PlusIcon
                     onClick={addFolderHandler}
@@ -160,7 +171,9 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                 
                 </div>
                 {/* Rendering all the folder */}
-                <div className="flex pl-5">
+                <div className={`flex pl-5 transition-all ${isRevisionSidebarOpen && usedWhere === "sidebar" ? 
+                    'opacity-50 pointer-events-none cursor-not-allowed' 
+                    : ''}`}>
                 <Accordion
                 type="multiple"
                 defaultValue={[ currentFolder?.toString() || '']}
@@ -184,6 +197,12 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                    }
                 </Accordion>
             </div>
+        </div>
+        </HoverCardTrigger>
+        {isRevisionSidebarOpen && usedWhere === "sidebar" && (
+            <DisabledHoverMessage />
+        )}
+        </HoverCard>
         </>
     )
 }

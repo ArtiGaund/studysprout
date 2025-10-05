@@ -7,6 +7,9 @@ import CypressTrashIcon from "../icons/CypressTrashIcon";
 import Trash from "../trash/trash";
 import Search from "../search/search";
 import CypressSearchIcon from "../icons/CypressSearchIcon";
+import RevisionButton from "../revision/revision-button";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
+import TooltipComponent from "../global/tooltip-component";
 
 
 interface NativeNavigationProps{
@@ -17,16 +20,26 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
     myWorkspaceId,
     className
 }) => {
+    const { isRevisionSidebarOpen } = useRevisionSidebar();
     return(
         <nav className={twMerge('my-2',className)}>
-            <ul className="flex flex-col gap-2">
+            <ul className={`flex flex-col gap-2 ${isRevisionSidebarOpen && 'justify-center items-center gap-4'}`}>
                 {/* <Search> */}
                     <li 
                     className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2 cursor-pointer"
                     >
-                        {/* <CypressSettingsIcon /> */}
-                        <CypressSearchIcon />
-                        <span>Search</span>
+                        {isRevisionSidebarOpen ? (
+                            <>
+                                <TooltipComponent message="Search">
+                                    <CypressSearchIcon />
+                                </TooltipComponent>
+                            </>
+                        ): (
+                            <>
+                                <CypressSearchIcon />
+                                <span>Search</span>
+                            </>
+                        )}
                     </li>
                 {/* </Search> */}
                 <li>
@@ -34,20 +47,48 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
                     className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2"
                     href={`/dashboard/${myWorkspaceId}`}
                     >
-                        <CypressHomeIcon />
-                        <span>My Workspace</span>
+                        
+                        {isRevisionSidebarOpen ?
+                         (
+                            <>
+                                <TooltipComponent message="My Workspace">
+                                    <CypressHomeIcon />
+                                </TooltipComponent>
+                            </>
+                         ) 
+                        : (
+                            <>
+                                <CypressHomeIcon />
+                                <span>My Workspace</span>
+                            </>
+                        )}
                     </Link>
                 </li>
                     <Trash>
                         <li 
                         className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2"
                         >
-                            <CypressTrashIcon />
-                            <span>Trash</span>
+                            
+                           {isRevisionSidebarOpen ? 
+                           ( 
+                            <>
+                                <TooltipComponent message="Trash">
+                                    <CypressTrashIcon />
+                                </TooltipComponent>
+                            </>
+                           )
+                           :(
+                            <>
+                                <CypressTrashIcon />
+                                <span>Trash</span>
+                            </>
+                           )
+                        }
                         </li>
                     </Trash>
-            
-                    
+                    <li  className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2">
+                        <RevisionButton />
+                    </li>
             </ul>
         </nav>
     )

@@ -19,6 +19,8 @@ import UserCard from "./user-card";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
+import SidebarExpandButton from "./sidebar-expand-button";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 interface SidebarProps{
     params: { workspaceId: string};
     className?: string;
@@ -49,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
 
     const router = useRouter()
 
-
+    const { isRevisionSidebarOpen } = useRevisionSidebar();
 
       // 2. Effect for setting current workspace based on URL param
       useEffect(() => {
@@ -92,21 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
         getWorkspaceFiles
       ])
 
-    //   3. Effect for fetching folders based on workspaceId
-      // useEffect(()=> {
-      //   console.log(`[Sidebar] useEffect (getFolders) triggered. params.workspaceId=${params.workspaceId}`);
-      //   if(params.workspaceId){
-         
-      //       const fetchFolders = async () => {
-      //         console.log(`[Sidebar] Initiating API call for getFolders for ${params.workspaceId}`);
-      //         const response = await getFolders(params.workspaceId);
-      //         if(!response.success){
-      //           console.log(`[Sidebar] Failed to fetch folders for workspace ${params.workspaceId}: `, response.error);
-      //         }
-      //       }
-      //     fetchFolders();
-      //   }
-      // },[params.workspaceId, getFolders])
+  
 
       useEffect(() => {
         getWorkspaces();
@@ -138,16 +126,18 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
 
     // check for user, check for folders, check for error, get all the workspaces which is private collaborating 
     // and shared workspaces
-    return (<aside className={twMerge('hidden sm:flex sm:flex-col w-[280px] shrink-0 p-4 md:gap-4 !justify-between',
+    return (<aside className={twMerge(`hidden sm:flex sm:flex-col
+      ${isRevisionSidebarOpen ? 'w-[80px]' : 'w-[280px]'} shrink-0 p-4 md:gap-4 !justify-between`,
       className
     )}>
         <div>
             { workspaces.length > 0 ? (
               <>
-              <WorkspaceDropdown
+              <SidebarExpandButton />
+              {!isRevisionSidebarOpen && (<WorkspaceDropdown
               workspaces={workspaces}
               defaultValue={currentWorkspace}
-              />
+              />)}
               <NativeNavigation myWorkspaceId={params.workspaceId}/>
               <ScrollArea className="overflow-scroll relative h-[450px]">
                   <div className="w-full pointer-events-none absolute bottom-0 h-20 bg-gradient-to-t
