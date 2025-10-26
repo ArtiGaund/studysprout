@@ -19,12 +19,10 @@ export async function POST(request: Request) {
                 }, { status: 400 });
             }
             const fileId = new mongoose.Types.ObjectId(_id);
-            // 2. Update the File document directly
-            const file = await FileModel.findByIdAndUpdate(
-                fileId,
-                updates,  // Pass the entire updates object directly
-                { new: true, runValidators: true } // Return updated document, run schema validators
-            ).lean();
+            // 2. Find the original document
+            let file = await FileModel.findById(fileId);
+
+
 
             if(!file){
                 return Response.json({
@@ -33,12 +31,19 @@ export async function POST(request: Request) {
                 success: false
             }, { status: 404 });
             }
+
+            // 3. Apply updates directly to the Mongoose Document instance
+            // This ensures Mongoose runs validations and proper type casting before the final save.
+            Object.assign(file, updates);
+
+            // 4. Await the save operation
+            const savedFile = await file.save();
         
              return Response.json({
                 statusCode: 200,
                 message: "File updated successfully.",
                 success: true,
-                data: { file } 
+                data: { file: savedFile.toObject({ getters: true, virtuals: true }) } 
             }, { status: 200 });
     } catch (error: any) {
         console.error("Error while updating the file:", error);

@@ -47,7 +47,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
     const { updateFile } = useFile();
 
     const isUpdatingInternally = useRef(false);
-
+    // const isInitialContentSaved = useRef(true);
 
 
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
@@ -66,22 +66,59 @@ const TextEditor: React.FC<TextEditorProps> = ({
     // Memoize the parsed content from fileDetails.data
     const initialContent = useMemo(() => {
         // let content: PartialBlock[] = [{ type: "paragraph", content: ""}];
-        if(fileDetails.data && typeof fileDetails.data === "string" && fileDetails.data.trim() !== ''){
-            try {
-                const parsed = JSON.parse(fileDetails.data);
-                if(Array.isArray(parsed)){
-                    const content = parsed as PartialBlock[];
-                    return parsed.length > 0 ? parsed : [{ type: "paragraph", content: ""}];
-                }
+        console.log("[TextEditor] fileDetails.data: ",fileDetails);
+        const data = fileDetails.data;
+        let contentToUse: PartialBlock[] | null = null;
+        if(data){
+            console.log("[TextEditor] fileDetails.data is a string");
+            if(typeof data === "string" && data.trim() !== ""){
+                 try {
+                    contentToUse = JSON.parse(data) as PartialBlock[];
+                    console.log("[TextEditor] parsed from string : ",contentToUse);
+               
             } catch (error) {
                 console.error("Error parsing fileDetails.data of BlockNote initial content:: ",error);
             }
+            }else if(Array.isArray(data)){
+                contentToUse = data as PartialBlock[];
+                console.log("[TextEditor] Using pre-parsed Array: ",contentToUse);
+            }else if(typeof data === "object" && Object.keys(data).length === 0){
+                console.log("[TextEditor] Data is an empty object, treating as empty content.")
+                contentToUse = [{ type: "paragraph", content: []}] as PartialBlock[];
+            }
+           
         }
-        return [{ type: "paragraph", content: ""}];
+
+        if(Array.isArray(contentToUse) && contentToUse.length > 0){
+            
+            // CRITICAL CHECK: Does the first block actually have content ?
+            // If it's a single block with content: [], the whole file is empty.
+
+            const hasVisibleContent = contentToUse.some(
+                block => 
+                    block.content &&
+                    Array.isArray(block.content) &&
+                    block.content.length > 0
+            );
+
+
+            if(hasVisibleContent){
+                console.log("[TextEditor] Using pre-parsed Array in Array: ",contentToUse);
+                return contentToUse;
+            }
+            
+        }
+        return [{ type: "paragraph", content: []}] as PartialBlock[];
         
     },[ fileDetails.data ])
 
+    const isFileContentReady = fileDetails && (
+        (typeof fileDetails.data === "string") ||
+        (Array.isArray(fileDetails.data)) ||
+        (fileDetails.data !== undefined)
+    );
 
+    
     const editor: BlockNoteEditor = useCreateBlockNote({
         initialContent,
         uploadFile: handleUpload,
@@ -170,18 +207,21 @@ const TextEditor: React.FC<TextEditorProps> = ({
     const saveContentToBackend = useCallback(async (content: string) => {
         // console.log("Attempting to save content for file ",fileId);
 
+        // check 1: define the signature of an empty BlockNote document
+        const defaultEmptyContent = JSON.stringify([{ 
+            type: "paragraph", 
+            props: { textColor: "default", backgroundColor: "default", textAlignment: "left" },
+            content: [],
+            children: []
+        }]);
+        // check 2: If the content is empty OR is just the default empty block,, ABORT.
+        if(!content || content.trim() === '[]' || content.trim() === defaultEmptyContent.trim()){
+            console.log("[TextEditor] Save Aborted. Content is empty or default template. Not Saving.");
+            return;
+        }
         try {
-            // const parsedContent = JSON.parse(content);
-            // console.log("parsedContent ",parsedContent);
-
-            isUpdatingInternally.current = true;
-
-             // TODO: Consider using updateFile from useFile hook here instead of direct axios call
-            // This would allow useFile to manage loading/error states and Redux updates.
-            // Example:
-            // const { updateFile } = useFile();
-            // const response = await updateFile(fileId, { data: parsedContent, lastUpdated: new Date() });
-            // if (!response.success) { ... }
+           
+            isUpdatingInternally.current = true; 
 
            const response = await updateFile(fileId, {
             data: content,
@@ -223,51 +263,27 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
         editor.onEditorContentChange(() => {
             const currentContent = JSON.stringify(editor.topLevelBlocks);
+
+            if(isUpdatingInternally.current) return;
+            // 2. Only call debouncedSave for subsequent, ge
             debouncedSave(currentContent);
             onChange(currentContent);
         });
 
     }, [editor, debouncedSave, onChange]); // Dependencies: editor, debouncedSave, onChange
 
-    const serializedFileContent = useMemo(() => {
-        return fileDetails?.data && typeof fileDetails.data === 'string' ? fileDetails.data : '';
-    },[
-        fileDetails?.data
-    ])
-
-    useEffect(() => {
-        if(!editor || !fileDetails || !fileDetails.data) return;
-
-        // If the update was initiated, don't re-synchronize immediately
-        if(isUpdatingInternally.current){
-            console.log("[TextEditor] Skipping external sync: internal update in progress");
-            return;
-        }
-
-        let latestContent: PartialBlock[] = [{ type: "paragraph", content: ""}];
-
-        if( serializedFileContent && serializedFileContent.trim() !==''){
-            try {
-                const parsed = JSON.parse(serializedFileContent);
-                if(Array.isArray(parsed) && parsed.length > 0){
-                    latestContent = parsed as PartialBlock[];
-                }   
-            } catch (error) {
-                console.error("Error parsing fileDetails.data for editor synchronization:", error);
-            }
-        }
-        const currentEditorContent = JSON.stringify(editor.topLevelBlocks);
-        const latestPropContent = JSON.stringify(latestContent);
-
-        if(currentEditorContent !== latestPropContent){
-            console.log("[TextEditor] Synchonizing editor content with latest fileDetails.data");
-            editor.replaceBlocks(editor.topLevelBlocks, latestContent);
-        }
-    },[
-        editor,
-        fileDetails,
-        serializedFileContent
-    ])
+    
+    if (Array.isArray(initialContent)) {
+    // Check the final data going into the editor just before it renders
+    console.log("FINAL EDITOR CONTENT PASSED:", initialContent); 
+}
+    if(!isFileContentReady){
+        return(
+            <div className="p-5 text-center text-gray-500">
+                Loading note content...
+            </div>
+        )
+    }
     return(
         <div className="p-5">
             <BlockNoteView  
@@ -278,5 +294,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
         </div>
     )
 }
+
 
 export default TextEditor

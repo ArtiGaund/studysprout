@@ -1,4 +1,6 @@
 "use client"
+
+import dynamic from 'next/dynamic'
 import BannerSection from '@/components/banner-upload/banner-section'
 import TextEditor from '@/components/editor/editor'
 // import Editor from '@/components/editor/editor'
@@ -12,6 +14,13 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 // import { useSelector } from 'react-redux'
 
+const DynamicTextEditor = dynamic(
+    () => import("@/components/editor/editor"),
+    {
+        ssr: false,
+        loading: () => <div> Loading editor...</div>
+    }
+)
 
 const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folderId?: string }}> = ({ params }) => {
     console.log("Params in file page ",params.fileId);
@@ -48,6 +57,7 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
              console.log(`[FilePage] Calling currentFileDetails for file: ${params.fileId}`);
             try {
                 const response = await currentFileDetails(params.fileId)
+                console.log("[FilePage]: Response from currentFileDetails: ",response);
                 if(!response.success){
                     console.error("FilePage: Failed to fetch file details: ",response.error);
                     const redirect = params.workspaceId && params.folderId 
@@ -76,6 +86,12 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
     if(!fileId){
         return <div>Loading file...</div>
     }
+
+    if(!currentFile || currentFile._id !== fileId){
+        console.log(`[FilePage] Waiting for file match: Requested: ${fileId}, current=${currentFile?._id}`);
+        return <div>Loading file content...</div>
+    }
+    console.log("[FilePage] currentFile: ", currentFile);
     return (
         <div className='relative'>
             { currentFile && (
@@ -85,7 +101,8 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
                     fileId={params.fileId}
                     dirDetails={currentFile}
                     ></BannerSection>
-                    <TextEditor 
+                    <DynamicTextEditor
+                    key={params.fileId} 
                     fileId={params.fileId}
                     fileDetails={currentFile}
                     onChange= {onChangeHandler}

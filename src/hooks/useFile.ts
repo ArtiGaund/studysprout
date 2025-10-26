@@ -265,15 +265,27 @@ export function useFile() {
             console.log("[useFile] currentFileDetails: No fileId provided.");
             return { success: false, error: "File id required" };
         }
+
+        // 1. check Redux state first (synchronous check for already loaded data)
+        const cachedFile = filesById[fileId];
+        if(cachedFile){
+            // we still need to set the global currentFileId to ensure the UI is correct
+            dispatch(SET_CURRENT_FILE(fileId));
+            console.log(`[useFile] Returning cached file and setting current ID: ${fileId}`);
+            return {
+                success: true,
+                data: cachedFile as ReduxFile,
+            };
+        }
         // Guard against redundant calls for this specific fetch
-        if (currentFileId === fileId && filesById[fileId]) {
-            console.log(`[useFile] Skipping currentFileDetails for ${fileId}: already set.`);
-            return { success: true, data: filesById[fileId] as ReduxFile }; // Return Redux data mapped back to Mongoose-like
-        }
-        if (hasFetchedCurrentFileRef.has(fileId)) {
-            console.log(`[useFile] Skipping currentFileDetails for ${fileId}: already initiated.`);
-            return { success: true, data: filesById[fileId] as ReduxFile };
-        }
+        // if (currentFileId === fileId && filesById[fileId]) {
+        //     console.log(`[useFile] Skipping currentFileDetails for ${fileId}: already set.`);
+        //     return { success: true, data: filesById[fileId] as ReduxFile }; // Return Redux data mapped back to Mongoose-like
+        // }
+        // if (hasFetchedCurrentFileRef.has(fileId)) {
+        //     console.log(`[useFile] Skipping currentFileDetails for ${fileId}: already initiated.`);
+        //     return { success: true, data: filesById[fileId] as ReduxFile };
+        // }
         dispatch(SET_FILE_LOADING(true));
         dispatch(SET_FILE_ERROR(null));
         try {
