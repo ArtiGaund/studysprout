@@ -17,7 +17,7 @@ import {
     return(
         <TooltipProvider>
             <Tooltip>
-                <TooltipTrigger>{children}</TooltipTrigger>
+                <TooltipTrigger asChild>{children}</TooltipTrigger>
                 <TooltipContent className="relative top-[-10px]">{message}</TooltipContent>
             </Tooltip>
         </TooltipProvider>
