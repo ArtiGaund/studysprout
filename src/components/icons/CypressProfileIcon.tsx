@@ -1,7 +1,7 @@
-import React, { FC } from 'react';
+import React, { forwardRef } from 'react';
 
-interface CypressProfileIconProps {}
-const CypressProfileIcon: FC<CypressProfileIconProps> = () => {
+interface CypressProfileIconProps extends React.SVGProps<SVGSVGElement> {}
+const CypressProfileIcon = forwardRef<SVGSVGElement, CypressProfileIconProps>((props, ref) => {
   return (
     <svg
       width="24"
@@ -23,6 +23,8 @@ const CypressProfileIcon: FC<CypressProfileIconProps> = () => {
       />
     </svg>
   );
-};
+});
+
+CypressProfileIcon.displayName = 'CypressProfileIcon';
 
 export default CypressProfileIcon;

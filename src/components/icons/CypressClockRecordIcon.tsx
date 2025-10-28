@@ -1,8 +1,8 @@
-import React, { FC } from "react";
+import React, { forwardRef } from "react";
 
-interface ClockRecordIconProps {}
+interface ClockRecordIconProps extends React.SVGProps<SVGSVGElement>{}
 
-const CypressClockRecordIcon: FC<ClockRecordIconProps> = () => {
+const CypressClockRecordIcon=  forwardRef<SVGSVGElement, ClockRecordIconProps>(( props, ref) => {
   return (
     // CRITICAL: Add the 'group' class here so inner elements can respond to the hover event on the SVG
     <svg
@@ -45,6 +45,8 @@ const CypressClockRecordIcon: FC<ClockRecordIconProps> = () => {
       />
     </svg>
   );
-};
+});
+
+CypressClockRecordIcon.displayName = "CypressClockRecordIcon";
 
 export default CypressClockRecordIcon;

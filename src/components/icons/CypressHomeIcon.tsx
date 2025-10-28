@@ -1,7 +1,7 @@
-import React, { FC } from 'react';
+import React, { forwardRef } from 'react';
 
-interface CypressHomeIconProps {}
-const CypressHomeIcon: FC<CypressHomeIconProps> = () => {
+interface CypressHomeIconProps extends React.SVGProps<SVGSVGElement>{}
+const CypressHomeIcon = forwardRef<SVGSVGElement,CypressHomeIconProps>(( props, ref) => {
   return (
     <svg
       width="24"
@@ -22,6 +22,8 @@ const CypressHomeIcon: FC<CypressHomeIconProps> = () => {
       />
     </svg>
   );
-};
+});
+
+CypressHomeIcon.displayName = 'CypressHomeIcon';
 
 export default CypressHomeIcon;

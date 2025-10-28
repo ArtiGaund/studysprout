@@ -1,8 +1,8 @@
-import React, { FC } from 'react';
+import React, { forwardRef } from 'react';
 
-interface CypressSearchIconProps {}
+interface CypressSearchIconProps extends React.SVGProps<SVGSVGElement> {}
 
-const CypressSearchIcon: FC<CypressSearchIconProps> = () => {
+const CypressSearchIcon = forwardRef<SVGSVGElement,CypressSearchIconProps>(( props, ref) => {
   return (
     <svg
       width="24"
@@ -28,6 +28,8 @@ const CypressSearchIcon: FC<CypressSearchIconProps> = () => {
       {/* For a simple magnifying glass, one path with the base fill is usually sufficient */}
     </svg>
   );
-};
+});
+
+CypressSearchIcon.displayName = 'CypressSearchIcon';
 
 export default CypressSearchIcon;
