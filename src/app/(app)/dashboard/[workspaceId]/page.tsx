@@ -2,6 +2,7 @@
 import BannerSection from '@/components/banner-upload/banner-section'
 import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
 import { useWorkspace } from '@/hooks/useWorkspace'
+import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
 import { RootState } from '@/store/store'
 import { ReduxWorkSpace } from '@/types/state.type'
 import { transformWorkspace } from '@/utils/data-transformers'
@@ -9,11 +10,11 @@ import { transformWorkspace } from '@/utils/data-transformers'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }) => {
     const router = useRouter()
-
+    const dispatch = useDispatch();
     const {
         //  currentWorkspaceDetails, 
          currentWorkspace, 
@@ -35,6 +36,11 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
             // Skip the fetch
             if(currentWorkspace && currentWorkspace._id === params.workspaceId && !isLoadingWorkspaces){
                 console.log("[WorkspacePage] currentWorkspace already matches params.workspaceId, skipping fetch.");
+                dispatch(SET_CURRENT_RESOURCE({
+                    id: currentWorkspace._id,
+                    title: currentWorkspace.title,
+                    type: 'Workspace',
+                }))
                 return;
             }
             
@@ -44,8 +50,15 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
                 if (!response.success) {
                     console.log(`[WorkspacePage] Failed to fetch workspace ${params.workspaceId}: `, response.error);
                     router.push('/dashboard'); // Redirect if workspace not found
-                } 
-               
+                } else if(response.data){
+                    const fetchedWorkspace = response.data as ReduxWorkSpace;
+                     dispatch(SET_CURRENT_RESOURCE({
+                            id: fetchedWorkspace._id,
+                            title: fetchedWorkspace.title,
+                            type: 'Workspace',
+                        }))
+                    }
+              
         };
         getWorkspaceDetails();
     }, [
@@ -53,7 +66,8 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
          router,  
          fetchCurrentWorkspace,
          currentWorkspace,
-         isLoadingWorkspaces
+         isLoadingWorkspaces,
+         dispatch
     ]);
 
     // Loading State

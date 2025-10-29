@@ -2,6 +2,7 @@
 import BannerSection from '@/components/banner-upload/banner-section'
 import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
 import { useFolder } from '@/hooks/useFolder'
+import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
 import { RootState } from '@/store/store'
 import { ReduxFolder } from '@/types/state.type'
 import { transformFolder } from '@/utils/data-transformers'
@@ -10,10 +11,11 @@ import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import { RootProps } from 'postcss'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 
 const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
     const router = useRouter()
+    const dispatch = useDispatch();
     // Below local state is not reflecting changes without refresh thats why using directly from currentFolder from Redux
     // const [ folderDetails, setFolderDetails ] = useState<ReduxFolder | undefined>(undefined)
     const { currentFolderDetail, isLoadingFolders } = useFolder();
@@ -49,6 +51,13 @@ const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
                     if(!response.success){
                         console.log(`[FolderPage] Failed to fetch folder ${params.folderId}: `, response.error);
                         router.push('/dashboard')
+                    }else if(response.data){
+                        const fetchedFolder = response.data as ReduxFolder;
+                        dispatch(SET_CURRENT_RESOURCE({
+                            id: fetchedFolder._id,
+                            title: fetchedFolder.title,
+                            type: 'Folder',
+                        }))
                     }
             }
          getFolderDetails()
@@ -59,6 +68,7 @@ const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
         params.folderId,
          router,
          currentFolderDetail,
+         dispatch
         //  folderDetailsToRender
         ])
 

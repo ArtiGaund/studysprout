@@ -12,6 +12,8 @@ import { ReduxFile } from '@/types/state.type'
 import { useRouter } from 'next/navigation'
 // import { RootProps } from 'postcss'
 import React, { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
+import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
 // import { useSelector } from 'react-redux'
 
 const DynamicTextEditor = dynamic(
@@ -28,6 +30,7 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
 
     
     const router = useRouter()
+    const dispatch = useDispatch();
     // const [ fileDetails, setFileDetails ] = useState<ReduxFile | undefined>(undefined)
 
     const { 
@@ -66,6 +69,12 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
                     router.push(redirect)
                 }else{
                    console.log(`[FilePage] Successfully fetched file details for: ${params.fileId}`);
+                   const fetchedFile = response.data as ReduxFile;
+                   dispatch(SET_CURRENT_RESOURCE({
+                       id: fetchedFile._id,
+                       title: fetchedFile.title,
+                       type: 'File',
+                   }))
                 }
             } catch (error) {
                 console.log("FilePage: Error while fetching file details:  ",error)
@@ -81,7 +90,8 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
         router,
         params.workspaceId,
         params.folderId,
-        currentFileDetails
+        currentFileDetails,
+        dispatch
     ])
     if(!fileId){
         return <div>Loading file...</div>
