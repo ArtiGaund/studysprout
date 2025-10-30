@@ -5,7 +5,7 @@ import { twMerge } from "tailwind-merge";
 import { Button } from "../ui/button";
 import { PlusIcon } from "lucide-react";
 import { Sheet, SheetTrigger } from "../ui/sheet";
-import FlashcardTypesForm from "../ui/flashcard-types-form";
+import FlashcardTypesForm from "../flashcard/flashcard-types-form";
 
 interface RevisionSidebarProps{
     params: { workspaceId: string};
