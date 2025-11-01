@@ -274,10 +274,10 @@ const Dropdown: React.FC<DropdownProps> = ({
     const hoverStyles = useMemo(
         () =>
           clsx(
-            'h-full hidden rounded-sm absolute right-0 items-center justify-center',
+            'h-full hidden rounded-sm absolute right-0 items-center justify-center flex space-x-1',
             {
-              'group-hover/file:block': listType === 'file',
-              'group-hover/folder:block': listType === 'folder',
+              'group-hover/file:flex': listType === 'file',
+              'group-hover/folder:flex': listType === 'folder',
             }
           ),
         [listType]
