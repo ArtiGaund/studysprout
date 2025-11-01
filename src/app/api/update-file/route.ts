@@ -1,7 +1,10 @@
 import dbConnect from "@/lib/dbConnect";
 import {FileModel, FolderModel, WorkSpaceModel} from "@/model/index";
+import { getAggregatedPlainText } from "@/utils/flashcardTextExtractor";
 import mongoose from "mongoose";
 
+// threshold for plaintext  generation (5 seconds)
+const THROTTLE_THRESHOLD_MS = 5000;
 
 export async function POST(request: Request) {
     await dbConnect()
@@ -31,6 +34,41 @@ export async function POST(request: Request) {
                 success: false
             }, { status: 404 });
             }
+
+            // --- START AI OPTIMISATION & THROTTLING LOGIC ---
+
+            // Get the current time for comparison and logging
+            const currentTime = Date.now();
+
+            // convert the Mongoose Data field to a timestamp
+            const lastGeneratedTimestamp = file.plainTextLastGenerated 
+            ? new Date(file.plainTextLastGenerated).getTime()
+            : 0;
+
+            // check 1: Does the file data exist in the update payload ?
+            if(updates.data){
+                // check 2: Is the plain text stale (need regeneration) ?
+                if(currentTime - lastGeneratedTimestamp > THROTTLE_THRESHOLD_MS){
+
+                    // run the heavy conversion process
+                    const newPlainText = getAggregatedPlainText([updates.data as string]);
+
+                    // update the dedicated fields in the updates payload
+                    updates.plainTextContent = newPlainText;
+                    updates.plainTextLastGenerated = new Date().toISOString();
+
+                    console.log(`[FileUpdate] Plaintext generated and scheduled for update (Throttle).`);
+                }else{
+                    console.log(`[FileUpdate] Plaintext generation skipped (Throttle active).`);
+
+                    // Ensure the payload doesn't accidentally contain stale/empty plaintext fields
+                    // that might overwrite the existing ones if they weren't explicitly passed.
+                    delete updates.plainTextContent;
+                    delete updates.plainTextLastGenerated;
+                }
+            }
+
+            // --- END AI OPTIMISATION & THROTTLING LOGIC ---
 
             // 3. Apply updates directly to the Mongoose Document instance
             // This ensures Mongoose runs validations and proper type casting before the final save.
