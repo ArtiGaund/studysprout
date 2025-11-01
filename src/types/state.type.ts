@@ -12,6 +12,8 @@ export interface ReduxFile{
     folderId?: string;
     createdAt: string;
     lastUpdated: string;
+    plainTextContent?: string;
+    plainTextLastGenerated?: string;
 }
 
 // Folder document

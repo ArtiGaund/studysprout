@@ -13,6 +13,8 @@ export interface File {
     folderId?: string; 
     createdAt: Date;
     lastUpdated: Date;
+    plainTextContent?: string; //will store json file data in string for AI
+    plainTextLastGenerated?: Date;
 }
 export const FileSchema: Schema<File> = new Schema({
     title:{
@@ -50,8 +52,13 @@ export const FileSchema: Schema<File> = new Schema({
     lastUpdated: {
         type: Date,
         default: Date.now
-    }
-
+    },
+    plainTextContent: {
+        type: String,
+    },
+    plainTextLastGenerated: {
+        type: Date,
+    },
 }
 )
 
