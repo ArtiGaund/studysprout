@@ -3,17 +3,34 @@
 // File document
 export interface ReduxFile{
     _id: string;
+
+    // core
     title: string;
     iconId?: string;
     data?:any;
+
+    // Metadata
+     createdAt: string;
+    lastUpdated: string;
+
+    // AI/flashcards
+    plainTextContent?: string;
+    structuredPlainText?:string;
+    blockMap?:any;
+    plainTextLastGenerated?: string;
+
+    // Sync / Versioning (critical)
+    version?: number;
+    contentHash?: string;
+    updatedLocalAt?: string;
+    syncStatus?: "synced" | "pending" | "conflict" | "offline";
+    isOfflineDraft?: boolean;
+
+    // Org
     inTrash?: string;
     bannerUrl?: string;
     workspaceId?: string;
-    folderId?: string;
-    createdAt: string;
-    lastUpdated: string;
-    plainTextContent?: string;
-    plainTextLastGenerated?: string;
+    folderId?: string;   
 }
 
 // Folder document

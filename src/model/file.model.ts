@@ -1,19 +1,46 @@
-import mongoose, { Schema, Document } from "mongoose";
-import { WorkSpace } from "./workspace.model";
-import { Folder } from "./folder.model";
-
+import { Schema } from "mongoose";
 export interface File {
     _id?: string;
+
+    // core content
     title: string;
     iconId?: string;
-    data?: string; //store actual JSON
-    inTrash?: string;
-    bannerUrl?: string;
-    workspaceId?: string;
-    folderId?: string; 
-    createdAt: Date;
+    data?: string;                      //full JSON blocks (always latest)
+    plainTextContent?: string;         //will store json file data in string for AI
+    structuredPlainText?:string;
+    blockMap?:any;
+
+    // versioning
+    version?: number;                    //increments every updates
+    contentHash?: string;                //detect identical saves
+     lastSyncedAt?: Date;
+     updatedAtLocal?: Date;
+
+    //  Offline sync
+    localChangeId?: string;              //prevent duplicate offline syncs
+    
+    // basic metadata
+     createdAt: Date;
     lastUpdated: Date;
-    plainTextContent?: string; //will store json file data in string for AI
+                  
+    // conflict state
+    conflictState?: "none" | "conflict" | "resolved";             //"resolved","conflict", null
+    isLocked?: boolean;                 //future multiuser editing
+    deletedAt?: Date | null;
+
+    // undo /history (24h)
+    history?: Array<{
+        version: number;
+        data: string;
+        updatedAt: Date;
+    }>;  //compact version history
+
+    // org
+     workspaceId?: string;
+    folderId?: string; 
+    bannerUrl?: string;
+    inTrash?: string;
+
     plainTextLastGenerated?: Date;
 }
 export const FileSchema: Schema<File> = new Schema({
@@ -23,27 +50,69 @@ export const FileSchema: Schema<File> = new Schema({
     },
     iconId:{
         type: String,
-        // required: [true, "Title is required"],
-        // unique: true
     },
-    data: {
+
+
+     data: {
         type: String,
         default: '[]',
     },
-    inTrash: {
+     plainTextContent: {
         type: String,
+        default:null,
     },
-    bannerUrl:{
+    structuredPlainText: {
         type: String,
+        default: null,
     },
-    workspaceId:{
-        type: Schema.Types.ObjectId,
-        ref: "Workspace"
+      blockMap: [{
+        id: String,
+        start: Number,
+        end: Number,    
+        type: String,
+    }],
+
+    version: {
+        type: Number,
+        default: 1,
     },
-    folderId: {
-        type: Schema.Types.ObjectId,
-        ref: "Folder"
+    contentHash: {
+        type: String,
+        default: "",
     },
+    localChangeId: {
+        type: String,
+        default: "",
+    },
+
+    lastSyncedAt: {
+        type: Date,
+        default: null,
+    },
+    updatedAtLocal: {
+        type: Date,
+        default: null,
+    },
+    conflictState: {
+       type: String,
+       default: "none",
+       enum: ["none", "conflict", "resolved"],
+    },
+    isLocked: {
+        type: Boolean,
+        default: false
+    },
+    deletedAt: {
+        type: Date,
+        default: null
+    },
+
+   history: [{
+    version: Number,
+    data: String,
+    updatedAt: Date,
+   }],
+
     createdAt: {
         type: Date,
         required: true,
@@ -53,11 +122,25 @@ export const FileSchema: Schema<File> = new Schema({
         type: Date,
         default: Date.now
     },
-    plainTextContent: {
+
+     workspaceId:{
+        type: Schema.Types.ObjectId,
+        ref: "Workspace"
+    },
+    folderId: {
+        type: Schema.Types.ObjectId,
+        ref: "Folder"
+    },
+     bannerUrl:{
         type: String,
     },
+    inTrash: {
+        type: String,
+    },
+   
     plainTextLastGenerated: {
         type: Date,
+        default: null
     },
 }
 )
