@@ -3,7 +3,6 @@ import {FileModel, FolderModel, WorkSpaceModel} from "@/model/index";
 import mongoose from "mongoose";
 import { File as MongooseFile } from "@/model/file.model";
 
-
 export async function POST(request: Request) {
     await dbConnect()
     try {
@@ -24,15 +23,15 @@ export async function POST(request: Request) {
             }, { status: 400})
         }
         // creating a new file
+        const EMPTY_BLOCK = [{ type: "paragraph", content: []}]
         const newFileData: MongooseFile = {
             title: fileData.title || "Untitled",
             folderId: fileData.folderId,
             workspaceId: fileData.workspaceId,
-
+            data: JSON.stringify(EMPTY_BLOCK),
             // safe backend defaults
             iconId: "📄",
             bannerUrl: "",
-            data: undefined,
             inTrash: undefined,
             createdAt: new Date(),
             lastUpdated: new Date(),
