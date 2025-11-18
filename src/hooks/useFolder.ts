@@ -100,28 +100,28 @@ export function useFolder(){
         // foldersById,
     ])
 
-    const createFolder = useCallback(async( folderData: MongooseFolder ): Promise<{
+    const createFolder = useCallback(async( workspaceId: string ): Promise<{
         success: boolean,
         data?: ReduxFolder,
         error?: string
     }> => {
-        if(!folderData)
+        if(!workspaceId)
             return {
                 success: false,
-                error: "Folder data required"
+                error: "WorkspaceId is required"
             }
             dispatch(SET_FOLDER_LOADING(true));
             dispatch(SET_FOLDER_ERROR(null));
             try {
-                const newFolder = await addFolder(folderData);
+                const newFolder = await addFolder(workspaceId);
 
                 const transformedFolder = transformFolder(newFolder as MongooseFolder);
 
                 dispatch(ADD_FOLDER(transformedFolder));
                 dispatch(SET_CURRENT_FOLDER(transformedFolder._id?.toString()));
                 // Clear the ref for this workspace's folders to force re-fetch if needed
-                if (folderData.workspaceId) {
-                    hasFetchedFoldersByWorkspaceRef.delete(folderData.workspaceId);
+                if (workspaceId) {
+                    hasFetchedFoldersByWorkspaceRef.delete(workspaceId);
                 }
                 return {
                     success: true,

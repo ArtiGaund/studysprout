@@ -1,6 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import {FolderModel,WorkSpaceModel } from "@/model/index";
-
+import { Folder as MongooseFolder } from "@/model/folder.model";
 import mongoose from "mongoose";
 
 
@@ -9,10 +9,11 @@ export async function POST(request: Request) {
     try {
         const folderData = await request.json();
         // 1. Validate incoming data for required fields
-        if (!folderData || !folderData.title || !folderData.workspaceId) {
+        console.log("[Create folder route] folderData ",folderData);
+        if (!folderData || !folderData.workspaceId) {
             return Response.json({
                 statusCode: 400,
-                message: "Bad Request: 'title' and 'workspaceId' are required to create a folder.",
+                message: "Bad Request: 'workspaceId' are required to create a folder.",
                 success: false
             }, { status: 400 });
         }
@@ -24,8 +25,17 @@ export async function POST(request: Request) {
                 success: false
             }, { status: 400 });
         }
+         const newFolderData: MongooseFolder = {
+                data: undefined,
+                createdAt: new Date(),
+                title: 'Untitled',
+                iconId: '📁',
+                inTrash: undefined,
+                workspaceId: folderData.workspaceId,
+                bannerUrl: '',
+              };
         // 2. Create the new folder document
-        const newFolder = await FolderModel.create(folderData)
+        const newFolder = await FolderModel.create(newFolderData)
         if(!newFolder){
             // This case is unlikely if validation passes, but good as a safeguard
             return Response.json({

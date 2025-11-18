@@ -87,18 +87,10 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
             // const date = ;
             // const dateToString = date.toISOString();
             // this will create a visible folder quickly for the user on the frontend
-            const newFolder: MongooseFolder = {
-                data: undefined,
-                createdAt: new Date(),
-                title: 'Untitled',
-                iconId: '📁',
-                inTrash: undefined,
-                workspaceId,
-                bannerUrl: '',
-              };
+           
 
              try {
-                 const folder = await createFolder(newFolder as MongooseFolder);
+                 const folder = await createFolder(workspaceId);
                 if(!folder.success){
                     toast({
                         title: "Failed to create folder",
