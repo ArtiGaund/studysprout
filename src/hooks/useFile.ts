@@ -30,12 +30,12 @@ export function useFile() {
      } = useSelector(( state: RootState) => state.file);
     
 
-     const createFile = useCallback(async (fileData: MongooseFile): Promise<{
+     const createFile = useCallback(async (payload: Partial<MongooseFile>): Promise<{
         success: boolean,
         data?: ReduxFile,
         error?: string
      }> => {
-        if(!fileData)
+        if(!payload)
             return {
                 success: false,
                 error: "File data required"
@@ -43,17 +43,17 @@ export function useFile() {
             dispatch(SET_FILE_LOADING(true));
             dispatch(SET_FILE_ERROR(null));
             try {
-                const newFile = await addFile(fileData);
+                const newFile = await addFile(payload);
 
                 const transformedFile = transformFile(newFile as MongooseFile);
                 dispatch(ADD_FILE(transformedFile));
                 dispatch(SET_CURRENT_FILE(transformedFile._id.toString()));
                 // Clear relevant refs to force re-fetch if needed
-                if (fileData.workspaceId) {
-                    hasFetchedWorkspaceFilesRef.delete(fileData.workspaceId);
+                if (payload.workspaceId) {
+                    hasFetchedWorkspaceFilesRef.delete(payload.workspaceId);
                 }
-                if (fileData.folderId) {
-                    hasFetchedFolderFilesRef.delete(fileData.folderId);
+                if (payload.folderId) {
+                    hasFetchedFolderFilesRef.delete(payload.folderId);
                 }
                 return {
                     success: true,

@@ -1,16 +1,17 @@
 import dbConnect from "@/lib/dbConnect";
 import {FileModel, FolderModel, WorkSpaceModel} from "@/model/index";
 import mongoose from "mongoose";
+import { File as MongooseFile } from "@/model/file.model";
 
 
 export async function POST(request: Request) {
     await dbConnect()
     try {
         const fileData = await request.json();
-         if(!fileData || !fileData.title || !fileData.folderId){
+         if(!fileData || !fileData.folderId || !fileData.workspaceId){
             return Response.json({
                 statusCode: 400,
-                message: "Bad Request: 'title' and 'folderId' are required to create a file.",
+                message: "Bad Request: 'folderId' and 'workspaceID' are required to create a file.",
                 success: false
             }, { status: 400})
         }
@@ -23,7 +24,20 @@ export async function POST(request: Request) {
             }, { status: 400})
         }
         // creating a new file
-        const newFile = await FileModel.create(fileData)
+        const newFileData: MongooseFile = {
+            title: fileData.title || "Untitled",
+            folderId: fileData.folderId,
+            workspaceId: fileData.workspaceId,
+
+            // safe backend defaults
+            iconId: "📄",
+            bannerUrl: "",
+            data: undefined,
+            inTrash: undefined,
+            createdAt: new Date(),
+            lastUpdated: new Date(),
+        }
+        const newFile = await FileModel.create(newFileData);
         
         if(!newFile){
             return Response.json({

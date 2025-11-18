@@ -18,6 +18,7 @@ import { useFile } from "@/hooks/useFile";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { clearEditingItem, setEditingItem, updateEditingItemTitle } from "@/store/slices/uiSlice";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
+import { randomUUID } from "crypto";
 
 interface DropdownProps {
     title: string;
@@ -289,20 +290,14 @@ const Dropdown: React.FC<DropdownProps> = ({
     const addNewFile = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!currentWorkspace?._id) return;
-        const newFile: MongooseFile = {
-            folderId: id, // Use the folder ID from props
-            data: undefined,
-            inTrash: undefined,
-            title: 'Untitled',
-            iconId: '📄',
-            workspaceId: currentWorkspace._id.toString(), 
-            bannerUrl: '',
-            createdAt: new Date(),
-            lastUpdated: new Date(),
-        };
+
+        const payload = {
+            folderId: id,
+            workspaceId: currentWorkspace._id.toString(),
+        }
 
         try {
-            const result = await createFile(newFile);
+            const result = await createFile(payload);
             if(!result.success){
                 toast({
                     title: "Failed to create file",
