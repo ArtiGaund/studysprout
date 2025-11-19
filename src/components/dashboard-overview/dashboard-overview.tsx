@@ -198,18 +198,18 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 }
                     
                    
-                    const newFolder: MongooseFolder = {
-                        data: undefined,
-                        createdAt: new Date(),
-                        title: 'Untitled',
-                        iconId: '📁',
-                        inTrash: undefined,
-                        workspaceId,
-                        bannerUrl: '',
-                      };
+                    // const newFolder: MongooseFolder = {
+                    //     data: undefined,
+                    //     createdAt: new Date(),
+                    //     title: 'Untitled',
+                    //     iconId: '📁',
+                    //     inTrash: undefined,
+                    //     workspaceId,
+                    //     bannerUrl: '',
+                    //   };
         
                      try {
-                         const folder = await createFolder(newFolder as MongooseFolder);
+                         const folder = await createFolder(workspaceId);
                         if(!folder.success){
                             toast({
                                 title: "Failed to create folder",
