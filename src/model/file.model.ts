@@ -43,6 +43,12 @@ export interface File {
 
     plainTextLastGenerated?: Date;
 }
+export const BlockMapEntrySchema = new Schema({
+    id: { type: String, required: true },
+    start: { type: Number, required: true },
+    end: { type: Number, required: true },
+    type: { type: String},
+}, { _id: false })
 export const FileSchema: Schema<File> = new Schema({
     title:{
         type: String,
@@ -65,11 +71,9 @@ export const FileSchema: Schema<File> = new Schema({
         type: String,
         default: null,
     },
-      blockMap: [{
-        id: String,
-        start: Number,
-        end: Number,    
-        type: String,
+      blockMap: [{ 
+        type: [BlockMapEntrySchema],
+        default: []
     }],
 
     version: {
