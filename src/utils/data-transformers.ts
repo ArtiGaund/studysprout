@@ -62,8 +62,22 @@ export const transformFile = (file: File): ReduxFile => {
         title: file.title || 'Untitled File',
         iconId: file.iconId || '📄',
         data: parseDataSafety(file.data),
-        inTrash: file.inTrash || undefined,
-        bannerUrl: file.bannerUrl || undefined,
+
+        // AI/text extraction fields
+        plainTextContent: file.plainTextContent || "",
+        structuredPlainText: file.structuredPlainText || "",
+        blockMap: file.blockMap || [],
+        plainTextLastGenerated: toStr(file.plainTextLastGenerated),
+
+        // version + sync fields
+        version: file.version ?? 1,
+        contentHash: file.contentHash ?? "",
+        updatedLocalAt: toStr(file.updatedAtLocal),
+        syncStatus: "synced",
+        isOfflineDraft: false,
+
+        inTrash: file.inTrash ?? undefined,
+        bannerUrl: file.bannerUrl ?? undefined,
         workspaceId: toStr(file.workspaceId) as string,
         folderId: toStr(file.folderId) as string,
         createdAt: toStr(file.createdAt) as string,
