@@ -83,7 +83,7 @@ export const useTitleEditing = ({
     const startEditGracePeriodTimerRef = useRef<NodeJS.Timeout | null>(null);
     // Define a generous window during which initial blurs are ignored
     const START_EDIT_GRACE_PERIOD_MS = 400; // Increased to give even more time for focus to stabilize
-    const BLUR_PROCESSING_DELAY_MS = 50; // Small delay before processing a blur event
+    const BLUR_PROCESSING_DELAY_MS = 350; // Small delay before processing a blur event
     
     useEffect(() => {
         // NEW DEBUG LOG: Check state of refs at start of useEffect
@@ -108,34 +108,17 @@ export const useTitleEditing = ({
                     // isStartingEditRef will be reset by handleInputFocus, not here.
                 }else{
                     console.log(`[${originalTitle}] useEffect: inputRef.current is NULL or not editing after timeout. inputRef.current: ${inputRef.current ? 'present' : 'NULL'}, isCurrentlyEditingThisItemEffective: ${isCurrentlyEditingThisItemEffective}`)
+                    if(isStartingEditRef.current){
+                        isStartingEditRef.current = false;
+                        startEditTimestampRef.current = null;
+                        console.log(`[${originalTitle}] useEffect: fallback reset. (element not found)`);
+                    }
                 }
             }, 0); // Use 0 delay to put it at the end of the current call stack
-
-            // Fallback: If for some reason handleInputFocus doesn't fire,
-            // reset isStartingEditRef after a longer delay to prevent indefinite blocking.
-            if(startEditGracePeriodTimerRef.current){
-                clearTimeout(startEditGracePeriodTimerRef.current);
-            }
-            startEditGracePeriodTimerRef.current = setTimeout(() => {
-                if(isStartingEditRef.current){
-                    console.log(`[${originalTitle}] useEffect: Fallback: isStartingEditRef reset after long delay.`);
-                    isStartingEditRef.current = false;
-                    startEditTimestampRef.current = null;
-                }
-                startEditGracePeriodTimerRef.current = null;
-            }, START_EDIT_GRACE_PERIOD_MS ); 
 
             // Cleanup for this specific effect run
             return () => {
                 clearTimeout(focusTimer);
-                if(startEditGracePeriodTimerRef.current){
-                    clearTimeout(startEditGracePeriodTimerRef.current);
-                    startEditGracePeriodTimerRef.current = null;
-                }
-
-                // When component unmounts or effect cleans up, ensure the flag is rest
-                isStartingEditRef.current = false;
-                startEditTimestampRef.current = null;
                 console.log(`[${originalTitle}] useEffect cleanup (on unmount/dependency change): isStartingEditRef reset.`);
             }
 
@@ -152,32 +135,11 @@ export const useTitleEditing = ({
                 clearTimeout(blurTimerRef.current);
                 blurTimerRef.current = null;
             }
-            // Also clear the start edit timer
-            if(startEditGracePeriodTimerRef.current){
-                clearTimeout(startEditGracePeriodTimerRef.current);
-                startEditGracePeriodTimerRef.current = null;
-            }
-        } else if (isCurrentlyEditingThisItemEffective) { 
-            // This means it's true, but was true before. Do nothing for focus re-scheduling.
-            console.log(`[${originalTitle}] useEffect: isCurrentlyEditingThisItemEffective is True, but no state change (was true). Skipping focus re-schedule.`); 
-        } else { 
-            console.log(`[${originalTitle}] useEffect: isCurrentlyEditingThisItemEffective is False, and no state change (was false).`); 
-        }
+          
+        } 
 
         // IMPORTANT: Update the ref at the very end of the effect for the next render cycle
-        wasEditingRef.current = isCurrentlyEditingThisItemEffective; 
-
-        // This return handles cleanup for any state change (unmount or editing state changes)
-        return () => {
-            if(blurTimerRef.current){
-                clearTimeout(blurTimerRef.current);
-                blurTimerRef.current = null;
-            }
-            if(startEditGracePeriodTimerRef.current){
-                clearTimeout(startEditGracePeriodTimerRef.current);
-                startEditGracePeriodTimerRef.current = null;
-            }
-        };
+        wasEditingRef.current = isCurrentlyEditingThisItemEffective;    
 
     },[ 
         isCurrentlyEditingThisItemEffective,
@@ -239,6 +201,16 @@ export const useTitleEditing = ({
         // `isStartingEditRef` is now reset by the grace period timer in useEffect.
         if (inputRef.current) {
             inputRef.current.select(); // Ensure text is selected on focus
+        }
+        if(isStartingEditRef.current){
+            isStartingEditRef.current = false;
+            startEditTimestampRef.current = null;
+            console.log(`[${originalTitle}] handleInput focus: Resetting isStartingRef.`);
+
+            if(startEditGracePeriodTimerRef.current){
+                clearTimeout(startEditGracePeriodTimerRef.current);
+                startEditGracePeriodTimerRef.current = null;
+            }
         }
         // No direct reset of isStartingEditRef.current here anymore.
     }, [originalTitle]);
@@ -406,8 +378,7 @@ export const useTitleEditing = ({
         // If a blur happens while we're in the "starting edit" window,
         // immediately ignore it and clear the flag's timer.
         // It's crucial to check isStartingEditRef.current directly, not its timer.
-        if (isStartingEditRef.current && startEditTimestampRef.current && 
-            (Date.now() - startEditTimestampRef.current < START_EDIT_GRACE_PERIOD_MS)) {
+        if (isStartingEditRef.current) {
             console.log(`[${originalTitle}] handleInputBlur: Ignoring immediate blur as isStartingEditRef is true.`);
             // No need to clear startEditTimerRef here, it's cleared by handleInputFocus or useEffect fallback.
             return; // Exit early, do not process this blur for saving
