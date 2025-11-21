@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "StudySprout",
   description: "Note taking app",
   icons: {
-   icon: "/public/images/tab_logo.png",  
+   icon: "/images/tab_logo.png",  
   },
 };
   
