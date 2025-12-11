@@ -31,7 +31,6 @@ interface TextEditorProps{
     fileDetails: ReduxFile;
     onChange: (value: string) => void;
     editable?:boolean;
-    // initialContent?: string;
 }
 
 const TextEditor: React.FC<TextEditorProps> = ({
@@ -39,7 +38,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
     fileDetails,
     onChange,
     editable,
-    // initialContent
 }) => {
     const { resolvedTheme } = useTheme()
     const { toast } = useToast();
@@ -47,9 +45,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
     const { updateFile } = useFile();
 
     const isUpdatingInternally = useRef(false);
-    // const isInitialContentSaved = useRef(true);
-
-
+    
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
         console.log("File upload triggered:", file.name);
         // file upload
@@ -65,25 +61,19 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
     // Memoize the parsed content from fileDetails.data
     const initialContent = useMemo(() => {
-        // let content: PartialBlock[] = [{ type: "paragraph", content: ""}];
-        console.log("[TextEditor] fileDetails.data: ",fileDetails);
         const data = fileDetails.data;
         let contentToUse: PartialBlock[] | null = null;
         if(data){
-            console.log("[TextEditor] fileDetails.data is a string");
             if(typeof data === "string" && data.trim() !== ""){
                  try {
                     contentToUse = JSON.parse(data) as PartialBlock[];
-                    console.log("[TextEditor] parsed from string : ",contentToUse);
                
             } catch (error) {
                 console.error("Error parsing fileDetails.data of BlockNote initial content:: ",error);
             }
             }else if(Array.isArray(data)){
                 contentToUse = data as PartialBlock[];
-                console.log("[TextEditor] Using pre-parsed Array: ",contentToUse);
             }else if(typeof data === "object" && Object.keys(data).length === 0){
-                console.log("[TextEditor] Data is an empty object, treating as empty content.")
                 contentToUse = [{ type: "paragraph", content: []}] as PartialBlock[];
             }
            
@@ -103,7 +93,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
 
             if(hasVisibleContent){
-                console.log("[TextEditor] Using pre-parsed Array in Array: ",contentToUse);
                 return contentToUse;
             }
             
@@ -194,19 +183,12 @@ const TextEditor: React.FC<TextEditorProps> = ({
                 },
 
             },
-            // Error is coming if used highlighter
-            // createHighlighter: () =>
-            //     createHighlighter({
-            //         themes: [resolvedTheme === "dark" ? "github-dark" : "github-light"], // Use dynamic theme
-            //         langs: [], // Shiki bundle handles this; often empty here if precompiled
-            //     }),
         },
     });
 
     // 1. define the actual function that sends data to your backend
     const saveContentToBackend = useCallback(async (content: string) => {
-        // console.log("Attempting to save content for file ",fileId);
-
+       
         // check 1: define the signature of an empty BlockNote document
         const defaultEmptyContent = JSON.stringify([{ 
             type: "paragraph", 
@@ -216,7 +198,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
         }]);
         // check 2: If the content is empty OR is just the default empty block,, ABORT.
         if(!content || content.trim() === '[]' || content.trim() === defaultEmptyContent.trim()){
-            console.log("[TextEditor] Save Aborted. Content is empty or default template. Not Saving.");
             return;
         }
         try {
@@ -225,20 +206,16 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
            const response = await updateFile(fileId, {
             data: content,
-            lastUpdated: new Date()
            })
             if(!response.success){
-                console.log("Error while updating file ",response.error);
                 toast({
                     title: "Failed to update file",
                     description: response.error,
                     variant: "destructive"
                 })
-            }else{
-                console.log("Content saved successfully for file ",fileId);
             }
         } catch (error: any) {
-            console.log("Error while saving content for file ",error);
+            console.warn("Error while saving content for file ",error);
             toast({
                 title: "Failed to save content",
                 description: error.message || "Something went wrong",
