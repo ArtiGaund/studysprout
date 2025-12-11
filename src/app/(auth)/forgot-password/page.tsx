@@ -42,7 +42,7 @@ const ForgotPasswordPage = () => {
                 router.push("/sign-in")
             } catch (error) {
                 console.error("Error in sending reset link", error);
-                            const axiosError = error as AxiosError<ApiResponse>
+                            const axiosError = error as AxiosError<ApiResponse<any>>
                             let errorMessage = axiosError.response?.data.message 
                             toast({
                                 title: "Forgot password failed",

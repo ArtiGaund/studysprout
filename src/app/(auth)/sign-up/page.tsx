@@ -55,7 +55,7 @@ const SignUp = () => {
                     const response = await axios.get(`/api/check-username-unique?username=${username}`)
                     setUsernameAvailable(response.data.message)
                 } catch (error) {
-                    const axiosError = error as AxiosError<ApiResponse>
+                    const axiosError = error as AxiosError<ApiResponse<any>>
                     setUsernameAvailable(
                         axiosError.response?.data.message || "Error while checking username"
                     )
@@ -71,7 +71,7 @@ const SignUp = () => {
     const onSubmit = async ( data: z.infer<typeof signUpSchema>) => {
         setIsSubmitting(true)
         try {
-            const response = await axios.post<ApiResponse>('/api/sign-up', data)
+            const response = await axios.post<ApiResponse<any>>('/api/sign-up', data)
             toast({
                 title: 'Sign up successful',
                 description: response.data.message
@@ -79,7 +79,7 @@ const SignUp = () => {
             router.replace(`/verify/${username}`)
         } catch (error) {
             console.error("Error in sign-up of user", error);
-            const axiosError = error as AxiosError<ApiResponse>
+            const axiosError = error as AxiosError<ApiResponse<any>>
             let errorMessage = axiosError.response?.data.message 
             toast({
                 title: "Sign up failed",
