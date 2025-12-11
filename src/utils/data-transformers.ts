@@ -73,6 +73,7 @@ export const transformFile = (file: File): ReduxFile => {
         version: file.version ?? 1,
         contentHash: file.contentHash ?? "",
         updatedLocalAt: toStr(file.updatedAtLocal),
+        lastLocalChangeId: file.lastLocalChangeId ?? 0,
         syncStatus: "synced",
         isOfflineDraft: false,
 
