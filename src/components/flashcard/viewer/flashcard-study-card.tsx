@@ -11,7 +11,7 @@ import { useFlashcardGenerator } from "@/hooks/flashcard/useFlashcardGenerator";
 import { useFlashcardSRS } from "@/hooks/flashcard/useFlashcardSRS";
 import { resetSingleFlashcard, updateFlashcard } from "@/store/slices/flashcardSlice";
 import { format } from "date-fns";
-import { Loader2, RotateCcw } from "lucide-react";
+import { Loader2, RotateCcw, Undo2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -63,7 +63,6 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
         p-4 rounded-xl shadow-md border border-gray-400 flex flex-col gap-4 max-h-[70vh] overflow-y-auto
         ">
             <CardTitle
-            //  className="flex justify-center items-center m-3 text-[18px] text-gray-500"
             className="text-center text-sm font-semibold text-purple-700"
             >
                 Card {index+1}/{total} • {card.type.toUpperCase()}
@@ -111,17 +110,22 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                 <CardContent>
                     <span className="p-2 text-gray-600">Question: </span>
                     <div 
-                    // className="bg-gray-900 p-3 text-[15px]"
                     className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm leading-relaxed"
                     >{card.question}</div>
-                    {!revealAnswer && (<button 
+                    {!revealAnswer ? (<button 
                     onClick={() => setRevealAnswer(true)}
-                    // className="px-3 py-1 rounded text-purple-600 hover:text-purple-700"
                     className="
                     mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-300 transition
                      disabled:text-gray-500 disabled:cursor-not-allowed
                     "
-                    >Reveal Answer</button>)}
+                    >Reveal Answer</button>) : (
+                        <button 
+                        onClick={() => setRevealAnswer(false)}
+                         className="mt-3 flex items-center gap-1 px-3 py-1"
+                        >
+                           <Undo2 size={20}/>
+                        </button>
+                    )}
                    { revealAnswer &&
                    ( <>
                         <span className="p-2 text-gray-600">Answer: </span>
@@ -166,14 +170,40 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                             <span>{option}</span>
                          </div>
                      )})}
+                     <div className="flex flex-row gap-3">
                     <button 
                     onClick={() => setChecked(true)}
-                    disabled={!selectedOption}
+                    disabled={!selectedOption || revealAnswer}
                      className="
                     mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-300 transition
                      disabled:text-gray-500 disabled:cursor-not-allowed disabled:bg-gray-300
                     "
                     >Check Answer</button>
+                    
+                        {!revealAnswer && (<button 
+                        onClick={() =>{ 
+                            setRevealAnswer(true);
+                            setSelectedOption(card.answer);
+                            setChecked(true);
+                        }}
+                        className="
+                        mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
+                        disabled:text-gray-500 disabled:cursor-not-allowed
+                        "
+                        >Reveal Answer</button>)}
+                        {(checked || revealAnswer) && (
+                            <button
+                            onClick={() => {
+                                setSelectedOption(null);
+                                setChecked(false);
+                                setRevealAnswer(false);
+                            }}
+                             className="mt-3 flex items-center gap-1 px-3 py-1"
+                            >
+                               <Undo2 size={20}/>
+                            </button>
+                        )}
+                        </div>
                 </CardContent>
             )}
             {card.type === "fill-in-the-blank" && (
@@ -184,33 +214,61 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                     // className="bg-gray-900 p-3 text-[15px]"
                     >{card.question}</div>
                     <input 
-                    value={userAnswer}
+                    disabled={revealAnswer}
+                    value={revealAnswer ? card.answer : userAnswer}
                     onChange={(e) => setUserAnswer(e.target.value)}
                     className="border rounded-lg p-2 w-full mt-3 text-sm focus:ring-2 focus:ring-purple-400 outline-none"
                     placeholder="Type your answer"
                     />
-                    <button
-                    disabled={!userAnswer.trim()}
-                    onClick={() => setChecked(true)}
-                     className="
-                    mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-300 transition
-                     disabled:text-gray-500 disabled:cursor-not-allowed disabled:bg-gray-300
-                    "
-                    >
-                        Check Answer
-                    </button>
-                    {checked && (
-                        <>
-                        {userAnswer.trim().toLowerCase() === card.answer.toLowerCase() ? (
-                            <p className="text-green-600 font-medium">Correct!</p>
-                        ) : (
+                    <div className="flex flex-row gap-3">
+                        <div>
+                        <button
+                        disabled={!userAnswer.trim()}
+                        onClick={() => setChecked(true)}
+                        className="
+                        mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
+                        disabled:text-gray-500 disabled:cursor-not-allowed disabled:bg-gray-300
+                        "
+                        >
+                            Check Answer
+                        </button>
+                        {checked && (
                             <>
-                                <p className="text-red-600 font-medium">Your answer: {userAnswer}</p>
-                                <p className="text-green-600 font-medium">Correct: {card.answer}</p>
+                            {userAnswer.trim().toLowerCase() === card.answer.toLowerCase() ? (
+                                <p className="text-green-600 font-medium">Correct!</p>
+                            ) : (
+                                <>
+                                    <p className="text-red-600 font-medium">Your answer: {userAnswer}</p>
+                                    <p className="text-green-600 font-medium">Correct: {card.answer}</p>
+                                </>
+                            )}
                             </>
                         )}
-                        </>
-                    )}
+                        </div>
+                        <div>
+                        {!revealAnswer && !checked && (<button 
+                        onClick={() => setRevealAnswer(true)}
+                        className="
+                        mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
+                        disabled:text-gray-500 disabled:cursor-not-allowed
+                        "
+                        >Reveal Answer</button>)}
+                        </div>
+                        <div>
+                            {(checked || revealAnswer) && (
+                                <button 
+                                onClick={() => {
+                                    setUserAnswer("");
+                                    setChecked(false);
+                                    setRevealAnswer(false);
+                                }}
+                                className="mt-3 flex items-center gap-1 px-3 py-1"
+                                >
+                                   <Undo2 size={20}/>
+                                </button>
+                            )}
+                        </div>
+                    </div>
                 </CardContent>
             )}
             <CardFooter className="flex justify-between items-center gap-2 mt-4">
