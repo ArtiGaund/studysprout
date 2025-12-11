@@ -67,7 +67,6 @@ const FeedbackForm = () => {
             const userEmail = user?.email as string;
             const sendFeedback = await axios.post(`/api/send-feedback`, { userEmail, feedbacks });
             if(!sendFeedback){
-                console.log("[FeedbackForm] Error sending feedback: ", sendFeedback);
                 toast({
                     title: "Failed to send feedback",
                     description: "Please try again",

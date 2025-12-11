@@ -34,7 +34,6 @@ export function useFolder(){
         error?: string
     }> => {
         if(!workspaceId) {
-            console.log("[useFolder] getFolders: No workspaceId provided.");
             return { success: false, error: "Workspace id required" };
         }
 
@@ -46,7 +45,6 @@ export function useFolder(){
         .filter( folder => folder?.workspaceId === workspaceId);
 
         if (hasFetchedFoldersByWorkspaceRef.has(workspaceId) && existingFolders.length > 0) {
-            console.log(`[useFolder] Skipping getFolders for workspace ${workspaceId}: already fetched and data present.`);
             // Return existing Redux data mapped back to Mongoose-like structure if needed by caller
             return { 
                 success: true, 
@@ -56,7 +54,6 @@ export function useFolder(){
         dispatch(SET_FOLDER_LOADING(true));
         dispatch(SET_FOLDER_ERROR(null));
         try {
-            console.log(`[useFolder] Fetching all folders for workspace: ${workspaceId}`);
             const fetchFolders = await getAllFolders(workspaceId);
             
             const transformedFolders = (Array.isArray(fetchFolders) 
@@ -74,10 +71,6 @@ export function useFolder(){
                     dispatch(SET_CURRENT_FOLDER(firstFolder._id));
                     }
                 }
-            // }else{
-            //     dispatch(SET_FOLDERS([]));
-            //     dispatch(SET_CURRENT_FOLDER(null));
-            // }
              hasFetchedFoldersByWorkspaceRef.add(workspaceId);
             return{
                 success: true,
@@ -95,9 +88,6 @@ export function useFolder(){
 
     }, [
         dispatch,
-        // currentFolderId,
-        // allFolderIds,
-        // foldersById,
     ])
 
     const createFolder = useCallback(async( workspaceId: string ): Promise<{
@@ -177,10 +167,6 @@ export function useFolder(){
             if (folder.workspaceId) { // Assuming folder object has workspaceId
                 hasFetchedFoldersByWorkspaceRef.delete(folder.workspaceId.toString());
             }
-            console.log("Dispatched UPDATE_FOLDER with payload: ",{
-                id: transformedReduxFolder._id,
-                updates: transformedReduxFolder
-            });
             return {
                 success: true,
                 data: transformedReduxFolder,
@@ -203,7 +189,6 @@ export function useFolder(){
         error?: string
     }> => {
         if(!folderId){
-            console.log("[useFolder] currentFolderDetail: No folderId provided.");
              return {
                 success: false,
                 error: "Folder id required"
@@ -211,13 +196,11 @@ export function useFolder(){
         }
         // 1. check if it's already the current folder and present in normalized state 
          if (currentFolderId === folderId && foldersById[folderId]) {
-            console.log(`[useFolder] Skipping currentFolderDetail for ${folderId}: already current and in Redux.`);
             return { success: true, data: foldersById[folderId] as ReduxFolder }; // Return existing Redux data mapped back to Mongoose-like
         }
         // 2. check if it's just in normalized state (but not necessarily current)
         // If it's in byId, we can directly set it as current without API call
         if(foldersById[folderId]){
-            console.log(`[useFolder] folder ${folderId} found in Redux byId map. Setting as current`);
             dispatch(SET_CURRENT_FOLDER(folderId));
             return {
                 success: true,
@@ -230,7 +213,6 @@ export function useFolder(){
         dispatch(SET_FOLDER_ERROR(null));
         
         try {
-            console.log(`[useFolder] fetching current folder from API: ${folderId}`);
             const folder = await getCurrentFolder(folderId);
             if(!folder){
                 return {
@@ -266,7 +248,6 @@ export function useFolder(){
     const invalidateFolderCaches = useCallback((workspaceId: string) => {
         if(workspaceId){
             hasFetchedFoldersByWorkspaceRef.delete(workspaceId);
-            console.log(`[useFolder] Invalidating: Cleared workspace folders cache for ${workspaceId}`);
         }
     },[])
      // --- Derived States ---

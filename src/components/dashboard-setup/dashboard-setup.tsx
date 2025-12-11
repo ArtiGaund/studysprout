@@ -8,14 +8,9 @@ import { useState } from "react"
 import { Button } from "../ui/button"
 import { Loader2 } from "lucide-react"
 import { useToast } from "../ui/use-toast"
-import axios from "axios"
-import { ApiResponse } from "@/types/api.interface"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Label } from "../ui/label"
-import { v4 as uuid4 } from "uuid";
-import { useDispatch } from "react-redux"
-import { ADD_WORKSPACE } from "@/store/slices/workspaceSlice"
 import { useWorkspace } from "@/hooks/useWorkspace"
 import UserCard from "../sidebar/user-card"
 
@@ -69,17 +64,11 @@ const DashboardSetup = () => {
         }
         try {
             setIsSubmitting(true)
-            // setIsLoading(true)
             const formData = new FormData()
-            // const id = uuid4()
-            // formData.append("_id",id)
             formData.append("workspaceName",workspaceTitle)
             if(session?.user._id){
                 formData.append("userId",session?.user._id)
             }
-
-            // console.log("form Data in frontend ",formData)
-
             if (selectedImage) {
                 formData.append('logo', selectedImage);
             } else {
@@ -90,8 +79,6 @@ const DashboardSetup = () => {
                 formData.append('iconId',selectedEmoji)
             }
             const response = await createWorkspace(formData)
-            // console.log("Response success ",response.data.success)
-           
             if (response.success && response.data) {
                 toast({
                     title: "Workspace created successfully",
@@ -113,7 +100,6 @@ const DashboardSetup = () => {
                 variant: "destructive"
             });
         } finally{
-            // setIsLoading(false)
             setIsSubmitting(false)
         }
     }

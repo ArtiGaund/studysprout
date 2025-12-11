@@ -1,9 +1,7 @@
 "use client"
-import ImageModel from "@/model/image.model";
+
 import  { WorkSpace } from "@/model/workspace.model";
-import { WorkSpaceModel } from "@/model/index";
 import axios from "axios";
-import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -13,20 +11,13 @@ interface SelectedWorkspacesProps {
     onClick?: (option: WorkSpace) => void;
 }
 const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onClick }) => {
-    const {data: session} = useSession()
     const [ workspaceLogo, setWorkspaceLogo ] = useState('')
-
-    // console.log("Workspace in selected workspaces ",workspace)
-    // console.log("Workspace logo in selected workspace ",workspace.logo)
-
     useEffect(() => {
         if(workspace.logo){
             const fetchWorkspaceLogoPath = async() => {
                 const imageId = workspace.logo
                 const response = await axios.get(`/api/get-image?imageId=${imageId}`)
-                // console.log("Response of selected workspace ",response.data)
                 const imageUrl = response.data.data
-                console.log("public id for image ",imageUrl)
                 if(imageUrl){
                     setWorkspaceLogo(imageUrl)
                 } 

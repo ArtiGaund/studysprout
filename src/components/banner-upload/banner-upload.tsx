@@ -1,7 +1,4 @@
 "use client"
-// import { File } from "@/model/file.model";
-import { Folder } from "@/model/folder.model";
-import { WorkSpace } from "@/model/workspace.model";
 import React, { useState } from "react"
 import CustomDialogTrigger from "../global/custom-dialog";
 import BannerUploadForm from "./banner-upload-form";

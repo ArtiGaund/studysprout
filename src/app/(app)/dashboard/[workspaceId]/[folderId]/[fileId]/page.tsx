@@ -3,18 +3,12 @@
 import dynamic from 'next/dynamic'
 import BannerSection from '@/components/banner-upload/banner-section'
 import TextEditor from '@/components/editor/editor'
-// import Editor from '@/components/editor/editor'
 import { useFile } from '@/hooks/useFile'
-// import { File } from '@/model/file.model'
 import { ReduxFile } from '@/types/state.type'
-// import { transformFile } from '@/utils/data-transformers'
-// import axios from 'axios'
 import { useRouter } from 'next/navigation'
-// import { RootProps } from 'postcss'
 import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
-// import { useSelector } from 'react-redux'
 
 const DynamicTextEditor = dynamic(
     () => import("@/components/editor/editor"),
@@ -25,14 +19,11 @@ const DynamicTextEditor = dynamic(
 )
 
 const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folderId?: string }}> = ({ params }) => {
-    console.log("Params in file page ",params.fileId);
     const fileId = params.fileId;
 
     
     const router = useRouter()
     const dispatch = useDispatch();
-    // const [ fileDetails, setFileDetails ] = useState<ReduxFile | undefined>(undefined)
-
     const { 
         currentFileDetails, 
         currentFile
@@ -41,9 +32,7 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
         console.log("Live updated content of file ",content);
     }
     useEffect(() => {
-         console.log(`[FilePage] useEffect triggered. fileId=${params.fileId}`);
         if(!params.fileId || typeof params.fileId !== 'string'){
-            console.warn("FilePage: Invalid fileId received in params: ", params.fileId);
             // Optionally redirect if fileId is invalid from the start
             const redirectPath = params.workspaceId 
                 ? `/dashboard/${params.workspaceId}${params.folderId ? `/${params.folderId}` : ''}`
@@ -57,18 +46,14 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
         // 1. checking if the file is already in Redux state
         // 2. using its internal useRef guard ( hasFetchedCurrentFiles) to prevent redundant API calls.
         const getFileDetails = async() => {
-             console.log(`[FilePage] Calling currentFileDetails for file: ${params.fileId}`);
             try {
                 const response = await currentFileDetails(params.fileId)
-                console.log("[FilePage]: Response from currentFileDetails: ",response);
                 if(!response.success){
-                    console.error("FilePage: Failed to fetch file details: ",response.error);
                     const redirect = params.workspaceId && params.folderId 
                     ? `/dashboard/${params.workspaceId}/${params.folderId}`
                     : `/dashboard/${params.workspaceId}`
                     router.push(redirect)
                 }else{
-                   console.log(`[FilePage] Successfully fetched file details for: ${params.fileId}`);
                    const fetchedFile = response.data as ReduxFile;
                    dispatch(SET_CURRENT_RESOURCE({
                        id: fetchedFile._id,
@@ -77,7 +62,7 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
                    }))
                 }
             } catch (error) {
-                console.log("FilePage: Error while fetching file details:  ",error)
+                console.warn("FilePage: Error while fetching file details:  ",error)
                 const redirect = params.workspaceId && params.folderId
                 ? `/dashboard/${params.workspaceId}/${params.folderId}`
                 : `/dashboard/${params.workspaceId}`
@@ -98,10 +83,8 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
     }
 
     if(!currentFile || currentFile._id !== fileId){
-        console.log(`[FilePage] Waiting for file match: Requested: ${fileId}, current=${currentFile?._id}`);
         return <div>Loading file content...</div>
     }
-    console.log("[FilePage] currentFile: ", currentFile);
     return (
         <div className='relative'>
             { currentFile && (
@@ -116,11 +99,8 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
                     fileId={params.fileId}
                     fileDetails={currentFile}
                     onChange= {onChangeHandler}
-                    // initialContent={JSON.stringify(currentFile.data)}
                     editable={!currentFile.inTrash}
                     />
-                    {/* <Editor /> */}
-                    
                 </>
             )}
         </div>

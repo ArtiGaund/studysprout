@@ -2,21 +2,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import TooltipComponent from "../global/tooltip-component";
 import { PlusIcon } from "lucide-react";
-import axios from "axios";
 import { useToast } from "../ui/use-toast";
-import { v4 as uuid4 } from "uuid";
 import {
     Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
   } from "@/components/ui/accordion"
 import { useDispatch, useSelector } from "react-redux";
-import { ADD_FOLDER, SET_CURRENT_FOLDER, SET_FOLDERS } from "@/store/slices/folderSlice";
 import { RootState } from "@/store/store";
 import Dropdown from "./dropdown";
-import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
-import { Folder as MongooseFolder} from "@/model/folder.model";
 import { useFolder } from "@/hooks/useFolder";
 import { ReduxFolder } from "@/types/state.type";
 import { useFile } from "@/hooks/useFile";
@@ -53,26 +45,20 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
    const { isRevisionSidebarOpen } = useRevisionSidebar();
  
     useEffect(() => {
-         console.log(`[FoldersDropdownList] useEffect triggered. currentWorkspace?._id=${currentWorkspace?._id}`);
         if(currentWorkspace?._id){
             const currentWorkspaceId = currentWorkspace?._id.toString();
 
                            const fetchFolders = async () => {
                     const response = await getFolders(currentWorkspaceId);
                     if(!response.success){
-                        console.log(`[FoldersDropdownList] Failed to fetch folders for workspace ${currentWorkspaceId}: `, response.error);
+                        console.warn(`[FoldersDropdownList] Failed to fetch folders for workspace ${currentWorkspaceId}: `, response.error);
                     }
                 };
                 fetchFolders();
                 const fetchFiles = async () => {
                     const response = await  getWorkspaceFiles(currentWorkspace?._id);
-                    // if(response.success){
-                    //     hasFetchedFilesForWorkspaceInListRef.current.add(currentWorkspaceId);
-                    // }else{
-                    //     console.log(`[FolderDropdownList] Failed to fetch files for workspace ${currentWorkspaceId}: `, response.error);
-                    // }
                     if(!response.success){
-                         console.log(`[FoldersDropdownList] Failed to fetch files for workspace ${currentWorkspaceId}: `, response.error);
+                         console.warn(`[FoldersDropdownList] Failed to fetch files for workspace ${currentWorkspaceId}: `, response.error);
                     }
                 }
                 fetchFiles();
@@ -84,11 +70,6 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
           getWorkspaceFiles,
         ])
     const addFolderHandler = async () => {
-            // const date = ;
-            // const dateToString = date.toISOString();
-            // this will create a visible folder quickly for the user on the frontend
-           
-
              try {
                  const folder = await createFolder(workspaceId);
                 if(!folder.success){
@@ -106,7 +87,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                 onFolderAdded(); // Call the prop to trigger parent re-fetch
             }
              } catch (error) {
-                console.log("Error while creating a folder in workspace ",error)
+                console.warn("Error while creating a folder in workspace ",error)
                 toast({
                     title: "Failed to create folder",
                     description: "Please try again later",
@@ -116,7 +97,6 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
            
        
     }
-    // console.log("folders from state ",folders)
 
     const filteredFolder = useMemo(() => {
         return folders.filter((folder) => !folder.inTrash)

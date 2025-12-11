@@ -8,7 +8,6 @@ export async function updateSRS(cardId: string, rating: RatingType["type"]){
     const card = await FlashcardModel.findById(cardId);
 
     if(!card){
-        console.warn("[updateSRS] Card not found");
         return;
     }
 

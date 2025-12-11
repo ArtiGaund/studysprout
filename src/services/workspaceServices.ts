@@ -2,18 +2,22 @@ import { Folder } from "@/model/folder.model";
 import { WorkSpace } from "@/model/workspace.model";
 import axios from "axios";
 
-
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
 // add workspace
 
 export async function addWorkspace(newWorkspace:FormData){
-    const { data } = await axios.post(`/api/create-new-workspace`, newWorkspace);
+    const relativePath = `/api/create-new-workspace`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.post(url, newWorkspace);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
 
 // users all workspaces
 export async function getUserWorkspaces(userId:string):Promise<WorkSpace[]>{
-    const { data } = await axios.get(`/api/check-user-have-created-workspace?userId=${userId}`);
+    const relativePath = `/api/check-user-have-created-workspace?userId=${userId}`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
@@ -22,7 +26,9 @@ export async function getUserWorkspaces(userId:string):Promise<WorkSpace[]>{
 // get current workspace
 
 export async function getCurrentWorkspace(workspaceId:string): Promise<WorkSpace>{
-    const { data } = await axios.get(`/api/get-current-workspace?workspaceId=${workspaceId}`);
+    const relativePath = `/api/get-current-workspace?workspaceId=${workspaceId}`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
@@ -30,7 +36,9 @@ export async function getCurrentWorkspace(workspaceId:string): Promise<WorkSpace
 // get all folders of workspace
 
 export async function getAllFolders(workspaceId:string):Promise<Folder[]> {
-    const { data } = await axios.get(`/api/get-all-workspace-folders?workspaceId=${workspaceId}`);
+    const relativePath = `/api/get-all-workspace-folders?workspaceId=${workspaceId}`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
@@ -47,7 +55,9 @@ export async function updateWorkspace(newTitle: string, workspaceId:string): Pro
         title: newTitle,
     }
     try {
-        const { data } =  await axios.post(`/api/update-workspace`, updatedData);
+        const relativePath = `/api/update-workspace`;
+        const url = `${BASE_URL}${relativePath}`
+        const { data } =  await axios.post(url, updatedData);
         if(!data.success) {
                 return { success: false, message: data.message || "Failed to update workspace title." };
             }
@@ -76,7 +86,9 @@ export async function updateLogo(
     formData.append("newLogo", logoFile);
     
    try {
-     const { data } = await axios.post(`/api/update-workspace-logo`, formData, {
+    const relativePath = `/api/update-workspace-logo`;
+    const url = `${BASE_URL}${relativePath}`
+     const { data } = await axios.post(url, formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },

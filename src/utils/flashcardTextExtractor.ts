@@ -95,5 +95,3 @@ export function getAggregatedPlainText(fileContentsArray: string[]): string{
 
     return aggregatedText.trim();
 }
-
-// heading1, heading2, heading3,quote, numbered list, bullet list, check list, paragraph, code block, table

@@ -15,7 +15,6 @@ export function buildFlashcardsSystemInstruction(
     desiredTypes: string[],
     cardCount: number,
 ): string{
-     console.log(`[Build Flashcards System Instruction] cardCount is ${cardCount} and desiredTypes are ${desiredTypes}` );
     const desiredTypesList = desiredTypes.join(', ');
     return `You are an expert educational flashcard generator. Your task is to analyze the provided study material 
     and generate high-quality flashcards.

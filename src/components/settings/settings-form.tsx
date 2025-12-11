@@ -8,7 +8,6 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { WorkSpace } from "@/model/workspace.model";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/store/store";
 import axios from "axios";
 import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { Alert, AlertDescription } from "../ui/alert";
@@ -60,8 +59,6 @@ const SettingsForm = () => {
     // will change the value of workspace when there is any change in name 
     useEffect(() => {
         if(currentWorkspace){
-            // const workspace = currentWorkspaceDetails(currentWorkspace);
-            
             setWorkspaceDetails({
                 _id: currentWorkspace._id,
                 title: currentWorkspace.title,
@@ -102,7 +99,7 @@ const SettingsForm = () => {
                     }
                 }
                 } catch (error) {
-                    console.log("Error while updating the workspace name ",error)
+                    console.warn("Error while updating the workspace name ",error)
                     toast({
                         title: "Failed to update workspace name",
                         description: "Error while updating the workspace name",
@@ -120,10 +117,6 @@ const SettingsForm = () => {
         if(!file) return
 
         setUploadingLogo(true)
-        
-    //    const formData = new FormData()
-    //    formData.append("_id",currentWorkspace._id.toString())
-    //    formData.append("newLogo",file)
        try {
             const response = await updateWorkspaceLogo(currentWorkspace._id, file)
             if(!response.success){
@@ -144,7 +137,7 @@ const SettingsForm = () => {
                 }
             }
        } catch (error) {
-        console.log("Error while updating the workspace logo ",error)
+        console.warn("Error while updating the workspace logo ",error)
         toast({
             title: "Failed to update the workspace logo",
             description: "Error while updating the workspace logo",

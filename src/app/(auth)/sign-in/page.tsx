@@ -13,7 +13,7 @@ import { signInSchema } from "@/schemas/signInSchema";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import Image from "next/image"
-import { IconMail, IconLock, IconBrandGoogle, IconBrandGithub } from "@tabler/icons-react";
+import { IconMail, IconLock } from "@tabler/icons-react";
 
 const SignIn = () => {
     const [ isSubmitting, setIsSubmitting ] = useState(false)
@@ -58,7 +58,7 @@ const SignIn = () => {
                 router.replace('/dashboard')
             }
         } catch (error) {
-            console.log("Error while login ",error)
+            console.warn("Error while login ",error)
             toast({
                 title: "Login Error",
                 description: " Error while login",

@@ -79,7 +79,6 @@ export async function GenerateFlashcardsFromChunks(
                 success: false
             }
         }
-        console.log(`[Generative flashcard from chunks] cardCount is ${cardCount} and desiredTypes are ${desiredTypes}` );
         // 2. Build the System Instruction (Build static + dynamic instructions that govern model behavior)
         const systemInstruction = buildFlashcardsSystemInstruction(desiredTypes, cardCount);
 
@@ -104,20 +103,14 @@ export async function GenerateFlashcardsFromChunks(
             const chunk = aggregatedTexts[chunkIndex];
             // 5. Build the dynamic User prompt for this chunk
             const userPrompt = buildUserPrompt(chunk, chunkIndex, aggregatedTexts.length, customInstructions);
-
-            console.log(`[Generate Flashcard From chunks] Sending chunk ${chunkIndex+1} ${chunk.length} characters to gemini...`);
             try {
                 const response = await callGemini(modelInstance, userPrompt);
-                console.log("[Generate Flashcard From chunks] Received response from gemini: ", response);
                 const result = await response.response;
-                console.log("[Generate Flashcard From chunks] result: ", result);
                 const jsonText = await result.text();
-                console.log("[Generate Flashcard From chunks] jsonText: ", jsonText);
-
+            
                 //6. Model returns raw JSON text → parse and extract flashcards
                 const parsed = JSON.parse(jsonText);
                 
-                // console.log(`[Generate Flashcard From chunks] Received chunk ${chunkIndex+1} ${jsonText.length} characters from gemini...`);
                 if(parsed.flashcards && Array.isArray(parsed.flashcards)){
                     allGeneratedCards.push(...parsed.flashcards);
                 }
@@ -126,7 +119,6 @@ export async function GenerateFlashcardsFromChunks(
                 continue;
             }
         }
-        console.log("[Generate Flashcard From chunks] allGeneratedCards: ", allGeneratedCards);
         //7. Final unified structured response
 
         return {

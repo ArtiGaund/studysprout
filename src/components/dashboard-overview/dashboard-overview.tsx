@@ -1,11 +1,9 @@
 "use client";
 
-import { Folder as MongooseFolder } from "@/model/folder.model";
 import { File as MongooseFile} from "@/model/file.model";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "../sidebar/folders-dropdown-list";
-import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 
 import TooltipComponent from "../global/tooltip-component";
@@ -57,8 +55,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           getWorkspaceFiles 
     } = useFile();
      const workspaceId = currentWorkspace?._id.toString() ?? "";
-    const dispatch = useDispatch()
-
     const isEditable = !dirDetails.inTrash;
 
     const fetchFolders = useCallback(async (workspaceId: string) => {
@@ -77,7 +73,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             folder.inTrash === undefined);
         
         if(hasFoldersForWorkspace){
-            console.log(`[Dashboard Overview] Skipping fetchFolders for workspace ${workspaceId}, already present.`);
             return;
         }
           try {
@@ -127,7 +122,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                  file.inTrash === undefined);
 
             if(hasFilesForFolder){
-                console.log(`[Dashboard Overview] Skipping fetchFiles for folder ${folderId}, already present.`);
                 return;
             }
                 try {
@@ -139,7 +133,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             description: allFiles.error,
                             variant: "destructive"
                         })
-                        //  dispatch(SET_FILES([])); // Set to empty to avoid stale data
                         return;
                      }
                      toast({
@@ -163,8 +156,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
        useEffect(() => {
                 // Fetch folders when dirType is workspace
         if (params && dirType === "folder") {
-            console.log(`[DashboardOverview] useEffect for folders: params=${params}, dirType=${dirType}`);
-
             const hasFilesForFolder = files.some(file => file.folderId === params && file.inTrash === undefined);
             if(!hasFilesForFolder){
                 fetchFiles(params);    
@@ -197,17 +188,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     return;
                 }
                     
-                   
-                    // const newFolder: MongooseFolder = {
-                    //     data: undefined,
-                    //     createdAt: new Date(),
-                    //     title: 'Untitled',
-                    //     iconId: '📁',
-                    //     inTrash: undefined,
-                    //     workspaceId,
-                    //     bannerUrl: '',
-                    //   };
-        
                      try {
                          const folder = await createFolder(workspaceId);
                         if(!folder.success){

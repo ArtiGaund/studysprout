@@ -7,16 +7,12 @@ import { DELETE_FOLDER, UPDATE_FOLDER } from "@/store/slices/folderSlice";
 import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { RootState } from "@/store/store";
 import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
-import { dir } from "console";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect,  useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useFile } from "./useFile";
 import { useFolder } from "./useFolder";
-import { useWorkspace } from "./useWorkspace";
-import { WorkSpace as MongooseWorkspace } from "@/model/workspace.model";
-import { Folder as MongooseFolder } from "@/model/folder.model";
-import { File as MongooseFile } from "@/model/file.model";
+
 
 type DirType = "workspace" | "folder" | "file";
 
@@ -36,7 +32,6 @@ export function useDir({
     currentFileId,
     onFileRestored
 }: UseDirOptions){
-    //  console.log("useDir hook initialized with dirId:", dirId, "dirType:", dirType);
     const dispatch = useDispatch();
     const router = useRouter();
     const { toast } = useToast();
@@ -126,13 +121,11 @@ export function useDir({
                 const restoredFolder = response as ReduxFolder;
                 if(restoredFolder.workspaceId){
                     invalidateFolderCaches(restoredFolder.workspaceId);
-                    console.log(`[useDir] Restored Folder: Invalidating folder caches for workspace: ${restoredFolder.workspaceId}`);
                 }
 
                 // Also invalidating file caches, as files within the folder might now be visible
                 if(restoredFolder._id){
                     invalidateFileCaches(restoredFolder.workspaceId, restoredFolder._id);
-                    console.log(`[useDir] Restored Folder: Invalidating file caches for folder: ${restoredFolder._id}`);
                 }
                 dispatch(UPDATE_FOLDER({
                     id: dirId,
@@ -143,15 +136,9 @@ export function useDir({
                 const restoredFile = response as ReduxFile;
                 if(restoredFile.workspaceId || restoredFile.folderId){
                     invalidateFileCaches(restoredFile.workspaceId, restoredFile.folderId);
-                    console.log(`[useDir] Restored File: Invalidating file caches for
-                         workspaceId: ${restoredFile.workspaceId}, folderId: ${restoredFile.folderId},
-                         folderId: ${restoredFile.folderId}`);
                     if(onFileRestored){
                         onFileRestored();
                     }
-                }else{
-                    console.log(`[useDir] Restored File: Could not invalidate file caches, missing workspaceId 
-                        or folderId in response.`)
                 }
                         dispatch(UPDATE_FILE({
                         id: dirId,
@@ -204,7 +191,6 @@ export function useDir({
         ])
 
     const handleDelete = useCallback( async () => {
-        // console.log("Attempting to hard delete dirId:", dirId, "of type:", dirType);
         if(!dirId){
             toast({
                 title: "Error",
@@ -213,7 +199,6 @@ export function useDir({
             })
             return; 
         }
-        // console.log("DirId inside delete methond ",dirId);
         setIsLoading(true);
         isNavigatingAfterDeleteRef.current = true;
         try {

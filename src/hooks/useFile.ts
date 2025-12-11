@@ -139,14 +139,12 @@ export function useFile() {
         error?: string
      }> => {
          if(!workspaceId){
-             console.log("[useFile] getWorkspaceFiles: No workspaceId provided.");
                 return {
                     success: false,
                     error: "Workspace id required"
                 }
             }
             if (hasFetchedWorkspaceFilesRef.has(workspaceId) && !forceFetch) {
-            console.log(`[useFile] Skipping getWorkspaceFiles for workspace ${workspaceId}: already fetched.`);
             const files = allFileIds
             .filter(id => filesById[id]?.workspaceId === workspaceId)
             .map(id => filesById[id]);
@@ -196,14 +194,12 @@ export function useFile() {
         error?: string
      }> => {
         if(!folderId){
-             console.log("[useFile] getFiles: No folderId provided.");
              return{
                 success: false,
                 error: "Folder id required"
             }
         }
         if (hasFetchedFolderFilesRef.has(folderId)) {
-            console.log(`[useFile] Skipping getFiles for folder ${folderId}: already fetched.`);
             const files = allFileIds
             .filter(id => filesById[id]?.folderId === folderId)
             .map(id => filesById[id]);
@@ -262,7 +258,6 @@ export function useFile() {
         error?: string
      }> => {
         if(!fileId){
-            console.log("[useFile] currentFileDetails: No fileId provided.");
             return { success: false, error: "File id required" };
         }
 
@@ -271,26 +266,15 @@ export function useFile() {
         if(cachedFile){
             // we still need to set the global currentFileId to ensure the UI is correct
             dispatch(SET_CURRENT_FILE(fileId));
-            console.log(`[useFile] Returning cached file and setting current ID: ${fileId}`);
             return {
                 success: true,
                 data: cachedFile as ReduxFile,
             };
         }
-        // Guard against redundant calls for this specific fetch
-        // if (currentFileId === fileId && filesById[fileId]) {
-        //     console.log(`[useFile] Skipping currentFileDetails for ${fileId}: already set.`);
-        //     return { success: true, data: filesById[fileId] as ReduxFile }; // Return Redux data mapped back to Mongoose-like
-        // }
-        // if (hasFetchedCurrentFileRef.has(fileId)) {
-        //     console.log(`[useFile] Skipping currentFileDetails for ${fileId}: already initiated.`);
-        //     return { success: true, data: filesById[fileId] as ReduxFile };
-        // }
         dispatch(SET_FILE_LOADING(true));
         dispatch(SET_FILE_ERROR(null));
         try {
             const file = await getCurrentFile(fileId);
-            console.log("[useFile] currentFileDetails: Fetched current file: ", file);
             if(!file){
                 return {
                     success: false,
@@ -298,7 +282,6 @@ export function useFile() {
                 }
             }
             const transformedFile = transformFile(file);
-            console.log("[useFile] currentFileDetails: Transformed current file: ", transformedFile);
             dispatch(ADD_FILE(transformedFile));
             dispatch(SET_CURRENT_FILE(transformedFile._id.toString()));
              hasFetchedCurrentFileRef.add(fileId);
@@ -317,7 +300,6 @@ export function useFile() {
      }
     }, [
         dispatch,
-        currentFileId,
         filesById
     ]);
 
@@ -328,16 +310,13 @@ export function useFile() {
     ) => {
         if(workspaceId){
             hasFetchedWorkspaceFilesRef.delete(workspaceId);
-            console.log(`[useFile] Invalidate: Cleared workspace files cache for ${workspaceId}`);
         }
         if(folderId){
             hasFetchedFolderFilesRef.delete(folderId);
-            console.log(`[useFile] Invalidate: Cleared folder files cache for ${folderId}`);
         }
 
         if(currentFileId){
             hasFetchedCurrentFileRef.delete(currentFileId);
-            console.log(`[useFile] Invalidate: Cleared current file cache for ${currentFileId}`);
         }
 
     },[currentFileId]);

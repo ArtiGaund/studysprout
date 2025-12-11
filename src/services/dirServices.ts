@@ -6,7 +6,7 @@ import axios from "axios";
 type DirType = "workspace" | "folder" | "file";
 
 
-
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
 export async function restoreDir(
     dirType: DirType,
     dirId: string,
@@ -15,7 +15,9 @@ export async function restoreDir(
         _id: dirId,
         inTrash: "",
     }
-    const { data } = await axios.post(`/api/update-${dirType}`,body);
+    const relativePath = `/api/update-${dirType}`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.post(url,body);
     if(!data.success) throw new Error(data.message);
     return data.data
 }
@@ -25,8 +27,9 @@ export async function hardDeleteDir(
     dirType: DirType,
     dirId: string,
 ) {
-    console.log(`Deleting ${dirType} ${dirId}`);
-    const { data } =  await axios.delete(`/api/delete-${dirType}?${dirType}Id=${dirId}`);
+   const relativePath = `/api/delete-${dirType}?${dirType}Id=${dirId}`;
+   const url = `${BASE_URL}${relativePath}`
+    const { data } =  await axios.delete(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
@@ -34,7 +37,9 @@ export async function hardDeleteDir(
 // Banners
 
 export async function getBanner(bannerUrl:string){
-    const { data } = await axios.get(`/api/get-image?imageId=${bannerUrl}`);
+    const relativePath = `/api/get-image?imageId=${bannerUrl}`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
@@ -42,7 +47,9 @@ export async function deleteBanner(
     dirType: DirType,
     dirId: string,
 ) {
-    const { data } = await axios.delete(`/api/delete-${dirType}-banner?${dirType}Id=${dirId}`);
+    const relativePath = `/api/delete-${dirType}-banner?${dirType}Id=${dirId}`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.delete(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
@@ -52,11 +59,14 @@ export async function uploadBanner(
     dirType: DirType,
     body: any
 ) {
-    const { data } = await axios.post(`/api/${dirType}-upload-banner`,body);
+    const relativePath = `/api/${dirType}-upload-banner`;
+    const url = `${BASE_URL}${relativePath}`;
+    const { data } = await axios.post(url,body);
     if(!data.success) throw new Error(data.message);
     return data.data;    
 }
 // icon
+
 
 export async function updateDirIcon(
     dirType: DirType,
@@ -69,7 +79,9 @@ export async function updateDirIcon(
         // ...payload, 
         iconId: icon,
     }
-    const { data } = await axios.post(`/api/update-${dirType}`,updatedData);
+    const relativePath = `/api/update-${dirType}`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.post(url,updatedData);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
@@ -85,7 +97,9 @@ export async function updateDir(
         _id: dirId,
         ...payload, 
     }
-    const { data } = await axios.post(`/api/update-${dirType}`,updatedData);
+    const relativePath = `/api/update-${dirType}`;
+    const url = `${BASE_URL}${relativePath}`
+    const { data } = await axios.post(url,updatedData);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }

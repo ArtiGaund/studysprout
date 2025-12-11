@@ -6,8 +6,7 @@ import { useWorkspace } from "./useWorkspace";
 import { useFolder } from "./useFolder";
 import { useFile } from "./useFile";
 import { clearEditingItem, setEditingItem, updateEditingItemTitle } from "@/store/slices/uiSlice";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { WorkSpace as MongooseWorkspace } from "@/model/workspace.model";
+import React, { useCallback, useEffect, useRef} from "react"
 import { Folder as MongooseFolder } from "@/model/folder.model";
 import { File as MongooseFile } from "@/model/file.model";
 import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
@@ -19,9 +18,7 @@ interface UseTitleEditingProps {
     id: string;
     dirType: 'workspace' | 'folder' | 'file';
     originalTitle: string;
-    // NEW: Optional prop for local editing state control (e.g., for folders)
     isEditingLocally?: boolean; 
-    // NEW: Callback to signal when editing should stop (for local state control)
     onEditingStop?: () => void; 
 }
 
@@ -82,36 +79,25 @@ export const useTitleEditing = ({
 
     const startEditGracePeriodTimerRef = useRef<NodeJS.Timeout | null>(null);
     // Define a generous window during which initial blurs are ignored
-    const START_EDIT_GRACE_PERIOD_MS = 400; // Increased to give even more time for focus to stabilize
     const BLUR_PROCESSING_DELAY_MS = 350; // Small delay before processing a blur event
     
     useEffect(() => {
-        // NEW DEBUG LOG: Check state of refs at start of useEffect
-        console.log(`[${originalTitle}] useEffect START: isCurrentlyEditingThisItemEffective: ${isCurrentlyEditingThisItemEffective}, wasEditingRef.current: ${wasEditingRef.current}, inputRef.current: ${inputRef.current ? 'present' : 'NULL'}`);
-
         // Only run the focus logic when editing state *changes* to true
         if (isCurrentlyEditingThisItemEffective && !wasEditingRef.current) { 
-            console.log(`[${originalTitle}] useEffect: isCurrentlyEditingThisItemEffective CHANGED TO TRUE. Scheduling focus.`); 
             // When we enter editing mode, set isStartingEditRef true
             isStartingEditRef.current = true;
             startEditTimestampRef.current = Date.now();
 
-            console.log(`[${originalTitle}] useEffect: Scheduling focus. inputRef.current BEFORE setTimeout: ${inputRef.current ? 'present' : 'NULL'}`);
             const focusTimer = setTimeout(() => {
-                // IMPORTANT: Add an additional check for inputRef.current and isCurrentlyEditingThisItemEffective
+                // check for inputRef.current and isCurrentlyEditingThisItemEffective
                 // inside the timeout to ensure the element is still mounted and we are still editing.
                 if(inputRef.current && isCurrentlyEditingThisItemEffective) { 
-                    console.log(`[${originalTitle}] useEffect: Attempting to focus. inputRef.current INSIDE setTimeout: ${inputRef.current ? 'present' : 'NULL'}`);
                     inputRef.current.focus();
                     inputRef.current.select();
-                    console.log(`[${originalTitle}] useEffect: Input focused and selected.`)
-                    // isStartingEditRef will be reset by handleInputFocus, not here.
                 }else{
-                    console.log(`[${originalTitle}] useEffect: inputRef.current is NULL or not editing after timeout. inputRef.current: ${inputRef.current ? 'present' : 'NULL'}, isCurrentlyEditingThisItemEffective: ${isCurrentlyEditingThisItemEffective}`)
                     if(isStartingEditRef.current){
                         isStartingEditRef.current = false;
                         startEditTimestampRef.current = null;
-                        console.log(`[${originalTitle}] useEffect: fallback reset. (element not found)`);
                     }
                 }
             }, 0); // Use 0 delay to put it at the end of the current call stack
@@ -119,12 +105,10 @@ export const useTitleEditing = ({
             // Cleanup for this specific effect run
             return () => {
                 clearTimeout(focusTimer);
-                console.log(`[${originalTitle}] useEffect cleanup (on unmount/dependency change): isStartingEditRef reset.`);
             }
 
         } else if (!isCurrentlyEditingThisItemEffective && wasEditingRef.current) { 
             // This block runs when editing state *changes* to false. Perform cleanup specific to this transition.
-            console.log(`[${originalTitle}] useEffect: isCurrentlyEditingThisItemEffective CHANGED TO FALSE. Performing cleanup.`); 
             // Reset all flags when not editing, but only if it *just* stopped being editing
             isBlurIntentionalRef.current = false;
             hasEscapedRef.current = false;
@@ -149,7 +133,6 @@ export const useTitleEditing = ({
 
     const handleStartEditing = useCallback(() => {
         if(!isCurrentlyEditingThisItemEffective){
-             console.log(`[${originalTitle}] handleStartEditing: Attempt to set editing item.`);
         // Set this flag immediately when starting an edit to ignore immediate blurs.
         // It's also set in useEffect, but this ensures it's set before the first render with isCurrentlyEditingThisItemEffective=true.
         isStartingEditRef.current = true; 
@@ -166,10 +149,7 @@ export const useTitleEditing = ({
             type: dirType,
             title: originalTitle
         }))
-        }else{
-             console.log(`[${originalTitle}] handleStartEditing: Already editing this item. Ignoring.`);
         }
-       
     }, [
         id,
         dirType,
@@ -178,25 +158,8 @@ export const useTitleEditing = ({
         isCurrentlyEditingThisItemEffective
     ])
 
-    // // NEW: Handle input focus
-    // const handleInputFocus = useCallback(() => {
-    //     // Reset isStartingEditRef only if it was true AND within the expected time window.
-    //     // This ensures it's reset ONLY when focus is truly gained due to the intended edit action.
-    //     if (isStartingEditRef.current) {
-    //         console.log(`[${originalTitle}] handleInputFocus: Input truly focused. Resetting isStartingEditRef.`);
-    //         isStartingEditRef.current = false;
-    //         startEditTimestampRef.current = null;
-    //         // Clear the fallback timer if focus succeeded
-    //         if (startEditTimerRef.current) {
-    //             clearTimeout(startEditTimerRef.current); 
-    //             startEditTimerRef.current = null;
-    //         }
-    //     }
-    // }, [originalTitle]);
-
     // Handle input focus
     const handleInputFocus = useCallback(() => {
-        console.log(`[${originalTitle}] handleInputFocus: Input received focus. isStartingEditRef.current before reset: ${isStartingEditRef.current}`);
         // This function's primary role is now to confirm focus and select text.
         // `isStartingEditRef` is now reset by the grace period timer in useEffect.
         if (inputRef.current) {
@@ -205,7 +168,6 @@ export const useTitleEditing = ({
         if(isStartingEditRef.current){
             isStartingEditRef.current = false;
             startEditTimestampRef.current = null;
-            console.log(`[${originalTitle}] handleInput focus: Resetting isStartingRef.`);
 
             if(startEditGracePeriodTimerRef.current){
                 clearTimeout(startEditGracePeriodTimerRef.current);
@@ -213,7 +175,7 @@ export const useTitleEditing = ({
             }
         }
         // No direct reset of isStartingEditRef.current here anymore.
-    }, [originalTitle]);
+    }, []);
 
 
     const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,10 +183,8 @@ export const useTitleEditing = ({
     },[dispatch])
 
     const handleSaveTitle = useCallback(async () => {
-        console.log(`[${originalTitle}] handleSaveTitle: Entering save logic.`);
         // Ensure we are still globally editing this item before saving
         if(!isCurrentlyEditingThisItemGlobally || !globalEditingItem || !globalEditingItem.tempTitle ) {
-            console.log(`[${originalTitle}] handleSaveTitle: Not currently globally editing or no tempTitle. Clearing state. `)
             // If the global state is already cleared or not for this item, just signal stop and return.
            if(isCurrentlyEditingThisItemEffective){
                  if(onEditingStop) onEditingStop(); 
@@ -248,7 +208,6 @@ export const useTitleEditing = ({
         }
         // Check if title is unchanged
         if (currentTempTitle === originalTitle) {
-            console.log(`[${originalTitle}] handleSaveTitle: Title unchanged. Clearing editing item.`);
             if(onEditingStop) onEditingStop(); 
             dispatch(clearEditingItem()); // Just clear editing, no need to save
             return; // Stop execution here
@@ -270,7 +229,6 @@ export const useTitleEditing = ({
                     title: currentTempTitle
                 };
                 const result = await updateFolder(id, updatedPayload);
-                console.log(`[${originalTitle}] handleSaveTitle: updated folder result:`, result);
                 success = !!result?.success; // Ensure result.success is explicitly boolean
                 updatedDataFromService = result?.data || null;
                 messageType = 'Folder';
@@ -279,21 +237,7 @@ export const useTitleEditing = ({
                     title: currentTempTitle
                 };
                 const result = await updateFile(id, updatedPayload);
-                console.log(`[${originalTitle}] handleSaveTitle: Attempting to update file with ID: ${id}, new title: ${currentTempTitle}`);
-                console.log(`[${originalTitle}] handleSaveTitle: updated file result:`, result);
-                
-                // Add a specific check here to see the full result of updateFile
-                if (result) {
-                    console.log(`[${originalTitle}] handleSaveTitle: File update service call returned:`, result);
-                    if (result.success) {
-                        console.log(`[${originalTitle}] handleSaveTitle: File update reported success. Data:`, result.data);
-                    } else {
-                        console.log(`[${originalTitle}] handleSaveTitle: File update reported failure. Error:`, result.error);
-                    }
-                } else {
-                    console.log(`[${originalTitle}] handleSaveTitle: File update service call returned undefined or null.`);
-                }
-
+            
                 success = !!result?.success;
                 updatedDataFromService = result?.data || null;
                 messageType = 'File';
@@ -333,7 +277,6 @@ export const useTitleEditing = ({
                 variant: 'destructive'
             })  
         }finally{
-            console.log(`[${originalTitle}] handleSaveTitle: Clearing editing item after save attempt.`);
             if(onEditingStop) onEditingStop(); // Signal to the component to stop local editing
             dispatch(clearEditingItem()); // Ensure global state is clean
         }
@@ -361,32 +304,26 @@ export const useTitleEditing = ({
         else if(e.key === 'Escape'){
             // mark escape was pressed, then clear editing state directly without saving
             hasEscapedRef.current = true;
-            console.log(`[${originalTitle}] handleKeyDown: Clearing editing item on Escape key.`);
             if(onEditingStop) onEditingStop(); // Signal to the component to stop local editing
             dispatch(clearEditingItem()); // Reverts title implicitly by clearing editingItem
             e.currentTarget.blur(); // Remove focus
         }
     },[
         dispatch,
-        originalTitle,
         onEditingStop // Add onEditingStop to dependencies
     ])
 
     const handleInputBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-        console.log(`[${originalTitle}] handleInputBlur: Event fired.`);
-
         // If a blur happens while we're in the "starting edit" window,
         // immediately ignore it and clear the flag's timer.
         // It's crucial to check isStartingEditRef.current directly, not its timer.
         if (isStartingEditRef.current) {
-            console.log(`[${originalTitle}] handleInputBlur: Ignoring immediate blur as isStartingEditRef is true.`);
             // No need to clear startEditTimerRef here, it's cleared by handleInputFocus or useEffect fallback.
             return; // Exit early, do not process this blur for saving
         }
 
         // 2. If Escape was pressed, we've already handled it by clearing state. Ignore this blur.
         if (hasEscapedRef.current) {
-            console.log(`[${id}] handleInputBlur: Blur due to Escape, returning.`);
             hasEscapedRef.current = false; // Reset for next interaction
             if(onEditingStop) onEditingStop(); // Signal to the component to stop local editing
             return; // Exit early
@@ -399,8 +336,6 @@ export const useTitleEditing = ({
         }
 
         blurTimerRef.current = setTimeout(() => {
-            console.log(`[${originalTitle}] handleInputBlur: Delayed processing started.`);
-
             // Get the related target (the element that received focus)
             const newFocusTarget = e.relatedTarget as HTMLElement | null;
 
@@ -408,32 +343,19 @@ export const useTitleEditing = ({
             // This prevents blur when moving focus, e.g., to emoji picker or buttons
             const parentOfInput = inputRef.current?.closest('.group\\/folder, .group\\/file');
             if (parentOfInput && newFocusTarget && parentOfInput.contains(newFocusTarget)) {
-                console.log(`[${originalTitle}] handleInputBlur: Focus moved within the same editing component's parent. Ignoring.`);
                 return;
             }
 
-            // Prevent saving if escape was just pressed
-            // if(hasEscapedRef.current){
-            //     hasEscapedRef.current = false; // Reset for next interaction
-            //     console.log(`[${originalTitle}] handleInputBlur: Blur due to Escape, returning.`);
-            //     if(onEditingStop) onEditingStop(); // Signal to the component to stop local editing
-            //     dispatch(clearEditingItem()); // Ensure global state is cleared if not already
-            //     return;
-            // }
-
             // Schedule save for unintentional blurs, or execute immediately for intentional
             if(isBlurIntentionalRef.current){
-                console.log(`[${originalTitle}] handleInputBlur: Intentional blur (Enter key), calling handleSaveTitle immediately.`);
                 handleSaveTitle();
                 isBlurIntentionalRef.current = false; // Reset the flag after use
             } else {
-                console.log(`[${originalTitle}] handleInputBlur: Unintentional blur (click outside), attempting to save.`);
                 // Crucially, re-check if we are *still* editing this specific item after the delay
                 // and if the Redux state hasn't been cleared by another action (e.g., escape key).
                 if (isCurrentlyEditingThisItemGlobally && globalEditingItem?.id === id && globalEditingItem?.type === dirType) {
                     handleSaveTitle();
                 } else {
-                    console.log(`[${originalTitle}] handleInputBlur: Delayed blur: Editing state changed or not currently editing this item, not saving.`);
                     if(onEditingStop) onEditingStop(); // Signal to the component to stop local editing
                     dispatch(clearEditingItem()); // Ensure global editing state is cleared
                 }
@@ -442,7 +364,6 @@ export const useTitleEditing = ({
         }, BLUR_PROCESSING_DELAY_MS); 
     },[
         handleSaveTitle,
-        originalTitle,
         isCurrentlyEditingThisItemGlobally, 
         globalEditingItem, 
         id, 

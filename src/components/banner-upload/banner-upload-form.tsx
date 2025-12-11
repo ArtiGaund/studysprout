@@ -12,14 +12,7 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Loader } from "lucide-react";
-import { toast, useToast } from "../ui/use-toast";
-import axios from "axios";
-import { UPDATE_FILE } from "@/store/slices/fileSlice";
-import { UPDATE_FOLDER } from "@/store/slices/folderSlice";
-import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
-import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
-import { useWorkspace } from "@/hooks/useWorkspace";
-import { useFolder } from "@/hooks/useFolder";
+import { toast } from "../ui/use-toast";
 
 interface BannerUploadFormProps {
     onUpload: (file: File) => Promise<void>;
@@ -30,15 +23,9 @@ const BannerUploadForm: React.FC<BannerUploadFormProps> = ({
    onUpload,
    isUploading
 }) => {
-    // const state = useSelector((state: RootState) => state.workspace)
-    // const workspaceId = useSelector((state: RootState) => state.workspace.currentWorkspace?._id)
-    // const folderId = useSelector((state: RootState) => state.folder.currentFolder?._id)
-    // const { currentWorkspace } = useWorkspace();
-    // const { currentFolder } = useFolder();
-    // const [ banner, setBanner ] = useState('')
+   
     const [ selectedFile, setSelectedFile ] = useState<File | null>(null);
-    const dispatch = useDispatch()
-    // const { toast } = useToast()
+   
     const { 
         register, 
         handleSubmit, 

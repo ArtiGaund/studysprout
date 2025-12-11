@@ -12,8 +12,6 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { IconCode } from "@tabler/icons-react";
-import Link from "next/link"
 import { Loader2 } from "lucide-react"
 
 const VerifyAccount = () => {

@@ -26,16 +26,13 @@ const DashboardPage = () => {
 
      useEffect(() => {
          if(status === "loading" ) return;
-        console.log("[DashboardPage] User status: ", status);
         if(status !== "authenticated" || !user){
-            console.log(`[DashboardPage] User not login/don't have account. Redirecting to sign up.`);
             return;
         }
         const fetchAndRedirect = async () => {
-            console.log("[DashboardPage] Initial workspace fetch.");
             const response = await getWorkspaces();
             if (!response.success) {
-                console.log(`[DashboardPage] Failed to fetch workspaces: `, response.error);
+                console.warn(`[DashboardPage] Failed to fetch workspaces: `, response.error);
             }
         }
         fetchAndRedirect();
@@ -48,7 +45,6 @@ const DashboardPage = () => {
     // 1. Redirection Logic (triggered by useEffect once data is ready)
    useEffect(() => {
         if (!isLoadingWorkspaces && hasWorkspaces && workspaces.length > 0 && workspaces[0]?._id) {
-            console.log(`[DashboardPage] Redirecting to workspace: ${workspaces[0]._id}`);
             router.replace(`/dashboard/${workspaces[0]._id}`);
         }
     }, [

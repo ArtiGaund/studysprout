@@ -1,10 +1,9 @@
 "use client";
 
-import { RootState } from "@/store/store";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import { useDispatch } from "react-redux";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import clsx from "clsx";
 import EmojiPicker from "../global/emoji-picker";
 import { useToast } from "../ui/use-toast";
@@ -16,9 +15,7 @@ import { Folder as MongooseFolder } from "@/model/folder.model";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { clearEditingItem, setEditingItem, updateEditingItemTitle } from "@/store/slices/uiSlice";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
-import { randomUUID } from "crypto";
 
 interface DropdownProps {
     title: string;
@@ -40,7 +37,6 @@ const Dropdown: React.FC<DropdownProps> = ({
 }) => {
     
     const router = useRouter();
-    const dispatch = useDispatch();
     const { toast } = useToast();
     const [ currentIcon, setCurrentIcon ] = useState(iconId)
     const { data: session} = useSession()
@@ -51,13 +47,10 @@ const Dropdown: React.FC<DropdownProps> = ({
 
     //  Local state for folder editing
     const [isEditingLocally, setIsEditingLocally] = useState(false);
-    // Local state for file editing
-    // const [isEditingFileLocally, setIsEditingFileLocally] = useState(false);
 
     // Callback for useTitleEditing to signal when editing should stop
     const handleEditingStop = useCallback(() => {
          setIsEditingLocally(false);
-        console.log(`[${title}] handleEditingStop: Local editing stopped for ${listType}.`);
     }, [listType, title]);
 
     const {
@@ -80,10 +73,9 @@ const Dropdown: React.FC<DropdownProps> = ({
     // Adjust handleStartEditing for Dropdown component
     const handleStartEditing = useCallback(() => {
         setIsEditingLocally(true); // Set local state to true immediately
-        console.log(`[${title}] handleStartEditing: Local editing started for ${listType}.`);
         // Always dispatch to Redux for global awareness (e.g., to disable other editing)
         handleStartEditingFromHook(); 
-    }, [listType, handleStartEditingFromHook, title]);
+    }, [handleStartEditingFromHook]);
 
 
     // states and Refs for click handling
@@ -99,7 +91,6 @@ const Dropdown: React.FC<DropdownProps> = ({
     const navigatePage = useCallback((accordionId: string, type: string) => {
         // prevent navigation while editing 
         if(isCurrentlyEditingFromHook) { // Use the effective state from the hook
-            console.log(`[${title}] Attempted to navigate while editing. Preventing.`);
             return;
         }
         if(!currentWorkspace?._id){
@@ -110,7 +101,6 @@ const Dropdown: React.FC<DropdownProps> = ({
             });
             return;
         }
-        console.log(`[${title}] Navigating to ${type} with ID: ${accordionId}`);
         if (type === 'folder') {
             router.push(`/dashboard/${currentWorkspace?._id}/${accordionId}`);
         }
@@ -132,17 +122,10 @@ const Dropdown: React.FC<DropdownProps> = ({
         isCurrentlyEditingFromHook, // Use effective state from hook
         router,
         toast,
-        title
     ]);
 
     const handleCombinedClick = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
-
-        // if currently editing, prevent any click actions
-        // if(isCurrentlyEditingFromHook) { // Use effective state from hook
-        //     console.log(`[${title}] handleCombinedClick: Preventing click action while editing.`);
-        //     return;
-        // }
 
         clickCount.current+=1;
         if(clickCount.current === 1){
@@ -150,7 +133,6 @@ const Dropdown: React.FC<DropdownProps> = ({
             clickTimer.current = setTimeout(() => {
                 if(clickCount.current === 1){
                     // if after the timeout, clickCount is still 1, it was a single click
-                    console.log(`[${title}] handleCombinedClick: Single Click Action. Navigating....`);
                     navigatePage(id, listType);
                 }
                 clickCount.current = 0;
@@ -161,8 +143,6 @@ const Dropdown: React.FC<DropdownProps> = ({
         id,
         listType,
         navigatePage,
-        isCurrentlyEditingFromHook, // Use effective state from hook
-        title
     ])
 
 
@@ -176,31 +156,23 @@ const Dropdown: React.FC<DropdownProps> = ({
         }
 
         clickCount.current = 0; // Reset click count for double click
-        console.log(`[${title}] handleCombinedDoubleClick: Double Click Action. Start editing...`);
         
         // Add a small delay for folders before starting edit to allow DOM to settle
         if (listType === 'folder') {
-            console.log(`[${title}] handleCombinedDoubleClick: Folder detected. Delaying handleStartEditing.`);
             setTimeout(() => {
                 if (!isCurrentlyEditingFromHook) { // Re-check effective state from hook after delay
                     handleStartEditing(); // Call the local handleStartEditing
-                } else {
-                    console.log(`[${title}] handleCombinedDoubleClick: Already editing after delay, ignoring.`);
                 }
             }, 300); // Increased delay for folders to 300ms
         } else {
             // For files, start editing immediately as before, but ensure local state is set
-            console.log(`[${title}] handleCombinedDoubleClick: File detected. Starting editing immediately.`); // NEW log
             if (!isCurrentlyEditingFromHook) { // Use effective state from hook
                 handleStartEditing(); // Call the local handleStartEditing
-            } else {
-                console.log(`[${title}] handleCombinedDoubleClick: Already editing, ignoring double click.`);
-            }
+            } 
         }
     }, [
         handleStartEditing, // Use local handleStartEditing
         isCurrentlyEditingFromHook, // Use effective state from hook
-        title,
         listType // Add listType to dependencies
     ])
 
@@ -217,7 +189,6 @@ const Dropdown: React.FC<DropdownProps> = ({
                     iconId: selectedEmoji,
                 };
                 // Use the 'id' prop of the current Dropdown component
-                console.log(`[${title}] onChangeEmoji: Updating folder emoji for ID: ${id}`);
                 const result = await updateFolder(id, updatedFolder); 
                 success = !!result?.success;
                 messageType = 'Folder';
@@ -226,7 +197,6 @@ const Dropdown: React.FC<DropdownProps> = ({
                     iconId: selectedEmoji,
                 };
                 // Use the 'id' prop of the current Dropdown component
-                console.log(`[${title}] onChangeEmoji: Updating file emoji for ID: ${id}`);
                 const result = await updateFile(id, updatedFile); 
                 success = !!result?.success;
                 messageType = 'File';

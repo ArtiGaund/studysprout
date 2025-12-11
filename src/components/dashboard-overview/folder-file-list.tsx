@@ -2,7 +2,7 @@
 
 import { RootState } from "@/store/store";
 import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch} from "react-redux";
 import { useToast } from "../ui/use-toast";
 import Dropdown from "../sidebar/dropdown";
 import { Accordion } from "../ui/accordion";
@@ -27,11 +27,9 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
     const { files, currentFile, getFiles } = useFile();
     const { toast } = useToast();
     const dispatch = useDispatch();
-    // console.log("Files in folder file list ",files);
-
+  
     useEffect(() => {
-         console.log(`[FolderFileList] useEffect triggered. folderId=${folderId}`);
-
+        
          if(folderId){
         const fetchFiles = async ( folderId : string) => {
                     try {
@@ -51,12 +49,6 @@ const FolderFileListInner: React.FC<FolderFileListProps> = ({
                         })
                     } catch (error) {
                         console.error("Error loading files ",error);
-                        // toast({
-                        //     title: "Failed to fetch files",
-                        //     description: "Please try again later",
-                        //     variant: "destructive"
-                        // })
-                        // setError(error);
                     }
                 }
 
