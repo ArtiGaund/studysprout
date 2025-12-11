@@ -14,10 +14,11 @@ export interface File {
     version?: number;                    //increments every updates
     contentHash?: string;                //detect identical saves
      lastSyncedAt?: Date;
-     updatedAtLocal?: Date;
+     updatedAtLocal?: Date | string;
 
     //  Offline sync
     localChangeId?: string;              //prevent duplicate offline syncs
+    lastLocalChangeId?: number;
     
     // basic metadata
      createdAt: Date;
@@ -49,6 +50,7 @@ export const BlockMapEntrySchema = new Schema({
     end: { type: Number, required: true },
     type: { type: String},
 }, { _id: false })
+
 export const FileSchema: Schema<File> = new Schema({
     title:{
         type: String,
@@ -87,6 +89,11 @@ export const FileSchema: Schema<File> = new Schema({
     localChangeId: {
         type: String,
         default: "",
+    },
+
+    lastLocalChangeId:{
+        type: Number,
+        default: 0
     },
 
     lastSyncedAt: {
