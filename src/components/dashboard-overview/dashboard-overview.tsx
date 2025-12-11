@@ -399,14 +399,17 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     <div className="relative flex z-20 top-2 bg-background w-3/4 h-10 group/title justify-between
                          items-center p-2 left-[5rem] text-Neutrals/neutrals-8">
                             <span className="font-bold text-Neutrals-8 text-[20px]">
-                               {dirType.toUpperCase()} stats
+                               {dirType.toUpperCase()} Flashcard Set list
                             </span>
                         </div>
                     <div className="relative flex flex-col z-20 top-2 bg-background w-3/4 h-10 group/title 
                         p-2 left-[5rem] text-Neutrals/neutrals-8">
-                        { dirType === "workspace" && (<span>Total Folders: {folders.length}</span>)}
-                        <span>Total files: {files.length}</span>
-                        <span>Last edited note</span>
+                        { dirType === "workspace" && (
+                            <span>Workspace Flashcard sets</span>
+                        )}
+                        {dirType === "folder" && (
+                            <span>Folder Flashcard sets </span>
+                        )}
                     </div>
                 </div>
             </div>

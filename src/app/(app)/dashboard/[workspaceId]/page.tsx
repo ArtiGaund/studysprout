@@ -1,6 +1,7 @@
 "use client"
 import BannerSection from '@/components/banner-upload/banner-section'
 import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
+import ResourceStats from '@/components/stats/resource-stats'
 import { useWorkspace } from '@/hooks/useWorkspace'
 import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
 import { RootState } from '@/store/store'
@@ -95,6 +96,15 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
                 dirType='workspace'
                 params={params.workspaceId}
                 globalEditingItem={globalEditingItems}
+                />
+            )}
+           </div>
+           <div>
+            {currentWorkspace && (
+                <ResourceStats 
+                dirType='workspace'
+                folders={currentWorkspace.folders.length}
+                // files={currentWorkspace.fol}
                 />
             )}
            </div>
