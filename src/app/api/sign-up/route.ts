@@ -2,7 +2,7 @@ import dbConnect from "@/lib/dbConnect";
 import {UserModel} from "@/model/index";
 import { sendVerificationEmail } from "@/helpers/SendVerificationEmail";
 import bcrypt from "bcryptjs";
-import { ApiError, ApiResponse } from "@/types/api.interface";
+import { ApiResponse } from "@/types/api.interface";
 import unverifiedUserModel from "@/model/unverified-user.model";
 
 // Temporary user store 
