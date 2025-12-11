@@ -63,7 +63,7 @@ const ResetPasswordPage = () => {
         router.push("/sign-in");
       }
     } catch (error) {
-      const axiosError = error as AxiosError<ApiResponse>;
+      const axiosError = error as AxiosError<ApiResponse<any>>;
       toast({
         title: "Reset password failed",
         description: axiosError.response?.data.message ?? "Unknown error occurred",

@@ -1,13 +1,13 @@
 
 
 import config from "@/config/config";
-import { ApiError, ApiResponse } from "@/types/api.interface";
+import { ApiResponse } from "@/types/api.interface";
 import nodemailer from "nodemailer";
 export async function sendVerificationEmail(
     email: string,
     username: string,
     verifycode: string
-): Promise<ApiResponse >{
+): Promise<ApiResponse<any> >{
      const transporter = nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
     port: 587,
@@ -32,6 +32,7 @@ export async function sendVerificationEmail(
             statusCode: 200,
             message: "Verification email sent successfully",
             success: true,
+            data: "",
         }
     } catch (emailError) {
          console.error("Error in sending verification email ",emailError)

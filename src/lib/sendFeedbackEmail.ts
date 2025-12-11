@@ -10,7 +10,7 @@ type FeebackEntry = {
 export async function sendFeedbackEmail(
     email: string,
     feedbacks: FeebackEntry[]
-):Promise<ApiResponse>{
+):Promise<ApiResponse<any>>{
     const transporter = nodemailer.createTransport({
         host: "smtp-relay.brevo.com",
         port: 587,
@@ -47,6 +47,7 @@ export async function sendFeedbackEmail(
             statusCode: 200,
             message: "Feedback email sent successfully",
             success: true,
+            data: "",
         };
     } catch (error) {
         console.error("Error sending feedback email: ",error);

@@ -1,13 +1,13 @@
 
 
 import config from "@/config/config";
-import { ApiError, ApiResponse } from "@/types/api.interface";
+import { ApiResponse } from "@/types/api.interface";
 import nodemailer from "nodemailer";
 export async function sendResetEmail(
     username: string,
     email: string,
     link: string
-): Promise<ApiResponse >{
+): Promise<ApiResponse<any> >{
      const transporter = nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
     port: 587,
@@ -31,6 +31,7 @@ export async function sendResetEmail(
             statusCode: 200,
             message: "Reset email sent successfully",
             success: true,
+            data: "",
         }
     } catch (resetError) {
          console.error("Error in sending reset email ",resetError)
