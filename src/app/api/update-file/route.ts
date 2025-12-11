@@ -1,10 +1,25 @@
+/**
+ * POST /api/update-file
+ * 
+ * This route is used to update a file
+ * 
+ * Responsibility:
+ * - Validate request payload (fileId, updates).
+ * - Find the file.
+ * - Apply updates directly to the Mongoose Document instance.
+ * - Save the file.
+ * 
+ * Notes:
+ * - This route is used to update a file
+
+ */
+import { computeHash } from "@/lib/compute-hash";
 import dbConnect from "@/lib/dbConnect";
 import {FileModel, FolderModel, WorkSpaceModel} from "@/model/index";
+import { refreshPlainTextContent } from "@/utils/fileProcessingUtils";
 import { getAggregatedPlainText } from "@/utils/flashcardTextExtractor";
 import mongoose from "mongoose";
 
-// threshold for plaintext  generation (5 seconds)
-const THROTTLE_THRESHOLD_MS = 5000;
 
 export async function POST(request: Request) {
     await dbConnect()
@@ -12,7 +27,6 @@ export async function POST(request: Request) {
         const updatedData = await request.json();
            
             const { _id, ...updates } = updatedData;
-            // console.log("updated data ",updatedData);
             // 1. Validate File ID
             if(!_id || !mongoose.Types.ObjectId.isValid(_id)){
                 return Response.json({
@@ -35,47 +49,38 @@ export async function POST(request: Request) {
             }, { status: 404 });
             }
 
-            // --- START AI OPTIMISATION & THROTTLING LOGIC ---
-
-            // Get the current time for comparison and logging
-            const currentTime = Date.now();
-
-            // convert the Mongoose Data field to a timestamp
-            const lastGeneratedTimestamp = file.plainTextLastGenerated 
-            ? new Date(file.plainTextLastGenerated).getTime()
-            : 0;
-
-            // check 1: Does the file data exist in the update payload ?
-            if(updates.data){
-                // check 2: Is the plain text stale (need regeneration) ?
-                if(currentTime - lastGeneratedTimestamp > THROTTLE_THRESHOLD_MS){
-
-                    // run the heavy conversion process
-                    const newPlainText = getAggregatedPlainText([updates.data as string]);
-
-                    // update the dedicated fields in the updates payload
-                    updates.plainTextContent = newPlainText;
-                    updates.plainTextLastGenerated = new Date().toISOString();
-
-                    console.log(`[FileUpdate] Plaintext generated and scheduled for update (Throttle).`);
-                }else{
-                    console.log(`[FileUpdate] Plaintext generation skipped (Throttle active).`);
-
-                    // Ensure the payload doesn't accidentally contain stale/empty plaintext fields
-                    // that might overwrite the existing ones if they weren't explicitly passed.
-                    delete updates.plainTextContent;
-                    delete updates.plainTextLastGenerated;
-                }
-            }
-
-            // --- END AI OPTIMISATION & THROTTLING LOGIC ---
-
+            // Only allow controlled fields
+            delete updates.version;
+            delete updates.lastLocalChangeId;
+            delete updates.updatedAtLocal;
+            delete updates.lastUpdated;
+            delete updates.contentHash;
+         
+           if(updates.updatedAtLocal && typeof updates.updatedAtLocal === 'string'){
+            updates.updatedAtLocal = new Date(updates.updatedAtLocal);
+           }
+           
+           if(updates.data){
+            updates.contentHash = computeHash(updates.data);
+           }
             // 3. Apply updates directly to the Mongoose Document instance
             // This ensures Mongoose runs validations and proper type casting before the final save.
             Object.assign(file, updates);
+           
 
+            file.version = (file.version || 1) + 1;
+            file.lastLocalChangeId = (file.lastLocalChangeId ?? 0) + 1;
+            file.updatedAtLocal = new Date();
+            file.lastUpdated = new Date();
+
+              // --- START AI OPTIMISATION & THROTTLING LOGIC ---
+
+           await refreshPlainTextContent(file);
+            // --- END AI OPTIMISATION & THROTTLING LOGIC ---
             // 4. Await the save operation
             const savedFile = await file.save();
+
+            
         
              return Response.json({
                 statusCode: 200,
