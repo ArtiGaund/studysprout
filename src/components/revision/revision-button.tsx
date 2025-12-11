@@ -4,7 +4,6 @@ import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import TooltipComponent from "../global/tooltip-component";
 import CypressClockRecordIcon from "../icons/CypressClockRecordIcon";
 
-
 export default function RevisionButton(){
     const { isRevisionSidebarOpen, setRevisionSidebarOpen } = useRevisionSidebar();
     return(
