@@ -23,6 +23,7 @@ export interface ReduxFile{
     version?: number;
     contentHash?: string;
     updatedLocalAt?: string;
+    lastLocalChangeId?: number;
     syncStatus?: "synced" | "pending" | "conflict" | "offline";
     isOfflineDraft?: boolean;
 
@@ -158,4 +159,43 @@ export interface RootState {
     users: UsersState;
     workspaces: WorkspacesState;
     
+}
+
+export interface ReduxFlashcard{
+    _id: string;
+    question: string;
+    answer: string;
+    type: "mcq" | "question-answer" | "fill-in-the-blank";
+    options?: string[];
+
+    // SRS
+    dueDate: string;
+    interval: number;
+    difficulty: number;
+    repetition: number;
+    lastReviewed: string | null;
+}
+
+export interface FlashcardState{
+   cardsBySet: Record<string,ReduxFlashcard[]>;
+   activeSetId: string | null;
+}
+
+export interface ReduxFlashcardSet{
+    _id: string;
+    title: string;
+    icon?: string;
+
+    cards: ReduxFlashcard[];
+    totalCards: number;
+    dueCount: number;
+
+    // grouping context
+    workspaceId: string;
+    resourceType: "Workspace" | "Folder" | "File";
+}
+
+export interface FlashcardSetState{
+    sets: ReduxFlashcardSet[];
+    loading: boolean;
 }
