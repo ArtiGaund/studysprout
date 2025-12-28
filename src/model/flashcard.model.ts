@@ -36,8 +36,39 @@ export interface Flashcard{
     createdBy: Types.ObjectId | string; 
     createdFor: string;
     updatedAt: Date;
+    source: {
+        fileIds: string[];
+        blockIds: string[];
+        startBlockId?: string;
+        endBlockId?: string;
+        blocksState: Record<string, {
+            updatedAt: Date;
+        }>;
+    },
 }
-
+const SourceSchema = new Schema({
+     fileIds: [{
+        type: Schema.Types.ObjectId,
+        ref: "File",
+        required: true,
+       }],
+       blockIds:[{
+        type: String,
+        required: true,
+       }],
+       startBlockId: String,
+       endBlockId: String,
+       blocksState: {
+        type: Map,
+        of: new Schema({
+            updatedAt: {
+                type: Date,
+                required: true,
+            },
+        }, { _id: false }),
+        required: true,
+       }
+}, { _id: false});
 /**
  *  Flashcard Schema
  * Defines database fields and validation.
@@ -100,7 +131,8 @@ export const FlashcardSchema: Schema<Flashcard> = new Schema({
        type: String,
     //    required: true,
    },
-   updatedAt: {
-       type: Date,
+   source: {
+      type: SourceSchema,
+      required: true
    }
-}, { timestamps: true })
+}, { timestamps: true });

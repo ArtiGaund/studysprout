@@ -1,37 +1,42 @@
 // Core Redux Model Interfaces (frontend Representation)
 
+import { IBlock } from "@/model/file.model";
+
 // File document
 export interface ReduxFile{
     _id: string;
-
-    // core
+    
+    // core metadata
     title: string;
     iconId?: string;
-    data?:any;
-
-    // Metadata
-     createdAt: string;
+    createdAt: string;
     lastUpdated: string;
-
-    // AI/flashcards
-    plainTextContent?: string;
-    structuredPlainText?:string;
-    blockMap?:any;
-    plainTextLastGenerated?: string;
-
-    // Sync / Versioning (critical)
-    version?: number;
-    contentHash?: string;
-    updatedLocalAt?: string;
-    lastLocalChangeId?: number;
-    syncStatus?: "synced" | "pending" | "conflict" | "offline";
-    isOfflineDraft?: boolean;
-
-    // Org
-    inTrash?: string;
-    bannerUrl?: string;
     workspaceId?: string;
-    folderId?: string;   
+    folderId?: string;
+    bannerUrl?: string;
+    inTrash?: string;
+
+    // Block based content
+    blocks: Record<string, IBlock>;
+    blockOrder: string[];
+
+    // versioning and sync
+    version: number;
+    contentHash?: string;
+    localChangeId?: string;
+    lastLocalChangeId?: number;
+    lastSyncedAt?: string;
+    updatedAtLocal?: string;
+    conflictState?: "none" | "conflict" | "resolved";
+    isLocked?: boolean;
+    deletedAt?: string | null;
+
+    //history (if needed)
+    history?: Array<{
+        version: number;
+        blocks: any;
+        updatedAt: string;
+    }>;
 }
 
 // Folder document
@@ -173,7 +178,15 @@ export interface ReduxFlashcard{
     interval: number;
     difficulty: number;
     repetition: number;
-    lastReviewed: string | null;
+    lastReviewed: string | null;    
+
+    // source
+    source?: {
+        fileIds: string[];
+        blockIds: string[];
+        blocksState: Record<string, { updatedAt: string }>;
+    };
+    isOutDated?: boolean;
 }
 
 export interface FlashcardState{
@@ -192,7 +205,19 @@ export interface ReduxFlashcardSet{
 
     // grouping context
     workspaceId: string;
+    folderId?: string;
+    resourceId: string;
+
     resourceType: "Workspace" | "Folder" | "File";
+    cardCount: number;
+    desiredTypes: ("question-answer" | "fill-in-the-blank" | "mcq")[];
+    sourceSnapshot?: {
+        fileIds: string[];
+        blockCount: number;
+        totalChars: number;
+    };
+    isOutdated?: boolean;
+    updatedAt: string;
 }
 
 export interface FlashcardSetState{

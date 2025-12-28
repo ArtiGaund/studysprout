@@ -19,6 +19,12 @@ export interface FlashcardSet{
     flashcards: Types.ObjectId[]; //reference to flashcards
     createdAt: Date;
     updatedAt: Date;
+    sourceSnapshot?: {
+        fileIds:( Types.ObjectId | string)[];
+        blockCount: number;
+        totalChars: number;
+    };
+    desiredTypes: [string];
 }
 
 export const FlashcardSetSchema: Schema<FlashcardSet> = new Schema({
@@ -68,5 +74,14 @@ export const FlashcardSetSchema: Schema<FlashcardSet> = new Schema({
     updatedAt: {
         type: Date,
         required: true,
+    },
+    sourceSnapshot: {
+        fileIds: [mongoose.Schema.Types.ObjectId],
+        blockCount: Number,
+        totalChars: Number,
+    },
+    desiredTypes: {
+        type: [String],
+        default: ["question-answer"],
     }
 })
