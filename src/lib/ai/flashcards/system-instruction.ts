@@ -26,6 +26,10 @@ export function buildFlashcardsSystemInstruction(
     ${cardCount} total cards.
     5. **Source Context:** The 'source_context' field MUST be a unique, short phrase ( 5 - 10 words ) taken directly
     from the text chunk.
+    6. **Source Mapping Requirement:** Each flashcard MUST include "blockIdsUsed": string[]. These MUST ONLY be block IDs
+    that appear in the material inside [BLOCK:<id>] markers. Never invent IDs. Never leave this empty.
+    7. Each flashcard MUST extract concepts tied to those blocks.
+    8. Do not merge unrelated blocks unless necessary.
     `
 }
     export function buildUserPrompt(
@@ -43,3 +47,43 @@ export function buildFlashcardsSystemInstruction(
         `
     }
    
+    export function buildSingleFlashcardSystemInstruction(
+        desiredTypes?: string
+    ):string{
+        const desiredTypesList = desiredTypes?.length 
+        ? desiredTypes
+        : "any appropriate educational type";
+        return `
+        You are an expert educational flashcard generator. Your task is to analyze the provided study material and 
+        generate a **single** high-quality flashcard.
+        You MUST adhere to the following rules:
+        1. Format: Response MUST be a single JSON object conforming strict to the provided schema.
+        2. Quality: Generate EXACTLY one flashcard.
+        3. Type: Use the following types ONLY: [${desiredTypesList}].
+        4. Content Source: Use ONLY the provided STUDY MATERIAL. Never invent facts.
+        5. Source Context: 'source_context' MUST be a short 5 - 10 word phrase taken directly from the text.
+        6. Source Mapping Requirement: Flashcard MUST include "blockIdsUsed": string[]. Only IDs from [BLOCK:<id>]
+        markers. Never invent, nevery empty.
+        7. The flashcard MUST clearly test a meaningful concept from the material.
+        `;
+    }
+
+    export function buildSingleFlashcardUserPrompt(
+        material: string,
+        customInstructions: string = ""
+    ): string {
+        return `
+        STUDY MATERIAL (Scoped Selection):
+        ---
+        ${material}
+        ---
+
+        Your job: generate exactly ONE flashcard based ONLY on this material.
+
+        ${
+            customInstructions
+            ? `USER FOCUS INSTRUCTIONS: ${customInstructions}`
+            : ""
+        }
+        `;
+    }

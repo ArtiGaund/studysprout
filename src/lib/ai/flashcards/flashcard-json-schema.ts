@@ -30,8 +30,12 @@ const FlashcardItemSchema: ObjectSchema = {
       items: { type: "string" } as SimpleStringSchema,
     } as ArraySchema,
     source_context: { type: SchemaType.STRING },
+    blockIdsUsed: {
+      type: SchemaType.ARRAY,
+      items: { type: "string" },
+    } as ArraySchema,
   },
-  required: ["type", "question", "answer", "source_context"],
+  required: ["type", "question", "answer", "source_context", "blockIdsUsed"],
 };
 
 export const UnifiedFlashcardSchema = (desiredTypes: string[]): ObjectSchema => ({

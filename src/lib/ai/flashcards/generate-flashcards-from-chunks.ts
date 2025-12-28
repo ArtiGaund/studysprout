@@ -23,7 +23,10 @@ export const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 // Define a common configuration for the model
 const MODAL_NAME = "gemini-2.5-flash";
 export async function GenerateFlashcardsFromChunks(
-    aggregatedTexts: string[],
+    aggregatedTexts: {
+        text: string,
+        blockIds: string[]
+    }[],
      cardCount: number, 
      desiredTypes: string[],
      customInstructions: string = ""
@@ -100,9 +103,10 @@ export async function GenerateFlashcardsFromChunks(
        //4. Process each chunk independently to avoid model context limits
 
         for(let chunkIndex = 0; chunkIndex< aggregatedTexts.length; chunkIndex++){
-            const chunk = aggregatedTexts[chunkIndex];
+            const rawText = aggregatedTexts[chunkIndex].text;
+            const chunkBlockIds = aggregatedTexts[chunkIndex].blockIds;
             // 5. Build the dynamic User prompt for this chunk
-            const userPrompt = buildUserPrompt(chunk, chunkIndex, aggregatedTexts.length, customInstructions);
+            const userPrompt = buildUserPrompt(rawText, chunkIndex, aggregatedTexts.length, customInstructions);
             try {
                 const response = await callGemini(modelInstance, userPrompt);
                 const result = await response.response;
@@ -111,6 +115,12 @@ export async function GenerateFlashcardsFromChunks(
                 //6. Model returns raw JSON text → parse and extract flashcards
                 const parsed = JSON.parse(jsonText);
                 
+                for(const card of parsed.flashcards ?? []){
+                    if(!card.blockIdsUsed || card.blockIdsUsed.length === 0){
+                        // fallback = full chunk range if model fails
+                        card.blockIdsUsed = chunkBlockIds;
+                    }
+                }
                 if(parsed.flashcards && Array.isArray(parsed.flashcards)){
                     allGeneratedCards.push(...parsed.flashcards);
                 }

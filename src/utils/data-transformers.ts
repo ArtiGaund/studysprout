@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { WorkSpace } from "@/model/workspace.model";
 import { Folder } from "@/model/folder.model";
-import { File } from "@/model/file.model";
+import { File, IBlock } from "@/model/file.model";
 import { 
     ReduxWorkSpace,
     ReduxFolder,
@@ -61,27 +61,39 @@ export const transformFile = (file: File): ReduxFile => {
         _id: toStr(file._id) as string,
         title: file.title || 'Untitled File',
         iconId: file.iconId || '📄',
-        data: parseDataSafety(file.data),
+       
+        blocks: convertBlockMap(file.blocks),
+        blockOrder: Array.isArray(file.blockOrder) ? file.blockOrder : [],
 
-        // AI/text extraction fields
-        plainTextContent: file.plainTextContent || "",
-        structuredPlainText: file.structuredPlainText || "",
-        blockMap: file.blockMap || [],
-        plainTextLastGenerated: toStr(file.plainTextLastGenerated),
+         createdAt: toStr(file.createdAt) as string,
+          lastUpdated: toStr(file.lastUpdated) as string,
+           workspaceId: toStr(file.workspaceId) as string,
+        folderId: toStr(file.folderId) as string,
+         inTrash: file.inTrash ?? undefined,
+        bannerUrl: file.bannerUrl ?? undefined,
 
         // version + sync fields
         version: file.version ?? 1,
         contentHash: file.contentHash ?? "",
-        updatedLocalAt: toStr(file.updatedAtLocal),
+        localChangeId: file.localChangeId,
         lastLocalChangeId: file.lastLocalChangeId ?? 0,
-        syncStatus: "synced",
-        isOfflineDraft: false,
+        lastSyncedAt: file.lastSyncedAt?.toString(),
+       updatedAtLocal: file.updatedAtLocal?.toString(),
+       conflictState: file.conflictState,
+    //    isLocked?: file.isLocked,
+       deletedAt: file.deletedAt?.toString(),
 
-        inTrash: file.inTrash ?? undefined,
-        bannerUrl: file.bannerUrl ?? undefined,
-        workspaceId: toStr(file.workspaceId) as string,
-        folderId: toStr(file.folderId) as string,
-        createdAt: toStr(file.createdAt) as string,
-        lastUpdated: toStr(file.lastUpdated) as string,
+    //    history: file.history  || [],       
+       
     }
+}
+
+function convertBlockMap(
+    blocks: Map<string, IBlock> | any
+): Record<string, IBlock>{
+    if(!blocks) return {};
+    if(blocks instanceof Map){
+        return Object.fromEntries(blocks);
+    }
+    return blocks;
 }
