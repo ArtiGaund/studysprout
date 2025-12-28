@@ -10,7 +10,10 @@ import mongoose from "mongoose";
 
 // Import all your individual schema files
 import { User, UserSchema } from "./user.model";
-import { File, FileSchema } from "./file.model";
+import { 
+    File,
+     FileSchema, 
+ } from "./file.model";
 import { Folder, FolderSchema } from "./folder.model";
 import { WorkSpace, WorkspaceSchema } from "./workspace.model";
 import { Image, ImageSchema } from "./image.model";
@@ -32,7 +35,6 @@ const FlashcardModel =
 (mongoose.models.Flashcard as mongoose.Model<Flashcard>) || mongoose.model<Flashcard>("Flashcard", FlashcardSchema);
 const FlashcardSetModel =
 (mongoose.models.FlashcardSet as mongoose.Model<FlashcardSet>) || mongoose.model<FlashcardSet>("FlashcardSet", FlashcardSetSchema);
-
 export {
     UserModel,
     FolderModel,
@@ -40,5 +42,5 @@ export {
     WorkSpaceModel,
     ImageModel,
     FlashcardModel,
-    FlashcardSetModel
+    FlashcardSetModel,
 }
