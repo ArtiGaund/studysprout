@@ -1,6 +1,6 @@
 "use client";
 
-import { File as MongooseFile} from "@/model/file.model";
+import { IBlock, File as MongooseFile} from "@/model/file.model";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "../sidebar/folders-dropdown-list";
@@ -247,7 +247,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         }
         const newFile: MongooseFile = {
                     folderId: currentFolder?._id.toString(),
-                    data: undefined,
                     inTrash: undefined,
                     title: 'Untitled',
                     iconId: '📄',
@@ -255,6 +254,9 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     bannerUrl: '',
                     createdAt: new Date(),
                     lastUpdated: new Date(),
+                    blocks: new Map<string, IBlock>,        // or new Map() if your type is Map
+                    blockOrder: [],
+                    version: 1,
                 };
 
         try {
