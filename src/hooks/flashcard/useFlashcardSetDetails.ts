@@ -31,9 +31,8 @@ export function useFlashcardSetDetails(setId?: string | null){
         try {
             const setResponse = await getFlashcardSetDetailBySetIdService(setId);
             const cardResponse = await getFlashcardsBySetIdService(setId);
-        
+           
              dispatch(setFlashcardsForSet({ setId, cards: cardResponse }));
-
             const dueCount = cardResponse.filter(
                 (c: any) => new Date(c.dueDate) <= new Date()
             ).length;
@@ -41,9 +40,11 @@ export function useFlashcardSetDetails(setId?: string | null){
             const totalCards = cardResponse.length;
 
             dispatch(updateSingleSet({
+                _id:setId,
                 ...setResponse,
                 dueCount,
                 totalCards,
+                isOutdated: setResponse.isOutdated,
             }));
            
         } catch (error) {
@@ -55,12 +56,13 @@ export function useFlashcardSetDetails(setId?: string | null){
     fetchDetails();
     },[
         setId,
-        dispatch
+        set?.updatedAt,
     ])
 
     return {
         set,
         cards,
         loading,
+        setLoading,
     }
 }

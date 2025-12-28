@@ -1,11 +1,14 @@
+/** 
+ * Manage File updation
+ */
 "use client";
 
 import { useCallback, useMemo } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
-import { File as MongooseFile } from "@/model/file.model";
-import { ADD_FILE, SET_CURRENT_FILE, SET_FILE_ERROR, SET_FILE_LOADING, SET_FILES, UPDATE_FILE } from "@/store/slices/fileSlice";
-import { addFile, getAllFilesByWorkspaceId, getCurrentFile } from "@/services/fileServices";
+import { IBlock, File as MongooseFile } from "@/model/file.model";
+import { ADD_BlOCK, ADD_FILE, DELETE_BLOCK, SET_CURRENT_FILE, SET_FILE_ERROR, SET_FILE_LOADING, SET_FILES, UPDATE_BLOCK, UPDATE_FILE } from "@/store/slices/fileSlice";
+import { addBlock, addFile, deleteBlock, getAllFilesByWorkspaceId, getCurrentFile, updateBlock } from "@/services/fileServices";
 import { ReduxFile } from "@/types/state.type";
 import { updateDir } from "@/services/dirServices";
 import { getAllFiles } from "@/services/folderServices";
@@ -15,6 +18,7 @@ import {
     hasFetchedFolderFilesRef,
     hasFetchedWorkspaceFilesRef
 } from "@/cache/fileCache";
+import { UIBlock } from "@/utils/block/normalizeBlock";
 
 export function useFile() {
     const dispatch = useDispatch();
@@ -83,13 +87,9 @@ export function useFile() {
             dispatch(SET_FILE_ERROR(null));
             // Stringify the 'data' field if it's an object/array before sending to API
             const payloadToSend = { ...updatedData };
-            if(payloadToSend.data && typeof payloadToSend.data !== 'string'){
-                payloadToSend.data = JSON.stringify(payloadToSend.data);
-            }
         try {
             const result = await updateDir("file",fileId, payloadToSend);
-            const file = result.file
-            console.log("Updated file:", result.file);
+            const file = result
             if(!result){
                 return {
                     success: false,
@@ -320,12 +320,106 @@ export function useFile() {
         }
 
     },[currentFileId]);
+
+    const addBlockHandler = useCallback(async (
+        fileId: string, 
+        block: UIBlock ,
+         afterBlockId: string ) => {
+            try {
+                const newBlock = await addBlock(fileId, block, afterBlockId );
+            
+                if(!newBlock?.blocks){
+                    return{
+                        success: false,
+                        error: "Failed to add block"
+                    }
+                }
+                    dispatch(UPDATE_FILE({
+                        id: fileId,
+                        updates: {
+                            blocks: {
+                                ...filesById[fileId].blocks,
+                                [newBlock.data.block.id]: newBlock.data.block,
+                            },
+                            blockOrder: newBlock.data.blockOrder,
+                        }
+                    }))
+                // }
+
+                return {
+                    success: true,
+                    data: newBlock
+                }
+            } catch (error: any) {
+                console.warn("[useFile] Failed to add block due to following error: ",error);
+                dispatch(DELETE_BLOCK({ fileId, blockId: block.id}));
+                return {
+                    success: false,
+                    error: error.message
+                }
+            }
+    },[
+        dispatch
+    ])
+
+    const updateBlockHandler = useCallback(async (
+        fileId: string,
+        blockId: string,
+        updates: UIBlock
+    ) => {
+        try {
+            const result = await updateBlock(fileId, blockId, updates);
+            dispatch(UPDATE_BLOCK({
+                fileId,
+                blockId,
+                updates
+            }));
+
+            return {
+                success: true,
+                data: result
+            }
+        } catch (error: any) {
+            console.warn("[useFile] Failed to update block due to following error: ",error);
+            return {
+                success: false,
+                error: error.message
+            }
+        }
+    }, [
+        dispatch
+    ])
+
+    const deleteBlockHandler = useCallback(async (
+        fileId: string,
+        blockId: string,
+    ) => {
+        try {
+            const result = await deleteBlock(fileId, blockId);
+
+            dispatch(DELETE_BLOCK({
+                fileId,
+                blockId
+            }))
+
+            return {
+                sucess: true,
+            }
+        } catch (error: any) {
+            console.warn("[useFile] Failed to delete block due to following error: ",error);
+            return {
+                success: false,
+                error: error.message
+            }
+        }
+    }, [
+        dispatch
+    ])
       // --- Derived States ---
-    //  const allFilesArray: ReduxFile[] = allFileIds.map(id => filesById[id]);
     const allFilesArray: ReduxFile[] = useMemo(() => {
-        return allFileIds.map(id => filesById[id]);
+        return allFileIds.map((id: string) => filesById[id]);
     }, [ allFileIds, filesById ]);
-    // const currentFileObject = currentFileId ? filesById[currentFileId] : undefined; 
+    
     const currentFileObject = useMemo(() => {
         return currentFileId ? filesById[currentFileId] : undefined;
     }, [ currentFileId, filesById ])
@@ -345,5 +439,8 @@ export function useFile() {
         currentFileDetails,
         getWorkspaceFiles,
         invalidateFileCaches,
+        addBlockHandler,
+        updateBlockHandler,
+        deleteBlockHandler
      }
 }

@@ -5,11 +5,12 @@
 
 
 import { useToast } from "@/components/ui/use-toast";
-import { deleteFlashcardSetService, generateFlashcardsService, GenerationPayload, resetFlashcardService } from "@/services/flashcardServices";
+import { deleteFlashcardSetService, generateFlashcardsService, GenerationPayload, resetFlashcardService, updateSingleOutdatedFlashcardService } from "@/services/flashcardServices";
 import { addSet, removeSet } from "@/store/slices/flashcardSetSlice";
 import { resetSingleFlashcard } from "@/store/slices/flashcardSlice";
 import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
+import { updateFlashcard } from "@/store/slices/flashcardSlice";
 
 interface FlashcardGeneratorOptions{
     onSuccess?: (setId: string) => void;
@@ -22,6 +23,7 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
     const [ isGeneratingCards, setIsGeneratingCards ] = useState(false);
     const [ isDeletingFlashcardSet, setIsDeletingFlashcardSet ] = useState(false);
     const [ reset, setReset ] = useState(false);
+    const [ regenerateSingleFlashcard, setRegenerateSingleFlashcard  ] = useState(false);
 
     // overwrite-flow state: used when a flashcard set already exists (409)
     const [ showOverwriteModal, setShowOverwiteModal ] = useState(false);
@@ -64,8 +66,27 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
             })
         
             const newSet = result.data?.flashcardSet;
+            const allFlashcards = result.data.flashcards;
             if(newSet){
-                dispatch(addSet(newSet));
+                dispatch(addSet({
+                    _id: newSet._id,
+                    title: newSet.title,
+                    icon: newSet.icon ?? "",
+
+                    workspaceId: newSet.workspaceId,
+                    folderId: newSet.folderId,
+                    resourceId: newSet.resourceId,
+                    resourceType: newSet.resourceType,
+
+                    totalCards: newSet.totalCards,
+                    dueCount: newSet.totalCards,
+                    cards: allFlashcards,
+                    cardCount: allFlashcards.length,
+                    desiredTypes: newSet.desiredTypes,
+                    sourceSnapshot: newSet.sourceSnapshot,
+                    isOutdated: newSet.isOutdated,
+                    updatedAt: newSet.updatedAt
+                }));
             }
 
             if(options?.onSuccess){
@@ -166,6 +187,46 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
         toast,
         dispatch
     ])
+    const updateSingleFlashcard = useCallback(async (flashcardId: string ) => {
+        setRegenerateSingleFlashcard(true);
+        try {
+            const result = await updateSingleOutdatedFlashcardService(flashcardId);
+            if(!result || !result.success){
+                toast({
+                    title: "Failed",
+                    description: "Something went wrong, result is not success",
+                })
+                return result;
+            }
+            dispatch(updateFlashcard({
+                setId: result.data.flashcard.parentSetId,
+                card: result.data.flashcard
+            }))
+
+            // console.log("[useFlashcardGenerator] redux after update: ",
+            //     store.getState().flashcard.cardsBySet[])
+            toast({
+                title: "Success",
+                description: "Successfully reset flashcard",
+            })
+            return result;
+        } catch (error) {
+            console.warn("[useFlashcardGenerator] Error resetting flashcard: ",error);
+            toast({
+                title: "Failed",
+                description: "Something went wrong, in catch block of useFlashcardGenerator",
+            })
+            return {
+                success: false,
+                error: error as string
+            }
+        }finally{
+            setRegenerateSingleFlashcard(false);
+        }
+    },[
+        toast,
+        dispatch
+    ])
     // helper to hide overwrite modal + clear stored set id
     const closeOverwriteModal = () => {
         setShowOverwiteModal(false);
@@ -179,6 +240,8 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
         deleteFlashcardSet,
         resetCard,
         reset,
+        regenerateSingleFlashcard,
+        updateSingleFlashcard,
 
         // modal state + controls
         showOverwriteModal,
