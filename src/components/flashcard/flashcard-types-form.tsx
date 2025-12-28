@@ -92,6 +92,8 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
         desiredTypes,
       }
       setLastPayload(payload);
+
+      console.log("[flashcard-types-form] payload: ", payload);
       const result = await generateCards(payload);
     } catch (error) {
       console.warn("[Flashcard-types-form] Error submitting form: ",error);
@@ -134,13 +136,11 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
               min={MIN_CARDS}
               onChange={(e) => {
                 const inputValue = e.target.value;
-                if(inputValue === ''){
-                  setCardCount('');
-                }else if( Number(inputValue) < MIN_CARDS){
-                  setCardCount(MIN_CARDS);
-                }else{
-                   setCardCount(Number(inputValue));
+                if(inputValue === ""){
+                  setCardCount("");
+                  return;
                 }
+                setCardCount(Number(inputValue));
                
               }}
               onBlur={() => {

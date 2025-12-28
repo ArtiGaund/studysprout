@@ -12,7 +12,7 @@ import { useFlashcardSRS } from "@/hooks/flashcard/useFlashcardSRS";
 import { resetSingleFlashcard, updateFlashcard } from "@/store/slices/flashcardSlice";
 import { format } from "date-fns";
 import { Loader2, RotateCcw, Undo2 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 
 
@@ -46,10 +46,25 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
 
     const {
         reset,
-        resetCard
+        resetCard,
+        updateSingleFlashcard,
+        regenerateSingleFlashcard,
     } = useFlashcardGenerator();
 
+
     const isCompleted = new Date(card.dueDate) > new Date();
+
+    const generateFlashcard = async () => {
+        try {
+            const result = await updateSingleFlashcard(card._id);
+
+            if(!result || !result.success){
+                console.warn("[FlashcardStudyCard] Error generating flashcard", result);
+            }
+        } catch (error) {
+            console.warn("[FlashcardStudyCard] Error generating flashcard", error);
+        }
+    }
 
     // Reset all when card changes
     useEffect(() => {
@@ -57,7 +72,10 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
         setSelectedOption(null);
         setChecked(false);
         setUserAnswer("");
+        // console.log(card.source.blockIds);
+        // console.log(card.source.blocksState);
     },[card._id]);
+    // console.log("[FlashcardStudyCard] card:", card);
     return (
         <Card className="
         p-4 rounded-xl shadow-md border border-gray-400 flex flex-col gap-4 max-h-[70vh] overflow-y-auto
@@ -67,6 +85,23 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
             >
                 Card {index+1}/{total} • {card.type.toUpperCase()}
             </CardTitle>
+            {card.isOutdated && (
+                <div className="mx-4 px-3 py-2 rounded-lg bg-yellow-900 text-yellow-300 text-sm flex
+                 justify-between items-center">
+                    <span>
+                        ⚠️ This flashcard may be outdated. Notes were updated after this card was created.
+                    </span>
+                    {regenerateSingleFlashcard 
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <button
+                    onClick={generateFlashcard}
+                    className="ml-3 px-3 py-1 text-xs bg-yellow-700 hover:bg-yellow-600 rounded"
+                    >
+                        Regenerate
+                    </button>
+                    }
+                </div>
+            )}
             <div className="flex flex-row gap-6 items-center justify-between">
                 <div>
                       {isCompleted ? (
