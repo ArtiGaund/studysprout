@@ -74,3 +74,27 @@ export async function getFlashcardsBySetIdService(setId: string){
         throw error
     }
 }
+
+/**
+ * Regenerate flashcard set
+ * 
+ * @param setId - The id of the flashcard set
+ * @returns - regenerate flashcard set
+ * 
+ * @throws Error - Backend failure message
+ */
+
+export async function regenerateFlashcardSetService(
+    setId: string,
+){
+    try {
+        const relativePath = `/api/flashcard-set/${setId}/regenerate`;
+        const url = `${BASE_URL}${relativePath}`
+        const { data } = await axios.post(url);
+        if(!data) throw new Error(data.message);
+        return data.data;
+    } catch (error) {
+        console.warn("[FlashcardSetServices] Failed to regenerate flashcard set due to following error: ",error);
+        throw error
+    }
+}

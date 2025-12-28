@@ -115,3 +115,23 @@ export async function resetFlashcardService(cardId: string){
         throw error;
     }
 }
+/**
+ * Regenerate single outdated flashcard
+ * 
+ * @param flashcardId - The id of the flashcard
+ * @returns - The regenerate single flashcard
+ * 
+ * @throws Error - Backend failed message
+ */
+
+export async function updateSingleOutdatedFlashcardService(flashcardId: string) {
+    try {
+        const relativePath = `/api/regenerate-single-flashcard`;
+        const url = `${BASE_URL}${relativePath}`
+        const { data } = await axios.post(url, { flashcardId });
+        return data;
+    } catch (error) {
+        console.warn("[FlashcardServices] updateSingleOutdatedFlashcardService failed due to following error: ",error);
+        throw error;
+    }
+}

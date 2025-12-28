@@ -1,4 +1,5 @@
-import { File } from "@/model/file.model";
+import { File, IBlock } from "@/model/file.model";
+import { UIBlock } from "@/utils/block/normalizeBlock";
 import axios from "axios";
 
 
@@ -37,5 +38,59 @@ export async function getAllFilesByWorkspaceId(workspaceId: string){
     return data.data;
     } catch (error) {
         console.warn("[FileServices] Failed to get current file due to following error: ",error);
+    }
+}
+
+// Block services
+export async function addBlock(
+    fileId: string,
+     block: UIBlock, 
+     afterBlockId?: string | null
+){
+    try {
+        // console.log("[fileService] addBlock block: ",block);
+        const relativePath = `/api/files/${fileId}/blocks`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.post(url, {
+           block: {
+            id: block.id,
+            type: block.type,
+            props: block.props ?? {},
+            content: block.content
+           },
+           afterBlockId
+        });
+        // console.log("[fileServices] addBlock data: ",data);
+        if(!data.success) throw new Error(data.message);
+        return data.data;
+    } catch (error) {
+        console.warn("[FileServices] Failed to add block due to following error: ",error);
+
+    }
+}
+
+export async function updateBlock(fileId: string, blockId: string, updates: Partial<UIBlock>){
+    try {
+        // console.log("[fileServices] updateBlock blockId: ",blockId);
+        const relativePath = `/api/files/${fileId}/blocks/${blockId}`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.patch(url, updates);
+        // console.log("[fileServices] updateBlock data: ",data);
+        if(!data.success) throw new Error(data.message);
+        return data.data;
+    } catch (error) {
+        console.warn("[FileServices] Failed to update block due to following error: ",error);
+    }
+}
+
+export async function deleteBlock(fileId: string, blockId: string){
+    try {
+        const relativePath = `/api/files/${fileId}/blocks/${blockId}`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.delete(url);
+        if(!data.success) throw new Error(data.message);
+        return data.data;
+    } catch (error) {
+        console.warn("[FileServices] Failed to delete block due to following error: ",error);
     }
 }
