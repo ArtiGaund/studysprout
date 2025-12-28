@@ -28,8 +28,10 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
         currentFileDetails, 
         currentFile
      } = useFile();
+
+    //  console.log("[File page] currentFile: ",currentFile);
     const onChangeHandler = ( content: string ) => {
-        console.log("Live updated content of file ",content);
+        // console.log("Live updated content of file ",content);
     }
     useEffect(() => {
         if(!params.fileId || typeof params.fileId !== 'string'){
