@@ -15,12 +15,24 @@
  */
 import { computeHash } from "@/lib/compute-hash";
 import dbConnect from "@/lib/dbConnect";
+import { bumpFileVersion } from "@/lib/file/bumpFileVersion";
 import {FileModel, FolderModel, WorkSpaceModel} from "@/model/index";
-import { refreshPlainTextContent } from "@/utils/fileProcessingUtils";
-import { getAggregatedPlainText } from "@/utils/flashcardTextExtractor";
+// import { refreshPlainTextContent } from "@/utils/fileProcessingUtils";
+// import { getAggregatedPlainText } from "@/utils/flashcardTextExtractor";
 import mongoose from "mongoose";
 
+type FileUpatePayload ={
+    _id: string;
+    title?: string;
+    iconId?: string;
+    bannerUrl?: string;
+    folderId?: string;
+    inTrash?: string;
+    workspaceId?: string;
 
+    conflictState?: "none" | "conflict" | "resolved";
+    isLocked?: boolean;
+}
 export async function POST(request: Request) {
     await dbConnect()
     try {
@@ -49,36 +61,20 @@ export async function POST(request: Request) {
             }, { status: 404 });
             }
 
-            // Only allow controlled fields
-            delete updates.version;
-            delete updates.lastLocalChangeId;
-            delete updates.updatedAtLocal;
-            delete updates.lastUpdated;
-            delete updates.contentHash;
-         
-           if(updates.updatedAtLocal && typeof updates.updatedAtLocal === 'string'){
-            updates.updatedAtLocal = new Date(updates.updatedAtLocal);
-           }
-           
-           if(updates.data){
-            updates.contentHash = computeHash(updates.data);
-           }
-            // 3. Apply updates directly to the Mongoose Document instance
-            // This ensures Mongoose runs validations and proper type casting before the final save.
-            Object.assign(file, updates);
-           
+        //    apply allowed updates explicitly
+        if(updates.title !== undefined) file.title = updates.title;
+        if(updates.iconId !== undefined) file.iconId = updates.iconId;
+        if(updates.bannerUrl !== undefined) file.bannerUrl = updates.bannerUrl;
+        if(updates.folderId !== undefined) file.folderId = updates.folderId;
+        if(updates.inTrash !== undefined) file.inTrash = updates.inTrash;   
+        if(updates.workspaceId !== undefined) file.workspaceId = updates.workspaceId;
+        if(updates.conflictState !== undefined) file.conflictState = updates.conflictState;
+        if(updates.isLocked !== undefined) file.isLocked = updates.isLocked;
 
-            file.version = (file.version || 1) + 1;
-            file.lastLocalChangeId = (file.lastLocalChangeId ?? 0) + 1;
-            file.updatedAtLocal = new Date();
-            file.lastUpdated = new Date();
-
-              // --- START AI OPTIMISATION & THROTTLING LOGIC ---
-
-           await refreshPlainTextContent(file);
-            // --- END AI OPTIMISATION & THROTTLING LOGIC ---
+           // updating file version
+                  bumpFileVersion(file);
             // 4. Await the save operation
-            const savedFile = await file.save();
+           await file.save();
 
             
         
@@ -86,7 +82,7 @@ export async function POST(request: Request) {
                 statusCode: 200,
                 message: "File updated successfully.",
                 success: true,
-                data: { file: savedFile.toObject({ getters: true, virtuals: true }) } 
+                data: file,
             }, { status: 200 });
     } catch (error: any) {
         console.error("Error while updating the file:", error);

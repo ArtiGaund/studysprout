@@ -13,7 +13,7 @@
  */
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
-import { FlashcardSetModel } from "@/model";
+import { FileModel, FlashcardSetModel } from "@/model";
 
 export async function GET(request: Request) {
     await dbConnect();
@@ -31,10 +31,51 @@ export async function GET(request: Request) {
     }
 
     const setId = queryParams.setId;
-
     try {
         const set = await FlashcardSetModel.findById(setId);
-        
+        if(!set){
+            return errorResponse(
+                "Set not found",
+                404,
+                404
+            )
+        }
+
+        // fetch all files included in this set
+        let files = [];
+        if(set?.resourceType === "Workspace"){
+            files = await FileModel.find({ workspaceId: set?.workspaceId }).lean();
+        }else if(set?.resourceType === "Folder"){
+            files = await FileModel.find({ folderId: set?.folderId }).lean();
+        }else{
+            files = await FileModel.find({ _id: set?.resourceId }).lean();
+        }
+
+        // compute latest totalBlocks and totalChars
+        let totalBlocks = 0;
+        let totalChars = 0;
+
+        for(const file of files){
+            for(const bId of file.blockOrder){
+                const block = file.blocks[bId];
+                if(!block?.structuredText) continue;
+
+                totalBlocks++;
+                totalChars+= block.structuredText.length;
+            }
+        }
+
+        const blockCountSnapshot = set?.sourceSnapshot?.blockCount || 0;
+        const charCountSnapshot = set?.sourceSnapshot?.totalChars || 0;
+
+
+        const addedBlocks = totalBlocks - blockCountSnapshot;
+        const addedChars = totalChars - charCountSnapshot;
+
+        const blockThreshold = 3;
+        const charThreshold = Math.max(50, Math.floor(charCountSnapshot*0.10)); //10%
+
+        const isOutdated = addedBlocks >= blockThreshold || addedChars >= charThreshold;
         if(!set){
             return errorResponse(
                 "No set found",
@@ -45,7 +86,10 @@ export async function GET(request: Request) {
 
         return successResponse(
             "Successfully fetched flashcard set",
-            set,
+            {
+                ...set,
+                isOutdated
+            },
             200,
             200
         )

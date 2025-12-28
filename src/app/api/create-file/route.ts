@@ -1,7 +1,7 @@
 import dbConnect from "@/lib/dbConnect";
 import {FileModel, FolderModel, WorkSpaceModel} from "@/model/index";
 import mongoose from "mongoose";
-import { File as MongooseFile } from "@/model/file.model";
+import { IBlock, File as MongooseFile } from "@/model/file.model";
 
 export async function POST(request: Request) {
     await dbConnect()
@@ -22,19 +22,23 @@ export async function POST(request: Request) {
                 success: false
             }, { status: 400})
         }
+    
         // creating a new file
-        const EMPTY_BLOCK = [{ type: "paragraph", content: []}]
         const newFileData: MongooseFile = {
             title: fileData.title || "Untitled",
             folderId: fileData.folderId,
             workspaceId: fileData.workspaceId,
-            data: JSON.stringify(EMPTY_BLOCK),
+           
+            blocks: new Map<string,IBlock>,
+            blockOrder: [],
             // safe backend defaults
             iconId: "📄",
             bannerUrl: "",
             inTrash: undefined,
             createdAt: new Date(),
             lastUpdated: new Date(),
+            version: 1,
+            lastLocalChangeId: 0,
         }
         const newFile = await FileModel.create(newFileData);
         
@@ -68,20 +72,6 @@ export async function POST(request: Request) {
             }, { status: 404 });
         }
 
-        // find the folder and update it with the new file
-        const folderId = newFile.folderId
-        const folder = await FolderModel.findById(folderId)
-        if(!folder){
-           await FileModel.findByIdAndDelete(newFile._id)
-            // const deletingFolder = await FolderModel.findByIdAndDelete(newFolder._id)
-            return Response.json({
-                statusCode: 400,
-                message: "Folder id is required",
-                success: false
-            })
-        }
-
-    
         return Response.json({
             statusCode: 201, // 201 Created is the appropriate status for successful resource creation
             message: "File created successfully and added to folder.",
@@ -92,8 +82,6 @@ export async function POST(request: Request) {
             }
         }, { status: 201 });
 
-
-        // console.log("Added folder in workspace ",workspace)
       
     } catch (error: any) {
          console.error("Error creating new file:", error);
