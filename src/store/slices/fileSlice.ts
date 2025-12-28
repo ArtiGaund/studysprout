@@ -41,12 +41,18 @@ const fileSlice = createSlice({
                 },
         UPDATE_FILE: (state, action: PayloadAction<{ id: string; updates: Partial<ReduxFile>;}>) => {
             const { id, updates } = action.payload;
-                        if(id && state.byId[id]){
-                            state.byId[id] = {
-                                ...state.byId[id],
-                                ...updates,
-                            } 
-                        }
+            const file = state.byId[id];
+            if(!file) return;
+
+            // Prevent accidental overwrites of blocks / blockorder
+            const { blocks, blockOrder, ...metadataUpdates } = updates;
+
+            state.byId[id] = {
+                ...file,
+                ...metadataUpdates,
+                blocks: file.blocks,
+                blockOrder: file.blockOrder,
+            };
         },
         SET_FILES: (state, action: PayloadAction<ReduxFile[]>) => {
             const newIncomingIds = new Set(action.payload.map(file => file._id));
@@ -75,6 +81,38 @@ const fileSlice = createSlice({
         SET_FILE_ERROR: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload;
         },
+        ADD_BlOCK: (state, action) => {
+            const { fileId, block, afterBlockId } = action.payload;
+            const file = state.byId[fileId];
+            if(!file) return;
+
+            file.blocks[block.id] = block;
+
+            if(!afterBlockId){
+                file.blockOrder.push(block.id);
+            }else{
+                const index = file.blockOrder.indexOf(afterBlockId);
+                file.blockOrder.splice(index + 1, 0, block.id);
+            }
+        },
+        UPDATE_BLOCK: (state, action) => {
+            const { fileId, blockId, updates } = action.payload;
+            const file = state.byId[fileId];
+            if(!file) return;
+
+            file.blocks[blockId] = {
+                ...file.blocks[blockId],
+                ...updates
+            };
+        },
+        DELETE_BLOCK: (state, action) => {
+            const { fileId, blockId } = action.payload;
+            const file = state.byId[fileId];
+            if(!file) return;
+
+            delete file.blocks[blockId];
+            file.blockOrder = file.blockOrder.filter(id => id!== blockId);
+        }
     }
 })
 
@@ -86,6 +124,9 @@ export const {
     SET_CURRENT_FILE,
      SET_FILE_LOADING,
     SET_FILE_ERROR,
+    ADD_BlOCK,
+    UPDATE_BLOCK,
+    DELETE_BLOCK,
 } = fileSlice.actions
 
 export default fileSlice.reducer;

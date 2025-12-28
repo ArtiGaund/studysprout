@@ -73,7 +73,11 @@ const flashcardSetSlice = createSlice({
             action: PayloadAction<ReduxFlashcardSet>
         ){
             const updated = action.payload;
-            state.sets = state.sets.map((s) => s._id === updated._id ? updated : s);
+            state.sets = state.sets.map((s) =>
+                 s._id === updated._id
+             ?{ ...s, ...updated }
+            : s
+        );
         }
     },
 });
