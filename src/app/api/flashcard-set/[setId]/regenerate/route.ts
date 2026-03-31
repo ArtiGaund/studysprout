@@ -1,20 +1,19 @@
 /**
- * POST /api/generate-flashcards
- * 
- * Generate flashcards from Workspace / Folder / File notes.
- * 
- * Responsibility:
- * - Validate request payload (resourceId, resourceType, cardCount, desiredTypes).
- * - Fetch all relevant files depending on the selected resouce level.
- * - Refresh and aggregate plain-text content from files.
- * - Chunk the aggregated text for LLM processing.
- * - Call `GenerateFlashcardsFromChunks` and return unified API response.
- * 
- * Notes:
- * - This route preform heavy processing: text regeneration, chunking, AI calls.
- * - store the flashcards, and use them in UI.
- * - Error responses use the unified API response helpers.
- * - 409 error code is different from any other error code, its to handle existing flashcard set.
+ * RESOURCE: Flashcard Regeneration Engine
+ * --------------------------------------
+ * Endpoint: POST /api/generate-flashcards/[setId]
+ * Role: Updates an existing flashcard set by generating fresh content.
+ * * * Logic Flow:
+ * 1. State Retrieval: Loads the existing Set metadata (Card count, types, and resource mapping).
+ * 2. Data Sync: Aggregates live block content from the linked Workspace/Folder/File.
+ * 3. AI Pipeline: Sends block-level chunks to Gemini/LLM to generate new flashcards.
+ * 4. Atomic Cleanup: 
+ * - Identifies all cards currently linked to the Set.
+ * - Hard deletes 'FlashcardProgress' records for old cards to reset SRS metrics.
+ * - Removes old 'Flashcard' documents from the database.
+ * 5. State Update: Injects new cards into the Set and updates the 'sourceSnapshot' 
+ * to reflect the content state at the time of regeneration.
+ * * * Note: This process resets Spaced Repetition (SRS) data for the entire set.
  */
 
 import dbConnect from "@/lib/dbConnect";
@@ -23,8 +22,7 @@ import { getAllFilesByWorkspaceId, getCurrentFile } from "@/services/fileService
 import { getAllFiles } from "@/services/folderServices";
 import { NextRequest } from "next/server";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
-import {  FlashcardModel, FlashcardSetModel, FolderModel, WorkSpaceModel } from "@/model";
-import { Types } from "mongoose";
+import {  FlashcardModel, FlashcardProgressModel, FlashcardSetModel } from "@/model";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { chunkBlocks } from "@/helpers/chunkBlocks";
@@ -207,6 +205,7 @@ export async function POST(
             const usedIds: string[] = card.blockIdsUsed;
             const safeIds = usedIds.filter(id => blockLookup[id]);
             return {
+                parentSetId: setId,
                 type: card.type,
                 question: card.question,
                 answer: card.answer,
@@ -245,15 +244,28 @@ export async function POST(
          }
 
         const flashcardIds = flashcardInserted.map(flashcard => flashcard._id);
-          //   delete all flashcards belonging to this set
-                await FlashcardModel.deleteMany({ parentSetId: setId });
+        
+        // --- START SHARED WORKSPACE CLEANUP ---
+        
+        // 1. Identify the OLD cards that are currently attached to this set
+        const oldCards = await FlashcardModel.find({ parentSetId: setId}).select("_id");
 
-           //  Update flashcards to reference the new set
-        await FlashcardModel.updateMany(
-            { _id: { $in: flashcardIds }},
-            { parentSetId: setId },
-        )
+        const oldCardIds = oldCards.map(card => card._id);
 
+        // 2. Delete all FlashcardProgress records for those old cards
+        if(oldCardIds.length > 0){
+            await FlashcardProgressModel.deleteMany({
+                flashcardId: { $in: oldCardIds }
+            });
+        }
+
+        // 3. Now delete the actual old flashcards belonging to this set
+        await FlashcardModel.deleteMany({ parentSetId: setId });
+
+        // --- END SHARED WORKSPACE CLEANUP ---
+
+
+        
 
         if(allGeneratedCards.length === 0){
             return errorResponse(
