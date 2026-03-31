@@ -1,42 +1,55 @@
+/**
+ * GET WORKSPACE API
+ * -----------------
+ * Role: Retrieves all workspaces associated with a specific user.
+ * Logic: Perform a "Member or Owner" check to ensure full accessibility.
+ */
+import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
-import{ FileModel, FolderModel, WorkSpaceModel} from "@/model/index";
-
-
+import{ WorkSpaceModel} from "@/model/index";
 
 export async function GET( request: Request ){
     await dbConnect()
 
-    const { searchParams } = new URL(request.url)
-        const queryParams = {
-            userId: searchParams.get('userId')
-        }
-    
-    if(!queryParams){
-        return Response.json({
-            statusCode: 401,
-            message: "Unauthorized",
-            success: false
-        })
+    // 1. Extract User Identity from Query Parameters
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if(!userId){
+        return errorResponse(
+            "User Id is required",
+            400,
+            400,
+        );
     }
-    // console.log("Query params ",queryParams)
-
     try {
-        const workspaces = await WorkSpaceModel.find({ workspace_owner: queryParams.userId }).lean();
-        // console.log("[route] check-user-have-created-workspace: workspaces:", workspaces);
-
-        return Response.json({
-            statusCode: 200,
-            message: "Workspace is present under the current user",
-            success: true,
-            data: workspaces
-        }, {status: 200})
+        /**
+         * 2. Perform Complex Query
+         * Finds workspaces where the user is either:
+         * A) The primary owner (workspace_owner)
+         * B) A member of the collaboration team (members.userId)
+         */
+        const workspaces = await WorkSpaceModel.find({ 
+            $or: [
+                { workspace_owner: userId },
+                { "members.userId": userId },
+            ]
+         }).lean();
+        
+        // 3. Return success with lean data for frontend performance
+        return successResponse(
+            "Workspaces retrieved successfully",
+            workspaces,
+            200,
+            200
+        )
         
     } catch (error) {
-        console.log("Error while finding the workspace under the current user ",error)
-        return Response.json({
-            statusCode: 500,
-            message: error,
-            success: false
-        }, {status: 500 })
+        console.error("Error while finding the workspace under the current user ",error)
+        return errorResponse(
+            "Internal Server error while finding the workspace under the current user",
+            500,
+            500,
+        );
     }
 }
