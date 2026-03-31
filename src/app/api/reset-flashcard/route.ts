@@ -9,26 +9,31 @@
  */
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
-import { FlashcardModel } from "@/model";
+import { FlashcardModel, FlashcardProgressModel } from "@/model";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/options";
 
 export async function POST(request: Request){
     await dbConnect();
-    const { searchParams} = new URL(request.url);
-    const queryParams = {
-        cardId: searchParams.get('cardId')
-    }
 
-    if(!queryParams || !queryParams.cardId){
+    const session = await getServerSession(authOptions);
+    if(!session?.user) return errorResponse(
+        "Unauthorized",
+        401,
+        401,
+    )
+    const { searchParams} = new URL(request.url);
+    const cardId = searchParams.get('cardId');
+
+    if(!cardId){
         return errorResponse(
-            "No card id present",
-            401,
-            401
+            "No card id is present",
+            400,
+            400,
         )
     }
-
-    const cardId = queryParams.cardId;
     try {
-        
+
         const card = await FlashcardModel.findById(cardId);
 
         if(!card){
@@ -38,18 +43,14 @@ export async function POST(request: Request){
                 404
             )
         }
-
-        const today = new Date();
-        card.interval = 1;
-        card.difficulty = 2.5;
-        card.repetition = 0;
-        card.dueDate = today;
-        card.lastReviewed = undefined;
-
         await card.save();
 
-
-        return successResponse(
+        await FlashcardProgressModel.findOneAndDelete({
+            cardId,
+            userId: session.user._id,
+        });
+        
+       return successResponse(
             "Successfully reset flashcard",
             200,
             200
