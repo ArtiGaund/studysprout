@@ -1,20 +1,43 @@
-import mongoose, { Schema, Document, ObjectId, Types } from "mongoose";
-import { User } from "./user.model";
-import { Image } from "./image.model";
-import { Folder, FolderSchema } from "./folder.model";
+/**
+ * @module WorkspaceModel
+ * @description The core Mongoose schema for the 'Workspaces' collection. 
+ * Orchestrates high-level metadata and permission-based access control.
+ * * KEY ARCHITECTURAL FEATURES:
+ * 1. RBAC (Role-Based Access Control): Implements a `members` sub-document array with 'editor'/'viewer' roles.
+ * 2. Hybrid ID Strategy: Supports both `Types.ObjectId` and `string` to ensure compatibility between 
+ * the MongoDB driver and the Frontend/Redux types.
+ * 3. Soft-Deletion Support: Includes an `inTrash` field to allow for "Undo" functionality.
+ * 4. Relational Integrity: Links to "User", "Folder", and "Image" collections via MongoDB `ref`.
+ */
+import mongoose, { Schema, Types } from "mongoose";
 
+// --- Types --
+export type WorkspaceMemberRole = "editor" | "viewer";
+
+/**
+ * @interface WorkspaceMemberDB
+ * Defines the structure for collaborative access. 
+ */
+export interface WorkspaceMemberDB {
+    userId: Types.ObjectId | string;
+    role: WorkspaceMemberRole;
+    addedAt?: Date;
+}
 export interface WorkSpace{
     _id: Types.ObjectId |string,
-    workspace_owner: Types.ObjectId | string,
+    workspace_owner: Types.ObjectId | string, // Primary owner with full privileges
     title?: string,
     iconId?: string,
-    data?: string,
-    inTrash?: string,
+    data?: string,            // Catch-all for legacy or unstructured metadata
+    inTrash?: string,          // Timestamp or ID indicating "Trash" status
     logo?: Types.ObjectId | string,
     bannerUrl?: string,
-    folders?: Types.ObjectId[] | string[],
+    folders?: Types.ObjectId[] | string[],  // One-to-Many relationship with Folders
+    members?: WorkspaceMemberDB[];           // Collaborative members
+    isPublic?: boolean;                      // Privacy toggle
 }
 
+// --- Schema Definition ---
 export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
     workspace_owner:{
         type: Schema.Types.ObjectId,
@@ -46,14 +69,35 @@ export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
         type: String,
     },
     folders: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Folder"
-            }]
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Folder"
+    }],
+    members: {
+        type: [
+        { 
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: true,
+            },
+            role: {
+                type: String,
+                enum: ["editor", "viewer"],
+                default: "editor",
+            },
+            addedAt: {
+                type: Date,
+                default: Date.now,
+            }
+        }
+    ],
+    default: [],
+    },
+    isPublic: {
+        type: Boolean,
+        default: false,
+    },
 },
 {
-    timestamps: true
+    timestamps: true   // Automatically generates 'createdAt' and 'updatedAt'
 })
-
-// const WorkSpaceModel = (mongoose.models.WorkSpace as mongoose.Model<WorkSpace>) || (mongoose.model<WorkSpace>("WorkSpace", WorkspaceSchema))
-
-// export default WorkSpaceModel

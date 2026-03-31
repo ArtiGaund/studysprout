@@ -1,14 +1,17 @@
 /**
- * Mongoose Model Registry
- * 
- * Centralizes all models to prevent recompilation issues in Next.js
- * 
- * Usage:
- *  import { FlashcardModel } from "@/model/index";
+ * @module ModelRegistry
+ * @description Centralized Mongoose model factory for the StudySprout ecosystem.
+ * * * ARCHITECTURAL SIGNIFICANCE:
+ * 1. Hot-Reload Resilience: Implements a "Check-or-Create" pattern to prevent Mongoose 
+ * OverwriteModelErrors during Next.js development (Fast Refresh).
+ * 2. Type-Safe Exports: Ensures all exported models carry the correct TypeScript 
+ * interfaces (User, Folder, File, etc.) for full IDE intellisense.
+ * 3. Singleton Pattern: Ensures that only one instance of each model exists in the 
+ * Node.js process, optimizing memory and connection overhead.
  */
 import mongoose from "mongoose";
 
-// Import all your individual schema files
+// Schema & Interface Imports
 import { User, UserSchema } from "./user.model";
 import { 
     File,
@@ -19,8 +22,15 @@ import { WorkSpace, WorkspaceSchema } from "./workspace.model";
 import { Image, ImageSchema } from "./image.model";
 import { Flashcard, FlashcardSchema } from "./flashcard.model";
 import { FlashcardSet, FlashcardSetSchema } from "./flashcardset.model";
+import { FlashcardProgressSchema, IFlashcardProgress } from "./flashcard-progress.model";
 
-// Avoid model overwrite errors during hot reload
+/**
+ * @section Singleton Model Initialization
+ * Pattern: (Existing Model) || (New Compiled Model)
+ * This is essential for Next.js because global variables (like mongoose.models) 
+ * persist across hot-reloads, but the code defining them may re-run.
+ */
+
 const UserModel = 
 (mongoose.models.User as mongoose.Model<User>) || (mongoose.model<User>("User", UserSchema))
 const FolderModel = 
@@ -35,6 +45,9 @@ const FlashcardModel =
 (mongoose.models.Flashcard as mongoose.Model<Flashcard>) || mongoose.model<Flashcard>("Flashcard", FlashcardSchema);
 const FlashcardSetModel =
 (mongoose.models.FlashcardSet as mongoose.Model<FlashcardSet>) || mongoose.model<FlashcardSet>("FlashcardSet", FlashcardSetSchema);
+const FlashcardProgressModel = 
+(mongoose.models.FlashcardProgress as mongoose.Model<IFlashcardProgress>) || 
+mongoose.model<IFlashcardProgress>("FlashcardProgress", FlashcardProgressSchema);
 export {
     UserModel,
     FolderModel,
@@ -43,4 +56,5 @@ export {
     ImageModel,
     FlashcardModel,
     FlashcardSetModel,
+    FlashcardProgressModel,
 }

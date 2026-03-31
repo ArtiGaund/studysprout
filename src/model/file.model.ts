@@ -1,168 +1,20 @@
-// import { Schema } from "mongoose";
-// export interface File {
-//     _id?: string;
+/**
+ * @module FileModel
+ * @description The foundational schema for the StudySprout editor. 
+ * It implements a "Hybrid Persistence" strategy to support both real-time 
+ * collaboration and efficient AI-driven flashcard generation.
+ * * * KEY ARCHITECTURAL DECISIONS:
+ * 1. Binary Sync (CRDT): Uses `contentBinary` to store Yjs/Automerge state. This is the 
+ * industry standard for merging offline changes without data loss.
+ * 2. Block-Map Indexing: Implements a `Map<string, IBlock>` and `blockOrder` array. 
+ * This O(1) lookup is significantly faster than searching through a nested array.
+ * 3. AI-Ready Metadata: The `plainText` and `structuredText` fields within `IBlock` 
+ * pre-process content for the Gemini API, reducing server-side compute.
+ * 4. Cache-Efficiency: By keeping a JSON "Preview" of blocks, the system can render 
+ * sidebars and summaries without decoding the heavy binary buffer.
+ */
 
 import { Schema } from "mongoose";
-
-//     // core content
-//     title: string;
-//     iconId?: string;
-//     data?: string;                      //full JSON blocks (always latest)
-//     plainTextContent?: string;         //will store json file data in string for AI
-//     structuredPlainText?:string;
-//     blockMap?:any;
-
-//     // versioning
-//     version?: number;                    //increments every updates
-//     contentHash?: string;                //detect identical saves
-//      lastSyncedAt?: Date;
-//      updatedAtLocal?: Date | string;
-
-//     //  Offline sync
-//     localChangeId?: string;              //prevent duplicate offline syncs
-//     lastLocalChangeId?: number;
-    
-//     // basic metadata
-//      createdAt: Date;
-//     lastUpdated: Date;
-                  
-//     // conflict state
-//     conflictState?: "none" | "conflict" | "resolved";             //"resolved","conflict", null
-//     isLocked?: boolean;                 //future multiuser editing
-//     deletedAt?: Date | null;
-
-//     // undo /history (24h)
-//     history?: Array<{
-//         version: number;
-//         data: string;
-//         updatedAt: Date;
-//     }>;  //compact version history
-
-//     // org
-//      workspaceId?: string;
-//     folderId?: string; 
-//     bannerUrl?: string;
-//     inTrash?: string;
-
-//     plainTextLastGenerated?: Date;
-// }
-// export const BlockMapEntrySchema = new Schema({
-//     id: { type: String, required: true },
-//     start: { type: Number, required: true },
-//     end: { type: Number, required: true },
-//     type: { type: String},
-// }, { _id: false })
-
-// export const FileSchema: Schema<File> = new Schema({
-//     title:{
-//         type: String,
-//         required: [true, "Title is required"],
-//     },
-//     iconId:{
-//         type: String,
-//     },
-
-
-//      data: {
-//         type: String,
-//         default: '[]',
-//     },
-//      plainTextContent: {
-//         type: String,
-//         default:null,
-//     },
-//     structuredPlainText: {
-//         type: String,
-//         default: null,
-//     },
-//       blockMap: [{ 
-//         type: [BlockMapEntrySchema],
-//         default: []
-//     }],
-
-//     version: {
-//         type: Number,
-//         default: 1,
-//     },
-//     contentHash: {
-//         type: String,
-//         default: "",
-//     },
-//     localChangeId: {
-//         type: String,
-//         default: "",
-//     },
-
-//     lastLocalChangeId:{
-//         type: Number,
-//         default: 0
-//     },
-
-//     lastSyncedAt: {
-//         type: Date,
-//         default: null,
-//     },
-//     updatedAtLocal: {
-//         type: Date,
-//         default: null,
-//     },
-//     conflictState: {
-//        type: String,
-//        default: "none",
-//        enum: ["none", "conflict", "resolved"],
-//     },
-//     isLocked: {
-//         type: Boolean,
-//         default: false
-//     },
-//     deletedAt: {
-//         type: Date,
-//         default: null
-//     },
-
-//    history: [{
-//     version: Number,
-//     data: String,
-//     updatedAt: Date,
-//    }],
-
-//     createdAt: {
-//         type: Date,
-//         required: true,
-//         default: Date.now
-//     },
-//     lastUpdated: {
-//         type: Date,
-//         default: Date.now
-//     },
-
-//      workspaceId:{
-//         type: Schema.Types.ObjectId,
-//         ref: "Workspace"
-//     },
-//     folderId: {
-//         type: Schema.Types.ObjectId,
-//         ref: "Folder"
-//     },
-//      bannerUrl:{
-//         type: String,
-//     },
-//     inTrash: {
-//         type: String,
-//     },
-   
-//     plainTextLastGenerated: {
-//         type: Date,
-//         default: null
-//     },
-// }
-// )
-
-/**
- * File Schema
- * 
- * This schema is for block level schema
- */
 
 export interface IBlock{
     id: string;
@@ -174,6 +26,11 @@ export interface IBlock{
     updatedAt: Date;
 }
 
+/**
+ * @schema BlockSchema
+ * Sub-document schema for individual content units. 
+ * Using {_id: false} to reduce overhead as we use a custom UUID string `id`.
+ */
 export const BlockSchema = new Schema<IBlock>({
     id: {
         type: String,
@@ -217,44 +74,54 @@ export interface File{
     workspaceId?: string;
     folderId?: string;
     bannerUrl?: string;
-    inTrash?: string;
+    inTrash?: string | null;
     createdAt: Date;
     lastUpdated: Date;
+
+    contentBinary: Buffer | null;
 
     // block-based content
     blocks: Map<string,IBlock>,
     blockOrder: string[],
 
-    // version & history
-    version: number;
-    history?: Array<{
-        version: number,
-        blocks: any,   //store blocks or diffs
-        updatedAt: Date,
-    }>;
-
-    // sync & collab
-    contentHash?: string;
-    localChangeId?: string;
-    lastLocalChangeId?: number;
-    lastSyncedAt?: Date;
-    updatedAtLocal?: Date;
-    conflictState?: "none" | "conflict" | "resolved";
-    isLocked?: boolean;
+    contentLastModified: Date,
     deletedAt?: Date | null;
 
     // optional 
     blockMap?:BlockMapEntry[];
 }
+
+/**
+ * @schema FileSchema
+ * The main entity schema. Optimized for relational lookups and sync status tracking.
+ */
 export const FileSchema = new Schema<File>({
     title: {
         type: String,
         required: true,
     },
+    workspaceId: {
+        type: Schema.Types.ObjectId,
+        ref: "Workspace"
+    },
+    folderId: {
+        type: Schema.Types.ObjectId,
+        ref: "Folder"
+    },
     iconId: {
         type: String,
     },
 
+    // --- CRDT & OFFLINE CORE ---
+    // This stores the Yjs document state as a binary buffer
+    // This is the ONLY way to make Offline Mode merge correctly
+    contentBinary: {
+        type: Buffer,
+        default: null,
+    },
+    // --- FLASHCARDS & AI DATA ---
+    // We keep a JSON "Preview" of the blocks here so Flashcard Sidebar doesn't have to decode
+    // binary every time
     blocks: {
         type: Map,
         of: BlockSchema,
@@ -266,63 +133,23 @@ export const FileSchema = new Schema<File>({
         default: [],
     },
 
-    version: {
-        type: Number,
-        default: 1,
-    },
-    history:[{
-        version: Number,
-        blocks: Schema.Types.Mixed,
-        updatedAt: Date,
-    }],
-
-    contentHash: {
-        type: String,
-        default: "",
-    },
-    localChangeId: {
-        type: String,
-        default: "",
-    },
-    lastLocalChangeId: {
-        type: Number,
-        default: 0
-    },
-    lastSyncedAt: {
+    // Track when the CONTENT specifically changed to trigger "Outdated" flashcards
+    contentLastModified: {
         type: Date,
-        default: null,
-    },
-    updatedAtLocal: {
-        type: Date,
-        default: null,
-    },
-    conflictState: {
-       type: String,
-       default: "none",
-       enum: ["none", "conflict", "resolved"],
-    },
-    isLocked: {
-        type: Boolean,
-        default: false,
+        default: Date.now,
     },
     deletedAt: {
         type: Date,
         default: null
     },
 
-    workspaceId: {
-        type: Schema.Types.ObjectId,
-        ref: "Workspace"
-    },
-    folderId: {
-        type: Schema.Types.ObjectId,
-        ref: "Folder"
-    },
+    
     bannerUrl: {
         type: String,
     },
     inTrash: {
         type: String,
+        default: null,
     },
 
     createdAt: {
