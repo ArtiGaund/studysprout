@@ -1,28 +1,39 @@
+/**
+ * @component DashboardOverview
+ * @description A polymorphic container that manages the high-level creation and 
+ * listing of entities (Folders within Workspaces or Files within Folders).
+ * * Key Architecture:
+ * - Dynamic Context: Uses `dirType` to swap between Workspace-level and Folder-level logic.
+ * - Optimized Selectors: Implements memoized selector factories (`makeSelectFolders`, `makeSelectFiles`) 
+ * to prevent unnecessary re-renders across the dashboard tree.
+ * - Action Abstraction: Encapsulates creation logic with optimistic-style feedback using Toasts.
+ */
+
 "use client";
 
 import { IBlock, File as MongooseFile} from "@/model/file.model";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "../sidebar/folders-dropdown-list";
 import { RootState } from "@/store/store";
-
 import TooltipComponent from "../global/tooltip-component";
-
 import { toast } from "../ui/use-toast";
-
 import { FolderIcon, FileIcon } from "lucide-react";
 import FolderFileList from "./folder-file-list";
 import { useCallback } from 'react';
 
-// Import Redux types 
+// --- Redux & Custom Hooks --- 
 import { 
     ReduxWorkSpace,
     ReduxFolder,
     ReduxFile
  } from "@/types/state.type";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
+import { useSelector } from "react-redux";
+import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
+import { makeSelectFolders, selectCurrentFolder } from "@/store/selectors/folderSelector";
+import { makeSelectFiles } from "@/store/selectors/fileSelector";
 
 
 interface DashboardOverviewProps{
@@ -33,8 +44,6 @@ interface DashboardOverviewProps{
     globalEditingItem?: RootState['ui']['editingItem'];
 }
 
-
-
 const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     dirDetails,
     fileId,
@@ -42,134 +51,41 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     params,
     globalEditingItem,
 }) => {
-    
+   // --- Contextual State Selection ---
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
+    const workspaceId = currentWorkspace?._id;
+    const currentFolder = useSelector(selectCurrentFolder);
+    const folderId = currentFolder?._id;
 
-    const [ refetchTrigger, setRefetchTrigger ] = useState(0)
-    const { currentWorkspace } = useWorkspace();
-    const { folders, currentFolder, getFolders, createFolder} = useFolder();
-    const { 
-        files,
-         currentFile, 
-         getFiles,
-          createFile,
-          getWorkspaceFiles 
-    } = useFile();
-     const workspaceId = currentWorkspace?._id.toString() ?? "";
+    const { createFolder} = useFolder();
+    const { createFile } = useFile();
+
+    /** * @section Memoized Selectors
+     * Using factory functions to create instance-specific selectors.
+     * This ensures that the component only re-renders when the specific 
+     * folders/files for the current view change.
+     */
+    const selectFolders = useMemo(makeSelectFolders,[]);
+    const selectFiles = useMemo(makeSelectFiles, []);
+
+    const EMPTY_FOLDER: ReduxFolder[] = [];
+    const EMPTY_FILE: ReduxFile[] = [];
+
+    const folders = useSelector( (state: RootState) =>
+        workspaceId ? selectFolders(state, workspaceId) : EMPTY_FOLDER
+    );
+    const files = useSelector( (state: RootState) =>
+    folderId ? selectFiles(state, folderId) : EMPTY_FILE
+    );
+
     const isEditable = !dirDetails.inTrash;
 
-    const fetchFolders = useCallback(async (workspaceId: string) => {
-        if(!workspaceId){
-            toast({
-                title: "Failed to fetch all folders of workspace",
-                description: "Workspace id not found",
-                variant: "destructive"
-            })
-            return;
-        }
-
-        // check if folders for this workspace are already loaded
-        const hasFoldersForWorkspace = folders.some(folder => 
-            folder.workspaceId === workspaceId && 
-            folder.inTrash === undefined);
-        
-        if(hasFoldersForWorkspace){
-            return;
-        }
-          try {
-            
-
-            const allFolders = await getFolders(workspaceId);
-            if(!allFolders.success){
-                toast({
-                     title: "Failed to fetch all folders of workspace",
-                    description: allFolders.error,
-                    variant: "destructive"
-                })
-                return;
-            }
-            
-            
-             toast({
-                title: "Successfully fetched all the folders",
-                description: "You can now add files in the folders or create new folders",
-             })
-             
-          } catch (error: any) {
-              console.error("Error loading folders ",error);
-                    toast({
-                        title: "Failed to fetch folders",
-                        description: "Please try again later",
-                        variant: "destructive"
-                    })
-          }
-        }, [
-            getFolders,
-            folders
-        ])
-         const fetchFiles = useCallback(async ( folderId : string) => {
-            if(!folderId){
-                toast({
-                    title: "Failed to fetch files",
-                    description: "Folder id not found",
-                    variant: "destructive"
-                });
-                return;
-            }
-
-            // check if files for this folder are already loaded
-            const hasFilesForFolder = files.some(file => 
-                file.folderId === folderId &&
-                 file.inTrash === undefined);
-
-            if(hasFilesForFolder){
-                return;
-            }
-                try {
-                  
-                     const allFiles = await getFiles(folderId);
-                     if(!allFiles.success){
-                        toast({
-                            title: "Failed to fetch files",
-                            description: allFiles.error,
-                            variant: "destructive"
-                        })
-                        return;
-                     }
-                     toast({
-                        title: "Successfully fetched all the files",
-                        description: "You can now add files to the folder",
-                     })
-                } catch (error) {
-                    console.error("Error loading files ",error);
-                    toast({
-                        title: "Failed to fetch files",
-                        description: "Please try again later",
-                        variant: "destructive"
-                    })
-                    
-                }
-            }, [ 
-                getFiles,
-                files
-            ])
-       
-       useEffect(() => {
-                // Fetch folders when dirType is workspace
-        if (params && dirType === "folder") {
-            const hasFilesForFolder = files.some(file => file.folderId === params && file.inTrash === undefined);
-            if(!hasFilesForFolder){
-                fetchFiles(params);    
-            }     
-        }
-        }, [
-            params, 
-            dirType, 
-            fetchFiles,
-            files,
-            refetchTrigger,
-        ]);
-
-         const addFolderHandler = useCallback(async () => {
+    /**
+     * @handler addNewFolderHandler
+     * Logic for workspace-level expansion. Creates a new folder entity 
+     * within the active workspace.
+     */
+    const addNewFolderHandler = useCallback(async () => {
 
                 if(!isEditable){
                     toast({
@@ -201,7 +117,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             title: "Successfully created folder",
                             description: "You can now add files to this folder",
                         });
-                        fetchFolders(workspaceId); // Re-fetch to update the list
                     }
                      } catch (error) {
                         console.log("Error while creating a folder in workspace ",error)
@@ -216,11 +131,15 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             }, [
                 createFolder, 
                 workspaceId,
-                fetchFolders,
                 isEditable
             ])
-            // add new file
-    const addNewFile = useCallback(async () => {
+            
+    /**
+     * @handler addNewFileHandler
+     * Logic for folder-level expansion. Creates a new file (with default block metadata) 
+     * within the active folder.
+     */        
+    const addNewFileHandler = useCallback(async () => {
         if (!isEditable) {
             toast({
                 title: "Cannot create file",
@@ -256,7 +175,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     lastUpdated: new Date(),
                     blocks: new Map<string, IBlock>,        // or new Map() if your type is Map
                     blockOrder: [],
-                    version: 1,
+                    contentBinary: null,
+                    contentLastModified: new Date(),
                 };
 
         try {
@@ -272,7 +192,6 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     title: "Successfully created new file",
                     description: "Start working on it",
                 });
-                fetchFiles(currentFolder._id.toString()); // Re-fetch to update the list
             }
            
         } catch (error) {
@@ -287,24 +206,14 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         createFile, 
         currentFolder, 
         workspaceId,
-        fetchFiles,
         isEditable
     ]);
 
-     const handleFolderAdded = useCallback(async () => {
-    
-    await fetchFolders(params);
-  }, [fetchFolders, params]);
-
-           
-           
-         
- const handleFileAdded = useCallback(async () => {
-   
-    await fetchFiles(params); 
-  }, [fetchFiles, params]);
-
- 
+    /**
+     * @memoized filteredFiles
+     * Filters out files currently in the trash and ensures 
+     * files match the current folder parameter.
+     */
   const filteredFiles = useMemo(() => {
     if(Array.isArray(files) && params){
         return files.filter(file => file.folderId === params && 
@@ -312,9 +221,10 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     }
     return []
   },[ files, params ])
+
     return(
         <div className='flex flex-row w-full items-center gap-2 pl-[5rem] p-[2rem]'>
-            {/* Activity section */}
+            {/* Primary Content Section: Creation & Listing */}
                 <div className='w-2/3'>
                     <div className="flex flex-row items-center gap-2">
                         <div className="flex sticky z-20 top-2 bg-background w-3/4 h-10 group/title justify-between
@@ -325,10 +235,11 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         </div>
                         <div className="flex sticky z-20 top-2 bg-background w-1/4 h-10 group/title justify-between
                          items-center pr-4 text-Neutrals/neutrals-8">
+                            {/* Dynamic Icon Trigger based on dirType */}
                             {dirType === "workspace" && (
                                  <TooltipComponent message="Create Folder">
                                     <FolderIcon
-                                    onClick={addFolderHandler}
+                                    onClick={addNewFolderHandler}
                                     className={`relative right-[-5rem] w-[2rem] h-[2rem]
                                     ${isEditable ? "cursor-pointer" : "cursor-not-allowed"}`}
                                     />
@@ -337,7 +248,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             
                             { dirType === "folder" &&(<TooltipComponent message="Create File">
                             <FileIcon 
-                             onClick={addNewFile}
+                             onClick={addNewFileHandler}
                             className={`w-[2rem] h-[2rem] ${isEditable ? "cursor-pointer" : "cursor-not-allowed"}`}
                             />
                             </TooltipComponent>)}
@@ -350,7 +261,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                            { folders?.length > 0 ? (<FoldersDropdownList 
                              workspaceFolders={folders || []}
                                 workspaceId={params}
-                                onFolderAdded={handleFolderAdded}
+                                // onFolderAdded={addNewFolderHandler}
                                 usedWhere = "workspacePage"
                                 globalEditingItems={globalEditingItem}
                             />): (
@@ -366,7 +277,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                                     <FolderFileList
                                     folderFiles={filteredFiles}
                                     folderId={params}
-                                    onFileAdded={handleFileAdded}
+                                    onFileAdded={addNewFileHandler}
                                     globalEditingItems={globalEditingItem}
                                     />
                                 ) :(
