@@ -1,15 +1,28 @@
+/** 
+ * ROOT LAYOUT (Studysprout)
+ * -------------------------
+ * This is the entry point of the React component tree.
+ * It initialize all Global Context Providers required for:
+ * - Authentication (NextAuth)
+ * - State Management (Redux)
+ * - Real-time Communication (Socket.io)
+ * - UI/Theming (Dark Mode & Radix UI) 
+ */
+
+
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+
+// Context & State Providers
 import AuthProvider from '../context/AuthProvider';
-import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from "@/lib/providers/next-theme-provider";
-import { UserProvider } from '@/lib/providers/user-provider';
 import ReduxProvider from '@/lib/providers/redux-provider';
 import { ModalProvider } from '@/context/ModalProvider';
-// import { ThemeProvider } from "next-themes"
+import { SocketProvider } from '@/lib/providers/socket-provider';
 
-
+// UI Components
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -29,6 +42,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        {/* INLINE SCRIPT: Prevents "Flicker of Unstyled Content" (FOUC) by enforcing dark mode
+        before the page paints. */}
          <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -39,14 +54,21 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           }}
         />
       </head>
+      {/* PROVIDER HIERARCHY:
+        1. AuthProvider: Top level for session management.
+        2. ModalProvider: Controls global UI overlays.
+        3. ReduxProvider: Global application state.
+        4. ThemeProvider: Handles Dark/light mode switching.
+        5. SocketProvider: Maintains persistent Websocket connection.
+      */}
       <AuthProvider>
         <ModalProvider>
         <body className={inter.className} >
         <ReduxProvider>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          {/* <UserProvider> */}
+          <SocketProvider>
             {children}
-          {/* </UserProvider> */}
+          </SocketProvider>
         </ThemeProvider>
         </ReduxProvider>
           <Toaster />
