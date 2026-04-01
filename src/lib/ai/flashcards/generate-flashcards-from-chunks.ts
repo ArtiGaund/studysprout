@@ -1,23 +1,18 @@
 /**
- * Generates flashcards from multiple text chunks using Gemini.
- * 
- * Responsibilities:
- * - Validates input (chunks, cardCount, desiredTypes).
- * - Build system intructions and response schema based on chosen card types.
- * - Instantiate a configured Gemini model instance.
- * - Process chunks one-by-one and aggregated generated flashcards.
- * 
- * Notes:
- * - Returns flashcards in a normalized structure (success, message, etc).
- * - Schema - enforced: model output is validated using `UnifiedFlashcardSchema`.
- * - Chunk loop continues even if some chunks fail (best-effort generation).
+ * @service GenerateFlashcardsFromChunks
+ * @description An advanced AI orchestration service that leverages Gemini 2.5 Flash to transform unstructured text into structured, schema-validated flashcards.
+ * * CORE ARCHITECTURAL PATTERNS:
+ * 1. Schema Enforcement: Uses `responseSchema` to guarantee that the LLM output strictly follows the `UnifiedFlashcardSchema`.
+ * 2. Distributed Processing: Chunks text to bypass context window limitations and prevent "lost-in-the-middle" performance degradation.
+ * 3. Resiliency (Exponential Backoff): Implements a `callGemini` helper with retry logic for 503 (Overloaded) errors.
+ * 4. Contextual Mapping: Tracks `blockIdsUsed` for each card, enabling "source-to-flashcard" traceability for the end user.
  */
-
 
 import { UnifiedFlashcardSchema } from "./flashcard-json-schema";
 import { buildFlashcardsSystemInstruction, buildUserPrompt } from "./system-instruction";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-// Initialize the client once
+
+// Initialize the Generative AI client as a singleton
 export const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // Define a common configuration for the model
@@ -32,6 +27,11 @@ export async function GenerateFlashcardsFromChunks(
      customInstructions: string = ""
     ){
 
+        /**
+         * @innerHelper callGemini
+         * Handles transient API failures. Implements a basic retry loop 
+         * to manage service availability issues without failing the entire batch.
+         */
         async function callGemini(
             modelInstance: ReturnType<typeof gemini.getGenerativeModel>,
             userPrompt: string,
@@ -60,7 +60,7 @@ export async function GenerateFlashcardsFromChunks(
             }
         }
     try {
-        // 1. Fast-fail for invalid or incomplete parameters
+        // // 1. Input Validation: Fail-fast pattern to save API costs and processing time
         if(aggregatedTexts.length === 0){
             return {
                 statusCode: 400,
@@ -68,11 +68,11 @@ export async function GenerateFlashcardsFromChunks(
                 success: false
             }
         }
-        if(cardCount < 5){
+        if(cardCount <= 0){
             return {
-                statusCode: 400,
-                message: "Minimum card count is 5",
-                success: false
+                statusCode: 200,
+               data: { flashcads: [] },
+                success: true
             }
         }
         if(desiredTypes.length === 0){
@@ -82,13 +82,11 @@ export async function GenerateFlashcardsFromChunks(
                 success: false
             }
         }
-        // 2. Build the System Instruction (Build static + dynamic instructions that govern model behavior)
+         // 2. Schema Preparation: Combines static system rules with dynamic card-type requirements
         const systemInstruction = buildFlashcardsSystemInstruction(desiredTypes, cardCount);
-
         const finalFlashcardSchema = UnifiedFlashcardSchema(desiredTypes);
-
-       //3. Create a single Gemini model instance for the entire batch
-
+       
+        // 3. Model Configuration: Configures the model with JSON output enforcement
         const modelInstance = gemini.getGenerativeModel({
             model: MODAL_NAME,
             systemInstruction,
@@ -100,21 +98,23 @@ export async function GenerateFlashcardsFromChunks(
 
         const allGeneratedCards: any[] = [];
 
-       //4. Process each chunk independently to avoid model context limits
-
+       /**
+         * @section Chunk Processing Loop
+         * Iterates through text segments to maintain high relevance and avoid model hallucinations 
+         * caused by overwhelming context lengths.
+         */
         for(let chunkIndex = 0; chunkIndex< aggregatedTexts.length; chunkIndex++){
             const rawText = aggregatedTexts[chunkIndex].text;
             const chunkBlockIds = aggregatedTexts[chunkIndex].blockIds;
-            // 5. Build the dynamic User prompt for this chunk
+            //  Build the dynamic User prompt for this chunk
             const userPrompt = buildUserPrompt(rawText, chunkIndex, aggregatedTexts.length, customInstructions);
             try {
                 const response = await callGemini(modelInstance, userPrompt);
                 const result = await response.response;
                 const jsonText = await result.text();
             
-                //6. Model returns raw JSON text → parse and extract flashcards
+                // Model returns raw JSON text → parse and extract flashcards
                 const parsed = JSON.parse(jsonText);
-                
                 for(const card of parsed.flashcards ?? []){
                     if(!card.blockIdsUsed || card.blockIdsUsed.length === 0){
                         // fallback = full chunk range if model fails
@@ -122,15 +122,20 @@ export async function GenerateFlashcardsFromChunks(
                     }
                 }
                 if(parsed.flashcards && Array.isArray(parsed.flashcards)){
-                    allGeneratedCards.push(...parsed.flashcards);
+                    // 4. Traceability: Mapping cards back to the specific blocks they originated from
+                    const processedCards = parsed.flashcards.map((card: any) => ({
+                        ...card,
+                        blockIdsUsed: (card.blockIdsUsed && card.blockIdsUsed.length > 0)
+                        ? card.blockIdsUsed
+                        : chunkBlockIds
+                    }));
+                    allGeneratedCards.push(...processedCards);
                 }
             } catch (error) {
                 console.warn(`[Generate Flashcard From chunks] Failed to generate flashcards from chunk ${chunkIndex+1} due to following error: `,error);
                 continue;
             }
         }
-        //7. Final unified structured response
-
         return {
             success: true,
             message: "Flashcards generated successfully",

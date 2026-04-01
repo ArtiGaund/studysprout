@@ -1,15 +1,23 @@
 /**
- * System instructions for Gemini to guide flashcard generation.
- * 
- * Responsibility:
- * - Tells the model how to behave (tone, constraints, style).
- * - Defines how flashcards should be formed from note content.
- * - Enforces output quality, safety and consistency.
- * 
- * Notes:
- * - Pure configuration. No business logic.
- * - Used only when calling Gemini's generateContent() //generateText(). 
+ * @module FlashcardPromptEngine
+ * @description Centralized factory for LLM instructions. Standardizes the "System Persona" 
+ * and "User Context" to ensure Gemini produces predictable, schema-compliant JSON.
+ * * * KEY ENGINEERING CONSTRAINTS:
+ * 1. Schema Adherence: Enforces a JSON-only response format to allow for automated parsing.
+ * 2. Deterministic Mapping: Uses `[BLOCK:<id>]` markers to maintain a "Source of Truth" between 
+ * generated cards and the original UI blocks.
+ * 3. Delimiter Specification: Explicitly defines semicolon (;) delimiters for multi-blank answers 
+ * to avoid CSV-style parsing errors.
+ * 4. Contextual Chunking: Supports partial study material (Chunks) to handle large documents 
+ * without exceeding LLM token limits.
  */
+
+/**
+     * @method buildSingleFlashcardSystemInstruction
+     * @description A specialized, high-precision instruction set for generating 
+     * exactly one flashcard. This is typically used for "Regenerate" or "Add One" 
+     * features where a user targets a specific snippet of text.
+     */
 
 export function buildFlashcardsSystemInstruction(
     desiredTypes: string[],
@@ -30,8 +38,18 @@ export function buildFlashcardsSystemInstruction(
     that appear in the material inside [BLOCK:<id>] markers. Never invent IDs. Never leave this empty.
     7. Each flashcard MUST extract concepts tied to those blocks.
     8. Do not merge unrelated blocks unless necessary.
+    9. **Fill-in-the-blank Format:** Use EXACTLY three underscores (___) for each blank.
+    10. **Multi-blank Answers:** If a card has multiple blanks, the 'answer' field MUST 
+    contain the answers in the correct order, separated by a SEMICOLON (e.g., "Answer One; Answer Two"). 
+    Do not use commas as delimiters, as they may appear within the answers themselves.
     `
 }
+
+/**
+ * @method buildUserPrompt
+ * @description Constructs the dynamic portion of the prompt, including chunk indices 
+ * and user-defined focus instructions (e.g., "Focus on chemical formulas").
+ */
     export function buildUserPrompt(
         chunk: string,
         chunkIndex: number,
@@ -47,6 +65,12 @@ export function buildFlashcardsSystemInstruction(
         `
     }
    
+
+    /**
+ * @method buildSingleFlashcardSystemInstruction
+ * @description Optimized instruction set for "Single Card Regeneration." 
+ * Used when a user updates a specific block and wants to refresh only the affected cards.
+ */
     export function buildSingleFlashcardSystemInstruction(
         desiredTypes?: string
     ):string{
@@ -65,9 +89,16 @@ export function buildFlashcardsSystemInstruction(
         6. Source Mapping Requirement: Flashcard MUST include "blockIdsUsed": string[]. Only IDs from [BLOCK:<id>]
         markers. Never invent, nevery empty.
         7. The flashcard MUST clearly test a meaningful concept from the material.
-        `;
+        8. **Fill-in-the-blank Format:** Use EXACTLY three underscores (___) for each blank.
+        9. **Multi-blank Answers:** If a card has multiple blanks, the 'answer' field MUST 
+        contain the answers in correct order, separated by a SEMICOLON (e.g., "Ans 1; Ans 2").`;
     }
 
+    /**
+     * @method buildSingleFlashcardUserPrompt
+     * @description Constructs the scoped user prompt for a single-card generation request.
+     * Focuses the AI's "attention" on a specific selection of text rather than a full document.
+     */
     export function buildSingleFlashcardUserPrompt(
         material: string,
         customInstructions: string = ""
