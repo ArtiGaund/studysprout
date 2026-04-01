@@ -1,8 +1,14 @@
 /**
- * This component show the flashcards of the flashcard set
- * 
- * - User can do revision using this component
- * - User can give rating to the flashcard
+ * @component FlashcardStudyCard
+ * @description The core interactive learning engine for StudySprout. 
+ * Implements a Spaced Repetition System (SRS) interface with support for multiple 
+ * flashcard types and real-time progress tracking.
+ * * * Core Features:
+ * - SRS Logic: Integration with `useFlashcardSRS` to handle memory quality ratings (Again, Hard, Good, Easy).
+ * - Dynamic Rendering: Polymorphic UI that adapts to 'question-answer', 'mcq', and 'fill-in-the-blank' types.
+ * - Fill-in-the-Blanks Engine: Uses regex splitting to create inline inputs for multi-blank questions.
+ * - State Management: Synchronizes local study states with Redux for persistence across sessions.
+ * - Outdated Detection: Notifies users when source notes have changed since card generation.
  */
 'use client';
 
@@ -17,7 +23,7 @@ import { useDispatch } from "react-redux";
 
 
 interface FlashcardStudyCardProps{
-    card: any;
+    card: any; 
     index: number;
     total: number;
     onNext: () => void;
@@ -28,22 +34,17 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
     total,
     onNext
 }) => {
+    // --- UI State Management ---
     // for question-answer
     const [ revealAnswer, setRevealAnswer ] = useState(false);
-
     // for mcq
     const [ selectedOption, setSelectedOption ] = useState<string | null>(null);
     const [ checked, setChecked] = useState(false);
+    // Maps blank index to user input string for Fill-in-the-blank mode
+    const [ userAnswer, setUserAnswer ] = useState<Record<number, string>>({});
 
-    // for fill-in-the-blanks
-    const [ userAnswer, setUserAnswer ] = useState("");
-
-    const {
-        rateCard,
-        loading
-    } = useFlashcardSRS();
     const dispatch = useDispatch();
-
+     const { rateCard } = useFlashcardSRS();
     const {
         reset,
         resetCard,
@@ -51,9 +52,45 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
         regenerateSingleFlashcard,
     } = useFlashcardGenerator();
 
+    /**
+     * @memoized isReviewed
+     * Determines if the card has already been completed in the current 24h window
+     * based on the SRS due date.
+     */
+    const isReviewed = useMemo(() => {
+        if(!card?.progress?.dueDate) return false;
+        return new Date(card.progress.dueDate) > new Date();
+    },[ 
+        card.progress?.dueDate,
+        card._id, 
+    ]);
 
-    const isCompleted = new Date(card.dueDate) > new Date();
+    /**
+         * @handler handleRating
+         * Triggers the SRS algorithm update on the backend and updates 
+         * the local Redux store before transitioning to the next card.
+         */
+    const handleRating = async (
+        quality: "again" | "hard" | "good" | "easy"
+    ) => {
+        const result = await rateCard(card._id, quality);
+        if(result?.success){
+            dispatch(updateFlashcard({
+                setId: card.parentSetId,
+                card: {
+                    ...card,
+                    progress: result.data.progress
+                }
+            }));
+            onNext();
+        }
+    }
 
+    /**
+     * @handler generateFlashcard
+     * Handles 'Regenerate' logic for cards marked as 'isOutdated'.
+     * Re-syncs flashcard content with updated source notes.
+     */
     const generateFlashcard = async () => {
         try {
             const result = await updateSingleFlashcard(card._id);
@@ -66,16 +103,14 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
         }
     }
 
-    // Reset all when card changes
+    // Resets interaction state when the user moves to a new card
     useEffect(() => {
         setRevealAnswer(false);
         setSelectedOption(null);
         setChecked(false);
-        setUserAnswer("");
-        // console.log(card.source.blockIds);
-        // console.log(card.source.blocksState);
+        setUserAnswer({});
     },[card._id]);
-    // console.log("[FlashcardStudyCard] card:", card);
+   
     return (
         <Card className="
         p-4 rounded-xl shadow-md border border-gray-400 flex flex-col gap-4 max-h-[70vh] overflow-y-auto
@@ -85,6 +120,8 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
             >
                 Card {index+1}/{total} • {card.type.toUpperCase()}
             </CardTitle>
+
+            {/* Outdated Content Notification */}
             {card.isOutdated && (
                 <div className="mx-4 px-3 py-2 rounded-lg bg-yellow-900 text-yellow-300 text-sm flex
                  justify-between items-center">
@@ -102,14 +139,18 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                     }
                 </div>
             )}
+
+            {/* SRS Status Indicators */}
             <div className="flex flex-row gap-6 items-center justify-between">
                 <div>
-                      {isCompleted ? (
+                      {isReviewed ? (
                             <div className="flex items-center gap-2 text-green-500 text-sm font-medium pl-6">
                                 <span className="text-lg">✓</span>
                                 Reviewed -
                                 <span className="text-lg">⏳</span>
-                                <span className="text-blue-800">Next due on {format(new Date(card.dueDate), "dd MMM")}</span>
+                                <span className="text-blue-800">
+                                    Next due on {format(new Date(card.progress?.dueDate || new Date()), "dd MMM")}
+                                </span>
                             </div>
                         ): (
                             <div className="flex items-center gap-2 text-orange-600 text-sm font-medium pl-6">
@@ -119,7 +160,7 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                         )}
                 </div>
                 <div>
-                    {isCompleted && (
+                    {isReviewed && (
                         <button
                         className="mr-6 p-1 rounded hover:bg-gray-700"
                         onClick={async () => {
@@ -141,6 +182,7 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                 </div>
             </div>
           
+          {/* MODE 1: Standard Question & Answer */}
            {card.type === "question-answer" &&( 
                 <CardContent>
                     <span className="p-2 text-gray-600">Question: </span>
@@ -169,6 +211,8 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                     )}
                 </CardContent>
             )}
+
+            {/* MODE 2: Multiple Choice (MCQ) */}
             {card.type === "mcq" && (
                 <CardContent>
                     <span className="p-2 text-gray-600">Question: </span>
@@ -241,136 +285,146 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                         </div>
                 </CardContent>
             )}
+
+            {/* MODE 3: Fill-in-the-Blanks (Advanced Multi-Input Logic) */}
             {card.type === "fill-in-the-blank" && (
-                <CardContent>
-                    <span className="p-2 text-gray-600">Question: </span>
-                    <div 
-                      className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm leading-relaxed"
-                    // className="bg-gray-900 p-3 text-[15px]"
-                    >{card.question}</div>
-                    <input 
-                    disabled={revealAnswer}
-                    value={revealAnswer ? card.answer : userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
-                    className="border rounded-lg p-2 w-full mt-3 text-sm focus:ring-2 focus:ring-purple-400 outline-none"
-                    placeholder="Type your answer"
-                    />
+                <CardContent className="space-y-4">
+                    <div className="bg-[#0f172a] p-6 rounded-xl border border-slate-800 leading-relaxed">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-3 text-lg">
+                            {card.question.split(/_{3,}/).map((
+                                part: string,
+                                i: number,
+                                arr: any[]
+                            ) => {
+                                const answerArray = card.answer.split(";").map((s:string) => s.trim());
+                                const currentVal = userAnswer[i] || "";
+                                return (
+                                <React.Fragment key={i}>
+                                    <span className="text-slate-200">{part}</span>
+                                    {i !== arr.length - 1 && (
+                                        <div className="inline-grid items-center align-bottom">
+                                            <span className="invisible whitespace-pre px-1 col-start-1 row-start-1 text-lg">
+                                                {
+                                                   ( revealAnswer 
+                                                    ? answerArray[i]
+                                                    : (currentVal || "...")) + " "
+                                                }
+                                            </span>
+                                            <input
+                                            autoFocus = { i=== 0}
+                                            disabled={revealAnswer || checked}
+                                            value={revealAnswer ? (answerArray[i] || "") : currentVal}
+                                            onChange={(e) => setUserAnswer(prev => ({
+                                                ...prev,
+                                                [i]: e.target.value
+                                            }))}
+                                            // style={{ width: '100%'}}
+                                            className={`
+                                                col-start-1 row-start-1 bg-transparent border-b-2 text-center outline-none
+                                                transition-all px-1 w-full
+                                                ${checked
+                                                    ? (currentVal.trim().toLowerCase() === (answerArray[i] || "").toLowerCase()
+                                                        ? "border-green-500 text-green-400"
+                                                        : "border-red-500 text-red-400")
+                                                    : "border-purple-500 focus:border-white"
+                                                }
+                                                `}
+                                                placeholder="..."
+                                            />
+                                        </div>
+                                    )}
+                                </React.Fragment>
+                            )})}
+                        </div>
+                    </div>
+
                     <div className="flex flex-row gap-3">
-                        <div>
-                        <button
-                        disabled={!userAnswer.trim()}
-                        onClick={() => setChecked(true)}
-                        className="
-                        mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
-                        disabled:text-gray-500 disabled:cursor-not-allowed disabled:bg-gray-300
-                        "
-                        >
-                            Check Answer
-                        </button>
-                        {checked && (
+                    {/* Control Bar for Fill-in-the-Blanks */}
+                        {!checked && !revealAnswer && (
                             <>
-                            {userAnswer.trim().toLowerCase() === card.answer.toLowerCase() ? (
-                                <p className="text-green-600 font-medium">Correct!</p>
-                            ) : (
-                                <>
-                                    <p className="text-red-600 font-medium">Your answer: {userAnswer}</p>
-                                    <p className="text-green-600 font-medium">Correct: {card.answer}</p>
-                                </>
-                            )}
+                                <button
+                                disabled={Object.keys(userAnswer).length === 0}
+                                onClick={() => setChecked(true)}
+                                className={`
+                                    px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800
+                                    disabled:bg-gray-700 transition
+                                    `}
+                                >
+                                    Check Answer
+                                </button>
+                                <button
+                                onClick={() => setRevealAnswer(true)}
+                                className={`
+                                    px-4 py-2 rounded-lg border border-purple-600 text-purple-400 text-sm
+                                    hover:bg-purple-900/30 transition
+                                    `}
+                                >   
+                                    Reveal Answer
+                                </button>
                             </>
                         )}
-                        </div>
-                        <div>
-                        {!revealAnswer && !checked && (<button 
-                        onClick={() => setRevealAnswer(true)}
-                        className="
-                        mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
-                        disabled:text-gray-500 disabled:cursor-not-allowed
-                        "
-                        >Reveal Answer</button>)}
-                        </div>
-                        <div>
-                            {(checked || revealAnswer) && (
-                                <button 
-                                onClick={() => {
-                                    setUserAnswer("");
-                                    setChecked(false);
-                                    setRevealAnswer(false);
-                                }}
-                                className="mt-3 flex items-center gap-1 px-3 py-1"
-                                >
-                                   <Undo2 size={20}/>
-                                </button>
-                            )}
-                        </div>
+                        {(checked || revealAnswer) && (
+                            <button
+                            onClick={() => {
+                                setUserAnswer({});
+                                setChecked(false);
+                                setRevealAnswer(false);
+                            }}
+                            className="flex items-center gap-1 px-3 py-1 text-gray-400 hover:text-white"
+                            >
+                                <Undo2 size={20}/>
+                                <span className="text-xs">Reset</span>
+                            </button>
+                        )}
                     </div>
                 </CardContent>
             )}
+
+            {/* SRS Rating Footer: Only visible once the answer is known */}
             <CardFooter className="flex justify-between items-center gap-2 mt-4">
-                {/* <span>Card no: {index+1} / {total}</span> */}
-                <button
-                onClick={async () =>{
-                    const updated = await rateCard(card._id, "again");
-                    if(updated && updated.data){
-                        dispatch(updateFlashcard({
-                            setId: updated.data.parentSetId,
-                            card: updated.data
-                        }));
-                    }
-                     onNext();
-                }}
+                {(revealAnswer || checked) ?(
+                    <div className="flex flex-col w-full gap-2">
+                        {isReviewed && (
+                            <div className="text-[10px] text-center text-green-500 font-semibold uppercase" >
+                                Re-reviewing (Already completed for tody)
+                            </div>
+                        )}
+                    <div className="flex items-center w-full">
+                    <button
+                onClick={() => handleRating("again")}
                 className="flex-1 py-2 text-red-700 font-bold text-sm transition"
                 >
                     Again
                 </button>
                 <span className="flex-1 ml-12 text-gray-700 font-bold">|</span>
                 <button
-                onClick={async () =>{ 
-                    const updated = await rateCard(card._id, "hard");
-                    if(updated && updated.data){
-                        dispatch(updateFlashcard({
-                            setId: updated.data.parentSetId,
-                            card: updated.data
-                        }));
-                    }
-                    onNext();
-                }}
+                onClick={() => handleRating("hard")}
                 className="flex-1 py-2 text-orange-700 font-bold text-sm transition"
                 >
                     Hard
                 </button>
                 <span className="flex-1 ml-12 text-gray-700 font-bold">|</span>
                 <button
-                onClick={async() =>{
-                     const updated = await rateCard(card._id, "good");
-                     if(updated && updated.data){
-                        dispatch(updateFlashcard({
-                            setId: updated.data.parentSetId,
-                            card: updated.data
-                        }));
-                     }
-                     onNext();
-                }}
+                onClick={() => handleRating("good")}
                 className="flex-1 py-2 text-green-700 font-bold text-sm transition"
                 >
                     Good
                 </button>
                 <span className="flex-1 ml-12 text-gray-700 font-bold">|</span>
                 <button
-                onClick={async() =>{
-                     const updated = await rateCard(card._id, "easy");
-                     if(updated && updated.data){
-                        dispatch(updateFlashcard({
-                            setId: updated.data.parentSetId,
-                            card: updated.data
-                        }));
-                     }
-                     onNext();
-                }}
+                onClick={() => handleRating("easy")}
                 className="flex-1 py-2 text-blue-700 font-bold text-sm transition"
                 >
                     Easy
                 </button>
+                </div>
+                </div>
+                ) : (
+                    <div className="text-xs text-gray-400 text-center w-full italic">
+                        Reveal the answer to rate your memory
+                    </div>
+                )
+            }
             </CardFooter>
         </Card>
     )
