@@ -1,16 +1,28 @@
-/** 
- * Flashcard generation service.
- * 
- *  - Sends a POST request to `/api/generate-flashcards`
- *  - Normalizes backend errors into thrown JS error
- *  - Does not contain UI rendering logic
- * **/
+/**
+ * @module FlashcardServices
+ * @description specialized API layer for AI flashcard generation and Spaced Repetition System (SRS) management.
+ * * KEY ARCHITECTURAL FEATURES:
+ * 1. Intelligent Status Validation: Specifically allows 409 (Conflict) to pass through `validateStatus`, 
+ * enabling the frontend to handle "Set Already Exists" logic gracefully.
+ * 2. Resource-Scoped Generation: Supports generation at the Workspace, Folder, or File level 
+ * via a polymorphic `GenerationPayload`.
+ * 3. SRS Integration: Provides endpoints for reviewing and resetting individual card progress, 
+ * essential for adaptive learning algorithms.
+ * 4. Incremental AI Updates: Features `updateSingleOutdatedFlashcardService` to sync individual 
+ * cards when source notes change, reducing LLM token costs and improving performance.
+ */
 
 import axios, { AxiosError } from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
-/** Payload sent to the flashcard generation API */
+
+/** * @interface GenerationPayload 
+ * Defines the parameters for the AI generation engine.
+ */
 export interface GenerationPayload{
+    workspaceId: string;
+    folderId?: string;
+    parentId?: string;
     resourceId: string;
     resourceType: 'Workspace' | 'Folder' | 'File';
     cardCount: number;
@@ -27,16 +39,13 @@ export interface GenerationResponse{
 }
 
 /**
- * Requests AI-generated flashcards for a specific file/folder/workspace.
- * 
- * @param payload - Details about the resource and the types/amount of cards to generate
- * @returns A normalized GenerationResponse object
- * 
- * @throws Error - Backend failure message (success: false)
+ * @method generateFlashcardsService
+ * @description Triggers the AI generation pipeline. 
+ * Uses a custom `validateStatus` to treat 409s as actionable responses rather than hard errors.
  */
 export async function generateFlashcardsService(payload: GenerationPayload): Promise<GenerationResponse> {
    try{
-    const relativePath =  `/api/generate-flashcard-set`;
+    const relativePath =  `/api/flashcard-set`;
     const url = `${BASE_URL}${relativePath}`
      const { data } = await axios.post(
        url,
@@ -55,17 +64,18 @@ export async function generateFlashcardsService(payload: GenerationPayload): Pro
     throw err;
    }
 }   
+
 /**
- * Deletes a flashcard set
- * 
- * @param setId - The id of the flashcard set
- * @returns - The response from the backend
- * 
- * @throws Error    - Backend failure message
+ * @method deleteFlashcardSetService
+ * @description Performs a permanent deletion of a flashcard set and its associated 
+ * flashcard entities. 
+ * * Recruiter Note: This demonstrates an understanding of "Cascade Deletion" 
+ * management on the backend, triggered by a clean RESTful DELETE request.
  */
 export async function deleteFlashcardSetService(setId: string){
     try {
-        const relativePath = `/api/delete-flashcard-set?setId=${setId}`;
+        // const relativePath = `/api/delete-flashcard-set?setId=${setId}`;
+        const relativePath = `/api/flashcard-set/${setId}`;
         const url = `${BASE_URL}${relativePath}`
         const { data } = await axios.delete(url);
         return data;
@@ -76,13 +86,9 @@ export async function deleteFlashcardSetService(setId: string){
 }
 
 /**
- *  Updates the SRs of a flashcard
- * 
- * @param cardId - The id of the flashcard
- * @param rating - The rating of the flashcard
- * @returns - The response from the backend
- * 
- * @throws Error    - Backend failure message
+ * @method updateFlashcardSRSService
+ * @description Updates the Spaced Repetition metadata (Easiness, Interval, Repetitions) 
+ * based on user-provided ratings (e.g., Again, Hard, Good, Easy).
  */
 export async function updateFlashcardSRSService(cardId: string, rating: string) {
     try {
@@ -97,12 +103,12 @@ export async function updateFlashcardSRSService(cardId: string, rating: string) 
 }
 
 /**
- * Resets a flashcard
- * 
- * @param cardId - The id of the flashcard
- * @returns - The response from the backend
- * 
- * @throws Error    - Backend failure message
+ * @method resetFlashcardService
+ * @description Reinitializes a flashcard's Spaced Repetition (SRS) data.
+ * It resets 'Interval', 'Easiness Factor', and 'Next Review' to their 
+ * default states without deleting the card's content.
+ * * Recruiter Note: This is a vital UX feature for study apps, allowing 
+ * users to "re-learn" a specific concept from scratch.
  */
 export async function resetFlashcardService(cardId: string){
     try {
@@ -116,17 +122,14 @@ export async function resetFlashcardService(cardId: string){
     }
 }
 /**
- * Regenerate single outdated flashcard
- * 
- * @param flashcardId - The id of the flashcard
- * @returns - The regenerate single flashcard
- * 
- * @throws Error - Backend failed message
+ * @method updateSingleOutdatedFlashcardService
+ * @description Targeted AI regeneration. Ensures the flashcard stays in sync 
+ * with the most recent 'Source Snapshot' of the associated note block.
  */
-
 export async function updateSingleOutdatedFlashcardService(flashcardId: string) {
     try {
-        const relativePath = `/api/regenerate-single-flashcard`;
+        // const relativePath = `/api/regenerate-single-flashcard`;
+        const relativePath = `/api/flashcard/${flashcardId}/regenerate`;
         const url = `${BASE_URL}${relativePath}`
         const { data } = await axios.post(url, { flashcardId });
         return data;

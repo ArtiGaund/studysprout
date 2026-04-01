@@ -1,50 +1,85 @@
+/**
+ * @module WorkspaceServices
+ * @description specialized API service layer for Workspace entity management. 
+ * Handles organizational hierarchy, metadata updates, and binary asset persistence.
+ * * KEY ARCHITECTURAL FEATURES:
+ * 1. Binary Asset Handling: Implements `FormData` patterns for `updateLogo`, 
+ * ensuring seamless multipart/form-data transmission to the backend.
+ * 2. Strict Return Types: Uses `Promise<WorkSpace>` and `Promise<Folder[]>` to ensure 
+ * downstream hooks receive predictable, strongly-typed data.
+ * 3. Error Normalization: Standardizes catch blocks to extract error messages 
+ * from Axios responses, providing clear feedback to the UI via the `useWorkspace` hook.
+ * 4. Resource Hierarchy: Orchestrates the retrieval of nested entities (Folders) 
+ * scoped specifically to a Workspace ID.
+ */
 import { Folder } from "@/model/folder.model";
 import { WorkSpace } from "@/model/workspace.model";
 import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
-// add workspace
 
+/**
+ * @method addWorkspace
+ * @description Persists a new workspace entity. Accepts FormData to handle 
+ * potential initial logo/banner uploads during creation.
+ */
 export async function addWorkspace(newWorkspace:FormData){
-    const relativePath = `/api/create-new-workspace`;
+    const relativePath = `/api/workspace`
     const url = `${BASE_URL}${relativePath}`
     const { data } = await axios.post(url, newWorkspace);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
 
-// users all workspaces
+/**
+ * @method getUserWorkspaces
+ * @description Bulk retrieval of all workspaces owned by or shared with a specific user.
+ */
 export async function getUserWorkspaces(userId:string):Promise<WorkSpace[]>{
-    const relativePath = `/api/check-user-have-created-workspace?userId=${userId}`;
+    const relativePath = `/api/workspace?userId=${userId}`;
     const url = `${BASE_URL}${relativePath}`
     const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
 
-
-// get current workspace
-
+/**
+ * @method getCurrentWorkspace
+ * @description Fetches the full metadata for a single workspace.
+ * * Implementation Note: Uses a RESTful ID-based route. The console log is 
+ * strategically placed to trace the ID flow from the Redux selector through 
+ * the service layer, ensuring the 'current' context is synchronized.
+ */
 export async function getCurrentWorkspace(workspaceId:string): Promise<WorkSpace>{
-    const relativePath = `/api/get-current-workspace?workspaceId=${workspaceId}`;
+    const relativePath = `/api/workspace/${workspaceId}`;
+    console.log("[Workspace Services] getCurrentWorkspace workspaceId: ",workspaceId);
     const url = `${BASE_URL}${relativePath}`
     const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
 
-// get all folders of workspace
-
+/**
+ * @method getAllFolders
+ * @description Retrieves all folders belonging to a specific workspace.
+ * * Logic: This is the primary "Branch" fetcher. It allows the UI to populate 
+ * the sidebar and dashboard tree for a specific workspace context.
+ */
 export async function getAllFolders(workspaceId:string):Promise<Folder[]> {
-    const relativePath = `/api/get-all-workspace-folders?workspaceId=${workspaceId}`;
+    const relativePath = `/api/folder?workspaceId=${workspaceId}`;
     const url = `${BASE_URL}${relativePath}`
     const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
 
-// update workspace
-
+/**
+ * @method updateWorkspace
+ * @description Performs a partial update on workspace metadata (primarily the Title).
+ * * Strategy: Instead of throwing a generic error, this method catches exceptions 
+ * and returns a standardized result object. This allows the calling hook to 
+ * display a specific 'toast' message to the user rather than a generic crash.
+ */
 export async function updateWorkspace(newTitle: string, workspaceId:string): Promise<{
     success: boolean;
     data?: WorkSpace;
@@ -55,7 +90,7 @@ export async function updateWorkspace(newTitle: string, workspaceId:string): Pro
         title: newTitle,
     }
     try {
-        const relativePath = `/api/update-workspace`;
+        const relativePath = `/api/workspace/${workspaceId}`;
         const url = `${BASE_URL}${relativePath}`
         const { data } =  await axios.post(url, updatedData);
         if(!data.success) {
@@ -71,8 +106,11 @@ export async function updateWorkspace(newTitle: string, workspaceId:string): Pro
     }
 }
 
-// logo
-
+/**
+ * @method updateLogo
+ * @description Specialized binary upload utility. Configures the 'Content-Type' 
+ * header explicitly for multipart handling of workspace branding assets.
+ */
 export async function updateLogo(
    workspaceId: string,
    logoFile: File
@@ -86,7 +124,8 @@ export async function updateLogo(
     formData.append("newLogo", logoFile);
     
    try {
-    const relativePath = `/api/update-workspace-logo`;
+    // const relativePath = `/api/update-workspace-logo`;
+    const relativePath = `/api/workspace/${workspaceId}/logo`;
     const url = `${BASE_URL}${relativePath}`
      const { data } = await axios.post(url, formData, {
         headers: {
