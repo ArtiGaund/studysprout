@@ -1,8 +1,18 @@
+/**
+ * @component Dropdown
+ * @description A recursive, context-aware navigation component that renders either a Folder 
+ * (Accordion) or a File. It handles complex interactions like single vs double-click differentiation, 
+ * real-time collaborative locking, and recursive nesting.
+ * * * Advanced Features:
+ * - Collaborative Awareness: Detects and visually locks items being edited by other users.
+ * - Event Debouncing: Distinguishes between single-click (Navigation) and double-click (Editing).
+ * - Recursive Architecture: Automatically renders child files if the listType is 'folder'.
+ * - Synchronous UI: Optimistically updates icons and titles while syncing with the backend.
+ */
 "use client";
 
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import clsx from "clsx";
 import EmojiPicker from "../global/emoji-picker";
@@ -10,12 +20,20 @@ import { useToast } from "../ui/use-toast";
 import TooltipComponent from "../global/tooltip-component";
 import { PlusIcon, Trash } from "lucide-react";
 import { File as MongooseFile} from "@/model/file.model";
-import { useSession } from "next-auth/react";
 import { Folder as MongooseFolder } from "@/model/folder.model";
 import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
+import { useUser } from "@/lib/providers/user-provider";
+import { useSelector } from "react-redux";
+
+// --- State Management ---
+import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
+import { selectCurrentFolder } from "@/store/selectors/folderSelector";
+import { makeSelectFiles } from "@/store/selectors/fileSelector";
+import { ReduxFile } from "@/types/state.type";
+import { RootState } from "@/store/store";
+import { selectUserId } from "@/store/selectors/userSelector";
 
 interface DropdownProps {
     title: string;
@@ -24,6 +42,7 @@ interface DropdownProps {
     iconId: string;
     children?: React.ReactNode;
     disabled?: boolean;
+    parentFolderId?: string;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -33,19 +52,37 @@ const Dropdown: React.FC<DropdownProps> = ({
     iconId,
     children,
     disabled,
+    parentFolderId,
     ...props
 }) => {
     
     const router = useRouter();
     const { toast } = useToast();
     const [ currentIcon, setCurrentIcon ] = useState(iconId)
-    const { data: session} = useSession()
+    const { user } = useUser();
 
-    const { currentWorkspace } = useWorkspace();
+    // --- Redux Selectors ---
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
+   
     const { updateFolder } = useFolder(); 
-    const { files, createFile, updateFile } = useFile();
 
-    //  Local state for folder editing
+    // Select files if this dropdown is a folder (Recursive Data Fetching)
+    const selectFiles = useMemo(makeSelectFiles, []);
+    const EMPTY_FILE: ReduxFile[] = [];
+
+    const files = useSelector((state: RootState) => 
+        listType === 'folder' ? selectFiles(state, id) : EMPTY_FILE
+    );
+
+    const {  
+        createFile, 
+        updateFile 
+    } = useFile();
+
+    // Collaborative state: check if another user is currently editing this specific ID
+    const remoteEditing = useSelector((state: RootState) => state.ui.remoteEditing[id]);
+
+    // --- Editing Logic ---
     const [isEditingLocally, setIsEditingLocally] = useState(false);
 
     // Callback for useTitleEditing to signal when editing should stop
@@ -78,16 +115,27 @@ const Dropdown: React.FC<DropdownProps> = ({
     }, [handleStartEditingFromHook]);
 
 
-    // states and Refs for click handling
+    // --- Click Management (Single vs Double) ---
     const clickTimer = useRef<NodeJS.Timeout | null>(null);
     const clickCount = useRef(0);
+
+    const currentUserId = useSelector(selectUserId);
+    // To Determine if the item is "Locked" by someone else
+    const isLockedByRemote = !!(
+        remoteEditing && 
+        typeof remoteEditing ==='object' &&
+        remoteEditing.userId !== currentUserId
+    )
 
     useEffect(() => {
         setCurrentIcon(iconId )
     }, [iconId])
 
     
-    //Navigate the user to a different page
+    /**
+     * @method navigatePage
+     * Handles routing based on hierarchy (Workspace > Folder > File)
+     */
     const navigatePage = useCallback((accordionId: string, type: string) => {
         // prevent navigation while editing 
         if(isCurrentlyEditingFromHook) { // Use the effective state from the hook
@@ -105,9 +153,9 @@ const Dropdown: React.FC<DropdownProps> = ({
             router.push(`/dashboard/${currentWorkspace?._id}/${accordionId}`);
         }
         if (type === 'file') {
-            const parentFile = files.find(file => file._id === accordionId);
-            if(parentFile?.folderId){
-                router.push(`/dashboard/${currentWorkspace._id}/${parentFile.folderId}/${accordionId}`);
+            // const parentFile = files.find(file => file._id === accordionId);
+            if(parentFolderId){
+                router.push(`/dashboard/${currentWorkspace._id}/${parentFolderId}/${accordionId}`);
             }else{
                 toast({
                     title: 'File path incomplete',
@@ -157,26 +205,32 @@ const Dropdown: React.FC<DropdownProps> = ({
 
         clickCount.current = 0; // Reset click count for double click
         
-        // Add a small delay for folders before starting edit to allow DOM to settle
-        if (listType === 'folder') {
-            setTimeout(() => {
-                if (!isCurrentlyEditingFromHook) { // Re-check effective state from hook after delay
-                    handleStartEditing(); // Call the local handleStartEditing
-                }
-            }, 300); // Increased delay for folders to 300ms
-        } else {
-            // For files, start editing immediately as before, but ensure local state is set
-            if (!isCurrentlyEditingFromHook) { // Use effective state from hook
-                handleStartEditing(); // Call the local handleStartEditing
-            } 
+        // // Add a small delay for folders before starting edit to allow DOM to settle
+        // if (listType === 'folder') {
+        //     // setTimeout(() => {
+        //         if (!isCurrentlyEditingFromHook) { // Re-check effective state from hook after delay
+        //             handleStartEditing(); // Call the local handleStartEditing
+        //         }
+        //     // }, 300); // Increased delay for folders to 300ms
+        // } else {
+        //     // For files, start editing immediately as before, but ensure local state is set
+        //     if (!isCurrentlyEditingFromHook) { // Use effective state from hook
+        //         handleStartEditing(); // Call the local handleStartEditing
+        //     } 
+        // }
+
+        if(!isCurrentlyEditingFromHook){
+            handleStartEditing();
         }
     }, [
         handleStartEditing, // Use local handleStartEditing
         isCurrentlyEditingFromHook, // Use effective state from hook
-        listType // Add listType to dependencies
     ])
 
-    // onchanges for emoji
+    /**
+     * @method onChangeEmoji
+     * Optimistically updates the UI icon before persisting to the DB
+     */
     const onChangeEmoji = async (selectedEmoji: string) => {
         setCurrentIcon(selectedEmoji); // Update local state immediately for visual feedback
 
@@ -225,6 +279,8 @@ const Dropdown: React.FC<DropdownProps> = ({
     };
     
     const isFolder = listType === 'folder';
+
+    // --- Styles ---
     const listStyles = useMemo(
         () =>
           clsx('relative', {
@@ -292,25 +348,30 @@ const Dropdown: React.FC<DropdownProps> = ({
             })
         }
     };
-
-
+   
     // move to trash
 
     const moveToTrash = async(e: React.MouseEvent) => {
         e.stopPropagation();
-        const user = session?.user.username
+        const username = user?.username
+         if(!id) {
+                    console.error(`[Move to trash] ${listType} Id is required`);
+                    return;
+                }
         // For folders, `id` is the folder ID.
         // For files, `id` is the file ID.
         // The `id.split('folder')` logic might be problematic if your IDs can contain 'folder' string or are not structured like that.
         // Assuming 'id' directly represents the entity's ID to be trashed.
         
         if(listType === 'folder'){
-            const trashValue = `Deleted by ${user}`
+            const trashValue = `Deleted by ${username}`
             const updatedFolder: Partial<MongooseFolder> ={
                 inTrash: trashValue
             }
             try {
+               
                 const result = await updateFolder(id, updatedFolder); // Use `id` directly
+                console.log("[Dropdown] moveToTrash result of folder: ",result);
                 if(!result.success){ // Check result.success for hook's return
                     toast({
                         title: "Failed to move folder to trash ",
@@ -318,6 +379,8 @@ const Dropdown: React.FC<DropdownProps> = ({
                         variant: "destructive"
                     })
                 } else {
+                   
+
                     toast({
                         title: "Folder moved to trash successfully",
                         description: "Keep it safe",
@@ -333,7 +396,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             }
         }
         if(listType === 'file'){
-            const trashValue = `Deleted by ${user}`
+            const trashValue = `Deleted by ${username}`
             const updatedFile: Partial<MongooseFile> ={
                 inTrash: trashValue
             }
@@ -346,6 +409,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                         variant: "destructive"
                     })
                 } else {
+                                 
                     toast({
                         title: "File moved to trash successfully",
                         description: "Keep it safe",
@@ -363,16 +427,12 @@ const Dropdown: React.FC<DropdownProps> = ({
     }
 
     const filesInCurrentFolder = useMemo(() => {
-        return files.filter((file) => {
-            return (
-                file.folderId?.toString() === id &&
-                file.inTrash === undefined
-            )
-        })
+        return files.filter((file) => !file.inTrash);
     },[
         files,
-        id
     ])
+
+    // console.log("[Dropdown] filesInCurrentFolder: ",filesInCurrentFolder);
    
         return (
         <AccordionItem 
@@ -398,17 +458,18 @@ const Dropdown: React.FC<DropdownProps> = ({
                 {/* This div now contains both the icon/input and the action buttons */}
                 {/* Ensure this container has a defined max-width or flex-basis to prevent overflow */}
                 <div  className={groupIdentifies}> {/* Added overflow-hidden */}
-                    <div className="flex gap-4 items-center justify-center overflow-hidden">
-                    <div className="relative"> 
+                    <div className="flex gap-4 items-center justify-start w-full min-w-0 overflow-hidden">
+                    <div className="relative flex-shrink-0"> 
                         <EmojiPicker getValue={onChangeEmoji}>
                             {currentIcon}
                         </EmojiPicker>
                     </div>
+                    <div className="flex items-center flex-grow min-w-0 overflow-hidden w-full">
                     {isCurrentlyEditingFromHook ? ( 
                         <input
                             ref={inputRef}
                             type="text"
-                            value={displayedTitle ?? ''}
+                            value={typeof displayedTitle === 'string' ? displayedTitle : ''}
                             className={clsx(
                                 'outline-none bg-muted cursor-text flex-grow text-Neutrals/neutrals-7', // Use flex-grow
                                 'z-20 p-1 rounded-sm min-w-0', // Added min-w-0 to allow shrinking
@@ -424,20 +485,61 @@ const Dropdown: React.FC<DropdownProps> = ({
                             // autoFocus={isCurrentlyEditingFromHook} 
                         />
                     ) : (
-                        <span
-                            className="cursor-pointer overflow-hidden whitespace-nowrap text-ellipsis flex-grow" // Use flex-grow
-                            onClick={handleCombinedClick} 
-                            onDoubleClick={handleCombinedDoubleClick} 
+                        <TooltipComponent
+                        className= {`${isLockedByRemote
+                            ? "bg-cyan-400 text-cyan-950 font-bold border-none shadow-[0_0_20px_rgba(251,191,36,0.4)]"
+                            : ""
+                        } `}
+                        // only show tooltip if someone else is editing
+                        message={
+                            isLockedByRemote
+                            ? `${remoteEditing.username} is editing...`
+                            : ""
+                        }
+                        
                         >
-                            {displayedTitle}
-                        </span>
+                            <div className={clsx(
+                                "flex items-center flex-nowrap flex-grow w-full gap-2 px-1 rounded-md transition-all duration-300 min-w-0",
+                                isLockedByRemote && "bg-emerald-950/40 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
+                            )}>
+                                <span
+                                className={clsx(
+                                    "block truncate flex-grow transition-colors min-w-0",
+                                    // Use remoteEditing object just to trigger a class
+                                    isLockedByRemote 
+                                    ? "text-emerald-400 font-semibold italic opacity-90 cursor-not-allowed select-none" 
+                                    : "hover:text-white cursor-pointer"
+                                )}
+                                // DISABLE clicks if locked
+                                onClick={(e) => !isLockedByRemote && handleCombinedClick(e)} 
+                                onDoubleClick={(e) => !isLockedByRemote && handleCombinedDoubleClick(e)} 
+                            >
+                                {String(displayedTitle)}
+                                
+                                
+                            </span>
+                            {/* Visual Indicator: A small pulse dot instead of text to save space */}
+                                {isLockedByRemote && (
+                                    <div className="ml-2 flex-shrink-0 items-center pr-2">
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"/>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"/>
+                                        </span>
+                                    </div>
+                                )}
+                        </div>
+                        </TooltipComponent>
                     )}
+                    </div>
                 </div>
                 {/* Action buttons remain, now correctly part of the flex container */}
                
-                <div className={hoverStyles}> 
+                {!isLockedByRemote && (<div className={hoverStyles}> 
 
-                  <TooltipComponent message={`Delete ${listType === 'folder' ? 'Folder' : 'File'}`}>
+                  <TooltipComponent
+                //   className="bg-amber-50"
+                     message={`Delete ${listType === 'folder' ? 'Folder' : 'File'}`}
+                >
                         <Trash 
                             onClick={(e) => { e.stopPropagation(); moveToTrash(e); }} 
                             size={15}
@@ -452,12 +554,12 @@ const Dropdown: React.FC<DropdownProps> = ({
                             className="hover:text-white transition-colors"
                         />
                     </TooltipComponent>)}
-                </div>
+                </div>)}
                 </div>
             </AccordionTrigger>
             
             {/* It will show files for the folders */}
-            <AccordionContent>
+            {listType === 'folder' && (<AccordionContent>
                     {filesInCurrentFolder.map((file) => {
                         return (
                             <Dropdown 
@@ -466,10 +568,11 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 listType="file"
                                 id={file._id}
                                 iconId={file?.iconId || ''}
+                                parentFolderId={id}
                             />
                         );
                     })}
-            </AccordionContent>
+            </AccordionContent>)}
         </AccordionItem>
         );
    

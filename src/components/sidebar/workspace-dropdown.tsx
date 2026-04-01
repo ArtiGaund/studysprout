@@ -1,6 +1,16 @@
+/**
+ * @component WorkspaceDropdown
+ * @description A strategic navigation component that manages the application's 
+ * top-level context (Workspace Selection). 
+ * * * Key Functionality:
+ * - Redux-Driven Selection: Synchronizes the UI with the global `currentWorkspace` state.
+ * - Dynamic Listing: Maps over normalized Redux state (`byId` and `allIds`) for high-performance rendering.
+ * - Creation Entry: Integrates with `CustomDialogTrigger` to launch the `DashboardSetup` flow.
+ * - UI Polish: Utilizes backdrop-blur and absolute positioning for a modern, "Notion-style" overlay.
+ */
 "use client"
-import { WorkSpace } from "@/model/workspace.model";
-import React, { useEffect, useState } from "react"
+
+import React, { useState } from "react"
 import SelectedWorkspaces from "./selected-workspaces";
 import CustomDialogTrigger from "../global/custom-dialog";
 import DashboardSetup from "../dashboard-setup/dashboard-setup";
@@ -17,45 +27,55 @@ interface WorkspaceDropdownProps{
 
 // this component will allow the user to select between the different workspaces
 const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defaultValue }) => {
-    // const { state, dispatch } = useAppState()
+    // --- STATE & DISPATCH ---
     const workspaceState = useSelector((state: RootState) => state.workspace);
-    const [ selectedOption, setSelectedOption ] = useState<ReduxWorkSpace | undefined>(defaultValue)
     const [ isOpen, setIsOpen ] = useState(false)
     const dispatch = useDispatch();
 
+    /**
+     * @selector currentWorkspace
+     * Derives the active workspace by looking up the ID in the normalized state object.
+     * This ensures the dropdown always displays the most up-to-date workspace metadata.
+     */
+    const currentWorkspace = useSelector((state: RootState) =>
+        state.workspace.currentWorkspace
+        ? state.workspace.byId[state.workspace.currentWorkspace._id]
+        : undefined
+    );
 
-    useEffect(() => {
-        const currentWorkspace = workspaceState.currentWorkspace
-        ? workspaceState.byId[workspaceState.currentWorkspace]
-        : undefined;
-
-        if(currentWorkspace && currentWorkspace._id !==selectedOption?._id){
-            setSelectedOption(currentWorkspace);
-        }else if(!currentWorkspace && selectedOption){
-            setSelectedOption(undefined);
-        }else if(!selectedOption && defaultValue){
-            setSelectedOption(defaultValue);
-        }
-    },[ workspaceState.currentWorkspace, workspaceState.byId, selectedOption, defaultValue ])
-    // handle select
+    /**
+     * @handler handleSelect
+     * Updates the global Redux state and closes the dropdown.
+     * Triggers a cascade of updates in child components (Folders/Files) via workspace ID.
+     */
     const handleSelect = ( option: ReduxWorkSpace ) => {
-        setSelectedOption(option)
-        dispatch(SET_CURRENT_WORKSPACE(option._id));
+        dispatch(SET_CURRENT_WORKSPACE(option));
         setIsOpen(false);
     }
 
-    const allWorkspaces = workspaceState.allIds.map(id => workspaceState.byId[id]).filter(Boolean) as ReduxWorkSpace[];
+    /**
+     * @derived allWorkspaces
+     * Transforms normalized state back into an array for rendering.
+     * Uses a filter(Boolean) to ensure data integrity during mapping.
+     */
+    const allWorkspaces = workspaceState.allIds
+    .map(id => workspaceState.byId[id])
+    .filter(Boolean) as ReduxWorkSpace[];
+
     return(
     <div className="relative inline-block text-left w-full">
+        {/* Active Workspace Trigger */}
         <div>
             <span onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
-                { selectedOption ?
-                 <SelectedWorkspaces workspace={selectedOption} /> 
+                { currentWorkspace ?
+                 <SelectedWorkspaces workspace={currentWorkspace} /> 
                  : 
                  ( 'Select  a workspace' )
                 }
             </span>
         </div>
+
+        {/* Dropdown Menu Overlay */}
         { isOpen && (
             <div className="origin-top-right absolute w-full rounded-md shadow-md z-50 bg-black/10
              backdrop-blur-lg group overflow-scroll border-[1px] border-muted p-2">
@@ -77,6 +97,8 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
                             </>
                         )}
                     </div>
+
+                    {/* Workspace Creation Action */}
                     <CustomDialogTrigger
                      content={<DashboardSetup />}
                       >

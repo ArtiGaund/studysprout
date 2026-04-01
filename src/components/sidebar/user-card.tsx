@@ -1,24 +1,34 @@
-"use client"
+/**
+ * @component UserCard
+ * @description A compact UI element that displays the authenticated user's profile information
+ * and provides a contextual dropup menu for account actions.
+ * * * Key Functionality:
+ * - Reactive UI: Adapts its layout based on the sidebar's expanded/collapsed state (`isRevisionSidebarOpen`).
+ * - Outside Click Detection: Implements a custom `useEffect` hook to automatically close the menu when clicking elsewhere.
+ * - Profile Integration: Consumes the `useUser` provider for real-time user data access.
+ * - Action Suite: Provides access to the Settings modal and Logout functionality.
+ */
+"use client";
+
 import React, { useEffect, useRef, useState} from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import CypressProfileIcon from "../icons/CypressProfileIcon";
-import { useSession } from "next-auth/react";
 import LogoutButton from "../global/logout-button";
 import { LogOut, Settings, User2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useModal } from "@/context/ModalProvider";
 import SettingsPage from "../settings/settings";
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
+import { useUser } from "@/lib/providers/user-provider";
 const UserCard = () => {
     const [ isOpen, setIsOpen] = useState(false);
-    const { data: session } = useSession()
-    const router = useRouter()
-    const user = session?.user
-    const { openModal } = useModal()
+    const {user} = useUser();    
     const menuRef = useRef<HTMLDivElement>(null);
-
     const { isRevisionSidebarOpen } = useRevisionSidebar();
     
+    /**
+     * @effect ClickOutsideListener
+     * Handles closing the action menu when a user clicks away from the component.
+     * Essential for maintaining a clean UX in dense sidebars.
+     */
     useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -38,6 +48,7 @@ const UserCard = () => {
         className={`hidden sm:flex justify-between items-center px-4 py-2
            ${!isRevisionSidebarOpen && 'bg-Neutrals/neutrals-12'}  rounded-3xl`}
         >
+          {/* Identity Section: Only visible when the sidebar is expanded */}
            {!isRevisionSidebarOpen && ( <aside
             className="flex justify-center items-center gap-2"
             >
@@ -53,6 +64,8 @@ const UserCard = () => {
                     </small>
                 </div>
             </aside>)}
+
+            {/* Action Section: Contains the Settings toggle and Dropup menu */}
             <div className="flex items-center justify-center">
                 {/* dropup */}
                 <div className="relative inline-block group">
@@ -64,9 +77,11 @@ const UserCard = () => {
                         <Settings />
                     </button>
                      {/* Dropdown */}
+
+       {/* Contextual Dropup Menu */}              
       {isOpen && (
         <div className="absolute bottom-[45px] right-0 bg-gray-900 text-white px-0 py-1 rounded-md shadow-lg z-50 flex flex-col items-center space-y-1 min-w-[50px]">
-          {/* Profile */}
+          {/* Account Settings Trigger */}
           <SettingsPage>
                     <div 
                     className="w-full hover:bg-zinc-800 p-2 rounded-md flex justify-center"
@@ -74,7 +89,8 @@ const UserCard = () => {
                          <User2 className="w-4 h-4" />
                     </div>
                 </SettingsPage> 
-          {/* Logout */}
+          
+          {/* Authentication Termination */}
           <div className="w-full hover:bg-zinc-800 p-1 rounded-md flex justify-center">
             <LogoutButton>
               <LogOut className="w-4 h-4" />
