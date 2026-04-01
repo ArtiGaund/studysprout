@@ -10,6 +10,7 @@ const config = {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     OWNER_EMAIL: process.env.OWNER_EMAIL,
     GEMINI_KEY: process.env.GEMINI_API_KEY,
+    INTERNAL_SECRET: process.env.INTERNAL_SECRET,
 }
 
 
