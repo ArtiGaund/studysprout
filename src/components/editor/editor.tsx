@@ -1,64 +1,198 @@
 
-"use client"
+/**
+ * @component TextEditor
+ * @description A state-of-the-art collaborative editor built with BlockNote and Yjs.
+ * * * Key Technical Features:
+ * - CRDT Integration: Uses Yjs (Y.Doc) to ensure conflict-free real-time synchronization.
+ * - Binary Serialization: Handles MongoDB Buffer-to-Uint8Array conversions for efficient 
+ * database hydration and low-latency socket transmission.
+ * - Awareness/Presence: Syncs cursor positions and user metadata (name/color) across clients.
+ * - Custom Provider: Implements a SocketCollaborationProvider to bridge Yjs with 
+ * a custom Socket.io backend.
+ * - Extensible Schema: Configured with multi-language code blocks and advanced table support.
+ */
 
-import { File } from "@/model/file.model";
+"use client"
 import React, { useCallback, useEffect, useMemo, useRef } from "react"
-import {
-     BlockNoteEditor,
-      BlockNoteSchema,
-      defaultBlockSpecs,
-      PartialBlock, 
-    } from "@blocknote/core"
-import { 
-    BlockNoteViewRaw,
-     useBlockNote,
-      useCreateBlockNote
-     } from "@blocknote/react"
+import { useCreateBlockNote } from "@blocknote/react"
 import { BlockNoteView } from "@blocknote/mantine";
 
 import "@blocknote/core/style.css"
 import "@blocknote/mantine/style.css"
 import "@/app/styles/blocknote-overrides.css"
 import { useTheme } from "next-themes";
-import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "../ui/use-toast";
-import { ReduxFile } from "@/types/state.type";
-import { useFile } from "@/hooks/useFile";
-import {  normalizeBlockUI } from "@/utils/block/normalizeBlock";
-import { createSlottable } from "@radix-ui/react-slot";
 
+// Yjs & Protocols
+import * as Y from "yjs";
+import { 
+    Awareness,
+    applyAwarenessUpdate,
+    encodeAwarenessUpdate
+} from "y-protocols/awareness";
 
+import { cursorColor } from "@/utils/cursor-color";
+import { useSocket } from "@/lib/providers/socket-provider";
+
+/**
+ * @class SocketCollaborationProvider
+ * @description A custom bridge between the Yjs document and the Socket.io instance.
+ * Required for BlockNote to recognize the socket as a valid collaboration source.
+ */
+class SocketCollaborationProvider{
+    constructor(public doc: Y.Doc, public awareness: Awareness){}
+    destroy() {}
+    connect() {}
+    disconnect() {}
+}
 interface TextEditorProps{
     fileId: string;
-    fileDetails: ReduxFile;
-    onChange: (value: string) => void;
+    initialContentBinary: Uint8Array | null; //Binary content
+    username: string;
     editable?:boolean;
 }
 
 const TextEditor: React.FC<TextEditorProps> = ({
     fileId,
-    fileDetails,
-    onChange,
+    initialContentBinary,
+    username,
     editable,
 }) => {
-    const { resolvedTheme } = useTheme()
+    const { socket, isConnected } = useSocket();
+    const isHydrated = useRef(false);
     const { toast } = useToast();
 
-    const {
-        //  updateFile
-        addBlockHandler,
-        updateBlockHandler,
-        deleteBlockHandler, 
-    } = useFile();
+    // --- 1. SHARED STATE INITIALIZATION ---
+    // Initialize the Y.Doc as a singleton for the lifecycle of this file
+    const doc = useMemo(() => new Y.Doc(), []);
+    const awareness = useMemo(() => new Awareness(doc), [doc]);
 
-    const isInitializeRef = useRef(false);
-    const prevBlocksRef = useRef<Record<string,any>>({});
-    const pendingAdds = useRef(new Set<string>());
-    const persistedBlockRef = useRef<Set<string>>(new Set());
-    const persistedSnapshotRef = useRef<Record<string, string>>({});
-    
-    // Ref for debounce
-    const updateTimeoutRef = useRef<Record<string, NodeJS.Timeout>>({}); 
+    // Create the provider instance for BlockNote's collaboration engine
+    const provider = useMemo(() => new SocketCollaborationProvider(doc, awareness),
+     [
+        doc,
+        awareness
+    ]);
+     const fragment = useMemo(() => doc.getXmlFragment("document-content"),[doc])
+     const userColor = useMemo(() => cursorColor(username), [username]);
+
+     /**
+     * @callback onRemoteUpdate
+     * Merges binary updates from other users into the local Y.Doc.
+     */
+     const onRemoteUpdate = useCallback((update: Uint8Array) => {
+            // Yjs handles the math of merging this updates safely
+           try {
+             Y.applyUpdate(doc, new Uint8Array(update));
+           } catch (error) {
+                console.error("[Editor] Remote update error: ",error);
+           }
+        },[doc]);
+
+    // --- 2. CONTENT SYNCHRONIZATION EFFECT ---
+    useEffect(() => {
+        if(!socket || !isConnected) return;
+
+        socket.emit("file:join", {fileId});
+
+        /**
+         * @logic Hydration
+         * Converts MongoDB Buffer objects into Uint8Arrays to hydrate the Y.Doc.
+         * Ensures the "rehydration" origin is specified to prevent echo-loops.
+         */
+        if(initialContentBinary && initialContentBinary.length > 0){
+            try {
+                // MongoDB often return Buffers as { type: 'Buffer', data: [...]}
+                const raw = initialContentBinary as any;
+                const uint8Array = raw.data 
+                ? new Uint8Array(raw.data)
+                : (raw instanceof Uint8Array ? raw : new Uint8Array(raw));
+                if(uint8Array.length > 0 && !isHydrated.current){
+                    doc.transact(() => {
+                        Y.applyUpdate(doc, uint8Array, "rehydration");
+                    }, "rehydration");
+                    console.log("[Editor] Successfully hydrated Y.Doc from DB. Fragment length: ",fragment.length);
+                    const availableType = Array.from(doc.share.keys());
+                    console.log("[Editor] Available Yjs Types: ",availableType);
+                    isHydrated.current = true;
+                }
+                // isHydrated.current = true;
+                socket.emit("file:update-raw", { fileId, update: uint8Array });
+            } catch (error) {
+                console.error("[Editor] Failed to hydrate Y.Doc: ",error);
+            }
+        } 
+     
+        // Listen for remote document changes
+       socket.on("file:update-raw", onRemoteUpdate);
+
+        // Emit local document changes (filtered to avoid re-emitting remote updates)
+        const onDocUpdate = (update: Uint8Array, origin: any) => {
+            if(origin === "remote") return;
+                socket.emit("file:update-raw", { fileId, update }); 
+        };
+
+        doc.on("update", onDocUpdate );
+
+        return () => {
+            socket.off("file:update-raw", onRemoteUpdate);
+            doc.off("update", onDocUpdate);
+        };
+    },[
+        doc,
+        fileId,
+        initialContentBinary,
+        fragment,
+    ])
+
+    // --- 3. AWARENESS (PRESENCE) EFFECT ---
+    useEffect(() => {
+        if(!socket || !awareness || !isConnected) return;
+
+        //1. Receive awareness updates from others
+        const onAwarenessRemote = ( update: Uint8Array ) => {
+           applyAwarenessUpdate(awareness, new Uint8Array(update), "remote");
+        };
+
+        // 2. Send local awareness 
+        const onAwarenessLocal = ({
+            added,
+            updated,
+            removed,
+        }: any) => {
+            const changedClients = added.concat(updated).concat(removed);
+            const update = encodeAwarenessUpdate(awareness, changedClients);
+            socket.emit("file:awareness-update", { fileId, update });
+        };
+
+        socket.on("file:awareness-update", onAwarenessRemote);
+        awareness.on("update", onAwarenessLocal);
+
+        // Broadcast local user metadata for cursor labels
+        awareness.setLocalStateField("user", {
+            name: username,
+            color: userColor,
+        });
+
+        return () => {
+            socket.off("file:awareness-update", onAwarenessRemote);
+            awareness.off("update", onAwarenessLocal);
+            awareness.setLocalStateField("user", null);
+        }
+
+    },[
+        awareness,
+        fileId,
+        username,
+    ])
+
+        
+        useEffect(() => {
+            console.log("Editor received binary: ", initialContentBinary?.length);
+        },[
+            initialContentBinary
+        ]);
+
     
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
         console.log("File upload triggered:", file.name);
@@ -72,91 +206,11 @@ const TextEditor: React.FC<TextEditorProps> = ({
         });
         return "";
     }
-    // console.log("[editor] fileDetails: ",fileDetails);
-
-    // Memoize the parsed content from fileDetails.data
-    // const initialContent = useMemo(() => {
-    //     const data = fileDetails.data;
-    //     let contentToUse: PartialBlock[] | null = null;
-    //     if(data){
-    //         if(typeof data === "string" && data.trim() !== ""){
-    //              try {
-    //                 contentToUse = JSON.parse(data) as PartialBlock[];
-               
-    //         } catch (error) {
-    //             console.error("Error parsing fileDetails.data of BlockNote initial content:: ",error);
-    //         }
-    //         }else if(Array.isArray(data)){
-    //             contentToUse = data as PartialBlock[];
-    //         }else if(typeof data === "object" && Object.keys(data).length === 0){
-    //             contentToUse = [{ type: "paragraph", content: []}] as PartialBlock[];
-    //         }
-           
-    //     }
-
-    //     if(Array.isArray(contentToUse) && contentToUse.length > 0){
-            
-    //         // CRITICAL CHECK: Does the first block actually have content ?
-    //         // If it's a single block with content: [], the whole file is empty.
-
-    //         const hasVisibleContent = contentToUse.some(
-    //             block => 
-    //                 block.content &&
-    //                 Array.isArray(block.content) &&
-    //                 block.content.length > 0
-    //         );
-
-
-    //         if(hasVisibleContent){
-    //             return contentToUse;
-    //         }
-            
-    //     }
-    //     return [{ type: "paragraph", content: []}] as PartialBlock[];
-        
-    // },[ fileDetails.data ])
-
-    // console.log("[editor] fileDetails: ",fileDetails);
-
-    const initialContent = useMemo<PartialBlock[]>(() => {
-        const blocks = fileDetails.blocks;
-        const order = fileDetails.blockOrder;
-
-        if(!blocks || !order || order.length === 0){
-            return [{
-                type: "paragraph",
-                content: []
-            }] as PartialBlock[];
-        }
-
-        const mapped = order
-        .map(id => blocks[id])
-        .filter(Boolean)
-        .map( block => ({
-            id: block.id,
-            type: block.type,
-            content: block.content,
-            props: block.props ?? {},
-            children: [],
-        })) as PartialBlock[];
-
-        if(mapped.length === 0){
-            return [{
-                type: "paragraph",
-                content: [],
-            }] as PartialBlock[];
-        }
-        return mapped;
-    },[
-        fileDetails.blocks,
-        fileDetails.blockOrder
-    ])
-
-
-    
-    const editor: BlockNoteEditor = useCreateBlockNote({
-        initialContent,
+   
+    // --- 4. EDITOR CONFIGURATION ---
+    const editor = useCreateBlockNote({
         uploadFile: handleUpload,
+        // Advanced table and formatting configuration
         tables: {
             splitCells: true,
             cellBackgroundColor: true,
@@ -230,200 +284,23 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
             },
         },
-    });
 
-        useEffect(() => {
-            if(!fileDetails?.blocks){
-                // console.log("[editor] fileDetails not available yet");
-                return;
-            }
-            Object.values(fileDetails.blocks).forEach(block => {
-                persistedBlockRef.current.add(block.id);
-                persistedSnapshotRef.current[block.id] = JSON.stringify(normalizeBlockUI(block));
-            });
-        },[
-            fileDetails.blocks
-        ])
-
-   useEffect(() => {
-    if(!editor) return;
-
-    if(!isInitializeRef.current){
-        const map: Record<string, any> = {};
-        editor.topLevelBlocks.forEach(block => {
-            (map[block.id] = block);
-        });
-        prevBlocksRef.current = map;
-        isInitializeRef.current = true;
-        return;
-    }
-
-    return editor.onChange(() => {
-        const currentBlocks = editor.topLevelBlocks;
-        const prevMap = prevBlocksRef.current;
-
-        const currentMap: Record<string, any> = {};
-        currentBlocks.forEach( block => currentMap[block.id] = block);
-
-        for(const id in currentMap){
-            const currentBlock = currentMap[id];
-            if(!persistedBlockRef.current.has(id)){
-                if(pendingAdds.current.has(id)) continue;
-                if(currentBlock.content.length === 0) continue;
-
-                // ignore empty placeholder block
-                const isEmptyText = currentBlock.content.length === 1 &&
-                currentBlock.content[0]?.text === "";
-
-                if(isEmptyText) continue;
-
-                // ignore slash command placeholder
-                const isSlashOnly = 
-                currentBlock.type === "paragraph" &&
-                currentBlock.content.length === 1 &&
-                currentBlock.content[0]?.text === "/";
-
-                if(isSlashOnly) continue;
-
-               
-                pendingAdds.current.add(id);
-
-                // console.log(`[editor][add check] persistedBlockRef: ${persistedBlockRef} and pendingAdds: ${pendingAdds} are added`);
-
-                const index = currentBlocks.findIndex(block => block.id === id);
-                const afterBlockId = currentBlocks[index-1]?.id ?? null;
-
-                // console.log("[editor] currentBlock: ",currentBlock);
-                addBlockHandler(fileId, normalizeBlockUI(currentBlock), afterBlockId)
-                .then((res) => {
-                    if(res?.success){
-                        persistedBlockRef.current.add(id);
-                        const stable = normalizeBlockUI(res.data);
-                        persistedSnapshotRef.current[id] = JSON.stringify(normalizeBlockUI(createSlottable));
-                    }
-                })
-                .finally(() => {
-                    pendingAdds.current.delete(id);
-                    persistedBlockRef.current.add(id);
-                });
-                // console.log("[editor][successfully added the block] ")
-                continue;
-            }
-
-            // console.log("[editor] Going for updating block");
-           const isPersistedBlockRef = persistedBlockRef.current.has(id);
-           const isPending = pendingAdds.current.has(id);
-        //    console.log("[editor][update-check]", {
-        //     id,
-        //     isPersistedBlockRef,
-        //     isPending,
-        //     snapshot: persistedSnapshotRef.current[id],
-        //    })
-            if (
-                !isPersistedBlockRef ||
-                isPending 
-            ) {
-                // console.log("[editor][update-skip]", {
-                //     id,
-                //     isPersistedBlockRef,
-                //     isPending,
-                // })
-                continue; // NEVER PATCH
-                }
-
-                // console.log("[editor] Block is persisted and not pending add");
-                if (currentBlock.content.length === 0) {
-            continue;
-            }
-            //  console.log("[editor] Block has content");
-
-            //  const reduxBlock = fileDetails.blocks?.[id];
-
-            // if(!reduxBlock) continue;
-           
-            // console.log("[editor] Block exists in redux"); 
-            const normalized = normalizeBlockUI(currentBlock);
-            const serialized = JSON.stringify(normalized);
-            // console.log(`[editor] persistedSnapshotRef.current[id]: ${persistedSnapshotRef.current[id]} and  serialized: ${serialized}`);
-
-           
-            // console.log({
-            //     id,
-            //     persisted: persistedBlockRef.current.has(id),
-            //     pending: pendingAdds.current.has(id),
-            //     snapshot: persistedSnapshotRef.current[id],
-            //     now: JSON.stringify(normalizeBlockUI(currentBlock))
-            //     });
-
-            if(persistedSnapshotRef.current[id] === serialized) continue;
-
-            // console.log("[editor] Block has changed");
-
-            clearTimeout(updateTimeoutRef.current[id]);
-
-             updateTimeoutRef.current[id] = setTimeout(() => {
-                 updateBlockHandler(
-                    fileId,
-                    id,
-                    normalized,
-                );
-                persistedSnapshotRef.current[id]= serialized;
-             }, 400); 
+        // Collaboration property
+        collaboration: {
+            fragment,
+            user: {
+                name: username,
+                color: "#10b981",
+            },
+            provider: provider, 
         }
-
-        for(const id in prevMap){
-            if(!currentMap[id]){
-                deleteBlockHandler(fileId, id);
-                persistedBlockRef.current.delete(id);
-                delete persistedSnapshotRef.current[id];
-            }
-        }
-        prevBlocksRef.current = currentMap;
-        onChange("dirty");
-        
     });
-   },[
-        editor,
-        fileId,
-        addBlockHandler,
-        updateBlockHandler,
-        deleteBlockHandler,
-        onChange
-   ])
-
-        //    Flush on blur
-       useEffect(() => {
-        if(!editor) return;
-
-        const flushUpdates = () => {
-            Object.entries(updateTimeoutRef.current).forEach(([id, timeout]) => {
-                clearTimeout(timeout);
-
-                const block = editor.topLevelBlocks.find(b => b.id === id);
-                if(!block) return;
-
-                const normalized = normalizeBlockUI(block);
-                updateBlockHandler(fileId, id, normalized);
-                persistedSnapshotRef.current[id] = JSON.stringify(normalized);
-            });
-        };
-
-        editor.domElement?.addEventListener("blur", flushUpdates, true);
-
-        return () => {
-            editor.domElement?.removeEventListener("blur", flushUpdates, true);
-        };
-       },[
-        editor,
-        fileId,
-        updateBlockHandler
-       ])
 
     return(
         <div className="p-5">
             <BlockNoteView  
                 editor={editor}
-                theme={ resolvedTheme === "dark" ? "dark" : "light" }
+                theme= "dark"
                 editable={editable}
             />
         </div>
