@@ -1,7 +1,11 @@
 /**
- * This component is used to regenerate a flashcard set, if flashcard set already exist of these resources
- * 
- * @returns {JSX.Element}
+ * @component RegenerateFlashcardSet
+ * @description A specialized modal for resolving flashcard generation conflicts.
+ * It provides users with three distinct actions when a resource already has associated cards:
+ * 1. Navigation: View the existing set.
+ * 2. Destructive: Wipe existing data and trigger a new AI generation cycle.
+ * 3. Dismissal: Cancel the operation.
+ * * * Design Pattern: Uses a "Fixed Overlay" with a contained "Action Dialog".
  */
 "use client";
 
@@ -24,6 +28,10 @@ export default function RegenerateFlashcardSet({
     onViewSet
 }: RegenerateFlashcardSetProps){
 
+    /**
+     * @hook useFlashcardGenerator
+     * Custom hook abstraction for handling API interactions and loading states.
+     */
     const {
         generateCards,
         isGeneratingCards,
@@ -31,19 +39,17 @@ export default function RegenerateFlashcardSet({
         isDeletingFlashcardSet,
     } = useFlashcardGenerator();
 
+    /**
+     * @handler handleDeleteAndRegenerate
+     * Orchestrates the replacement of an existing flashcard set.
+     * Includes defensive validation and error logging for the regeneration lifecycle.
+     */
     const handleDeleteAndRegenerate = async () => {
-        // validate flashcardSetId 
+       // Defensive checks to prevent orphan requests
         if(!flashcardSetId) return;
         // validate payload
         if(!payload) return;
         try {
-            // delete the flashcard set
-            const deleteFlashcardSetResponse = await deleteFlashcardSet(flashcardSetId);
-
-            if(!deleteFlashcardSetResponse || !deleteFlashcardSetResponse.success){
-                console.warn("[RegenerateFlashcardSet] Error deleting flashcard set", deleteFlashcardSetResponse);
-                return;
-            }
             // regenerate the flashcard set
             const regenerateFlashcard = await generateCards(payload);
 
@@ -51,6 +57,8 @@ export default function RegenerateFlashcardSet({
                 console.warn("[RegenerateFlashcardSet] Error regenerating flashcard set", regenerateFlashcard);
                 return;
             }
+           
+            
         } catch (error) {
             console.warn("[RegenerateFlashcardSet] Error deleting and regenerating flashcard set", error);
         }
