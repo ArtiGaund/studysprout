@@ -1,28 +1,39 @@
+/**
+ * @component FeedbackForm
+ * @description A comprehensive feedback collection system for StudySprout. 
+ * Allows users to submit Bug Reports, Feature Requests, and Testimonials (Complements) 
+ * within a single unified interface.
+ * * * Key Technical Features:
+ * - Conditional Rendering: Smooth CSS transitions for expanding/collapsing form sections.
+ * - Complex Validation: A derived `isFormValid` state that ensures at least one category 
+ * is selected and that selected categories are not empty.
+ * - Dynamic Payload Construction: Aggregates multiple feedback types into a single 
+ * array for efficient batch processing on the backend.
+ * - Provider Integration: Consumes user context via `useUser` for automated email attribution.
+ */
+
 'use client';
 
-
 import { MailCheckIcon, MessageSquareShareIcon } from 'lucide-react';
-import Email from 'next-auth/providers/email';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { useToast } from '../ui/use-toast';
 import axios from 'axios';
+import { useUser } from '@/lib/providers/user-provider';
 const FeedbackForm = () => {
-
-    const { data: session } = useSession();
-    const user = session?.user; 
-
+    const { user } = useUser();
     const { toast } = useToast();
 
+    // --- SECTION VISIBILITY STATE ---
     const [ isBugReportChecked, setIsBugReportChecked ] = useState(false);
     const [ isFeatureRequestChecked, setIsFeatureRequestChecked ] = useState(false);
     const [ isOtherChecked, setIsOtherChecked ] = useState(false);
 
-    // state for textarea
+    // --- INPUT CONTENT STATE ---
     const [ bugReportText, setBugReportText] = useState("");
     const [ featureRequestText, setFeatureRequestText ] = useState("");
     const [ complementText, setComplementText] = useState("");
 
+    // --- EVENT HANDLERS ---
     const handleBugReportChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setIsBugReportChecked(event.target.checked);
     }
@@ -35,12 +46,24 @@ const FeedbackForm = () => {
         setIsOtherChecked(event.target.checked);
     }
     
-
+    /**
+     * @variable isFormValid
+     * Derived state to prevent empty submissions.
+     * Logic: 
+     * 1. At least one checkbox must be active.
+     * 2. Any active checkbox must have a corresponding non-empty textarea.
+     */
     const isFormValid =
     (!isBugReportChecked || bugReportText.trim().length > 0) &&
     (!isFeatureRequestChecked || featureRequestText.trim().length > 0) &&
     (!isOtherChecked || complementText.trim().length > 0) && 
     (isBugReportChecked || isFeatureRequestChecked || isOtherChecked);
+    
+    /**
+     * @function submitFeedback
+     * Orchestrates the API submission process.
+     * Transforms local state into a structured array of feedback objects.
+     */
     const submitFeedback = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const form = event.currentTarget;
