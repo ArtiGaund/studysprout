@@ -1,11 +1,16 @@
+/**
+ * @component BannerUploadForm
+ * @description A specialized form component for handling image uploads.
+ * It leverages Zod for schema validation and React Hook Form for state management,
+ * providing a robust UX with real-time validation and loading states.
+ * * Key Engineering Patterns:
+ * - Schema-Driven Validation: Uses Zod to enforce file requirements.
+ * - Manual File State Integration: Bridges the gap between browser FileList and Form state.
+ * - Clean Cleanup: Resets internal state and form fields upon successful parent callback.
+ */
 "use client"
-import { File as MongooseFile } from "@/model/file.model";
-import { Folder } from "@/model/folder.model";
-import { WorkSpace } from "@/model/workspace.model";
-import { RootState } from "@/store/store";
 import React, { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
 import { uploadBannerFormSchema } from "@/schemas/uploadBannerFormSchema"
 import { z } from "zod";
 import { Label } from "../ui/label";
@@ -15,7 +20,9 @@ import { Loader } from "lucide-react";
 import { toast } from "../ui/use-toast";
 
 interface BannerUploadFormProps {
+    /**Callback to handle the actual file upload logic (API calls, etc) */
     onUpload: (file: File) => Promise<void>;
+    /**Global or parent loading state to disable UI during transit */
     isUploading: boolean;
 }
 
@@ -23,7 +30,7 @@ const BannerUploadForm: React.FC<BannerUploadFormProps> = ({
    onUpload,
    isUploading
 }) => {
-   
+    // Track the actual File object for the upload callback
     const [ selectedFile, setSelectedFile ] = useState<File | null>(null);
    
     const { 
@@ -38,8 +45,10 @@ const BannerUploadForm: React.FC<BannerUploadFormProps> = ({
         }
         })
 
-    // have to upload the image
-
+    /**
+     * @handler onChangeBannerHandler
+     * Syncs the HTML input file list with the local component state.
+     */
    const onChangeBannerHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             setSelectedFile(e.target.files[0]);
@@ -47,6 +56,12 @@ const BannerUploadForm: React.FC<BannerUploadFormProps> = ({
             setSelectedFile(null);
         }
     };
+
+    /**
+     * @handler onSubmitHandler
+     * Final validation check before invoking the parent's onUpload logic.
+     * Implements a clean-up phase on success.
+     */
     const onSubmitHandler:SubmitHandler<z.infer<typeof uploadBannerFormSchema>> = async () => {
         if(!selectedFile){
             toast({
@@ -79,9 +94,13 @@ const BannerUploadForm: React.FC<BannerUploadFormProps> = ({
             type="file"
             accept="image/*"
             disabled={isUploading}
+            /* Note: We merge react-hook-form's registration with our custom 
+                   change handler to maintain validation and file access. 
+                */
             {...register('banner', {required: 'Banner image is required'})}
             onChange={onChangeBannerHandler}
             />
+            {/* Accessible error feedback */}
             <small className="text-red-600">
                 {errors.banner?.message?.toString()}
             </small>

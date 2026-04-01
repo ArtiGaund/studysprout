@@ -1,3 +1,16 @@
+/**
+ * @component BannerSection
+ * @description A dynamic header component for a Studysprout app.
+ * It manages titles, emojis, banners, and breadcrumbs for three distinct directory level:
+ * 1. Workspace
+ * 2. Folder
+ * 3. File
+ * * Key Features:
+ * - Context-Aware Breadcrumbs: Dynamically calculates path based on current directory type.
+ * - Inline Editing: Managed via custom hooks for title and icon updates.
+ * - Recovery UI: Integrated "Trash" state management with Restore/Delete actions.
+ * - Real-time Status: Visual feedback for 'Saving' vs 'Saved' states using Redux selectors.
+ */
 "use client"
 
 import React, { useCallback, useMemo } from "react";
@@ -10,37 +23,53 @@ import EmojiPicker from "../global/emoji-picker";
 import BannerUpload from "./banner-upload";
 import { XCircleIcon } from "lucide-react";
 import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
-import { useWorkspace } from "@/hooks/useWorkspace";
-import { useFolder } from "@/hooks/useFolder";
-import { useFile } from "@/hooks/useFile";
 import { useDir } from "@/hooks/useDir";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
 import clsx from "clsx";
 
 import Feedback from "../feedback/feedback";
+import WorkspaceAccessControl from "../workspace/workspace-access-control";
+import { useSelector } from "react-redux";
+import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
+import { selectCurrentFolder, selectFolderById } from "@/store/selectors/folderSelector";
+import { selectCurrentFile } from "@/store/selectors/fileSelector";
+import { RootState } from "@/store/store";
 
 interface BannerSectionProps{
     dirDetails: ReduxWorkSpace | ReduxFolder | ReduxFile;
     fileId: string;
     dirType: "workspace" | "folder" | "file";
-   
 }
-
 
 const BannerSection: React.FC<BannerSectionProps> = ({
     dirDetails,
     fileId,
     dirType,
 }) => {
+    // --- REDUX SELECTORS ---
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
+    const currentFolder = useSelector(selectCurrentFolder);
    
+    // Determines parent folder context specifically for 'file' types to build breadcrumbs accurately
+    const parentFolderId = dirType === 'file'
+    ? (dirDetails as ReduxFile).folderId
+    : undefined;
 
-    const { currentWorkspace } = useWorkspace();
-    const { currentFolder } = useFolder();
-    const { currentFile } = useFile();
+    // Using existing selector to find the specific folder in the nested Redux State
+    const parentFolder = useSelector((state: RootState) =>
+        currentWorkspace?._id && parentFolderId
+        ? selectFolderById(state, currentWorkspace._id, parentFolderId)
+        : null
+    );
+
     const { toast } = useToast()
     const pathname = usePathname()
 
+   
     const isEditable = !dirDetails.inTrash;
+
+     // --- CUSTOM HOOKS ---
+    // Logic for handling title input, debouncing, and server-side syncing
     const {
         isCurrentlyEditingThisItem,
         displayedTitle,
@@ -55,6 +84,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
         originalTitle: dirDetails?.title
     })
 
+    // Directory-level operations (Restore, Delete, Icon/Banner updates)
     const {
         details,
         isLoading,
@@ -70,62 +100,65 @@ const BannerSection: React.FC<BannerSectionProps> = ({
     } = useDir({
         dirType,
         dirId: fileId,
-        currentWorkspaceId: currentWorkspace?._id?.toString(),
-        currentFolderId: currentFolder?._id.toString(),
-        currentFileId: currentFile?._id.toString()
+        currentWorkspaceId: currentWorkspace?._id,
+        currentFolderId: (dirDetails as ReduxFile).folderId ||currentFolder?._id,
+        currentFileId: dirType === 'file' ? fileId : undefined
     })
  
-
+    // Fallback logic ensuring the UI stays reactive during optimistic updates
+    const effectiveDetails = details || dirDetails;
     
-
-    
+    /**
+     * @memoized breadcrumbs
+     * High-performance calculation of the navigation path.
+     * Combines Workspace > Folder > File titles and icons
+     */
     const breadCrumbs = useMemo(() => {
        
-        if(!pathname ||  !currentWorkspace) return;
-        const segments = pathname.split('/').filter((val) => val !== 'dashboard' && val);
+        if(!pathname ||  !currentWorkspace) return "";
 
-        let workspaceTitle = currentWorkspace.title ?? '';
-        let workspaceIconId = currentWorkspace.iconId ?? '';
-        if(dirType === 'workspace' && isCurrentlyEditingThisItem){
-            workspaceTitle = displayedTitle ?? '';
+        const workspaceBreadCrumb = `${currentWorkspace.iconId || ''} ${currentWorkspace.title || ''}`;
+
+        // 1. Resolve Folder breadcramp
+        let folderObj: ReduxFolder | null = null;
+        if(dirType === 'file'){
+            folderObj = parentFolder;
+        }else if(dirType === 'folder'){
+            folderObj = effectiveDetails as ReduxFolder;
         }
-        const workspaceBreadCrumb = `${workspaceIconId} ${currentWorkspace.title}`;
-        if(segments.length === 1){
-            return workspaceBreadCrumb;
-        }
-       
-        let folderTitle = currentFolder?.title ?? '';
-        let folderIconId = currentFile?.iconId ?? '';
+
+        let folderTitle = folderObj?.title ?? '';
+        let folderIconId = folderObj?.iconId ?? '';
+
+        // Reflects real-time title changes if the folder is currently being edited
         if(dirType === 'folder' && isCurrentlyEditingThisItem){
             folderTitle = displayedTitle ?? '';
         }
-        const folderBreadCrumb = folderTitle
+
+        const folderBreadCrumb = folderTitle 
         ? `/ ${folderIconId} ${folderTitle}`
         : '';
 
-        if(segments.length === 2){
-            return `${workspaceBreadCrumb} ${folderBreadCrumb}`;
+        // 2. Resolve File breadcramp
+        let fileBreadCrumb = "";
+        if(dirType === 'file'){
+            let fileTitle = effectiveDetails.title ?? '';
+            let fileIconId = effectiveDetails.iconId ?? '';
+            if(isCurrentlyEditingThisItem){
+                fileTitle = displayedTitle ?? '';
+            }
+            fileBreadCrumb = `/ ${fileIconId} ${fileTitle}`;
         }
-
-    //   const fileSegment = segments[2];
-        let fileTitle = currentFile?.title ?? '';
-        let fileIconId = currentFile?.iconId ?? '';
-        if(dirType === 'file' && isCurrentlyEditingThisItem){
-            fileTitle = displayedTitle ?? '';
-        }
-        const fileBreadCrumb = fileTitle 
-        ? `/ ${fileIconId} ${fileTitle}`
-        : '';
 
         return `${workspaceBreadCrumb} ${folderBreadCrumb} ${fileBreadCrumb}`;
       }, [
         pathname,
         currentWorkspace,
-        currentFolder,
-        currentFile,
         dirType,
         isCurrentlyEditingThisItem,
-        displayedTitle
+        displayedTitle,
+        effectiveDetails,
+        parentFolder,
     ]);
 
     const handleDoubleClick = useCallback(() => {
@@ -145,21 +178,21 @@ const BannerSection: React.FC<BannerSectionProps> = ({
          toast
     ]);
 
-    
-   
-
-  if (isLoading || !details) {
+    // --- RENDER LOGIC ---
+  if (isLoading || !effectiveDetails) {
         return (
             <div className="flex justify-center items-center h-full">
                 Loading {dirType} details...
             </div>
         );
     }
+    const data = effectiveDetails as (ReduxWorkSpace & ReduxFolder & ReduxFile);
 
     return(
         <>
+            {/* Trash Recovery Banner */}
             <div className="relative">
-                {details?.inTrash && (
+                {data?.inTrash && (
                     <article className="py-2 bg-[#EB5757] flex md:flex-row flex-col justify-center
                      items-center gap-4 flex-wrap">
                         <div className="flex flex-col md:flex-row gap-2 justify-center items-center">
@@ -172,7 +205,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                             className="bg-transparent border-white text-white
                              hover:bg-white hover:text-[#EB5757]"
                              onClick={handleRestore}
-                             disabled={isLoading || !details}
+                             disabled={isLoading || !data}
                              >Restore</Button>
                              <Button
                              size={"sm"} 
@@ -183,15 +216,16 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                                     console.log("Delete button clicked!"); // <--- ADD THIS
                                     handleDelete();
                                 }}
-                              disabled={isLoading || !details}
+                              disabled={isLoading || !data}
                              >Delete</Button>
                         </div>
                         <span className="text-sm text-white">
-                            {details.inTrash}
+                            {data.inTrash}
                         </span>
                      </article>
                 )}
 
+                {/* Sub-Header: Path & Sync Status */}
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-between
                  justify-center sm:items-center sm:p-2 p-8">
                     <div>{breadCrumbs}</div>
@@ -216,9 +250,21 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                                 Saved
                             </Badge>
                         )}
+                        {isEditable ? 
+                        <WorkspaceAccessControl
+                        workspaceId={currentWorkspace?._id!}
+                         editable={true}
+                         />
+                        : <WorkspaceAccessControl
+                        workspaceId={currentWorkspace?._id!}
+                        editable={false}
+                        />
+                        }
                     </div>
                 </div>  
             </div>
+
+            {/* Visual Assets Section */}
             {bannerImageUrl && (
                  <div className="relative w-full h-[200px]">
                  <Image 
@@ -235,7 +281,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                 <div
                 className="w-full self-center max-w-[800px] flex flex-col px-7 lg:my-8"
                 >
-                    {/* Icon image */}
+                    {/* Collaborative Icon/Emoji Picker */}
                     <div
                      className="text-[80px]"
                      >
@@ -243,22 +289,22 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                             <div className={`w-[100px] ${isEditable ? "cursor-pointer" : "cursor-not-allowed"} 
                             transition-colors h-[100px] flex
                              items-center justify-center hover:bg-muted rounded-xl`}>
-                                {details.iconId}
+                                {data.iconId}
                             </div>
                         </EmojiPicker>
                      </div>
-                     {/* for banner */}
+                     {/* Banner Control UI*/}
                      <div className="flex">
                         {isEditable && (<BannerUpload
-                        details={details}
+                        details={data}
                         id={fileId}
                         dirType={dirType}
                         className="mt-2 text-sm text-muted-foreground p-2 hover:text-card-foreground
                          transition-all rounded-md"
                         >
-                            {details.bannerUrl ? "Update Banner" : "Add Banner"}
+                            {data.bannerUrl ? "Update Banner" : "Add Banner"}
                         </BannerUpload>)}
-                        {details.bannerUrl && isEditable &&
+                        {data.bannerUrl && isEditable &&
                         <Button
                         variant="ghost"
                         className="gap-2 hover:bg-background flex items-center justify-center mt-2
@@ -270,7 +316,7 @@ const BannerSection: React.FC<BannerSectionProps> = ({
                         </Button>
                         }
                      </div>
-                    {/* Title Editing / Display */}
+                    {/* Adaptive Title Input: Switched between <span> and <input>*/}
                     { isCurrentlyEditingThisItem ? (
                         <input 
                         ref={inputRef}
