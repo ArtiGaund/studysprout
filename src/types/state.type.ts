@@ -1,4 +1,16 @@
-// Core Redux Model Interfaces (frontend Representation)
+/**
+ * @module ReduxStateModels
+ * @description Centralized Type Definitions for the StudySprout Redux Store.
+ * * ARCHITECTURAL PRINCIPLES:
+ * 1. Data Normalization: Implements the 'Dictionary' pattern (`byId` / `allIds`) 
+ * to ensure O(1) lookup speeds and prevent redundant re-renders.
+ * 2. SRS Integration: Defines `ReduxFlashcard` with Spaced Repetition metadata 
+ * (interval, difficulty, repetition) to support adaptive learning.
+ * 3. Atomic Block Architecture: `ReduxFile` treats content as a collection of 
+ * independent `blocks`, enabling Notion-style granular editing.
+ * 4. Multi-Tenant Scoping: States like `filesByFolder` and `foldersByWorkspace` 
+ * segment data by parent ID to ensure strict data isolation and performance.
+ */
 
 import { IBlock } from "@/model/file.model";
 
@@ -14,29 +26,15 @@ export interface ReduxFile{
     workspaceId?: string;
     folderId?: string;
     bannerUrl?: string;
-    inTrash?: string;
+    inTrash?: string | null;
+
+    contentBinary?:any;
+    contentLastModified: string;
 
     // Block based content
     blocks: Record<string, IBlock>;
     blockOrder: string[];
-
-    // versioning and sync
-    version: number;
-    contentHash?: string;
-    localChangeId?: string;
-    lastLocalChangeId?: number;
-    lastSyncedAt?: string;
-    updatedAtLocal?: string;
-    conflictState?: "none" | "conflict" | "resolved";
-    isLocked?: boolean;
     deletedAt?: string | null;
-
-    //history (if needed)
-    history?: Array<{
-        version: number;
-        blocks: any;
-        updatedAt: string;
-    }>;
 }
 
 // Folder document
@@ -46,10 +44,16 @@ export interface ReduxFolder{
     title: string;
     iconId?: string;
     data?: string;
-    inTrash?: string;
+    inTrash?: string | null;
     bannerUrl?: string;
     workspaceId?: string;
     files?: string[] //Array of file _ids for normalization
+}
+export type WorkspaceRole = "editor" | "viewer";
+
+export interface WorkspaceMemberState {
+    userId: string;
+    role: WorkspaceRole;
 }
 //  WorkSpace document
 export interface ReduxWorkSpace {
@@ -58,12 +62,14 @@ export interface ReduxWorkSpace {
     title: string;
     iconId?: string;
     data?: string; 
-    inTrash?: string; 
+    inTrash?: string | null; 
     logo?: string; 
     bannerUrl?: string;
     folders: string[]; 
     createdAt?: string; 
     updatedAt?: string;
+    members?: WorkspaceMemberState[];
+    isPublic: boolean;
 }
 // Image document
 export interface ReduxImage{
@@ -97,6 +103,11 @@ export interface ReduxUser {
     email: string;
     isVerified: boolean;
     workspace: string[]; // Array of WorkSpace _ids for normalization
+
+    avatarType: "image" | "initial";
+    avatarUrl?: string;
+    avatarInitials: string; 
+    
     createdAt?: string; 
     updatedAt?: string; 
 }
@@ -104,19 +115,31 @@ export interface ReduxUser {
 // --- Redux Slice States (How data is structured within each slice) ---
 
 export interface FilesState {
-    byId: { [id: string]: ReduxFile };
-    allIds: string[]; 
+    filesByFolder: Record<
+    string,
+    {
+        byId: Record<string, ReduxFile>;
+        allIds: string[];
+        loading?:boolean;
+    }
+    >;
     loading: boolean;
     error: string | null;
-    currentFile: string | null;
+    currentFile: ReduxFile | null;
 }
 
 export interface FoldersState {
-    byId: { [id: string]: ReduxFolder }; 
-    allIds: string[];
-    loading: boolean;
-    error: string | null;
-    currentFolder: string | null;
+   foldersByWorkspace: Record<
+       string,
+       {
+           byId: Record<string, ReduxFolder>;
+           allIds: string[];
+           loading?: boolean;
+       }
+       >;
+       currentFolder: ReduxFolder | null;
+       loading: boolean;
+       error: string | null;
 }
 
 export interface ImagesState {
@@ -148,7 +171,7 @@ export interface UsersState {
 export interface WorkspacesState {
     byId: { [id: string]: ReduxWorkSpace }; 
     allIds: string[];
-    currentWorkspace: string | null; 
+    currentWorkspace: ReduxWorkSpace | null; 
     loading: boolean;
     error: string | null;
 }
@@ -164,6 +187,7 @@ export interface RootState {
     users: UsersState;
     workspaces: WorkspacesState;
     
+    user: ReduxUserState;
 }
 
 export interface ReduxFlashcard{
@@ -173,20 +197,23 @@ export interface ReduxFlashcard{
     type: "mcq" | "question-answer" | "fill-in-the-blank";
     options?: string[];
 
-    // SRS
-    dueDate: string;
-    interval: number;
-    difficulty: number;
-    repetition: number;
-    lastReviewed: string | null;    
+    // UI MetaData
+    isOutDated?: boolean;
 
-    // source
+    // USER-SPECIFIC SRS (Mapped from FlashcardProgress in DB)
+    progress?: {
+        dueDate: string;
+        interval: number;
+        difficulty: number;
+        repetition: number;
+        lastReviewed: string | null;
+    };
+
     source?: {
         fileIds: string[];
         blockIds: string[];
-        blocksState: Record<string, { updatedAt: string }>;
+        blockState: Record<string, { updatedAt: string }>;
     };
-    isOutDated?: boolean;
 }
 
 export interface FlashcardState{
@@ -223,4 +250,10 @@ export interface ReduxFlashcardSet{
 export interface FlashcardSetState{
     sets: ReduxFlashcardSet[];
     loading: boolean;
+}
+
+export interface ReduxUserState{
+    userId: string | null;
+    status: "loading" | "authenticated" | "unauthenticated";
+    token?: string | null;
 }
