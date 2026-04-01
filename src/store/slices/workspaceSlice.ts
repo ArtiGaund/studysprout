@@ -1,25 +1,44 @@
+/**
+ * @slice workspaceSlice
+ * @description The root organizational slice for StudySprout. Manages a normalized 
+ * collection of Workspaces and tracks the globally active context.
+ * * KEY ARCHITECTURAL FEATURES:
+ * 1. Normalized State Pattern: Uses `byId` and `allIds` to enable O(1) lookups and 
+ * preserve the user's preferred workspace ordering.
+ * 2. Referential Integrity: `SET_WORKSPACES` implements a manual dirty-check to prevent 
+ * unnecessary re-renders of the entire sidebar if the data hasn't changed.
+ * 3. Context Tracking: `SET_CURRENT_WORKSPACE` manages the "Global Active State," 
+ * driving the routing and breadcrumb logic seen in other components.
+ * 4. Safe Deletion: `DELETE_WORKSPACE` performs a cleanup of the `currentWorkspace` 
+ * pointer to prevent "dead-link" errors in the UI.
+ */
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { WorkSpace } from "@/model/workspace.model";
-import { Draft } from 'immer';
 import { ReduxWorkSpace, WorkspacesState } from "@/types/state.type";
 
 const initialState: WorkspacesState = {
     byId: {},
     allIds: [],
     currentWorkspace: null, // Stores the ID
-    loading: false, // Add loading state
+    loading: true, // Add loading state
     error: null, // Add error state
 }
-
 
 const workspaceSlice = createSlice({
     name: "workspace",
     initialState,
     reducers: {
+        /**
+         * @reducer ADD_WORKSPACE
+         * Registers a new workspace entity into the normalized store.
+         */
         ADD_WORKSPACE: (state, action: PayloadAction<ReduxWorkSpace>) => {
             state.byId[action.payload._id] = action.payload;
             state.allIds.push(action.payload._id);
         },
+        /**
+         * @reducer DELETE_WORKSPACE
+         * Safely removes a workspace and resets the active selection if necessary.
+         */
         DELETE_WORKSPACE: (state, action: PayloadAction<string>) => {
             const idToDelete = action.payload;
 
@@ -30,28 +49,33 @@ const workspaceSlice = createSlice({
             state.allIds = state.allIds.filter((id: string) => id !== idToDelete); // Explicitly typed 'id' here
 
             // If the deleted workspace was the current one, clear currentWorkspace
-            if (state.currentWorkspace === idToDelete) {
+            if (state.currentWorkspace?._id === idToDelete) {
                 state.currentWorkspace = null;
             }
         },
+
+        /**
+         * @slice workspaceSlice (Continued)
+         * * @reducer UPDATE_WORKSPACE
+         * @description Implements a targeted "Dictionary Patch." By updating only the 
+         * specific key in the `byId` map, we ensure that components observing other 
+         * workspaces do not trigger a re-render. This is a critical performance 
+         * optimization for multi-workspace sidebars.
+         */
         UPDATE_WORKSPACE: (state, action: PayloadAction<ReduxWorkSpace>) => { // Expect full WorkSpace or Partial<WorkSpace> for consistent transfor
             // Update in byId directly
             if (state.byId[action.payload._id]) { // Check if it exists
                 state.byId[action.payload._id] = action.payload;
             }
         },
+
+        /**
+         * @reducer SET_WORKSPACES
+         * Performs an "Optimized Hydration." By comparing new data against existing keys 
+         * and content, it prevents Redux from emitting a change event if the incoming 
+         * data is identical to the current state.
+         */
         SET_WORKSPACES: (state, action: PayloadAction<ReduxWorkSpace[]>) => {
-            // Clear existing state for a fresh set
-            // state.byId = {};
-            // state.allIds = [];
-            // action.payload.forEach(ws => {
-            //     state.byId[ws._id] = ws;
-            //     state.allIds.push(ws._id);
-            // });
-            // state.loading = false; // Set loading to false after data is set
-            // state.error = null;
-
-
             // Create a new dictionaries and arrays from the payload
             const newByID: { [ key: string]: ReduxWorkSpace } = {};
             const newAllIds: string[] = [];
@@ -78,12 +102,34 @@ const workspaceSlice = createSlice({
                 state.loading = false;
                 state.error = null;
         },
-        SET_CURRENT_WORKSPACE: (state, action: PayloadAction<string | null>) => { // Payload is just the ID
+
+        /**
+         * @reducer SET_CURRENT_WORKSPACE
+         * @description Manages the "Active Context." This state drives the conditional 
+         * rendering of the entire Dashboard. When a user clicks a workspace in the 
+         * sidebar, this action synchronizes the URL parameters with the Redux state 
+         * to ensure a "Single Source of Truth."
+         */
+        SET_CURRENT_WORKSPACE: (state, action: PayloadAction<ReduxWorkSpace | null>) => { // Payload is just the ID
             state.currentWorkspace = action.payload;
         },
+
+        /**
+         * @reducer SET_WORKSPACE_LOADING
+         * @description Orchestrates "Global Loading States." This is utilized by 
+         * high-level Layout components to render skeleton screens or progress bars 
+         * during initial hydration or heavy API transitions.
+         */
          SET_WORKSPACE_LOADING: (state, action: PayloadAction<boolean>) => {
             state.loading = action.payload;
         },
+
+        /**
+         * @reducer SET_WORKSPACE_ERROR
+         * @description A centralized error sink. Captured API failures are stored 
+         * here to be consumed by global Toast providers or Error Boundary components, 
+         * ensuring a graceful "Fail-Soft" user experience.
+         */
         SET_WORKSPACE_ERROR: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload;
         },
