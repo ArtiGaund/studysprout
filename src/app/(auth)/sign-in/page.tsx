@@ -1,3 +1,13 @@
+/**
+ * SIGN-IN PAGE
+ * ------------
+ * Role: Entry point for user authentication
+ * * Features:
+ * 1. Form Management: Uses React Hook Form + Zod for client-side validation 
+ * 2. Multi-Provider Auth: Supports standard Credentials (Email/Username) and OAuth(Google/Github)
+ * 3. Feedback: Integration with shadcn/ui Toast for error/success reporting.
+ * 4. UX: Handles loading states and prevents double-submission via 'isSubmitting'. 
+ */
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -10,10 +20,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { signInSchema } from "@/schemas/signInSchema";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import Image from "next/image"
 import { IconMail, IconLock } from "@tabler/icons-react";
+import { useSelector } from "react-redux";
+import { selectUserId } from "@/store/selectors/userSelector";
 
 const SignIn = () => {
     const [ isSubmitting, setIsSubmitting ] = useState(false)
@@ -25,6 +37,7 @@ const SignIn = () => {
             identifier: "", password: "",
         }
     })
+    const userId = useSelector(selectUserId);
 
     const onSubmit = async( data: z.infer<typeof signInSchema>) => {
         try {
@@ -50,12 +63,10 @@ const SignIn = () => {
                 }
                 
             }
-            if(result?.url){
-                toast({
-                    title: "Login Successful",
-                    description: " Moving to Dashboard",
-                })
-                router.replace('/dashboard')
+          
+            if(result?.ok){
+                if(!userId) return;
+                    router.replace('/dashboard');
             }
         } catch (error) {
             console.warn("Error while login ",error)
