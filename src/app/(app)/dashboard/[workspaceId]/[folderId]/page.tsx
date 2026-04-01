@@ -1,84 +1,114 @@
+/**
+ * FOLDER OVERVIEW PAGE
+ * -----------------------
+ * Role: Renders the dashboard for a specific folder within a workspace
+ * * Key Responsibilities:
+ * 1. Data Sync: Matches the 'folderId' from the URL with the local Redux store.
+ * 2. Navigation Guard: If the folder doesn't exist in the current workspace,
+ * it redirects the user back to the workspace root.
+ * 3. Context Management: Updates the global 'Current Resource' to facilitate breadcrumbs. 
+ */
 "use client"
 import BannerSection from '@/components/banner-upload/banner-section'
 import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
-import { useFolder } from '@/hooks/useFolder'
-import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
+import { 
+    makeSelectFolders, 
+    selectCurrentFolder, 
+    selectFolderLoading 
+} from '@/store/selectors/folderSelector'
+import { SET_CURRENT_FOLDER } from '@/store/slices/folderSlice'
 import { RootState } from '@/store/store'
 import { ReduxFolder } from '@/types/state.type'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 
-const FolderPage: React.FC<{ params : { folderId: string }}> = ({ params }) => {
+const FolderPage: React.FC<{ 
+    params : {
+        workspaceId: string,
+         folderId: string 
+        }
+}> = ({ params }) => {
     const router = useRouter()
     const dispatch = useDispatch();
    
-    const { currentFolderDetail, isLoadingFolders } = useFolder();
-    // Get the current folder ID from Redux
-    const currentFolderIdFromRedux = useSelector((state: RootState) => state.folder.currentFolder);
-    // Get the normalized folders by ID map from Redux
-    const foldersById = useSelector((state: RootState) => state.folder.byId);
+    // Memoized selectors for performance
+    const selectFolders = useMemo(makeSelectFolders,[]);
+    const EMPTY_FOLDER: ReduxFolder[] = [];
 
-    // Memoize the full folder object to be passed to child components
-    const folderDetailsToRender: ReduxFolder | undefined = useMemo(() => {
-        if(currentFolderIdFromRedux && foldersById[currentFolderIdFromRedux]){
-            return foldersById[currentFolderIdFromRedux];
-        }
-        return undefined;
-    },[
-        currentFolderIdFromRedux,
-        foldersById
-    ])
-    
+    const folders = useSelector((state: RootState) =>
+        params.workspaceId ? selectFolders(state, params.workspaceId) : EMPTY_FOLDER
+    );
+
+    const currentFolder = useSelector(selectCurrentFolder);
+    const folderLoading = useSelector(selectFolderLoading);
+
+    // Guard: Verify if the currently selected folder matches the URL
+    const isCorrectFolder = currentFolder?._id === params.folderId;
+
+    /** * EFFECT: Folder Data Synchronization
+     * Ensures Redux state reflects the folder being viewed in the URL
+     */
     useEffect(() => {
-        if(!params.folderId){
-            return;
-        }
+      const folder = folders.find(
+            f => f._id === params.folderId
+        );
 
-                const getFolderDetails = async() => {
-            
-                    const response = await currentFolderDetail(params.folderId)
-                    if(!response.success){
-                        router.push('/dashboard')
-                    }else if(response.data){
-                        const fetchedFolder = response.data as ReduxFolder;
-                        dispatch(SET_CURRENT_RESOURCE({
-                            id: fetchedFolder._id,
-                            title: fetchedFolder.title,
-                            type: 'Folder',
-                        }))
-                    }
-            }
-         getFolderDetails()
+        if(folder && currentFolder?._id !== params.folderId){
+            dispatch(SET_CURRENT_FOLDER(folder));
+        }
     }, [
         params.folderId,
-         router,
-         currentFolderDetail,
-         dispatch
-        ])
+        folders
+    ])
 
+    /** * EFFECT: Deletion/Safety Guard
+     * If the folder is deleted or not found, redirect to the parent workspace.
+     */
+    useEffect(() => {
+        if(!folderLoading && folders.length > 0){
+            const folderExists = folders.some(f => f._id === params.folderId);
+            if(!folderExists){
+                router.replace(`/dashboard/${params.workspaceId}`);
+            }
+        }
+    },[
+        folderLoading,
+        folders,
+        params.folderId,
+        params.workspaceId,
+        router
+    ])
 
-     // Show loading state if folder details are not yet available or are loading
-    if (isLoadingFolders || !folderDetailsToRender || folderDetailsToRender._id !== params.folderId) {
+    //  --- RENDER STATES ---
+    if(folderLoading || !isCorrectFolder){
+        return(
+            <div className='flex justify-center items-center h-full'>
+                Loading folder...
+            </div>
+        )
+    }
+
+    if(!currentFolder || currentFolder._id !== params.folderId){
         return (
             <div className='flex justify-center items-center h-full'>
-                Loading folder details ...
+                Syncing folder data...
             </div>
-        );
+        )
     }
     return (
         <div className='relative'>
-            { folderDetailsToRender && (
+            { currentFolder && (
                 <BannerSection
                 dirType='folder'
                 fileId={params.folderId}
-                dirDetails={folderDetailsToRender}
+                dirDetails={currentFolder}
                 ></BannerSection>
             )}
             <div>
-                { folderDetailsToRender && (
+                { currentFolder && (
                     <DashboardOverview 
-                    dirDetails={folderDetailsToRender}
+                    dirDetails={currentFolder}
                     fileId={params.folderId}
                     dirType='folder'
                     params={params.folderId}

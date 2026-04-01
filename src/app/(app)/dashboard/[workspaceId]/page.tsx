@@ -1,71 +1,61 @@
+/**
+ * WORKSPACE OVERVIEW PAGE
+ * -----------------------
+ * Role: The default landing view for a specific workspace.
+ * * Functions:
+ * 1. Context Synchronization: Updates the 'Current Resouce' context for breadcrumbs/sidebar.
+ * 2. Visual Layout: Renders the Banner, Dashboard Overview (Title/Emoji), and Resource Stats.
+ * 3. Loading Safety: Ensures UI components only render once Redux data matches the URL. 
+ */
+
 "use client"
 import BannerSection from '@/components/banner-upload/banner-section'
 import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
 import ResourceStats from '@/components/stats/resource-stats'
-import { useWorkspace } from '@/hooks/useWorkspace'
 import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
 import { RootState } from '@/store/store'
-import { ReduxWorkSpace } from '@/types/state.type'
-import { transformWorkspace } from '@/utils/data-transformers'
-import axios from 'axios'
-import { useRouter } from 'next/navigation'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { 
+    selectCurrentWorkspace, 
+    selectWorkspaceLoading 
+} from '@/store/selectors/workspaceSelector'
 
 const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }) => {
-    const router = useRouter()
     const dispatch = useDispatch();
-    const {
-         currentWorkspace, 
-         isLoadingWorkspaces,
-         fetchCurrentWorkspace
-         } = useWorkspace();
 
+    // Selectors fro Redux Store
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
+    const workspaceLoading = useSelector(selectWorkspaceLoading);
     const globalEditingItems = useSelector((state: RootState) => state.ui.editingItem);
 
-    useEffect(() => {
-        // Only proceed if workspaceId is valid
-            if (!params.workspaceId) {
-                return;
-            }
+    // Guard: Verify if the Redux data actually belongs to the workspace in the URL
+     const isDataReady = currentWorkspace?._id === params.workspaceId;
 
-            // If the currentWorkspace from Redux already matches the ID of params and it's not currently loading,
-            // Skip the fetch
-            if(currentWorkspace && currentWorkspace._id === params.workspaceId && !isLoadingWorkspaces){
+     /** * EFFECT: Context Update
+      * Update the global breadcrumbs/sidebar context so the UI knows we are currently viewing this
+      * specific Workspace resouce.
+      */
+    useEffect(() => {
+       
+            if(isDataReady){
                 dispatch(SET_CURRENT_RESOURCE({
                     id: currentWorkspace._id,
                     title: currentWorkspace.title,
-                    type: 'Workspace',
-                }))
-                return;
+                    type: 'Workspace'
+                }));
             }
-            
-        const getWorkspaceDetails = async () => {
-                const response = await fetchCurrentWorkspace(params.workspaceId); 
-                if (!response.success) {
-                    router.push('/dashboard'); // Redirect if workspace not found
-                } else if(response.data){
-                    const fetchedWorkspace = response.data as ReduxWorkSpace;
-                     dispatch(SET_CURRENT_RESOURCE({
-                            id: fetchedWorkspace._id,
-                            title: fetchedWorkspace.title,
-                            type: 'Workspace',
-                        }))
-                    }
-              
-        };
-        getWorkspaceDetails();
     }, [
         params.workspaceId,
-         router,  
-         fetchCurrentWorkspace,
-         currentWorkspace,
-         isLoadingWorkspaces,
-         dispatch
+        isDataReady
     ]);
 
-    // Loading State
-    if (isLoadingWorkspaces || !currentWorkspace || currentWorkspace._id !== params.workspaceId) {
+   
+    // --- CONDITIONAL RENDERING ---    
+    if (
+       workspaceLoading ||
+       !isDataReady
+    ) {
         return (
             <div className='flex justify-center items-center h-full'>
                 Loading workspace details ...
