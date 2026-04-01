@@ -1,17 +1,33 @@
+/**
+ * @component SelectedWorkspaces
+ * @description A specialized navigation component representing an individual workspace entry.
+ * Primarily used within workspace switchers or sidebar lists.
+ * * Key Technical Features:
+ * - Async Asset Resolution: Fetches signed or private image URLs from an internal API based on image IDs.
+ * - Robust Fallbacks: Implements a character-based avatar (Initial of Workspace Title) if no logo exists.
+ * - UX/UI Polish: Uses Next.js `Link` for client-side routing, `next/image` for optimization, 
+ * and CSS ellipsis for long workspace titles.
+ */
 "use client"
 
-import  { WorkSpace } from "@/model/workspace.model";
+import { ReduxWorkSpace } from "@/types/state.type";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 interface SelectedWorkspacesProps {
-    workspace: WorkSpace;
-    onClick?: (option: WorkSpace) => void;
+    workspace: ReduxWorkSpace;
+    onClick?: (option: ReduxWorkSpace) => void;
 }
 const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onClick }) => {
     const [ workspaceLogo, setWorkspaceLogo ] = useState('')
+
+    /**
+     * @effect FetchWorkspaceLogo
+     * Logic to resolve the image path. Since logos are stored as IDs/Keys, 
+     * we query the internal API to get a temporary or public URL for the Next.js Image component.
+     */
     useEffect(() => {
         if(workspace.logo){
             const fetchWorkspaceLogoPath = async() => {
@@ -34,6 +50,7 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
             className="flex rounded-md hover:bg-muted transition-all flex-row p-2 gap-2 
             justify-start cursor-pointer items-center my-1 group/item overflow-hidden"
             >
+                {/* --- WORKSPACE ICON SECTION --- */}
                 { workspaceLogo ? (
                     <div className="relative w-[26px] h-[26px] flex-shrink-0 rounded-full overflow-hidden">
                         <Image 
@@ -48,11 +65,14 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
                         />
                       </div>
                 ): (
+                    /* Fallback UI: Renders the first letter of the workspace title */
                     <div className="w-[26px] h-[26px] flex-shrink-0 items-center justify-center bg-gray-200
                      text-gray-700 rounded-full text-sm font-bold">
                         {workspace.title?.toUpperCase() || 'W'}
                     </div>
                 )}
+
+                {/* --- WORKSPACE INFO SECTION --- */}
                 <div className="flex flex-col flex-grow min-w-0">
                     <p className="text-lg w-[170px] overflow-hidden
                      whitespace-nowrap text-white text-ellipsis">
