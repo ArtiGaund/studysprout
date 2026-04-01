@@ -1,35 +1,65 @@
+/**
+ * @hook useWorkspace
+ * @description The primary controller for Workspace-level operations and global state synchronization.
+ * * ARCHITECTURAL HIGHLIGHTS:
+ * 1. Multi-Level Caching: Uses specialized Refs (`hasFetchedAllWorkspaceRef`, etc.) to prevent redundant network traffic.
+ * 2. Auth-Integrated Logic: Automatically gates workspace operations based on the user's authentication status.
+ * 3. Optimistic Updates: Dispatches title changes to Redux immediately while syncing with the server in the background.
+ * 4. Resource Cleanup: Implemented `hardDeleteDir` for permanent removal of workspace trees.
+ */
 "use client";
 
 import { WorkSpace as MongooseWorkSpace} from "@/model/workspace.model";
 import { hardDeleteDir } from "@/services/dirServices";
-import { addWorkspace, getCurrentWorkspace, getUserWorkspaces, updateLogo, updateWorkspace } from "@/services/workspaceServices";
-import { ADD_WORKSPACE, DELETE_WORKSPACE, SET_CURRENT_WORKSPACE, SET_WORKSPACE_ERROR, SET_WORKSPACE_LOADING, SET_WORKSPACES, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
+import { 
+    addWorkspace, 
+    getCurrentWorkspace, 
+    getUserWorkspaces, 
+    updateLogo, 
+    updateWorkspace 
+} from "@/services/workspaceServices";
+import { 
+    ADD_WORKSPACE, 
+    DELETE_WORKSPACE, 
+    SET_CURRENT_WORKSPACE, 
+    SET_WORKSPACE_ERROR, 
+    SET_WORKSPACE_LOADING, 
+    SET_WORKSPACES, 
+    UPDATE_WORKSPACE 
+} from "@/store/slices/workspaceSlice";
 import { RootState } from "@/store/store";
 import { ReduxWorkSpace } from "@/types/state.type";
 import { transformWorkspace } from "@/utils/data-transformers";
-import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useMemo} from "react";
+import { useCallback, useMemo} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     hasFetchedAllWorkspaceRef,
     hasCheckedUserWorkspaceStatusRef,
     hasFetchedCurrentWorkspaceDetailsRef
 } from "@/cache/workspaceCache";
+import { selectAuthStatus, selectUserId } from "@/store/selectors/userSelector";
 
 export function useWorkspace() {
-    const { data: session, status } = useSession();
+    // const { data: session, status } = useSession();
+    const currentUserId = useSelector(selectUserId);
+    const authStatus = useSelector(selectAuthStatus);
+
     const dispatch = useDispatch(); 
 
     // selector for workspace state
     const {
         byId: workspacesById,
         allIds: allWorkspaceIds,
-        currentWorkspace: currentWorkspaceId,
+        currentWorkspace,
         loading: loadingFromRedux,
         error: errorFromRedux,
     } = useSelector((state: RootState) => state.workspace);
     
-    // function to fetch all user workspaces and dispatch to Redux
+    /**
+     * @method getWorkspaces
+     * Fetches all workspaces associated with the authenticated user.
+     * Implements a singleton fetch pattern via `hasFetchedAllWorkspaceRef`.
+     */
     const getWorkspaces = useCallback(async(): Promise<{
         success: boolean;
         data?: ReduxWorkSpace[];
@@ -37,22 +67,15 @@ export function useWorkspace() {
     }> => {
 
         // Handling auth logic inside the function
-        if(!session?.user?._id || status !== "authenticated"){
+        if(!currentUserId || authStatus !== "authenticated"){
             return {
                 success: false,
                 error: "User not authenticated."
             }
         }
-        // only proceed if session  is authenticated and userId is available
-        if(status !== "authenticated" || !session?.user?._id) {
-            return {
-                success: false,
-                error: "Not authenticated or no user ID."
-            };
-        }
        
         // Guards against redundant calls for this specific fetch
-        if(hasFetchedAllWorkspaceRef.has(session.user._id)){
+        if(hasFetchedAllWorkspaceRef.has(currentUserId)){
             return {
                 success: true,
                 data: allWorkspaceIds.map(id => workspacesById[id]).filter(Boolean) as ReduxWorkSpace[]
@@ -62,26 +85,21 @@ export function useWorkspace() {
         dispatch(SET_WORKSPACE_ERROR(null));
 
         try {
-            const response = await getUserWorkspaces(session.user._id);
+            const response = await getUserWorkspaces(currentUserId);
 
             const transformedWorkspace = (Array.isArray(response)
             ? response
             : [response]
             ).filter(Boolean).map(workspace => transformWorkspace(workspace as MongooseWorkSpace));
-
-            if(transformedWorkspace.length > 0){
-                dispatch(SET_WORKSPACES(transformedWorkspace));
-                if(!currentWorkspaceId && !transformedWorkspace.some(workspace => workspace._id === currentWorkspaceId)){
-                    const firstWorkspace = transformedWorkspace[0];
-                    if(firstWorkspace && firstWorkspace._id){
-                        dispatch(SET_CURRENT_WORKSPACE(firstWorkspace._id));
-                    }
-                }
-            }else{
-                dispatch(SET_WORKSPACES([]));
-                dispatch(SET_CURRENT_WORKSPACE(null));
+            dispatch(SET_WORKSPACES(transformedWorkspace));
+            if(!currentWorkspace){
+                dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace[0]));
+            }else if(
+                !transformedWorkspace.some(workspace => workspace._id === currentWorkspace._id)
+            ){
+                dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace[0]));
             }
-            hasFetchedAllWorkspaceRef.add(session.user._id);
+            hasFetchedAllWorkspaceRef.add(currentUserId);
             return {
                 success: true,
                 data: transformedWorkspace
@@ -98,12 +116,16 @@ export function useWorkspace() {
             dispatch(SET_WORKSPACE_LOADING(false)); // Clear loading state in Redux
         }
     }, [
-        session?.user?._id,
-        status,
+        currentUserId,
+        authStatus,
         dispatch
     ])
 
-    // function to fetch current workspace
+    /**
+     * @method fetchCurrentWorkspace
+     * Logic for deep-linking and direct navigation. 
+     * Prioritizes the Redux 'byId' cache before initiating a network request.
+     */
     const fetchCurrentWorkspace = useCallback(async ( workspaceId: string ): Promise<{
         success: boolean;
         data?: ReduxWorkSpace;
@@ -116,7 +138,9 @@ export function useWorkspace() {
             };
         }
 
-        if(currentWorkspaceId === workspaceId && workspacesById[workspaceId]){
+        // 1. Cache Hit: Prevent unnecessary network latency
+        if(workspacesById[workspaceId]){
+            dispatch(SET_CURRENT_WORKSPACE(workspacesById[workspaceId]));
             return { 
                 success: true, 
                 data: workspacesById[workspaceId] 
@@ -127,6 +151,7 @@ export function useWorkspace() {
         dispatch(SET_WORKSPACE_ERROR(null));
         try {
             const workspace = await getCurrentWorkspace(workspaceId);
+            // console.log("[useWorkspace] fetchCurrentWorkspace: ",workspace);
             if(!workspace){
                 return {
                     success: false,
@@ -135,7 +160,9 @@ export function useWorkspace() {
             }
              // Transform to Redux type before dispatching and returning
             const transformedWorkspace = transformWorkspace(workspace);
-            dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace._id)); // Set current ID in Redux
+
+            // 2. Synchronize both 'current' pointer and the lookup table
+            dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace)); // Set current ID in Redux
             dispatch(UPDATE_WORKSPACE(transformedWorkspace)); // Also ensure the object is in byId map
 
             return {
@@ -157,29 +184,35 @@ export function useWorkspace() {
          dispatch,
         ])
 
-    // function to create new workspace
+    /**
+     * @method createWorkspace
+     * Handles multipart/form-data for workspace creation (Title + Logo).
+     * Implements automatic cache invalidation for the user's workspace list.
+     */
     const createWorkspace = useCallback(async ( formData: FormData ): Promise<{
          success: boolean; 
          data?: ReduxWorkSpace;
           error?: string
      }> => {
-        if(status !== "authenticated" || !session?.user?._id)
+        if(authStatus !== "authenticated" || !currentUserId)
              return {success: false, error: "User is not authenticated"};
         dispatch(SET_WORKSPACE_LOADING(true));
         dispatch(SET_WORKSPACE_ERROR(null));
         try {
+            // Append ownership context if not present in the form payload
             if(!formData.has("userId")){
-                formData.append("userId", session.user._id);
+                formData.append("userId", currentUserId);
             }
             const newWorkspace = await addWorkspace(formData);
 
             const transformedWorkspace = transformWorkspace(newWorkspace as MongooseWorkSpace);
             dispatch(ADD_WORKSPACE(transformedWorkspace));
-            dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace._id));
+            dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace));
 
-            if (session.user._id) {
-                hasFetchedAllWorkspaceRef.delete(session.user._id);
-                hasCheckedUserWorkspaceStatusRef.delete(session.user._id);
+            // Invalidate 'All' and 'Status' caches to trigger a fresh sidebar fetch
+            if (currentUserId) {
+                hasFetchedAllWorkspaceRef.delete(currentUserId);
+                hasCheckedUserWorkspaceStatusRef.delete(currentUserId);
             }
             hasFetchedCurrentWorkspaceDetailsRef.delete(transformedWorkspace._id); 
             return {
@@ -194,7 +227,20 @@ export function useWorkspace() {
         }finally{
             dispatch(SET_WORKSPACE_LOADING(false));
         }
-    }, [dispatch, session?.user?._id, status])
+    }, [
+        dispatch, 
+        currentUserId, 
+        authStatus,
+    ])
+
+    /**
+     * @method currentWorkspaceDetails
+     * @description High-performance fetch for a single workspace entity.
+     * Implements a "Cache-First" strategy: 
+     * 1. Checks Active Redux State.
+     * 2. Checks Persistence Refs (hasFetchedCurrentWorkspaceDetailsRef).
+     * 3. Falls back to Network Fetch only if necessary.
+     */
     const currentWorkspaceDetails = useCallback(async (workspaceId: string): Promise<{
         success: boolean;
         data?: ReduxWorkSpace;
@@ -204,10 +250,11 @@ export function useWorkspace() {
             return { success: false, error: "Workspace id required" };
         }
 
-        if(currentWorkspaceId === workspaceId && workspacesById[workspaceId]){
+        // 1. Immediate Return: If this workspace is already the current one in Redux
+        if(currentWorkspace?._id === workspaceId && workspacesById[workspaceId]){
             return { success: true, data: workspacesById[workspaceId] }; // Return Redux data from store
         }
-        // NEW: Add useRef guard for this specific function call
+        // 2. Cache Check: Prevent duplicate inflight requests for the same ID
         if (hasFetchedCurrentWorkspaceDetailsRef.has(workspaceId)) {
             return { success: true, data: workspacesById[workspaceId] }; // Return Redux data from store
         }
@@ -215,6 +262,7 @@ export function useWorkspace() {
         dispatch(SET_WORKSPACE_ERROR(null));
         try {
             const workspace = await getCurrentWorkspace(workspaceId);
+            console.log("[useWorkspace] currentWorkspaceDetails: ",workspace);
             if(!workspace){
                 return{
                     success: false,
@@ -222,8 +270,13 @@ export function useWorkspace() {
                 }
             }
            const transformedWorkspace = transformWorkspace(workspace);
+
+           // 3. Normalized Update: Update the specific entry in the 'byId' map 
+            // and set it as the active workspace for the UI.
             dispatch(UPDATE_WORKSPACE(transformedWorkspace)); // Ensure this specific workspace is in the byId map
-            dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace._id)); // Also set it as current if not already
+            dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace)); // Also set it as current if not already
+            
+            // Mark this ID as fetched to prevent redundant calls in this session
             hasFetchedCurrentWorkspaceDetailsRef.add(workspaceId);
             return{
                 success: true,
@@ -240,6 +293,11 @@ export function useWorkspace() {
     }, [
         dispatch,
     ])
+
+    /**
+     * @method updateWorkspaceTitle
+     * Demonstrates Optimistic UI: Updates local Redux state before API confirmation.
+     */
     const updateWorkspaceTitle = useCallback(async (workspaceId: string, newTitle: string): Promise<{
         success: boolean;
         data?: ReduxWorkSpace;
@@ -261,8 +319,8 @@ export function useWorkspace() {
              const transformedWorkspace = transformWorkspace(response.data as MongooseWorkSpace);
              dispatch(UPDATE_WORKSPACE(transformedWorkspace));
              hasFetchedCurrentWorkspaceDetailsRef.delete(workspaceId);
-             if(session?.user._id){
-                hasFetchedAllWorkspaceRef.delete(session.user._id);
+             if(currentUserId){
+                hasFetchedAllWorkspaceRef.delete(currentUserId);
              }
              return {
                  success: true,
@@ -281,9 +339,13 @@ export function useWorkspace() {
         }
     }, [
         dispatch,
-        session?.user._id
+        currentUserId,
     ]);
 
+    /**
+     * @method updateWorkspaceLogo
+     * Handles binary file uploads (logos) while maintaining the normalized Redux state.
+     */
     const updateWorkspaceLogo = useCallback(async (workspaceId: string, logo: File): Promise<{
         success: boolean;
         data?: ReduxWorkSpace;
@@ -306,8 +368,8 @@ export function useWorkspace() {
             const transformedWorkspace = transformWorkspace(workspace as MongooseWorkSpace);
             dispatch(UPDATE_WORKSPACE(transformedWorkspace));
             hasFetchedCurrentWorkspaceDetailsRef.delete(workspaceId);
-            if(session?.user._id){
-                hasFetchedAllWorkspaceRef.delete(session.user._id);
+            if(currentUserId){
+                hasFetchedAllWorkspaceRef.delete(currentUserId);
             }
             return {
                 success: true,
@@ -328,9 +390,14 @@ export function useWorkspace() {
         }
     }, [
         dispatch,
-        session?.user._id
+        currentUserId
     ])
 
+    /**
+     * @method deleteWorkspace
+     * Orchestrates the permanent removal of a workspace.
+     * Communicates with the directory service to ensure all nested folders/files are purged.
+     */
     const deleteWorkspace = useCallback(async (workspaceId: string): Promise<{
         success: boolean;
         data?: MongooseWorkSpace;
@@ -366,6 +433,11 @@ export function useWorkspace() {
         }
     },[dispatch])
 
+    /**
+     * @method checkUserHaveCreatedWorkspace
+     * A lightweight 'Existence Check' used for routing logic (e.g., onboarding vs dashboard).
+     * Uses a dedicated 'Status' cache to prevent repeated 'existence' queries.
+     */
     const checkUserHaveCreatedWorkspace = useCallback( async (userIDToCheck: string): Promise<{
         success: boolean;
         data?: boolean;
@@ -389,7 +461,6 @@ export function useWorkspace() {
         dispatch(SET_WORKSPACE_ERROR(null));
 
         try {
-            // console.log(`[useWorkspace] checkUserHaveCreatedWorkspace: Checking workspace existence for user ${userIDToCheck}.`);
             const response = await getUserWorkspaces(userIDToCheck);
 
             const hasWorkspaces = Array.isArray(response) && response.length > 0;
@@ -410,47 +481,10 @@ export function useWorkspace() {
             dispatch(SET_WORKSPACE_LOADING(false));
         }
     },[
-        session?.user._id,
-        status,
         dispatch
     ])
-      // --- EFFECT: Trigger initial fetch of all user workspaces ---
-    useEffect(()=> {
-        // const userId = session?.user._id
-        const fetchWorkspaces = async () => {
-           
-            if(status !== "authenticated" || !session?.user?._id) return;
-            const user = session.user._id as string;
-            // Only call checkUserHaveCreatedWorkspace if not checked
-            if(!hasCheckedUserWorkspaceStatusRef.has(user)){
-                const checkResult = await checkUserHaveCreatedWorkspace(user);
-                if(checkResult.success){
-                    hasCheckedUserWorkspaceStatusRef.add(user);
-                }
-            }
-            
-            // Only call getWorkspace if not fetched
-            if(!hasFetchedAllWorkspaceRef.has(user)){
-                const fetchResult = await getWorkspaces();
-                if(fetchResult.success){
-                    hasFetchedAllWorkspaceRef.add(user);
-                }
-            }
-            
-        }
-        fetchWorkspaces();
-    },[ 
-        session?.user._id, 
-        status,
-        ]);
 
-     // --- Derived States ---
-    const currentWorkspaceObject = useMemo(() => {
-        return currentWorkspaceId ? workspacesById[currentWorkspaceId] : undefined;
-    },[
-        currentWorkspaceId,
-        workspacesById
-    ])
+    // --- Memoized Derived Exports ---
     const allWorkspacesArray = useMemo(() => {
         return allWorkspaceIds.map( id => workspacesById[id]);
     },[
@@ -462,11 +496,11 @@ export function useWorkspace() {
         // Data derived from Redux store
         workspaces: allWorkspacesArray,
         hasWorkspaces: allWorkspaceIds.length > 0,
-        currentWorkspace: currentWorkspaceObject,
-        currentWorkspaceId: currentWorkspaceId, // Expose the ID if needed
+        currentWorkspace: currentWorkspace,
+        currentWorkspaceId: currentWorkspace?._id, // Expose the ID if needed
 
         // Loading and error states from Redux
-        isLoadingWorkspaces: loadingFromRedux || status === "loading", // Combine Redux loading with session loading
+        isLoadingWorkspaces: loadingFromRedux || authStatus === "loading", // Combine Redux loading with session loading
         workspaceError: errorFromRedux,
 
         // Functions to trigger actions

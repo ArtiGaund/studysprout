@@ -1,18 +1,39 @@
+/**
+ * @hook useTitleEditing
+ * @description A sophisticated synchronization hook for collaborative title editing.
+ * * CORE CAPABILITIES:
+ * 1. Multi-User Awareness: Distinguishes between local edits and remote (Socket.io) updates.
+ * 2. Focus Management: Implements a "Grace Period" logic to prevent accidental blurs during mount.
+ * 3. Event Orchestration: Emits granular lifecycle events (Start, Typing, Stop) to the backend.
+ * 4. Optimistic Persistence: Updates Redux and DB simultaneously with built-in revert-on-failure.
+ */
 "use client";
+
 import { useToast } from "@/components/ui/use-toast";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { useWorkspace } from "./useWorkspace";
 import { useFolder } from "./useFolder";
 import { useFile } from "./useFile";
-import { clearEditingItem, setEditingItem, updateEditingItemTitle } from "@/store/slices/uiSlice";
-import React, { useCallback, useEffect, useRef} from "react"
+import { 
+    clearEditingItem, 
+    setEditingItem, 
+    updateEditingItemTitle 
+} from "@/store/slices/uiSlice";
+import React, { useCallback, useEffect, useMemo, useRef} from "react"
 import { Folder as MongooseFolder } from "@/model/folder.model";
 import { File as MongooseFile } from "@/model/file.model";
 import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { UPDATE_FOLDER } from "@/store/slices/folderSlice";
 import { UPDATE_FILE } from "@/store/slices/fileSlice";
 import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
+import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
+import { selectCurrentFolder } from "@/store/selectors/folderSelector";
+import { useUser } from "@/lib/providers/user-provider";
+import { selectUserId } from "@/store/selectors/userSelector";
+import { emitRealtimeEvent } from "@/lib/realtime-fetch";
+import { useSocket } from "@/lib/providers/socket-provider";
+
 
 interface UseTitleEditingProps {
     id: string;
@@ -29,48 +50,74 @@ export const useTitleEditing = ({
     isEditingLocally = false, // Default to false if not provided
     onEditingStop // Destructure the new callback prop
 }: UseTitleEditingProps) =>{
-
+    const { socket, isConnected } = useSocket();
     const dispatch = useDispatch();
     const { toast } = useToast();
+    const { user } = useUser();
 
-    // editing item from UI state (global Redux state)
+    // --- Selectors ---
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
+    const workspaceId = currentWorkspace?._id;
+    const currentFolder = useSelector(selectCurrentFolder);
+    const currentUserId = useSelector(selectUserId);
+
+   // Global UI state ensures only one item is edited at a time across the app
     const globalEditingItem = useSelector((state: RootState) => state.ui.editingItem);
+    const remoteEditingData = useSelector((state: RootState) => state.ui.remoteEditing[id]);
     
     // Determine if THIS specific item is currently being edited based on the global state
     const isCurrentlyEditingThisItemGlobally = globalEditingItem?.id === id && globalEditingItem.type === dirType;
 
     // The effective editing state for the hook's internal logic
     // For folders, we'll primarily use isEditingLocally. For files/workspaces, use global state.
-    const isCurrentlyEditingThisItemEffective = dirType === 'folder' ? isEditingLocally : isCurrentlyEditingThisItemGlobally;
+    const isCurrentlyEditingThisItemEffective = dirType === 'folder' 
+    ? isEditingLocally
+    : isCurrentlyEditingThisItemGlobally;
 
-    // The displayed title should come from the global editing state if this item is the one being edited globally,
-    // otherwise it's the original title. We use globalEditingItem.tempTitle because the actual text input
-    // is always backed by the Redux tempTitle for consistency.
-    const displayedTitle = isCurrentlyEditingThisItemGlobally ? globalEditingItem.tempTitle : originalTitle;
+    /**
+     * @memoized displayedTitle
+     * Resolves the title based on priority: 
+     * Local Temp State > Remote User's Typing > Database Original
+     */
+     const displayedTitle = useMemo((): string => {
+        // 1. If I am the one editing locally
+        if(isCurrentlyEditingThisItemGlobally) {
+            return globalEditingItem.tempTitle ?? originalTitle;
+        }
 
+        // 2. If someone ELSE is editing (Remote)
+        // remoteEditingData is an object { username, tempTitle, userId}
+        // We only want tempTitle
+        if(remoteEditingData && typeof remoteEditingData === 'object'){
+            return remoteEditingData.tempTitle || originalTitle;
+        }
+
+        // 3. Fallback to orihinal
+        return originalTitle;
+     },[
+        isCurrentlyEditingThisItemGlobally,
+        globalEditingItem.tempTitle,
+        remoteEditingData,
+        originalTitle,
+     ])
 
     // data manipulation hooks
     const { updateWorkspaceTitle} = useWorkspace();
     const { updateFolder } = useFolder();
     const { updateFile } = useFile();
 
-    // Pass the inputRef to the hook
+    // --- Focus & Interaction Logic ---
     const inputRef = useRef<HTMLInputElement>(null);
-
     // ref to track if a blur is intentional (e.g., via Enter key)
     const isBlurIntentionalRef = useRef(false);
-
     // ref to track if an escape key was pressed
     const hasEscapedRef = useRef(false);
-
     // ref for blur timeout
     const blurTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // This flag indicates if the editing mode has just been entered
     // and the input is currently attempting to gain focus.
     const isStartingEditRef = useRef(false);
-    // Ref to manage the timer that resets isStartingEditRef
-    const startEditTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // NEW: Ref to track if the item was editing in the previous render
     const wasEditingRef = useRef(false); 
@@ -81,57 +128,54 @@ export const useTitleEditing = ({
     // Define a generous window during which initial blurs are ignored
     const BLUR_PROCESSING_DELAY_MS = 350; // Small delay before processing a blur event
     
+
+    /**
+     * @effect Auto-Focus Handler
+     * Ensures that when editing starts, the input gains focus and text is pre-selected.
+     */
     useEffect(() => {
-        // Only run the focus logic when editing state *changes* to true
-        if (isCurrentlyEditingThisItemEffective && !wasEditingRef.current) { 
-            // When we enter editing mode, set isStartingEditRef true
-            isStartingEditRef.current = true;
-            startEditTimestampRef.current = Date.now();
-
-            const focusTimer = setTimeout(() => {
-                // check for inputRef.current and isCurrentlyEditingThisItemEffective
-                // inside the timeout to ensure the element is still mounted and we are still editing.
-                if(inputRef.current && isCurrentlyEditingThisItemEffective) { 
-                    inputRef.current.focus();
-                    inputRef.current.select();
-                }else{
-                    if(isStartingEditRef.current){
-                        isStartingEditRef.current = false;
-                        startEditTimestampRef.current = null;
+        // Only focus if we just switched to editing mode
+        if(isCurrentlyEditingThisItemGlobally && !wasEditingRef.current){
+            const timer = setTimeout(() => {
+                inputRef.current?.focus();
+                inputRef.current?.select()
+            },50);
+            return () => clearTimeout(timer);
+        }
+        wasEditingRef.current = isCurrentlyEditingThisItemGlobally;
+    },[
+        isCurrentlyEditingThisItemGlobally
+    ])
+        const emitStopEditing = useCallback(() => {
+            if(socket && workspaceId){
+                emitRealtimeEvent(
+                    'workspace-tree-update',
+                    String(workspaceId),
+                    'presence:remote-editing-stop',
+                    {
+                        itemId: id,
                     }
-                }
-            }, 0); // Use 0 delay to put it at the end of the current call stack
-
-            // Cleanup for this specific effect run
-            return () => {
-                clearTimeout(focusTimer);
+                );
             }
+        },[
+            socket,
+            workspaceId,
+            id,
+        ])
 
-        } else if (!isCurrentlyEditingThisItemEffective && wasEditingRef.current) { 
-            // This block runs when editing state *changes* to false. Perform cleanup specific to this transition.
-            // Reset all flags when not editing, but only if it *just* stopped being editing
-            isBlurIntentionalRef.current = false;
-            hasEscapedRef.current = false;
-            isStartingEditRef.current = false; // Ensure this is reset when editing stops
-            startEditTimestampRef.current = null;
-            // Clear any pending blur timer if editing stops
-            if(blurTimerRef.current){
-                clearTimeout(blurTimerRef.current);
-                blurTimerRef.current = null;
-            }
-          
-        } 
-
-        // IMPORTANT: Update the ref at the very end of the effect for the next render cycle
-        wasEditingRef.current = isCurrentlyEditingThisItemEffective;    
-
-    },[ 
-        isCurrentlyEditingThisItemEffective,
-         originalTitle 
-        ]); // Dependencies remain the same
-
-
+       
+    /**
+     * @method handleStartEditing
+     * Initializes the collaborative session by notifying the Socket server.
+     */
     const handleStartEditing = useCallback(() => {
+        // Guard: If already editing this specific item, DO NOT emit or dispatch again
+        if(isCurrentlyEditingThisItemGlobally) return;
+        if(!user || !socket || !currentUserId || !isConnected){
+            console.warn("[useTitleEditing] no user or socket");
+            return;
+        }
+
         if(!isCurrentlyEditingThisItemEffective){
         // Set this flag immediately when starting an edit to ignore immediate blurs.
         // It's also set in useEffect, but this ensures it's set before the first render with isCurrentlyEditingThisItemEffective=true.
@@ -148,27 +192,60 @@ export const useTitleEditing = ({
             id,
             type: dirType,
             title: originalTitle
-        }))
+        }));
+      
+        emitRealtimeEvent(
+            'workspace-tree-update',
+            String(workspaceId),
+            'presence:remote-editing-start',
+            {
+                itemId: id,
+                username: user?.username,
+                userId: currentUserId,
+                tempTitle: originalTitle,
+            }
+        );
         }
     }, [
         id,
         dirType,
         originalTitle,
         dispatch,
-        isCurrentlyEditingThisItemEffective
+        isCurrentlyEditingThisItemEffective,
+        socket,
+        user,
+        workspaceId,
+        currentUserId,
+        isCurrentlyEditingThisItemGlobally,
+        isConnected
     ])
 
-    // Handle input focus
+    /**
+     * @method handleInputFocus
+     * @description Finalizes the transition into editing mode.
+     * * STRATEGIC ROLE:
+     * 1. Focus Confirmation: Resets the 'isStartingEdit' protection flags once 
+     * the browser successfully attaches focus to the input.
+     * 2. UX Optimization: Automatically selects the entire text string, 
+     * allowing the user to overwrite the title immediately without manual highlighting.
+     * 3. Race Condition Prevention: Clears any pending 'Grace Period' timers 
+     * to ensure the UI doesn't accidentally close the input after focus is gained.
+     */
     const handleInputFocus = useCallback(() => {
         // This function's primary role is now to confirm focus and select text.
         // `isStartingEditRef` is now reset by the grace period timer in useEffect.
         if (inputRef.current) {
             inputRef.current.select(); // Ensure text is selected on focus
         }
+
+        // Cleanup of the 'Mounting Shield'
+        // If we reach this point, the focus was successful, so we can 
+        // stop ignoring blur events.
         if(isStartingEditRef.current){
             isStartingEditRef.current = false;
             startEditTimestampRef.current = null;
 
+            // Clear the safety fallback timer
             if(startEditGracePeriodTimerRef.current){
                 clearTimeout(startEditGracePeriodTimerRef.current);
                 startEditGracePeriodTimerRef.current = null;
@@ -177,37 +254,88 @@ export const useTitleEditing = ({
         // No direct reset of isStartingEditRef.current here anymore.
     }, []);
 
-
+    /**
+     * @method handleTitleChange
+     * Emits "Throttled" typing events to update remote cursors/titles.
+     */
     const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        dispatch(updateEditingItemTitle(e.target.value));
-    },[dispatch])
 
+        if(!socket || !isConnected){
+            return;
+        }
+        const value = e.target.value;
+
+        dispatch(updateEditingItemTitle(value));
+        console.log("[useTitleEditing] DEBUG: Emitting typing.",{
+            workspaceId,
+            id,
+            value,
+        })
+        // EMIT: "I am currently typing this..."
+        // socket.emit("presence:remote-editing-typing", {
+        //     workspaceId,
+        //     itemId: id,
+        //     tempTitle: value
+        // });
+
+        emitRealtimeEvent(
+            'workspace-tree-update',
+            String(workspaceId),
+            'presence:remote-editing-typing',
+            {
+                itemId: id,
+                tempTitle: value,
+                userId: currentUserId,
+            }
+        )
+
+    },[
+        dispatch,
+        socket,
+        workspaceId,
+        id,
+        isConnected
+    ])
+
+    /**
+     * @method handleSaveTitle
+     * The "Critical Path": Validates input, updates the database via services, 
+     * and synchronizes the Redux store with the response.
+     */
     const handleSaveTitle = useCallback(async () => {
-        // Ensure we are still globally editing this item before saving
-        if(!isCurrentlyEditingThisItemGlobally || !globalEditingItem || !globalEditingItem.tempTitle ) {
+        // 1. Initial Guard: If we aren't editing or title is missing
+        if(
+            !isCurrentlyEditingThisItemGlobally || 
+            !globalEditingItem || 
+            !globalEditingItem.tempTitle 
+        ) {
             // If the global state is already cleared or not for this item, just signal stop and return.
            if(isCurrentlyEditingThisItemEffective){
-                 if(onEditingStop) onEditingStop(); 
-             dispatch(clearEditingItem()); //ensure global state is clean
+            // Ensure others know we stopped
+                emitStopEditing();
+                if(onEditingStop) onEditingStop(); 
+                dispatch(clearEditingItem()); //ensure global state is clean
            }
            
             return;
         }
         const currentTempTitle = globalEditingItem.tempTitle.trim();
 
-        // if title is empty
+        // 2. Empty Title Case
         if(currentTempTitle === ''){
             toast({
                 title: 'Title cannot be empty',
                 description: 'Reverted to original title.',
                 variant: 'destructive'
             });
+            emitStopEditing();
             if(onEditingStop) onEditingStop(); 
             dispatch(clearEditingItem()); // Clear editing, it will display originalTitle
             return; // Stop execution here
         }
-        // Check if title is unchanged
+        // 3. Unchanged Title case (User clicked out without typing)
         if (currentTempTitle === originalTitle) {
+            emitStopEditing();
             if(onEditingStop) onEditingStop(); 
             dispatch(clearEditingItem()); // Just clear editing, no need to save
             return; // Stop execution here
@@ -247,13 +375,15 @@ export const useTitleEditing = ({
                 // Dispatch the appropriate Redux action to update the store
                 if(dirType === 'workspace'){
                     dispatch(UPDATE_WORKSPACE(updatedDataFromService as ReduxWorkSpace))
-                }else if(dirType === 'folder'){
+                }else if(dirType === 'folder' && workspaceId){
                     dispatch(UPDATE_FOLDER({
+                        workspaceId,
                         id,
                         updates: updatedDataFromService
                     }))
                 }else if(dirType === 'file'){
                     dispatch(UPDATE_FILE({
+                        folderId: currentFolder?._id!,
                         id,
                         updates: updatedDataFromService
                     }))
@@ -277,6 +407,7 @@ export const useTitleEditing = ({
                 variant: 'destructive'
             })  
         }finally{
+            emitStopEditing();
             if(onEditingStop) onEditingStop(); // Signal to the component to stop local editing
             dispatch(clearEditingItem()); // Ensure global state is clean
         }
@@ -292,7 +423,10 @@ export const useTitleEditing = ({
         toast,
         updateWorkspaceTitle,
         onEditingStop, // Add onEditingStop to dependencies
-        isCurrentlyEditingThisItemEffective
+        isCurrentlyEditingThisItemEffective,
+        emitStopEditing,
+        workspaceId,
+        currentFolder,
     ])
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -304,13 +438,21 @@ export const useTitleEditing = ({
         else if(e.key === 'Escape'){
             // mark escape was pressed, then clear editing state directly without saving
             hasEscapedRef.current = true;
+
+            // 1. Explicitly notify others immediately
+            emitStopEditing();
+
+            // 2. Clear local UI
             if(onEditingStop) onEditingStop(); // Signal to the component to stop local editing
             dispatch(clearEditingItem()); // Reverts title implicitly by clearing editingItem
+            
+            // 3. Force Focus out to trigger closure
             e.currentTarget.blur(); // Remove focus
         }
     },[
         dispatch,
-        onEditingStop // Add onEditingStop to dependencies
+        onEditingStop, // Add onEditingStop to dependencies
+        emitStopEditing,
     ])
 
     const handleInputBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
@@ -357,6 +499,7 @@ export const useTitleEditing = ({
                     handleSaveTitle();
                 } else {
                     if(onEditingStop) onEditingStop(); // Signal to the component to stop local editing
+                    emitStopEditing();
                     dispatch(clearEditingItem()); // Ensure global editing state is cleared
                 }
             }
@@ -369,7 +512,8 @@ export const useTitleEditing = ({
         id, 
         dirType, 
         dispatch,
-        onEditingStop // Add onEditingStop to dependencies
+        onEditingStop, // Add onEditingStop to dependencies
+        emitStopEditing,
     ])
 
     return {

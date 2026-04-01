@@ -1,18 +1,38 @@
+/**
+ * @hook useDir
+ * @description A unified controller hook for managing directory entities (Workspaces, Folders, Files).
+ * This hook abstracts complex state operations, providing a consistent API for any UI 
+ * component needing to perform CRUD-like actions on the file system tree.
+ * * * Core Competencies:
+ * - Polymorphic State Selection: Context-aware Redux selectors that navigate nested state.
+ * - Optimistic UI Updates: Dispatches immediate local state changes before server confirmation 
+ * to ensure a "zero-latency" user experience.
+ * - Cache Invalidation: Triggers targeted re-fetches via secondary hooks (useFile, useFolder).
+ * - Lifecycle Management: Handles banner image fetching and automatic cleanup/routing after deletions.
+ */
 "use client";
 
 import { useToast } from "@/components/ui/use-toast";
-import { deleteBanner, getBanner, hardDeleteDir, restoreDir, updateDirIcon, uploadBanner } from "@/services/dirServices";
+import {
+     deleteBanner, 
+     getBanner, 
+     hardDeleteDir, 
+     restoreDir,
+      updateDirIcon,
+       uploadBanner 
+    } from "@/services/dirServices";
 import { DELETE_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
 import { DELETE_FOLDER, UPDATE_FOLDER } from "@/store/slices/folderSlice";
 import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { RootState } from "@/store/store";
 import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect,  useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useFile } from "./useFile";
 import { useFolder } from "./useFolder";
-
+import { clearLastWorkspace } from "@/lib/local-storage-workspace";
+import { useSession } from "next-auth/react";
 
 type DirType = "workspace" | "folder" | "file";
 
@@ -38,21 +58,8 @@ export function useDir({
     const { invalidateFileCaches } = useFile();
     const { invalidateFolderCaches } = useFolder();
 
-    // select the relevant item directly from the Redux store
-    const details = useSelector((state: RootState) => {
-        if(!dirId) return;
-        switch(dirType){
-            case "workspace" :
-                return state.workspace.byId[dirId];
-            case "folder":
-                return state.folder.byId[dirId];
-            case "file":
-                return state.file.byId[dirId];
-            default: 
-                return undefined;
-        }
-    })
 
+    // --- State & Refs ---
     const [ isLoading, setIsLoading ] = useState(false);
     const [ isSaving, setIsSaving ] = useState(false);
     const [ isRemovingBanner, setIsRemovingBanner ] = useState(false);
@@ -61,7 +68,46 @@ export function useDir({
     // This ref will help us to prevent fetching if a deletion/navigation is in progress
     const isNavigatingAfterDeleteRef = useRef(false);
 
-    // fetch the banner image url if available
+    const params = useParams();
+    const { data: session} = useSession();
+
+    /**
+     * @selector details
+     * Navigates the Redux tree based on the provided dirType.
+     * Includes a robust fallback search for files if the primary path is missing.
+     */
+    const details = useSelector((state: RootState) => {
+        if(!dirId) return;
+        switch(dirType){
+            case "workspace" :
+                return state.workspace.byId?.[dirId];
+            case "folder":
+                return state.folder.foldersByWorkspace
+                ?.[currentWorkspaceId ?? ""]
+                ?.byId?.[dirId];
+            case "file":
+                // 1. Try the specific folder path
+                const fileByPath = state.file.filesByFolder
+                ?.[currentFolderId ?? ""]
+                ?.byId?.[dirId];
+                if(fileByPath) return fileByPath;
+
+                // 2. Fallback: Search all folders for this fileId
+                for(const folderId in state.file.filesByFolder){
+                    const file = state.file.filesByFolder[folderId].byId[dirId];
+                    if(file) return file;
+                }
+                return undefined;
+            default: 
+                return undefined;
+        }
+    })
+
+    
+   /**
+     * @effect Banner-Fetcher
+     * Syncs the visual banner URL with the entity's metadata.
+     */
     useEffect(() => {
         if(details?.bannerUrl){
             const fetchImage = async() => {
@@ -79,6 +125,11 @@ export function useDir({
         }
     }, [details?.bannerUrl]);
 
+    /**
+     * @method handleRestore
+     * Moves an item out of the trash. Uses Optimistic UI updates
+     * to prevent UI flickering while waiting for the database response.
+     */
     const handleRestore = useCallback(async() => {
         if(!dirId || !details?.inTrash){
             toast({
@@ -88,11 +139,12 @@ export function useDir({
             });
             return;
         }
-
+        const parentWorkspaceId = (details as any).workspaceId;
+        const parentFolderId = (details as any).folderId;
        setIsSaving(true);
         try {
             const updatePayload: Partial<ReduxWorkSpace | ReduxFolder | ReduxFile> = {
-                inTrash: undefined,
+                inTrash: null,
                 lastUpdated: new Date().toISOString(),
             }
             // Optimistic UI update: Dispatch immediately
@@ -100,50 +152,51 @@ export function useDir({
                 dispatch(UPDATE_WORKSPACE(updatePayload as ReduxWorkSpace));
             if(dirType === "folder")
                 dispatch(UPDATE_FOLDER({
+                workspaceId: parentWorkspaceId,
                 id: dirId,
                 updates: updatePayload as ReduxFolder
             }));
-            if(dirType === "file"){
+            if(dirType === "file" && parentFolderId){
                 dispatch(UPDATE_FILE({
+                    folderId: parentFolderId,
                     id: dirId,
                     updates: updatePayload as ReduxFile
                 }));
             }
             
 
-            const response = await restoreDir(dirType, dirId);
+            const response = await restoreDir(dirType, dirId)
 
-            
             // Dispatch full updated objects from api response
             if(dirType === "workspace")
                 dispatch(UPDATE_WORKSPACE(response as ReduxWorkSpace));
             if(dirType === "folder"){
                 const restoredFolder = response as ReduxFolder;
                 if(restoredFolder.workspaceId){
+                        dispatch(UPDATE_FOLDER({
+                        workspaceId: restoredFolder.workspaceId,
+                        id: dirId,
+                        updates: restoredFolder
+                    }));
                     invalidateFolderCaches(restoredFolder.workspaceId);
-                }
-
-                // Also invalidating file caches, as files within the folder might now be visible
-                if(restoredFolder._id){
                     invalidateFileCaches(restoredFolder.workspaceId, restoredFolder._id);
                 }
-                dispatch(UPDATE_FOLDER({
-                    id: dirId,
-                    updates: restoredFolder
-                }));
+                
             }
             if(dirType === "file"){
                 const restoredFile = response as ReduxFile;
-                if(restoredFile.workspaceId || restoredFile.folderId){
+                if(restoredFile.workspaceId && restoredFile.folderId){
+                     dispatch(UPDATE_FILE({
+                        folderId: restoredFile.folderId,
+                        id: dirId,
+                        updates: restoredFile
+                    }));
                     invalidateFileCaches(restoredFile.workspaceId, restoredFile.folderId);
                     if(onFileRestored){
                         onFileRestored();
                     }
                 }
-                        dispatch(UPDATE_FILE({
-                        id: dirId,
-                        updates: restoredFile
-                    }));
+                       
                 }
             toast({
                 title: `Successfully restored ${dirType}`,
@@ -167,11 +220,13 @@ export function useDir({
                     dispatch(UPDATE_WORKSPACE(previousPayload as ReduxWorkSpace));
                 if(dirType === 'folder')
                     dispatch(UPDATE_FOLDER({
+                workspaceId: currentWorkspaceId!,
                 id: dirId,
                 updates: previousPayload as ReduxFolder
             }));
                 if(dirType === 'file')
                     dispatch(UPDATE_FILE({
+                folderId: currentFolderId!,
                 id: dirId,
                 updates: previousPayload as ReduxFile
             }));
@@ -190,7 +245,13 @@ export function useDir({
            invalidateFolderCaches
         ])
 
+    /**
+     * @method handleDelete
+     * Executes permanent deletion and manages the complex redirect logic
+     * required to keep the user in a valid navigation path.
+     */
     const handleDelete = useCallback( async () => {
+        if(!session?.user._id) return;
         if(!dirId){
             toast({
                 title: "Error",
@@ -201,24 +262,41 @@ export function useDir({
         }
         setIsLoading(true);
         isNavigatingAfterDeleteRef.current = true;
+        const parentWorkspaceId = (details as any).workspaceId;
+        const parentFolderId = (details as any).folderId;
         try {
             const response = await hardDeleteDir(dirType, dirId);
             if(dirType === "workspace"){
                  dispatch(DELETE_WORKSPACE(dirId));
+                 clearLastWorkspace(session.user._id);
                  router.replace("/dashboard");
             }
                
             else if(dirType === "folder"){
-                dispatch(DELETE_FOLDER(dirId));
-                router.replace(currentWorkspaceId ? `/dashboard/${currentWorkspaceId}` : `/dashboard`);
+                dispatch(DELETE_FOLDER({
+                    workspaceId: parentWorkspaceId,
+                    folderId: dirId
+                }));
+                router.replace(
+                    params.workspaceId
+                     ? `/dashboard/${params.workspaceId}`
+                     : "/dashboard"
+                    );
             }
             else if(dirType === "file"){
-                dispatch(DELETE_FILE(dirId));
+                dispatch(DELETE_FILE({
+                    folderId: parentFolderId,
+                    fileId: dirId
+                }));
                 router.replace(
-                    currentWorkspaceId && currentFolderId 
-                    ?`/dashboard/${currentWorkspaceId}/${currentFolderId}` 
-                    : `/dashboard`);
+                    params.workspaceId && params.folderId 
+                    ? `/dashboard/${params.workspaceId}/${params.folderId}`
+                    : params.workspaceId 
+                    ? `/dashboard/${params.workspaceId}`
+                    :"/dashboard"
+                );
             }
+
                 
             toast({
                  title: `${dirType.charAt(0).toUpperCase() + dirType.slice(1)} deleted successfully`,
@@ -243,11 +321,14 @@ export function useDir({
         dispatch,
         toast,
         router,
-        currentWorkspaceId,
-        currentFolderId
+        params,
+        session?.user._id
     ])
 
-
+    /**
+     * @method handleIconChange
+     * Updates the emoji/icon identifier for the entity across the store.
+     */
     const handleIconChange = useCallback( async (icon: string) => {
         if(!dirId){
             toast({
@@ -263,11 +344,13 @@ export function useDir({
                 dispatch(UPDATE_WORKSPACE(updateDir as ReduxWorkSpace));
             if(dirType === "folder")
                 dispatch(UPDATE_FOLDER({
+            workspaceId: currentWorkspaceId!,
             id: dirId,
             updates: updateDir as ReduxFolder
         }));
             if(dirType === "file")
                 dispatch(UPDATE_FILE({
+            folderId: currentFolderId!,
             id: dirId,
             updates: updateDir as ReduxFile
         }));
@@ -292,6 +375,10 @@ export function useDir({
         toast
     ])
 
+    /**
+     * @method handleBannerUpload
+     * Manages binary data upload via FormData and syncs the resulting URL.
+     */
     const handleBannerUpload = useCallback( async (file: File) => {
         if(!dirId){
             toast({
@@ -307,16 +394,18 @@ export function useDir({
         if(dirType === "folder") formData.append("folderId", dirId);
         if(dirType === "file") formData.append("fileId", dirId);
         try {
-            const updateDir = await uploadBanner(dirType, formData);
+            const updateDir = await uploadBanner(dirType, dirId, formData);
             if(dirType === "workspace") 
                 dispatch(UPDATE_WORKSPACE(updateDir as ReduxWorkSpace));
             if(dirType === "folder")
                 dispatch(UPDATE_FOLDER({
+                    workspaceId: currentWorkspaceId!,
                     id: dirId,
                     updates: updateDir as ReduxFolder
                 }));
             if(dirType === "file")
                 dispatch(UPDATE_FILE({
+            folderId: currentFolderId!,
             id: dirId,
             updates: updateDir as ReduxFile
         }));
@@ -341,6 +430,10 @@ export function useDir({
         toast
     ])
 
+    /**
+     * @method handleDeleteBanner
+     * Removes the banner association and cleans up cloud storage references.
+     */
     const handleDeleteBanner = useCallback(async () => {
         if(!details?.bannerUrl) return; 
         if(!dirId){
@@ -358,11 +451,13 @@ export function useDir({
                 dispatch(UPDATE_WORKSPACE(updatedDir as ReduxWorkSpace));
             if(dirType === "folder")
                 dispatch(UPDATE_FOLDER({
+            workspaceId: currentWorkspaceId!,
             id: dirId,
             updates: updatedDir as ReduxFolder
         }));
             if(dirType === "file")
                 dispatch(UPDATE_FILE({
+            folderId: currentFolderId!,
             id: dirId,
             updates: updatedDir as ReduxFile
         }));
