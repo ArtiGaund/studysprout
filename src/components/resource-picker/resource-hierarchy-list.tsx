@@ -1,17 +1,45 @@
+/**
+ * @component ResourceHierarchyList
+ * @description A modal-based resource picker that allows users to traverse their 
+ * data hierarchy (Workspace > Folder > File) to set a context for flashcard generation.
+ * * * Key Architecture:
+ * - Centralized Context: Synchronizes the selected resource with the Redux `contextSlice`.
+ * - Selective Expansion: Manages an `expandedIds` Set for high-performance UI toggling 
+ * without re-rendering the entire tree.
+ * - Reactive Loading: Aggregates loading states from multiple slices (Workspace, Folder, File) 
+ * to provide a unified UX during data fetching.
+ */
 "use client";
 
 import { useDispatch, useSelector } from "react-redux";
-import { DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import {
+    DialogClose,
+    DialogContent, 
+    DialogDescription, 
+    DialogFooter, 
+    DialogHeader, 
+    DialogTitle 
+} from "../ui/dialog";
 import { RootState } from "@/store/store";
-import { useWorkspace } from "@/hooks/useWorkspace";
-import React, { useEffect, useState } from "react";
-import { useFolder } from "@/hooks/useFolder";
-import { useFile } from "@/hooks/useFile";
+import React, { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import ResourcePickerItem from "./resource-picker-item";
-import { ReduxWorkSpace } from "@/types/state.type";
+import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
 import { SET_CURRENT_RESOURCE } from "@/store/slices/contextSlice";
 import { Button } from "../ui/button";
+
+// --- Selectors ---
+import { 
+    selectCurrentWorkspace, 
+    selectWorkspaceLoading, 
+    selectWorkspaces 
+} from "@/store/selectors/workspaceSelector";
+import {
+     makeSelectFolders, 
+     selectCurrentFolder, 
+     selectFolderLoading 
+    } from "@/store/selectors/folderSelector";
+import { makeSelectFiles, selectFileLoading } from "@/store/selectors/fileSelector";
 
 interface ResourceHierarchyListProps{
     onSelect: (id: string, title: string, type: 'Workspace' | 'Folder' | 'File') => void;
@@ -19,26 +47,56 @@ interface ResourceHierarchyListProps{
 const ResourceHierarchyList: React.FC<ResourceHierarchyListProps> = ({ onSelect }) => {
    
     const dispatch = useDispatch();
-    // current selected resource (opened page)
+    
+    /** * @section Redux State Selection
+     * Retrieves the current user context and workspace metadata.
+     */
     const currentContext = useSelector((state: RootState) => state.context.currentResource);
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
+    const workspaceId = currentWorkspace?._id;
 
-    const {
-        currentWorkspace,
-        isLoadingWorkspaces,
-        getWorkspaces,
-    } = useWorkspace();
+    const isLoadingWorkspaces = useSelector(selectWorkspaceLoading);
+    const isLoadingFolders = useSelector(selectFolderLoading);
+    const isLoadingFiles = useSelector(selectFileLoading);
 
-    const {
-        folders,
-        isLoadingFolders,
-        getFolders,
-    } = useFolder();
+    
+    /** * @section Memoized Instance Selectors
+     * Prevents parent re-renders from triggering unnecessary filtering logic.
+     */
+    const selectFolders = useMemo(makeSelectFolders,[]);
+    const selectFiles = useMemo(makeSelectFiles, []);
+    const EMPTY_FOLDER: ReduxFolder[] = [];
 
-    const {
-        files: allFiles,
-        fileLoading: isLoadingFiles,
-        getWorkspaceFiles,
-    } = useFile();
+    const folders = useSelector((state: RootState) => 
+    workspaceId ? selectFolders(state, workspaceId) : EMPTY_FOLDER
+    );
+    const currentFolder = useSelector(selectCurrentFolder);
+    const folderId = currentFolder?._id;
+
+    const EMPTY_FILE: ReduxFile[] = [];
+
+    const files = useSelector((state: RootState) =>
+    folderId ? selectFiles(state, folderId) : EMPTY_FILE
+    );
+
+    /** * @section Local UI State
+     * Manages a Set of IDs to track expanded folders/workspaces in the hierarchy.
+     */
+    const [ expandedIds, setExpandedIds ] = useState<Set<string>>(new Set());
+   
+    
+
+    // Automatically expand the current active workspace on load
+    useEffect(() => {
+        if(workspaceId){
+            setExpandedIds(prev => new Set(prev).add(workspaceId));
+        }
+    }, [ workspaceId]);
+
+    /**
+     * @handler handleResourceSelect
+     * Updates the global context for the Flashcard generation engine.
+     */
     const handleResourceSelect = (id: string, title: string, type: 'Workspace' | 'Folder' | 'File') => {
         dispatch(SET_CURRENT_RESOURCE({
             id,
@@ -47,39 +105,6 @@ const ResourceHierarchyList: React.FC<ResourceHierarchyListProps> = ({ onSelect 
         }
         ))
     }
-
-    // State to manage which containers are open
-
-    const [ expandedIds, setExpandedIds ] = useState<Set<string>>(new Set());
-
-    // Data fetching effect
-    useEffect(() => {
-        if(currentWorkspace?._id){
-            const workspaceId = currentWorkspace._id;
-
-            // Ensure necessary data for the current workspace is fetched
-            getFolders(workspaceId);
-            getWorkspaceFiles(workspaceId);
-
-            // Automatically expand the current workspace on initial load
-            setExpandedIds(prev => {
-                if(!prev.has(workspaceId)){
-                    return new Set(prev).add(workspaceId);
-                }
-                return prev;
-            });
-        }else{
-            // Fallback: Ensure workspaces are fetched if none is selected
-            getWorkspaces();
-        }
-    },[
-        currentWorkspace?._id,
-        getFolders,
-        getWorkspaceFiles,
-        getWorkspaces
-    ])
-
-
     // Simple toggle function for folder/workspace expansion
     const toggleExpansion = (id: string) => {
         setExpandedIds(prev => {
@@ -111,11 +136,14 @@ const ResourceHierarchyList: React.FC<ResourceHierarchyListProps> = ({ onSelect 
                      for **flashcard generation and review**.
                 </DialogDescription>
             </DialogHeader>
-            {/* Current workspace */}
+
+            {/* Selection Breadcrumb / Status */}
             <div className="flex flex-row gap-2">
                 <span>Selected: </span>
                 <span>[ {currentContext.type} : {currentContext.title} ] </span>
             </div>
+
+            {/* Scrollable Tree View */}
             <div className="h-auto overflow-y-auto">
                 <div className="flex flex-col gap-1 p-2">
                     <ResourcePickerItem 
@@ -123,7 +151,7 @@ const ResourceHierarchyList: React.FC<ResourceHierarchyListProps> = ({ onSelect 
                     resourceType="Workspace"
                     level={0}
                     allFolders={folders}
-                    allFiles={allFiles}
+                    allFiles={files}
                     isExpanding={expandedIds.has(topLevelWorkspace?._id!)}
                     onToggle={toggleExpansion}
                     onSelect={handleResourceSelect}

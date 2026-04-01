@@ -1,34 +1,54 @@
+/**
+ * @component TrashRestore
+ * @description Provides a centralized interface for viewing and navigating deleted content.
+ * * * Features:
+ * - Dynamic Filtering: Filters the global 'Trash' state from Redux to show only items 
+ * relevant to the active workspace.
+ * - Polymorphic Linking: Correctly constructs navigation paths based on whether 
+ * the item is a top-level Folder or a nested File.
+ * - Empty State Management: Renders a centered feedback message when no items are found.
+ */
 "use client"
-import { useFile } from "@/hooks/useFile";
-import { useFolder } from "@/hooks/useFolder";
-import { ReduxFolder, ReduxFile } from "@/types/state.type";
+
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { selectTrashFiles } from "@/store/selectors/fileSelector";
+import { selectTrashFolders } from "@/store/selectors/folderSelector";
 import { FileIcon, FolderIcon } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useSelector } from "react-redux";
 
 
 const TrashRestore = () => {
-   
-    const [ folders, setFolders ] = useState<ReduxFolder[] | []>([])
-    const [ files, setFiles ] = useState<ReduxFile[] | []>([])
-
     const {
-        folders: allFolders,
-    } = useFolder();
-    const {
-        files: allFiles,
-    } = useFile();
-    useEffect(() => {
-        setFolders(allFolders.filter(folder => folder.inTrash));
-        setFiles(allFiles.filter(file => file.inTrash));
-    }, [allFolders, allFiles])
-
+        currentWorkspace
+    } = useWorkspace();
     
+    const workspaceId = currentWorkspace?._id;
+
+    // --- State Selection ---
+    // Accesses memoized selectors for all items marked 'inTrash: true'
+    const trashedFolders = useSelector(selectTrashFolders);
+    const trashedFiles = useSelector(selectTrashFiles);
+   
+    // --- Filtering Logic ---
+    // Ensures users only see trash from their currently active workspace
+    const workspaceTrashFolder = trashedFolders.filter(
+        folder => folder.workspaceId === workspaceId
+    )
+
+    const workspaceTrashFile = trashedFiles.filter(
+        file => file.workspaceId === workspaceId
+    )
+    // Safety check: Don't render if the workspace context isn't loaded
+    if(!workspaceId) return null;
+
     return(
-        <section>{folders.length && (
+        <section>{workspaceTrashFolder.length >0 && (
             <>
                 <h3>Folders</h3>
-                {folders.map((folder) => (
+                {/* Folder Recovery List */}
+                {workspaceTrashFolder.map((folder) => (
                      <Link 
                      href={`/dashboard/${folder.workspaceId}/${folder._id}`} 
                      key={folder._id}
@@ -44,10 +64,12 @@ const TrashRestore = () => {
                 ))}
             </>
         )}
-        {files.length && (
+
+        {/* File Recovery List */}
+        {workspaceTrashFile.length>0 && (
             <>
                 <h3>Files</h3>
-                {files.map((file) => (
+                {workspaceTrashFile.map((file) => (
                     <Link 
                     href={`/dashboard/${file.workspaceId}/${file.folderId}/${file._id}`} 
                     key={file._id}
@@ -63,7 +85,9 @@ const TrashRestore = () => {
                 ))}
             </>
         )}
-        {!files.length && !folders.length && (
+
+        {/* Empty State UI */}
+        {!workspaceTrashFile.length && !workspaceTrashFolder.length && (
             <div className="text-muted-foreground absolute top-[50%] left-[50%] transform
              -translate-x-1/2 -translate-y-1/2">
                 No Items in Trash

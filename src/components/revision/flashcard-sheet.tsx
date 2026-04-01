@@ -1,7 +1,20 @@
+/**
+ * @component FlashcardSheet
+ * @description A compact, interactive list item representing a Flashcard Set.
+ * Features dynamic "Due" status calculation and optimistic UI feedback.
+ * * * Key Features:
+ * - Event Propagation Management: Prevents parent click events when deleting.
+ * - Reactive "Due" Logic: Recalculates study urgency based on card-level metadata in Redux.
+ * - Performance Optimized: Uses `useMemo` to filter through card progress arrays efficiently.
+ */
 'use client';
 
+import { RootState } from "@/store/store";
 import { Trash } from "lucide-react";
+import { useMemo } from "react";
+import { useSelector } from "react-redux";
 
+// --- Types ---
 export interface FlashcardSet{
     _id: string;
     title: string;
@@ -20,33 +33,66 @@ const FlashcardSheet = ({
     onOpen: (id: string) => void;
     onDelete: (id: string) => void;
 }) => {
+    // --- State Selection ---
+    // Accesses cards directly from the slice to ensure the "Due" count reflects recent study sessions
+    const cards = useSelector((state: RootState) =>
+         state.flashcard.cardsBySet?.[set._id] ?? []);
+
+    /**
+     * @memoized realDueCount
+     * Business logic to determine if a set requires immediate attention.
+     * Logic: If a card has no due date or a due date in the past, it's considered 'Due'.
+     */
+    const realDueCount = useMemo(() => {
+        // Fallback to the set's initial count if local card data hasn't synced yet
+        if(cards.length === 0) return set.dueCount;
+
+        return cards.filter(card => {
+            const dueDate = card.progress?.dueDate;
+            return !dueDate || new Date(dueDate) <= new Date();
+        }).length;
+    },[
+        cards,
+        set.dueCount
+    ]);
    return(
      <div
-    onClick={() => onOpen(set._id)}
-    className="group flex justify-between items-center py-2 cursor-pointer rounded hover:bg-muted"
+        onClick={() => onOpen(set._id)}
+        className="group relative flex justify-between items-center py-2 cursor-pointer rounded hover:bg-white/5 overflow-visible transition-colors"
+        aria-label={`Study ${set.title}`}
     >
-        <div className="flex gap-2 items-center flex-1 min-w-0">
+        <div className="flex gap-2 items-center flex-1 min-w-0 mr-2">
+            {/* Visual Icon & Title */}
             <span>{set.icon || "🧠"}</span>
             <span className="text-[12px] text-gray-200 truncate max-w-[120px]">{set.title}</span>
-            {set.dueCount > 0 ? (
-                <span className="text-red-400 text-[11px] shrink-0 font-extrabold mr-4">
-                    🔥 {set.dueCount} due
+            
+            {/* Urgency Indicators: Fire icon for due cards, Checkmark for completed */}
+            {realDueCount > 0 ? (
+                <span className="text-red-400 text-[11px] shrink-0 font-extrabold">
+                    🔥 {realDueCount} due
                 </span>
             ) 
             : (
-                <span className="text-green-400 text-[11px] shrink-0 font-extrabold mr-4">
-                    ✓ {set.dueCount} due
+                <span className="text-green-400 text-[11px] shrink-0 font-extrabold">
+                    ✓
                 </span>
             )}
-        </div>
-        <Trash 
-        onClick={(e) => {
+
+            {/* Contextual Action: Trash (Hidden until hover) */}
+            <div
+             onClick={(e) => {
                 e.stopPropagation();
                 onDelete(set._id);
             }}
+            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 transition-all shrink-0"
+        >
+        <Trash 
+       
             size={15}
-            className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
+            className="text-gray-400 group-hover:text-red-400 transition-colors"
         />
+        </div>
+        </div>
     </div>
    )
 }

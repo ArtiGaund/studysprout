@@ -1,15 +1,26 @@
+/**
+ * @component SettingsForm
+ * @description A comprehensive administrative interface for managing Workspace and User Profile settings.
+ * * Key Capabilities:
+ * - Debounced Updates: Implements a timer-based ref for workspace title changes to minimize API overhead.
+ * - Asset Management: Handles binary file uploads for workspace logos and user avatars.
+ * - Destructive Action Workflows: Integrated modal-based confirmation for account deletion and 
+ * automatic routing logic after workspace removal.
+ * - Reactive Sync: Synchronizes local component state with Redux global state via useEffect hooks.
+ */
+'use client';
+
 import React, { useEffect, useRef, useState } from "react";
 import { useToast } from "../ui/use-toast";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Briefcase, LogOut, User } from "lucide-react";
 import { Separator } from "@radix-ui/react-select";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { WorkSpace } from "@/model/workspace.model";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { DELETE_WORKSPACE, UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
+import { UPDATE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -21,42 +32,54 @@ import { ReduxWorkSpace } from "@/types/state.type";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useDir } from "@/hooks/useDir";
 import { transformWorkspace } from "@/utils/data-transformers";
+import { useUser } from "@/lib/providers/user-provider";
+import { selectUserId } from "@/store/selectors/userSelector";
+import { selectCurrentWorkspace, selectWorkspaces } from "@/store/selectors/workspaceSelector";
+import { WorkSpace as MongooseWorkSpace} from "@/model/workspace.model";
 
 const SettingsForm = () => {
      const { openModal, closeModal } = useModal();
     const { toast } = useToast()
-    const { data: session } = useSession()
-    const user=session?.user
+    const { user } = useUser(); 
     const router = useRouter()
+
+    // --- Global State & Context ---
+    const userId = useSelector(selectUserId);
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
+    const workspaces = useSelector(selectWorkspaces);
+
+    // --- Custom Hooks for Business Logic ---
     const {
-        currentWorkspace,
         updateWorkspaceTitle,
         updateWorkspaceLogo,
-        workspaces: allWorkspacesArray,
-        hasWorkspaces
     } = useWorkspace();
 
     const {
         handleDelete: handleDeleteWorkspace,
-        isLoading: isDeletingWorkspace,
     } = useDir({
         dirType: "workspace",
         dirId: currentWorkspace?._id || "",
     })
    
+
+    // --- Local UI State ---
     const [ workspaceDetails, setWorkspaceDetails ] = useState<Partial<ReduxWorkSpace>>({
         title: currentWorkspace?.title || "",
         logo: currentWorkspace?.logo || undefined,
     })
-    // when user want to change the workspace name, there will be timer
-    const titleTimerRef = useRef<ReturnType<typeof setTimeout>>()
+    
     const [ uploadingProfilePic, setUploadingProfilePic ] = useState(false)
     const dispatch = useDispatch()
     const [uploadingLogo, setUploadingLogo] = useState(false)
    
 
+    /** * @property titleTimerRef
+     * Holds the timeout ID for debouncing workspace title updates.
+     * Prevents excessive database writes while the user is typing.
+     */
+    const titleTimerRef = useRef<ReturnType<typeof setTimeout>>()
 
-    // will change the value of workspace when there is any change in name 
+    // Sync local state when the active workspace changes in the Redux store
     useEffect(() => {
         if(currentWorkspace){
             setWorkspaceDetails({
@@ -67,7 +90,11 @@ const SettingsForm = () => {
         }
     }, [currentWorkspace])
 
-    // onChange workspace title
+    /**
+     * @handler workspaceNameChange
+     * Manages debounced title updates. 
+     * Updates local state immediately for snappy UI, but delays API call by 500ms.
+     */
     const workspaceNameChange = (e:React.ChangeEvent<HTMLInputElement>) => {
         if(!currentWorkspace || !e.target.value) return
         const newWorkspaceDetails = { ...workspaceDetails, workspaceName: e.target.value}
@@ -90,7 +117,7 @@ const SettingsForm = () => {
                 }else{
                     const workspace = response.data
                     if(workspace){
-                        const transformedWorkspace = transformWorkspace(workspace)
+                        const transformedWorkspace = transformWorkspace(workspace as MongooseWorkSpace)
                         dispatch(UPDATE_WORKSPACE(transformedWorkspace))
                         toast({
                             title: "Successfully updated workspace name",
@@ -109,6 +136,10 @@ const SettingsForm = () => {
             }, 500)
     }
 
+    /**
+     * @handler onChangeWorkspaceLogo
+     * Facilitates file selection and upload for workspace branding.
+     */
     const onChangeWorkspaceLogo = async(e: React.ChangeEvent<HTMLInputElement>) => {
         if(!currentWorkspace) return
 
@@ -128,7 +159,7 @@ const SettingsForm = () => {
             }else{
                 const workspace = response.data
                 if(workspace){
-                    const transformedWorkspace = transformWorkspace(workspace)
+                    const transformedWorkspace = transformWorkspace(workspace as MongooseWorkSpace)
                         dispatch(UPDATE_WORKSPACE(transformedWorkspace))
                     toast({
                         title: "Successfully updated the workspace logo",
@@ -147,8 +178,13 @@ const SettingsForm = () => {
 
     } 
 
-
-    // onClicks
+    /**
+     * @handler onDeleteWorkspaceClick
+     * Handles the complex logic of workspace removal:
+     * 1. API deletion call.
+     * 2. Calculation of the next available workspace for redirection.
+     * 3. Fallback routing to dashboard root if no workspaces remain.
+     */
     const onDeleteWorkspaceClick = async () => {
         if(!currentWorkspace || !currentWorkspace._id) {
             toast({
@@ -159,8 +195,8 @@ const SettingsForm = () => {
             return;
         }
         await handleDeleteWorkspace();
-        const remainingWorkspaces = allWorkspacesArray.filter(
-            (workspace: WorkSpace) => workspace._id !== currentWorkspace._id
+        const remainingWorkspaces = workspaces.filter(
+            (workspace: ReduxWorkSpace) => workspace._id !== currentWorkspace._id
         )
 
         if(remainingWorkspaces.length > 0){
@@ -176,13 +212,13 @@ const SettingsForm = () => {
 
     }
 
-    // get workspace details
-
-    // 
-
+   /**
+     * @handler deleteAccount
+     * Permanent user account deletion. Clears remote data and local session.
+     */
     const deleteAccount = async () => {
         try {
-            const response = await axios.delete(`/api/delete-account?userId=${user?._id}`)
+            const response = await axios.delete(`/api/delete-account?userId=${userId}`)
     
             if(!response.data.success){
                     console.log("Error while deleting user account", response.data.message)
@@ -212,7 +248,8 @@ const SettingsForm = () => {
     
     return (
     <div className="flex gap-4 flex-col">
-        {hasWorkspaces && (
+        {/* Workspace Settings Section */}
+        {workspaces && (
             <div>
                 <p className="flex items-center gap-2 mt-6">
             <Briefcase 
@@ -249,6 +286,7 @@ const SettingsForm = () => {
             disabled={uploadingLogo}
             />
         </div>
+        {/* Dangerous Action Area */}
         <Alert variant={'destructive'}>
             <AlertDescription>
                 Warning! Deleting your workspace will permanantly delete all data related to this workspace.
@@ -265,6 +303,8 @@ const SettingsForm = () => {
         </Alert>
             </div>
         )}
+
+        {/* Profile Settings Section */}
         <p className="flex items-center gap-2 mt-6">
             <User size={20}/> Profile
         </p>

@@ -1,56 +1,92 @@
-    /**
-     * This component is used to view a flashcard set
-     */
-    "use client";
+/**
+ * @component FlashcardSetViewerSheet
+ * @description A high-fidelity study interface for reviewing flashcards within a slide-over Sheet.
+ * * * Core Technical Features:
+ * - SRS Logic: Implements automated progress tracking (New, Due, Completed) using useMemo 
+ * to categorize cards based on Spaced Repetition due dates.
+ * - Dynamic Regeneration: Integrated with an AI-backend to refresh/regenerate outdated 
+ * card sets when the source resource (notes/folder) changes.
+ * - State Synchronization: Orchestrates Redux updates across multiple slices 
+ * (flashcardSlice and flashcardSetSlice) to ensure UI consistency.
+ * - UX/Accessibility: Uses Radix-UI primitives (Sheet, VisuallyHidden) for 
+ * screen-reader compliance and smooth transitions.
+ */
+"use client";
 
-    import { useFlashcardSetDetails } from "@/hooks/flashcard/useFlashcardSetDetails";
-    import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
-    import FlashcardSetHeader from "./viewer/flashcard-set-header";
-    import FlashcardStudyCard from "./viewer/flashcard-study-card";
-    import FlashcardProgressList from "./viewer/flashcard-progress-list";
-    import { useState } from "react";
-    import FlashcardLoading from "../ui/flashcard-loading";
-    import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-    import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-    import { useDispatch, useSelector } from "react-redux";
-    import { RootState } from "@/store/store";
-    import { deleteFlashcardSetService } from "@/services/flashcardServices";
-    import { useFlashcardGenerator } from "@/hooks/flashcard/useFlashcardGenerator";
-    import { useFlashcardSet } from "@/hooks/flashcard/useFlashcardSet";
+import { useFlashcardSetDetails } from "@/hooks/flashcard/useFlashcardSetDetails";
+import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/sheet";
+import FlashcardSetHeader from "./viewer/flashcard-set-header";
+import FlashcardStudyCard from "./viewer/flashcard-study-card";
+import FlashcardProgressList from "./viewer/flashcard-progress-list";
+import { useMemo, useState } from "react";
+import FlashcardLoading from "../ui/flashcard-loading";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
+import { useFlashcardSet } from "@/hooks/flashcard/useFlashcardSet";
 import { setFlashcardsForSet } from "@/store/slices/flashcardSlice";
 import { updateSingleSet } from "@/store/slices/flashcardSetSlice";
 
-        interface FlashcardSetViewerSheetProps{
-            setId: string;
-        }
-        const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({ 
-            setId
-        }) => {
+interface FlashcardSetViewerSheetProps{
+    setId: string;
+}
 
-            const [ activeIndex, setActiveIndex ] = useState(0);
-            // const [ regenerate, setRegenerate ] = useState(false);
-            const EMPTY: any[] = [];
-            const cards = useSelector((state: RootState) => {
-                const map = state.flashcard.cardsBySet;
-                return map && map[setId] ? map[setId] : EMPTY;
+const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({ 
+    setId
+}) => {
+        const dispatch = useDispatch();
+        const [ activeIndex, setActiveIndex ] = useState(0);
+        
+        const EMPTY: any[] = [];
+
+        // --- State Selection ---
+        // Accesses cards from a normalized map in Redux to ensure O(1) lookup performance
+        const cards = useSelector((state: RootState) => {
+            const map = state.flashcard.cardsBySet;
+            return map && map[setId] ? map[setId] : EMPTY;
             });
-            const set = useSelector((state: RootState) => state.flashcardSet.sets.find((s) => s._id === setId));
 
+        const set = useSelector((state: RootState) => state.flashcardSet.sets.find((s) => s._id === setId));
+        
+        /**
+         * @memoized stats
+         * Calculates flashcard categories (New, Due, Completed) based on SRS metadata.
+         * Prevents expensive re-calculations on every render unless the cards array changes.
+         */
+        const stats = useMemo(() => {
+            return cards.reduce((acc,card) => {
+                const dueDate = card.progress?.dueDate;
+                if(!dueDate){
+                    acc.new++;
+                }else{
+                    const isDue = new Date(dueDate) <= new Date();
+                    if(isDue) acc.due++;
+                    else acc.completed++;
+                }
+                return acc;
+            }, { new: 0, due: 0, completed: 0});
+        },[cards]);
+        
+        const isSessionFinished = activeIndex >= cards.length && cards.length > 0;
+
+        const todoCount = stats.new + stats.due;
+
+        // --- Custom Hooks for Business Logic ---
             const {
                 loading,
                 setLoading,
             } = useFlashcardSetDetails(setId);
 
-            const dispatch = useDispatch();
+            
             const {
                 regenerating,
                 regenerateFlashcardSet
             } = useFlashcardSet(set?.workspaceId!);
+
+            // --- Navigation Handlers ---
             const goNext = () => {
-                setActiveIndex((prev) => {
-                    if(prev < cards.length -1) return prev + 1;
-                    return prev;
-                });
+                setActiveIndex((prev) => prev+1);
             }
 
             const goPrev = () => {
@@ -59,21 +95,16 @@ import { updateSingleSet } from "@/store/slices/flashcardSetSlice";
                     return prev;
                 });
             }
-            console.log("[flashcard-set-viewer-sheet] set: ",set);
-
+            
+            /**
+             * @handler handleRegenerateFlashcardSet
+             * Triggers an AI-driven regeneration of the set. 
+             * Resets study progress and synchronizes the local Redux store with new data.
+             */
             const handleRegenerateFlashcardSet = async () => {
                 if(!set) return;
                 setLoading(true)
                 try {
-                    const payload = {
-                        workspaceId: set.workspaceId,
-                        folderId: set.folderId,
-                        resourceId: set.resourceId,
-                        resourceType: set.resourceType,
-                        cardCount: set.totalCards,
-                        desiredTypes: set.desiredTypes
-                    }
-                    
                     const newFlashcardSet = await regenerateFlashcardSet(set._id);
                     if(!newFlashcardSet){
                         console.warn("[FlashcardSetViewerSheet] Error regenerating flashcard set", newFlashcardSet);
@@ -101,6 +132,8 @@ import { updateSingleSet } from "@/store/slices/flashcardSetSlice";
                     setLoading(false);
                 }
             }
+
+            // --- Conditional Rendering: Loading & Empty States ---
             if(loading){
                 return(
                     <SheetContent className="w-full !max-w-[800px]">
@@ -141,11 +174,33 @@ import { updateSingleSet } from "@/store/slices/flashcardSetSlice";
                                 Regenerate Set
                             </button>}
                         </SheetTitle>
-                        
+                        {/* SRS Progress Dashboard */}
+                        <div className="flex items-center gap-4 px-4 py-2 bg-gray-900/30 border-b border-gray-800">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                <span className="text-[11px] font-bold text-gray-400">
+                                    NEW: {stats.new}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                                <span className="text-[11px] font-bold text-gray-400">
+                                    DUE: {stats.due}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-2 h-2 rounded-full bg-green-500" />
+                                <span className="text-[11px] font-bold text-gray-400">
+                                    DONE: {stats.completed}
+                                </span>
+                            </div>
+                        </div>
                     <VisuallyHidden>
                         <SheetDescription></SheetDescription>
                     </VisuallyHidden>
                     </SheetHeader>
+
+                    {/* Outdated Content Alert */}
                     {set?.isOutdated && (
                         <div className="mt-2 px-3 py-2 rounded bg-yellow-900/50 border border-yellow-300
                         text-yellow-300 text-sm font-semibold flex justify-between items-center">
@@ -154,32 +209,48 @@ import { updateSingleSet } from "@/store/slices/flashcardSetSlice";
                         </div>
                     )}
                     
+                    {/* Main Study Area */}
                     <div className="flex-1 overflow-y-auto px-2">
-                    <div className="flex items-center justify-center gap-3 mt-8 w-full mx-auto">
-                    <button
-                    onClick={goPrev}
-                    disabled={activeIndex === 0}
-                    className={`flex items-center justify-center p-2 rounded-full border border-gray-300 hover:bg-gray-100
-                        disabled:opacity-40 disabled:hover:bg-transparent h-[30px]`}
-                    >
-                        <ChevronLeft size={20}/>
-                    </button>
-                        <FlashcardStudyCard 
-                        card={cards[activeIndex]}
-                        index={activeIndex}
-                        total={cards.length}
-                        onNext={goNext}
-                        />
-                        <button
-                        disabled={activeIndex === cards.length -1 }
-                        onClick={goNext}
-                    className={`flex items-center justify-center p-2 rounded-full border border-gray-300 hover:bg-gray-100
-                        disabled:opacity-40 disabled:hover:bg-transparent h-[30px]`}
-                    >
-                        <ChevronRight size={20}/>
-                    </button>
+                        {isSessionFinished ? (
+                            <div className={`flex flex-col items-center justify-center h-full gap-4`}>
+                                <h2 className="text-2xl font-bold">Session Complete! 🎉</h2>
+                                <p>You&apos;ve reviewed all cards in this set for today.</p>
+                                <button
+                                onClick={() => setActiveIndex(0)}
+                                >
+                                    Review Again
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center gap-3 mt-8 w-full mx-auto">
+                                <button
+                                onClick={goPrev}
+                                disabled={activeIndex === 0}
+                                className={`flex items-center justify-center p-2 rounded-full border border-gray-300 hover:bg-gray-100
+                                    disabled:opacity-40 disabled:hover:bg-transparent h-[30px]`}
+                                >
+                                    <ChevronLeft size={20}/>
+                                </button>
+                                    <FlashcardStudyCard 
+                                    card={cards[activeIndex]}
+                                    index={activeIndex}
+                                    total={cards.length}
+                                    onNext={goNext}
+                                    />
+                                    <button
+                                    disabled={activeIndex === cards.length -1 }
+                                    onClick={goNext}
+                                className={`flex items-center justify-center p-2 rounded-full border border-gray-300 hover:bg-gray-100
+                                    disabled:opacity-40 disabled:hover:bg-transparent h-[30px]`}
+                                >
+                                    <ChevronRight size={20}/>
+                                </button>
+                                </div>
+                        )}
+                    
                     </div>
-                    </div>
+
+                    {/* Footer Navigation: Progress Overview */}
                     <div className="border-t border-gray-700 py-3 bg-background">
                         <FlashcardProgressList 
                         setId={setId}
