@@ -28,6 +28,6 @@
      "**/*.tsx", 
      ".next/types/**/*.ts",
      "types"
-  ],
+, "scripts/migrate-user-avatar.ts"  ],
   "exclude": ["node_modules"]
 }
