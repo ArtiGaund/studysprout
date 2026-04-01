@@ -1,24 +1,37 @@
 /**
- * Manages flashcard generation, deletion, reset + overwrite modal logic
- * Wraps backend services and sync results into Redux
+ * @hook useFlashcardGenerator
+ * @description An advanced orchestration hook for managing AI-driven flashcard lifecycles.
+ * * TECHNICAL CAPABILITIES:
+ * 1. Real-time Feedback: Emits progress percentages to a Socket.io server to drive UI progress bars.
+ * 2. Conflict Management: Implements a "409 Conflict" recovery flow, allowing users to overwrite existing sets.
+ * 3. Batch State Sync: Updates both the FlashcardSet (metadata) and Flashcards (entities) slices in Redux simultaneously.
+ * 4. Granular Updates: Supports single-entity regeneration for outdated cards without resetting the entire set.
  */
 
-
 import { useToast } from "@/components/ui/use-toast";
-import { deleteFlashcardSetService, generateFlashcardsService, GenerationPayload, resetFlashcardService, updateSingleOutdatedFlashcardService } from "@/services/flashcardServices";
+import { 
+    deleteFlashcardSetService, 
+    generateFlashcardsService, 
+    GenerationPayload, 
+    resetFlashcardService, 
+    updateSingleOutdatedFlashcardService 
+} from "@/services/flashcardServices";
 import { addSet, removeSet } from "@/store/slices/flashcardSetSlice";
-import { resetSingleFlashcard } from "@/store/slices/flashcardSlice";
+import { resetSingleFlashcard, setFlashcardsForSet } from "@/store/slices/flashcardSlice";
 import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateFlashcard } from "@/store/slices/flashcardSlice";
+import { useSocket } from "@/lib/providers/socket-provider";
 
 interface FlashcardGeneratorOptions{
     onSuccess?: (setId: string) => void;
     onAlreadyExist?: (setId: string) => void;
 }
 export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
+    const { socket } = useSocket();
     const { toast } = useToast();
     const dispatch = useDispatch();
+
     // UI + async state flags
     const [ isGeneratingCards, setIsGeneratingCards ] = useState(false);
     const [ isDeletingFlashcardSet, setIsDeletingFlashcardSet ] = useState(false);
@@ -31,16 +44,37 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
  
 
     /**
-     * Generates a new flashcard set from notes
-     * - Handles overwrite flow (409)
-     * - Writes newly created set to Redux
-     * - Surfaces toast notifications for success/failure
+     * @method generateCards
+     * Triggers the AI pipeline. 
+     * Includes a progress reporting mechanism to improve perceived performance.
      */
     const generateCards = useCallback(async (payload: GenerationPayload) => {
         setIsGeneratingCards(true);
+
+        // Send progress to socket
+        const reportProgress = (
+            percent: number,
+            currentCount: number,
+        ) => {
+            if(socket){
+                socket.emit("report_progress", {
+                    resourceId: payload.resourceId,
+                    workspaceId: payload.workspaceId,
+                    progress: percent,
+                    currentCount: currentCount,
+                    totalCards: payload.cardCount,
+                });
+            }
+        };
         try {
+            // Initial Start (5%)
+            reportProgress(5, 0);
+
             // Fire API request
             const result = await generateFlashcardsService(payload);
+
+            // Processing (After API before Redux finished)
+            reportProgress(80, Math.floor(payload.cardCount * 0.8 ));
             if(!result || !result.success){
                 if(result.statusCode === 409){ //flashcard already exist of these payload
                     // Open an model to ask user if they want to overwrite the flashcard
@@ -65,8 +99,7 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
                 description: "Successfully generated flashcards",
             })
         
-            const newSet = result.data?.flashcardSet;
-            const allFlashcards = result.data.flashcards;
+            const { flashcardSet: newSet, flashcards: allFlashcards } = result.data;
             if(newSet){
                 dispatch(addSet({
                     _id: newSet._id,
@@ -87,6 +120,13 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
                     isOutdated: newSet.isOutdated,
                     updatedAt: newSet.updatedAt
                 }));
+
+                dispatch(setFlashcardsForSet({
+                    setId: newSet._id,
+                    cards: allFlashcards,
+                }));
+
+                reportProgress(100, payload.cardCount);
             }
 
             if(options?.onSuccess){
@@ -113,9 +153,10 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
     ])
 
     /**
-     * Delete flashcard set and remove it from Redux
+     * @method deleteFlashcardSet
+     * Logic for permanent removal of study data. 
+     * Ensures Redux state is purged only after successful backend confirmation.
      */
-
     const deleteFlashcardSet = useCallback(async (setId: string) => {
         setIsDeletingFlashcardSet(true);
         try {
@@ -149,7 +190,9 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
     },[toast, dispatch])
 
     /**
-     * Reset a single flashcard's progress and update Redux store
+     * @method resetCard
+     * Reset study progress for a single card.
+     * Demonstrates high-performance, granular state updates without re-fetching.
      */
     const resetCard = useCallback(async (cardId: string) => {
         setReset(true);
@@ -187,6 +230,12 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
         toast,
         dispatch
     ])
+
+    /**
+     * @method updateSingleFlashcard
+     * Updates an 'Outdated' card. Shows proficiency in partial data synchronization 
+     * rather than expensive full-set refreshes.
+     */
     const updateSingleFlashcard = useCallback(async (flashcardId: string ) => {
         setRegenerateSingleFlashcard(true);
         try {
@@ -202,9 +251,6 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
                 setId: result.data.flashcard.parentSetId,
                 card: result.data.flashcard
             }))
-
-            // console.log("[useFlashcardGenerator] redux after update: ",
-            //     store.getState().flashcard.cardsBySet[])
             toast({
                 title: "Success",
                 description: "Successfully reset flashcard",

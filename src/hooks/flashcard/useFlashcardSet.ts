@@ -1,14 +1,18 @@
 /**
- * Manages flashcard set fetching
- * 
- * Wraps backend services and sync results into Redux
+ * @hook useFlashcardSet
+ * @description A specialized data-fetching hook for retrieving and refreshing Flashcard Sets.
+ * * CORE ARCHITECTURAL PATTERNS:
+ * 1. Automatic Hydration: Triggers an initial fetch via `useEffect` bound to the `workspaceId`.
+ * 2. Deduplication Logic: Uses `hasFetchedRef` to prevent redundant API calls during component re-renders.
+ * 3. Atomic Refresh: The `regenerateFlashcardSet` method demonstrates how to update specific 
+ * metadata (like `isOutdated`) while simultaneously refreshing the card entities.
+ * 4. Force-Refresh Capability: Provides a `forceRefresh` flag to bypass local cache when necessary.
  */
-
 import { useToast } from "@/components/ui/use-toast";
 import { getFlashcardSetService, regenerateFlashcardSetService } from "@/services/flashcardSetServices";
-import { addSet, removeSet, setFlashcardSets, updateSingleSet } from "@/store/slices/flashcardSetSlice";
+import { setFlashcardSets, updateSingleSet } from "@/store/slices/flashcardSetSlice";
 import { setFlashcardsForSet } from "@/store/slices/flashcardSlice";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 
 
@@ -16,39 +20,59 @@ export function useFlashcardSet(workspaceId: string){
     const [ loading, setLoading ] = useState(false);
     const [ regenerating, setRegenerating ] = useState(false);
 
+    /**
+     * @property hasFetchedRef
+     * Tracks the last successfully fetched ID to prevent 
+     * infinite fetch loops and unnecessary network load.
+     */
+    const hasFetchedRef = useRef<string | null>(null);
+
     const { toast } = useToast();
    
     const dispatch = useDispatch();
-    useEffect(() => {
-        if(!workspaceId){
-            console.log("[useFlashcardSet] workspaceId not provided, useEffect returned early.");
-            return;
-        }
 
-        const fetchSets = async () => {
-            setLoading(true);
-            try {
-                const response = await getFlashcardSetService(workspaceId);
-                // setSets(response);
-                dispatch(setFlashcardSets(response));
-            } catch (error) {
-                console.warn("[useFlashcardSet] Error fetching flashcard sets: ",error);
-            }finally{
-                setLoading(false);
-            }
+    /**
+     * @method getFlashcardSets
+     * Retrieves all sets for a given context (Workspace or Folder).
+     * Implements basic client-side memoization via Ref.
+     */
+    const getFlashcardSets = useCallback(async (
+        id: string,
+        forceRefresh = false, 
+    ) => {
+        if(!id) return;
+
+        // Check if forceRefresh is true
+        if(!forceRefresh && hasFetchedRef.current === id) return;
+
+        // if(hasFetchedRef.current === id) return;
+        setLoading(true);
+       
+        try {
+            const response = await getFlashcardSetService(id);
+            dispatch(setFlashcardSets(response));
+             hasFetchedRef.current = id;
+        } catch (error) {   
+            console.warn("[useFlashcardSet] [getFlashcardSets] Error fetching flashcard sets: ",
+                error
+            );
+        }finally{
+            setLoading(false);
         }
-        fetchSets();
     },[
-        workspaceId,
         dispatch
     ])
     
-
+    /**
+     * @method regenerateFlashcardSet
+     * Handles the "Full Set Update" logic. Useful when the source notes change 
+     * and the entire set needs to be re-synced with the AI service.
+     */
     const regenerateFlashcardSet = useCallback(async (setId: string) => {
         setRegenerating(true);
         try {
             const response = await regenerateFlashcardSetService(setId);
-            if(!response){
+            if(!response || !response.success){
                 toast({
                     title: "Regenerating Flashcard set failed",
                     description: response.message,
@@ -56,14 +80,15 @@ export function useFlashcardSet(workspaceId: string){
                 });
                 return;
             }
-            const newSet = response.data?.flashcardSet;
-            if(newSet){
-                dispatch(updateSingleSet(newSet));
+            const { flashcardSet, flashcards} = response.data;
+                dispatch(updateSingleSet({
+                    ...flashcardSet,
+                    isOutdated: false,
+                }));
                 dispatch(setFlashcardsForSet({
-                    setId: newSet._id,
-                    cards: newSet.flashcards
-                }))
-            }
+                   setId: flashcardSet._id,
+                   cards: flashcards,
+                }));
                        toast({
                            title: "Regenerate Flashcard set successful",
                            description: "Successful"
@@ -79,9 +104,21 @@ export function useFlashcardSet(workspaceId: string){
         toast
     ])
 
+    /**
+     * @effect Auto-Hydration
+     * Triggers whenever the workspace context changes, ensuring the user 
+     * always sees relevant data.
+     */
+    useEffect(() => {
+        getFlashcardSets(workspaceId);
+    },[
+        workspaceId,
+        getFlashcardSets,
+    ])
     return {
         loading,
         regenerating,
         regenerateFlashcardSet,
+        getFlashcardSets,
     }
 }
