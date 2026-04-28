@@ -2,10 +2,12 @@
 
 import { Github, Globe, Heart, Terminal } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { ContactModal } from "./Contact-Modal";
 
 export const Footer = () => {
-    const currentYear = new Date().getFullYear();
-
+    const [ isContactOpen, setIsContactOpen ] = useState(false);
+    
     return(
         <footer className="w-full bg-[#050A0A] border-t border-white/5 py-12 px-6 relative
         overflow-hidden">
@@ -62,6 +64,12 @@ export const Footer = () => {
                             href={link.href}
                             className="text-sm text-gray-400 hover:text-[#63FF9D] transition-colors
                             flex items-center gap-2 group"
+                            onClick={(e) => {
+                                if(link.name === "Contact Us"){
+                                    e.preventDefault();
+                                    setIsContactOpen(true);
+                                }
+                            }}
                             >
                                 {link.icon && <span className="text-gray-600 group-hover:text-[#63FF9D]
                                 transition-colors">
@@ -70,7 +78,12 @@ export const Footer = () => {
                             </Link>
                         ))}
                     </nav>
-
+                    
+                    <ContactModal 
+                    isOpen={isContactOpen}
+                    onClose={() => setIsContactOpen(false)}
+                    />
+                    
                     {/* Quick Action / Status */}
                     <div className="flex items-center gap-4">
                         <div className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400
