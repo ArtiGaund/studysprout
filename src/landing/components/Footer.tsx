@@ -32,8 +32,16 @@ export const Footer = () => {
                             Cultivating knowledge through surgical deconvolution and 
                             active recall.
                         </p>
-                        <div className="text-xs text-gray-600 font-mono">
-                            © {currentYear} StudySprout. All rights reserved.
+                        <div className="text-xs text-gray-600 font-mono relative z-[20]">
+                            © {new Date().getFullYear()} StudySprout. Engineering by{" "}
+                            <a
+                            href={process.env.NEXT_PUBLIC_LINKEDIN_PROFILE} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-400 hover:text-[#63FF9D] transition-colors cursor-pointer pointer-events-auto"
+                            >
+                                Arti Gaund
+                            </a>
                         </div>
                     </div>
 
@@ -43,7 +51,11 @@ export const Footer = () => {
                             { name: "Privacy Policy", href: "#" },
                             { name: "Terms of Service", href: "#"},
                             { name: "Contact Us", href: "#" },
-                            { name: "GitHub", href: "#", icon: <Github size={14}/>}
+                            { 
+                                name: "GitHub", 
+                                href: process.env.NEXT_PUBLIC_GITHUB_PROJECT_LINK || "#", 
+                                icon: <Github size={14}/>
+                            }
                         ].map((link) => (
                             <Link
                             key={link.name}
