@@ -15,6 +15,7 @@ interface SidebarViewProps{
     addFile: (id: string) => void;
     onViewChange: (viewId: string) => void; 
     deleteOperation: (id: string) => void;
+    onRecordInteraction: () => void;
 }
 
 export const SidebarView = ({
@@ -28,6 +29,7 @@ export const SidebarView = ({
     addFile,
     onViewChange,
     deleteOperation,
+    onRecordInteraction,
 }: SidebarViewProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -40,9 +42,9 @@ export const SidebarView = ({
     },[editingId]);
 
     return(
-        <div className="w-64 border-r border-white/5 flex flex-col bg-[#080C0C] h-full">
+        <div className="w-64 border-r border-white/5 flex flex-col bg-[#080C0C] h-full overflow-hidden">
             {/* Top: Brand/Workspace Info */}
-            <div className="p-4 border-b border-white/5">
+            <div className="flex-shrink-0 p-4 border-b border-white/5">
                 <div className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.03] border
                 border-white/5">
                     <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center
@@ -61,7 +63,7 @@ export const SidebarView = ({
             </div>
 
             {/* Global Navigation */}
-            <div className="p-4 space-y-1 border-b border-white/5">
+            <div className="flex-shrink-0 p-4 space-y-1 border-b border-white/5">
                 {[
                     {
                         // id: "Search",
@@ -88,13 +90,14 @@ export const SidebarView = ({
                     <div
                     key={i}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
-                        cursor-pointer ${item.action 
+                        cursor-pointer ${(item as any).action 
                             ? 'bg-white/5 text-white'
                             : 'text-gray-500 hover:text-gray-300'
                         }`}
                     onClick={() => {
-                        if(item.id){
-                            onViewChange(item.id)
+                        if((item as any).id){
+                            onViewChange((item as any).id);
+                            onRecordInteraction();
                         }
                     }}
                     >
@@ -107,7 +110,7 @@ export const SidebarView = ({
             </div>
 
             {/* Scrollable Folders Section */}
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollable">
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollable min-h-0">
                 <div className="flex items-center justify-between mb-4 group px-2">
                     <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">
                         Public
@@ -129,7 +132,10 @@ export const SidebarView = ({
                         </button>
                         <button
                         id="guide-plus-btn"
-                        onClick={addFolder}
+                        onClick={() => {
+                            addFolder();
+                            onRecordInteraction();
+                        }}
                         className="text-gray-500 hover:text-[#63FF9D] transition-colors p-1
                         rounded-md"
                         >   
@@ -148,7 +154,10 @@ export const SidebarView = ({
                             <div className="flex items-center gap-2 group hover:bg-white/5 p-1.5
                             rounded-lg transition-all">
                                 <button
-                                onClick={() => toggleFolder(folder.id)}
+                                onClick={() => {
+                                    toggleFolder(folder.id);
+                                    onRecordInteraction();
+                                }}
                                 className="text-gray-700"
                                 >   
                                     {expandedFolders[folder.id]
@@ -171,7 +180,10 @@ export const SidebarView = ({
                                      onKeyDown={(e) => e.key === 'Enter' && setEditingId(null)}
                                     />
                                 : <span 
-                                    onDoubleClick={() => setEditingId(folder.id)}
+                                    onDoubleClick={() => {
+                                        setEditingId(folder.id);
+                                        onRecordInteraction();
+                                    }}
                                     className="text-[11px] text-gray-400 truncate flex-1 
                                     font-medium"
                                     >
@@ -191,6 +203,7 @@ export const SidebarView = ({
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             addFile(folder.id);
+                                            onRecordInteraction();
                                         }}
                                     />
                                     <Trash 
@@ -201,7 +214,10 @@ export const SidebarView = ({
                                             ? 'opacity-100' 
                                             : 'opacity-0 group-hover:opacity-100'
                                         }`}
-                                    onClick={() => deleteOperation(folder.id)}
+                                    onClick={() =>{ 
+                                        deleteOperation(folder.id)
+                                        onRecordInteraction();
+                                    }}
                                     />
                                 </div>
                             </div>
@@ -236,7 +252,10 @@ export const SidebarView = ({
                                             : <span 
                                             className="text-[11px] text-gray-600 truncate
                                              font-medium"
-                                            onDoubleClick={() => setEditingId(file.id)}
+                                            onDoubleClick={() => {
+                                                setEditingId(file.id);
+                                                onRecordInteraction();
+                                            }}
                                             >
                                                 {file.name}
                                                 </span>
@@ -245,7 +264,10 @@ export const SidebarView = ({
                                             <Trash 
                                             size={12}
                                             className="text-gray-400 flex justify-end"
-                                            onClick={() => deleteOperation(file.id)}
+                                            onClick={() => {
+                                                deleteOperation(file.id);
+                                                onRecordInteraction();
+                                            }}
                                             />
                                         </div>
                                     ))}
@@ -257,7 +279,7 @@ export const SidebarView = ({
             </div>
 
             {/* Footer Profile */}
-            <div className="p-4 border-t border-white/5 bg-white/[0.01]">
+            <div className="flex-shrink-0 p-4 border-t border-white/5 bg-white/[0.01] z-10">
                 <div className="flex items-center gap-3 px-3 py-2 rounded-xl border
                  border-white/5
                 bg-[#050A0A]">

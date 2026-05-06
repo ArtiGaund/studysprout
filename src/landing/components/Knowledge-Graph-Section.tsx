@@ -17,12 +17,15 @@ export const KnowledgeGraphSection = () => {
     return (
         <section
         id="ecosystem"
-         className="py-32 px-6 bg-[#050A0A] relative overflow-hidden"
+         className="py-16 md:py-32 px-4 sm:px-6 lg:px-8 bg-[#050A0A] relative overflow-hidden"
          >
-            <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12
+            lg:gap-16 items-center">
                 
-                <div className="relative aspect-square max-w-xl mx-auto w-full bg-[#080C0C]
-                 rounded-[40px] border border-white/5 shadow-2xl overflow-hidden">
+                {/*Visual Graph Container  */}
+                <div className="relative aspect-square max-w-[90vw] sm:max-w-xl mx-auto w-full
+                 bg-[#080C0C] rounded-[30px] order-last lg:order-first
+                 md:rounded-[40px] border border-white/5 shadow-2xl overflow-hidden">
                     
                     {/* SVG Path: Coordinates updated to match node y-values */}
                     <svg viewBox="0 0 500 500" className="absolute inset-0 w-full h-full z-0">
@@ -53,13 +56,13 @@ export const KnowledgeGraphSection = () => {
                                     <div className={`absolute inset-0 rounded-full ${node.color}
                                      opacity-20 animate-[pulse-ring_3s_ease-out_infinite] 
                                      scale-[2.5]`} />
-                                    <div className={`w-4 h-4 rounded-full ${node.color} 
-                                    shadow-[0_0_20px_rgba(255,255,255,0.2)] border-2
-                                     border-white/20`} />
-                                    <div className={`absolute top-8 left-1/2 -translate-x-1/2 
-                                        px-3 py-1 rounded-lg bg-[#0D1414] border
-                                         border-white/10 text-[10px] font-black text-white 
-                                         transition-all whitespace-nowrap 
+                                    <div className={`w-3 h-3 md:w-4 md:h-4 rounded-full 
+                                    ${node.color} shadow-[0_0_20px_rgba(255,255,255,0.2)] 
+                                    border-2 border-white/20`} />
+                                    <div className={`absolute top-6 md:top-8 left-1/2 -translate-x-1/2 
+                                        px-2 md:px-3 py-1 rounded-lg bg-[#0D1414] border
+                                         border-white/10 text-[8px] md:text-[10px] font-black
+                                          text-white transition-all whitespace-nowrap 
                                          ${hoveredNode === node.id 
                                          ? 'scale-110 opacity-100 border-[#63FF9D]/50 shadow-[0_0_15px_rgba(99,255,157,0.3)]' 
                                          : 'opacity-60 scale-90'}`}>
@@ -71,16 +74,17 @@ export const KnowledgeGraphSection = () => {
                     </div>
 
                     {/* Context Card */}
-                    <div className="absolute bottom-8 left-8 right-8 p-6 rounded-3xl
-                     bg-[#0D1414]/90 border border-white/5 backdrop-blur-xl z-20">
+                    <div className="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 
+                    md:right-8 p-4 md:p-6 rounded-2xl md:rounded-3xl bg-[#0D1414]/90 border
+                     border-white/5 backdrop-blur-xl z-20">
                         <div className="flex items-center gap-2 mb-2">
                             <Target size={14} className="text-[#63FF9D]" />
-                            <span className="text-[10px] font-black text-white uppercase 
-                            tracking-widest">
+                            <span className="text-[9px] md:text-[10px] font-black text-white 
+                            uppercase tracking-widest">
                                 Neural Mapping
                             </span>
                         </div>
-                        <p className="text-xs text-gray-400 leading-relaxed">
+                        <p className="text-[10px] md:text-xs text-gray-400 leading-relaxed">
                             {hoveredNode === 'trans' 
                                 ? "Critical path detected: 'Transformers' relies on 'Attention' and 'Linear Algebra' foundations."
                                 : "The graph visualizes your cognitive dependencies. StudySprout's AI maps prerequisites as you build your second brain."}
@@ -88,52 +92,56 @@ export const KnowledgeGraphSection = () => {
                     </div>
                 </div>
 
-                <div className="space-y-12 text-left">
+                {/* Text Content */}
+                <div className="space-y-8 md:space-y-12 text-center lg:text-left order-first
+                lg:order-last">
                     <div className="space-y-4">
                         <h3 className="text-[#63FF9D] font-mono text-[10px] uppercase 
                         tracking-[0.4em] opacity-80">
                             Knowledge Ecosystem
                         </h3>
-                        <h2 className="text-4xl lg:text-5xl font-extrabold text-white 
+                        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white 
                         leading-tight">
                             Your Mind, <br/>
                             <span className="text-[#63FF9D]">Digitally Orchestrated.</span>
                         </h2>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="flex gap-5 items-start p-6 rounded-3xl border 
-                        border-transparent hover:border-white/5 hover:bg-white/[0.02] 
+                    <div className="space-y-4 max-w-xl mx-auto lg:mx-0">
+                        <div className="flex gap-4 md:gap-5 items-start p-4 md:p-6 rounded-3xl 
+                        border border-transparent hover:border-white/5 hover:bg-white/[0.02] 
                         transition-all group">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex 
-                            items-center justify-center text-blue-400 border
-                             border-blue-500/20 group-hover:scale-110 transition-transform">
+                            <div className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-2xl
+                             bg-blue-500/10 flex items-center justify-center text-blue-400 
+                             border border-blue-500/20 group-hover:scale-110 
+                             transition-transform">
                                 <Share2 size={24} />
                             </div>
-                            <div>
-                                <h4 className="text-white font-bold text-lg mb-1">
+                            <div className="text-left">
+                                <h4 className="text-white font-bold text-base md:text-lg mb-1">
                                     Non-Linear Discovery
                                 </h4>
-                                <p className="text-sm text-gray-500 leading-relaxed">
+                                <p className="text-xs md:text-sm text-gray-500 leading-relaxed">
                                     Map connections across subjects, revealing how different
                                      domains influence your core research.
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex gap-5 items-start p-6 rounded-3xl border 
-                        border-transparent hover:border-white/5 hover:bg-white/[0.02] 
+                        <div className="flex gap-4 md:gap-5 items-start p-4 md:p-6 rounded-3xl 
+                        border border-transparent hover:border-white/5 hover:bg-white/[0.02] 
                         transition-all group">
-                            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex 
-                            items-center justify-center text-purple-400 border
-                             border-purple-500/20 group-hover:scale-110 transition-transform">
-                                <GitBranch size={24} />
+                            <div className="w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-2xl
+                             bg-purple-500/10 flex items-center justify-center
+                            text-purple-400 border border-purple-500/20 
+                            group-hover:scale-110 transition-transform">
+                                <GitBranch size={20} />
                             </div>
-                            <div>
-                                <h4 className="text-white font-bold text-lg mb-1">
+                            <div className="text-left">
+                                <h4 className="text-white font-bold text-base md:text-lg mb-1">
                                     Prerequisite Tracking
                                 </h4>
-                                <p className="text-sm text-gray-500 leading-relaxed">
+                                <p className="text-xs md:text-sm text-gray-500 leading-relaxed">
                                     Identify knowledge gaps and follow logical paths back to 
                                     foundational concepts.
                                 </p>

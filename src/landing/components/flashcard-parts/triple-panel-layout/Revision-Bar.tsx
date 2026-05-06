@@ -24,8 +24,8 @@ export const RevisionBar = ({
     activeHint,
 }: RevisionBarProps) => {
     return (
-        <div className="w-64 border-r border-white/5 bg-white/[0.01] p-6 flex flex-col gap-8
-         h-full">
+        <div className="w-48 lg:w-64 border-r border-white/5 bg-white/[0.01] p-4 lg:p-6 
+        flex flex-col gap-8 h-full overflow-y-auto">
             <div className="flex-none space-y-4">
                 <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
                     Revision Bar

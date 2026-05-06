@@ -49,13 +49,15 @@ export const WorkspaceShowcaseSection = () => {
     return (
         <section 
             id="workspaces-section"
-            className="scroll-mt-20 relative isolate py-32 px-6 overflow-hidden bg-[#050A0A]"
+            className="scroll-mt-20 relative isolate py-16 md:py-32 px-4 sm:px-6 lg:px-8
+            overflow-hidden bg-[#050A0A]"
         >
             {/* Background Texture and Lighting */}
-            <div className="absolute inset-0 -z-10">
+            <div className="absolute inset-0 -z-10 overflow-hidden">
                 <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                     w-[1000px] h-[600px] rounded-full blur-[140px] transition-all duration-100
-                     ${mode === 'private' ? 'bg-[#63FF9D]/15' : 'bg-purple-600/15'}`}
+                     w-[80vw] h-[40vh] max-w-[1000px] rounded-full blur-[100px] md:blur-[140px]
+                    transition-all duration-700
+                     ${mode === 'private' ? 'bg-[#63FF9D]/10' : 'bg-purple-600/10'}`}
                 />
                 <div className="absolute inset-0 opacity-[0.03]
                  [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)]
@@ -63,34 +65,38 @@ export const WorkspaceShowcaseSection = () => {
             </div>
 
             <div className="max-w-7xl mx-auto flex flex-col items-center">
-                <div className="text-center mb-16 space-y-4">
-                    <h3 className="text-[#63FF9D] font-mono text-xs uppercase tracking-[0.4em] 
-                    opacity-80">
+                <div className="text-center mb-12 md:mb-16 space-y-4 px-4">
+                    <h3 className="text-[#63FF9D] font-mono text-[10px] md:text-xs uppercase
+                     tracking-[0.4em] opacity-80">
                         Knowledge Management
                     </h3>
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold
+                     text-white leading-tight">
                         Cultivate Your <span className="text-[#63FF9D]">Digital Forest.</span>
                     </h2>
-                    <p className="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto">
+                    <p className="text-gray-400 text-sm sm:text-base md:text-lg 
+                    leading-relaxed max-w-2xl mx-auto">
                         Switch between high-security private vaults and collaborative public gardens. 
                         Decompose complex research into infinite nested architectures.
                     </p>
                 </div>
                 {/* Interactive Toggle */}
                 <div className="inline-flex items-center p-1 bg-white/5 border border-white/10 
-                    rounded-2xl mb-24 backdrop-blur-md">
+                    rounded-2xl mb-12 md:mb-24 backdrop-blur-md w-full sm:w-auto">
                     <button
                         onClick={() => setMode('private')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all
+                        className={`flex-1 sm:flex-none flex items-center gap-2 px-4 md:px-6 py-3
+                            rounded-xl text-xs md:text-sm font-bold transition-all
                             duration-300 ${ mode === 'private' 
                                 ? 'bg-[#63FF9D] text-black shadow-[0_0_20px_rgba(99,255,157,0.4)]' 
                                 : 'text-gray-400 hover:text-white'}`}
                     >   
-                        <Lock size={16}/> Private Vault
+                        <Lock size={14}/> Private Vault
                     </button>
                     <button
                         onClick={() => setMode('public')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all
+                        className={`flex-1 sm:flex-none flex items-center gap-2 px-4 md:px-6 py-3
+                            rounded-xl text-xs md:text-sm font-bold transition-all
                             duration-300 ${mode === 'public' 
                                 ? 'bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]' 
                                 : 'text-gray-400 hover:text-white'}`}
@@ -99,14 +105,16 @@ export const WorkspaceShowcaseSection = () => {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center w-full min-h-[450px]">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-24 items-start md:items-center
+                w-full">
                     {/* Left Side: Technical Monitor */}
-                    <div className="space-y-12 text-left transition-all duration-500">
+                    <div className="space-y-8 md:space-y-12 text-center lg:text-left 
+                    transition-all duration-500">
                         <div className="space-y-5">
                             <h3 className="text-[#63FF9D] font-mono text-xs uppercase tracking-[0.4em] opacity-80">
                                 {mode === 'private' ? 'Deep Focus' : 'Shared Intelligence'}
                             </h3>
-                            <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-[1.1]">
+                            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-[1.1]">
                                 { mode === 'private'
                                 ? <> A <span className="text-[#63FF9D]"> Sanctuary </span>for Your Second Brain.</>
                                 : <>A Common for <br /> <span className="text-purple-400">Collaborative</span> Growth.</>}
@@ -114,8 +122,9 @@ export const WorkspaceShowcaseSection = () => {
                         </div>
 
                         {/* BullMQ / Status Monitor Card */}
-                        <div className="relative group p-8 rounded-2xl border border-white/10 bg-white/[0.02]
-                        overflow-hidden max-w-lg">
+                        <div className="mx-auto lg:mx-0 relative group p-6 md:p-8 rounded-2xl 
+                        border border-white/10 bg-white/[0.02]
+                        overflow-hidden max-w-md lg:max-w-lg">
                             <div className="relative z-10 space-y-6">
                                 <div className="flex items-center gap-4">
                                     <div className={`p-3 rounded-xl transition-all duration-500
@@ -146,7 +155,7 @@ export const WorkspaceShowcaseSection = () => {
                         </div>
                         
                         {/* Nesting Stats */}
-                        <div className="flex gap-16 pt-4">
+                        <div className="flex justify-center lg:justify-start gap-8 md:gap-16 pt-4">
                             <div className="space-y-1">
                                 <div className="text-[10px] text-gray-500 uppercase tracking-[0.2rem] font-bold">Nesting</div>
                                 <div className="text-white font-bold text-2xl">Infinite</div>
@@ -160,9 +169,12 @@ export const WorkspaceShowcaseSection = () => {
                     </div>
 
                     {/* Right Side: Interactive 3D Hierarchy Visual */}
-                    <div className="relative group [perspective:2000px]">
-                        <div className="relative bg-[#080C0C] border border-white/10 rounded-2xl p-10 backdrop-blur-3xl shadow-2xl transition-all duration-700 
-                            [transform:rotateY(-10deg)rotateX(5deg)] group-hover:[transform:rotateY(0deg)rotateX(0deg)]">
+                    <div className="relative group [perspective:2000px] w-full max-w-lg mx-auto">
+                        <div className="relative bg-[#080C0C] border border-white/10 
+                        rounded-2xl p-6 md:p-10 backdrop-blur-3xl shadow-2xl transition-all 
+                        duration-700 md:[transform:rotateY(-10deg)rotateX(5deg)] 
+                        hover:[transform:rotateY(0deg)rotateX(0deg)]
+                        [transform:rotateY(0deg)rotateX(0deg)]">
 
                             <div className="flex items-center justify-between mb-10 pb-5 border-b border-white/5">
                                 <div className="flex items-center gap-3">

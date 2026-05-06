@@ -14,13 +14,15 @@ interface MainCanvasProps {
     addFolder: () => void;
     addFile: (id: string) => void;
     deleteOperation: (id: string) => void;
+    onRecordInteraction: () => void;
 }
 
 export const MainCanvas = ({ 
     nodes,
     addFolder,
     addFile,
-    deleteOperation, 
+    deleteOperation,
+    onRecordInteraction, 
 }: MainCanvasProps) => {
     const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -33,9 +35,10 @@ export const MainCanvas = ({
 
     return (
         <div className="flex-1 flex flex-col bg-[#050A0A] h-full overflow-hidden">
-            <BannerSection />
-
-            <div className="flex-1 p-10 overflow-y-auto custom-scrollbar">
+            <div className="flex-shrink-0 bg-[#050A0A]">
+                <BannerSection />
+            </div>
+            <div className="flex-1 p-10 overflow-y-auto min-h-0 custom-scrollbar">
                 {/* Header */}
                 <div className="flex items-center gap-4 border-b border-white/5 pb-6 mb-8">
                     <div className="w-12 h-12 rounded-xl bg-[#63FF9D]/10 flex items-center 
@@ -50,11 +53,15 @@ export const MainCanvas = ({
                 </div>
 
                 <div className="space-y-2">
-                    {rootFolders.map(folder => (
+                    {rootFolders.filter(node => node.type === 'folder' && !node.parentId)
+                    .map(folder => (
                         <div key={folder.id} className="space-y-1">
                             {/* FOLDER ROW */}
                             <div 
-                                onClick={() => toggleFolder(folder.id)}
+                                onClick={() => {
+                                    toggleFolder(folder.id)
+                                    onRecordInteraction();
+                                }}
                                 className="flex items-center justify-between p-4 rounded-xl 
                                 border border-white/5 bg-white/[0.02]
                                  hover:bg-white/[0.04] transition-all cursor-pointer group"
@@ -81,7 +88,8 @@ export const MainCanvas = ({
                                      text-gray-400 hover:text-[#63FF9D] transition-colors"
                                      onClick={(e) => {
                                         e.stopPropagation();
-                                        addFile(folder.id)
+                                        addFile(folder.id);
+                                        onRecordInteraction();
                                      }}
                                      >
                                         <Plus size={14} />
@@ -89,7 +97,10 @@ export const MainCanvas = ({
                                     <button 
                                     className="p-1.5 rounded-md hover:bg-red-500/10
                                      text-gray-400 hover:text-red-400 transition-colors"
-                                     onClick={() => deleteOperation(folder.id)}
+                                     onClick={() => {
+                                        deleteOperation(folder.id)
+                                        onRecordInteraction();
+                                     }}
                                      >
                                         <Trash2 size={14} />
                                     </button>
@@ -116,7 +127,10 @@ export const MainCanvas = ({
                                             className="opacity-0 group-hover:opacity-100 p-1.5 
                                             rounded-md hover:bg-red-500/10 text-gray-400
                                              hover:text-red-400 transition-all"
-                                             onClick={() => deleteOperation(file.id)}
+                                             onClick={() => {
+                                                deleteOperation(file.id);
+                                                onRecordInteraction();
+                                             }}
                                              >
                                                 <Trash2 size={14} />
                                             </button>

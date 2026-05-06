@@ -28,10 +28,10 @@ export const CustomForm = ({
     return (
         <div>
             {(view === 'customizing' || view === 'reviewing') && (
-                <div className="absolute top-0 right-0 h-full w-[440px] border-l
-                 border-white/10 bg-[#0D1414]/98 backdrop-blur-2xl z-50 animate-in 
-                 slide-in-from-right duration-500 shadow-[-20px_0_60px_rgba(0,0,0,0.5)] flex 
-                 flex-col">
+                <div className="absolute top-0 right-0 h-full w-full sm:w-[440px] border-l
+                border-white/10 bg-[#0D1414] backdrop-blur-none z-50 animate-in   {/* Remove /98 opacity, remove backdrop-blur */}
+                slide-in-from-right duration-500 shadow-[-20px_0_60px_rgba(0,0,0,0.5)] flex
+                flex-col">
                     <div className="p-7 border-b border-white/5 flex items-center
                      justify-between bg-white/[0.01]">
                         <div className="flex items-center gap-2">
@@ -51,7 +51,7 @@ export const CustomForm = ({
                         </button>
                     </div>
 
-                    <div className="flex-1 p-10 overflow-y-auto space-y-12 text-left">
+                    <div className="flex-1 p-5 sm:p-10 overflow-y-auto space-y-6 sm:space-y-12 text-left">
                         {view === 'customizing' ? (
                             <>
                                 <div className="space-y-4">

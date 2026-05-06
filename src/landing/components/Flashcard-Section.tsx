@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { CollapsedNavigation } from "./flashcard-parts/triple-panel-layout/Collapsed-Navigation";
-import { RevisionBar } from "./flashcard-parts/triple-panel-layout/Revision-Bar";
-import { EditorCanvas } from "./flashcard-parts/triple-panel-layout/editor-canvas";
-import { DescriptionPart } from "./flashcard-parts/description-part";
+import { Maximize2 } from "lucide-react";
+import { EditorContent, EditorContentProps } from "./flashcard-parts/editor-content";
+import { FullscreenPopup } from "./Dashboard-preview-parts/Fullscreen-Popup";
+import { CollapsedPreview } from "./Dashboard-preview-parts/Collapsed-Preview";
 
 export const FlashcardSection = () => {
     // UI View Management
@@ -30,6 +30,28 @@ export const FlashcardSection = () => {
     // User Selection States (Live)
     const [showLivePopup, setShowLivePopup] = useState(false);
     const docRef = useRef<HTMLDivElement>(null);
+
+    // Responsive fullscreen state
+    const [ isExpanded, setIsExpanded ] = useState(false);
+    const [ showCollapsed, setShowCollapsed ] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Detect whether we should show the collapsed preview or the full inline editor.
+    // Uses ResizeObserver on the container so it responds to any viewpoint width - not just
+    // the predefined breakpoints
+    useEffect(() => {
+        const check = () => {
+            if(containerRef.current){
+                // Below 1024 px (lg) the flex-row layout collapses and the editor becomes too
+                // cramped to interact with comfortably.
+                setShowCollapsed(containerRef.current.offsetWidth < 1024);
+            }
+        };
+        check();
+        const observer = new ResizeObserver(check);
+        if(containerRef.current) observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    },[]);
 
     // User selection interaction logic
     const handleTextSelection = useCallback(() => {
@@ -141,9 +163,34 @@ export const FlashcardSection = () => {
 
     const currentCards = activeSet ? flashcardSets[activeSet].data : [];
 
+    const editorProps: EditorContentProps = {
+        setHasNewFileSet,
+        setActiveSet,
+        setView,
+        activeSet,
+        hasNewFileSet,
+        hasCustomSet,
+        setHasCustomSet,
+        activeHint,
+        artiStatus,
+        isHighlightingSimulated,
+        showSimulationPopup,
+        showLivePopup,
+        setShowLivePopup,
+        view,
+        setIsFlipped,
+        isFlipped,
+        reviewIndex,
+        currentCards,
+        docRef,
+        setReviewIndex,
+        flashcardSets,
+    }
+
     return (
-        <section id="flashcard-section" className="scroll-mt-20 relative py-32 px-6
-         bg-[#050A0A] overflow-hidden">
+        <section 
+        id="flashcard-section" 
+        className="scroll-mt-20 relative py-32 px-6 bg-[#050A0A] overflow-hidden">
             {/* Aesthetic Background */}
             <div className="absolute inset-0 -z-10">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
@@ -169,64 +216,74 @@ export const FlashcardSection = () => {
                     </p>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-2 w-full">
-                {/* LEFT PART: Triple-Panel Layout */}
-                <div className="flex h-[740px] w-full lg:w-[70%] overflow-hidden rounded-3xl 
-                border border-white/10 bg-[#080C0C] shadow-2xl relative">
+                {/* 
+                    ---Editor container
+                    The container is measured by ResizeObserver.
+                    - >= 1024 px: full inline layout, no expand button.
+                    - < 1024 px: collapsed preview + expand button
+                */}
+                <div ref={containerRef} className="w-full">
                     
-                    {/* PANEL 1: Global Collapsed Navigation (Mimics Screenshot 1) */}
-                    <CollapsedNavigation />
+                    {showCollapsed ? (
+                        /*--- Small screen: hint badge + collapsed preview --- */
+                        <div className="flex flex-col items-center gap-4">
+                            {/* Hint badge */}
+                            <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/20
+                            rounded-full animate-bounce">
+                                <p className="text-purple-400 text-[10px] font-black uppercase
+                                tracking-widest">
+                                    Tap Expand to interact with the flashcard editor
+                                </p>
+                            </div>
 
-                    {/* PANEL 2: Revision Bar (Screenshot 1) */}
-                    <RevisionBar 
-                    setHasNewFileSet={setHasNewFileSet}
-                    setActiveSet={setActiveSet}
-                    setView={setView}
-                    activeSet={activeSet!}
-                    hasNewFileSet={hasNewFileSet}
-                    hasCustomSet={hasCustomSet}
-                    setHasCustomSet={setHasCustomSet}
-                    activeHint={activeHint}
-                    />
+                            {/* Card wrapper - same visual chrome as the large-screen card */}
+                            <div className="w-full rounded-3xl border border-white/10 
+                            bg-[#080C0C]/80 backdrop-blur-3xl shadow-2xl overflow-hidden">
+                                {/* Inner top bar */}
+                                <div className="flex items-center justify-between px-4 py-3
+                                border-b border-white/5">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-purple-400
+                                        animate-pulse"/>
+                                        <span className="text-white font-black uppercase
+                                        tracking-widest text-[10px]">
+                                            Flashcard Editor
+                                            <span className="text-gray-500 font-medium ml-2">
+                                                - Interactive Playground
+                                            </span>
+                                        </span>
+                                    </div>
+                                </div>
 
-                    {/* PANEL 3: Content Canvas & Editor Simulation (Screenshot 1) */}
-                   <EditorCanvas 
-                   artiStatus={artiStatus}
-                   isHighlightingSimulated={isHighlightingSimulated}
-                   showSimulationPopup={showSimulationPopup}
-                   showLivePopup={showLivePopup}
-                   setShowLivePopup={setShowLivePopup}
-                   view={view}
-                   setView={setView}
-                   setActiveSet={setActiveSet}
-                   setIsFlipped={setIsFlipped}
-                   isFlipped={isFlipped}
-                   reviewIndex={reviewIndex}
-                   activeSet={activeSet!}
-                    currentCards={currentCards}
-                    docRef={docRef}
-                    setReviewIndex={setReviewIndex}
-                    setHasCustomSet={setHasCustomSet}
-                    hasCustomSet={hasCustomSet} 
-                    activeHint={activeHint}
-                   />
-                </div>
-
-                {/* RIGHT PART: Description (30%) */}
-                    <DescriptionPart 
-                    view={view}
-                    setActiveSet={setActiveSet}
-                    setView={setView}
-                    flashcardSets={flashcardSets}
-                    currentCards={currentCards}
-                    reviewIndex={reviewIndex}
-                    isFlipped={isFlipped}
-                    setIsFlipped={setIsFlipped}
-                    activeSet={activeSet}
-                    activeHint={activeHint}
-                    />
+                                {/* Collapsed preview with ghost chrome */}
+                                <div className="p-1">
+                                    <CollapsedPreview 
+                                    onExpand={() => setIsExpanded(true)}
+                                    heading="Interactive Flashcard Editor"
+                                    subHeading=" Tap to launch full editor experience"
+                                    type="flashcard"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* --- Large screen: full inline editor --- */
+                        <EditorContent {...editorProps}/>
+                    )}
                 </div>
             </div>
+
+            {/* --- Fullscreen popup (portal -> always above navbar) */}
+            <FullscreenPopup 
+            isOpen={isExpanded}
+            onClose={() => setIsExpanded(false)}
+            sandboxContent={ <EditorContent {...editorProps} fillHeight={true}/>}
+            naturalWidth={1400}
+            naturalHeight={740}
+            type="flashcard"
+            />
+
+            {/*  */}
 
             <style jsx global>{`
                 ::selection { background: #63FF9D; color: #000; }

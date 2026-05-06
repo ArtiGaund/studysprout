@@ -1,9 +1,10 @@
 'use client';
 
 import { Briefcase, Folder, FileText, MousePointer2 } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SidebarView } from "./Dashboard-preview-parts/Sidebar-View";
 import { MainCanvas } from "./Dashboard-preview-parts/Main-Canvas";
+import { SandboxInner } from "./Dashboard-preview-parts/Sandbox-Inner";
 
 export interface Node {
     id: string;
@@ -12,7 +13,11 @@ export interface Node {
     parentId: string | null;
 }
 
-export const DashboardPreview = () => {
+interface DashboardPreviewProps{
+    isExpanded?: boolean;
+}
+
+export const DashboardPreview: React.FC<DashboardPreviewProps> = ({ isExpanded }) => {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -67,14 +72,14 @@ export const DashboardPreview = () => {
         
         // Control Items (Tooltip should be on the RIGHT of the pointer)
         { 
-            x: 193, 
-            y: 320, 
+            x: 183, 
+            y: 310, 
             text: "PDF Parser: Fracture documents into folders.", 
             action: 'highlightPdf', 
             delay: 3000 
         },
         { 
-            x: 225, 
+            x: 215, 
             y: 320, 
             text: "Create Folder: Architect your structure.", 
             action: 'addFolder', 
@@ -88,7 +93,7 @@ export const DashboardPreview = () => {
             delay: 4500 
         },
         { 
-            x: 210, 
+            x: 170, 
             y: 360, 
             text: "Create File: Deep dive into concepts.", 
             action: 'addFile', 
@@ -107,6 +112,12 @@ export const DashboardPreview = () => {
         lastInteraction.current = Date.now();
         setIsPaused(true);
     },[])
+
+    useEffect(() => {
+        window.dispatchEvent(new CustomEvent('sandbox-pause-change', {
+            detail: isPaused
+        }));
+    },[isPaused]);
   
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -367,131 +378,30 @@ export const DashboardPreview = () => {
         setNodes(prev => prev.filter(node => node.id !== id && node.parentId !== id));
     };
     return (
-        <div className="flex flex-col gap-4">
-            <div className="flex flex-col items-center mb-6 animate-bounce">
-                <div className="px-4 py-2 bg-[#63FF9D]/10 border border-[#63FF9D]/20
-                 rounded-full">
-                    <p className="text-[#63FF9D] text-[10px] font-black uppercase 
-                    tracking-widest">
-                        Move your pointer inside to take control & try it yourself
-                    </p>
-                </div>
-            </div>
-            {/* Sandbox Heading */}
-            <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-[#63FF9D] animate-pulse"/>
-                    <h3 className="text-white font-black uppercase tracking-widest text-xs">
-                        Studysprout Sandbox
-                        <span className="text-gray-500 font-medium ml-2">
-                            - Interactive Playground
-                        </span>
-                    </h3>
-                </div>
-
-                {/* Interactive Indicator */}
-                <div className={`text-[10px] font-bold transition-all duration-500
-                    ${isPaused 
-                        ? 'text-[#63FF9D] opacity-100'
-                        : 'text-gray-600 opacity-50'
-                    }`}>
-                    { isPaused 
-                        ? "MANUAL OVERRIDE ACTIVE"
-                        : "AI GUIDE RUNNING"
-                    }
-                </div>
-            </div>
-        <div 
-        ref={sandboxRef}
-        className="relative rounded-2xl border border-white/10 bg-[#080C0C]/80 
-        backdrop-blur-3xl p-1.5 shadow-2xl transition-all duration-1000 
-        [transform:rotateX(10deg)] hover:[transform:rotateX(0deg)]"
-        >
-            
-            <div 
-                className="absolute z-[190] pointer-events-none border border-[#63FF9D] 
-                rounded-lg transition-all duration-700 ease-in-out shadow-[0_0_15px_#63FF9D]"
-                style={{ 
-                    left: spotlightPos.x - 12, 
-                    top: spotlightPos.y - 12, // Adjusted for 24px height
-                    width: '30px',             // Solid base width
-                    height: '24px',            // Standard row height for sidebar items
-                    opacity: spotlightPos.opacity,
-                    transform: `scaleX(${spotlightPos.scale})`,
-                    transformOrigin: 'left center'
-                }}
+            <SandboxInner 
+            nodes={getOrderedNodes()}
+            expandedFolders={expandedFolders}
+            editingId={editingId}
+            pointerPos={pointerPos}
+            spotlightPos={spotlightPos}
+            contextText={contextText}
+            isPaused={isPaused}
+            isSidebarItem={isSidebarItem}
+            sandboxRef={sandboxRef}
+            onUpdateName={(id, name) => setNodes(prev => 
+                prev.map(n => n.id === id ? { ...n, name } : n))
+            }
+            onSetEditingId={setEditingId}
+            onToggleFolder={(id) => setExpandedFolders(prev => 
+                ({ ...prev, [id]: !prev[id] }))
+            }
+            onAddFolder={handleAddFolder}
+            onAddFile={handleAddFile}
+            onDelete={handleDelete}
+            onViewChange={handleUserNavigation}
+            onRecordInteracion={recordInteraction}
+            fillHeight={isExpanded}
             />
-
-            {/* The Virtual Guide Pointer */}
-            <div 
-                className="absolute z-[200] pointer-events-none transition-all duration-700 
-                ease-in-out"
-                style={{ left: pointerPos.x, top: pointerPos.y, opacity: pointerPos.opacity }}
-            >
-                <MousePointer2 
-                className="text-[#63FF9D] fill-[#63FF9D] drop-shadow-[0_0_10px_#63FF9D]" 
-                size={20} />
-                
-                {/* TOOLTIP LOGIC */}
-                <div className={`absolute top-[-10px] transition-all duration-500 
-                whitespace-nowrap
-                    ${isSidebarItem 
-                        ? 'fixed-tooltip-left' // Moves tooltip OUTSIDE to the left
-                        : 'left-[25px] ml-4'                   // Moves tooltip to the right
-                    }`}
-                    style={isSidebarItem ? {
-                        left: `-${pointerPos.x + 10}px`, // Dynamically negate the pointer's X to stay at the edge
-                        transform: 'translateX(-100%)',
-                        marginRight: '20px'
-                    } : {}}
-                >
-                    <div className="bg-[#63FF9D] text-black text-[10px] font-black px-3 py-2 
-                    rounded-lg shadow-[0_0_30px_rgba(99,255,157,0.3)] relative">
-                        {contextText}
-                        {/* Arrow */}
-                        <div className={`absolute top-[14px] w-2.5 h-2.5 bg-[#63FF9D] 
-                        rotate-45 
-                            ${isSidebarItem ? '-right-1' : '-left-1'}`} 
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex h-[600px] text-left overflow-hidden rounded-xl">
-                <SidebarView 
-                    nodes={getOrderedNodes()}
-                    expandedFolders={expandedFolders}
-                    editingId={editingId}
-                    updateName={(id, name) => setNodes(prev => 
-                        prev.map(n => n.id === id ? { ...n, name } : n))
-                    }
-                    setEditingId={setEditingId}
-                    toggleFolder={(id) => setExpandedFolders(prev => 
-                        ({ ...prev, [id]: !prev[id] }))
-                    }
-                    addFolder={() => {
-                        handleAddFolder();
-                        recordInteraction();
-                    }}
-                    addFile={(id) => {
-                        handleAddFile(id);
-                        recordInteraction();
-                    }}
-                    onViewChange={(id) => {
-                        handleUserNavigation(id);
-                        recordInteraction();
-                    }}
-                    deleteOperation={handleDelete}
-                />
-
-               <MainCanvas 
-                nodes={getOrderedNodes()}
-                addFolder={handleAddFolder}
-                addFile={handleAddFile}
-                deleteOperation={handleDelete}
-                />
-            </div>
-        </div>
-        </div>
+        // </div>
     );
 };
