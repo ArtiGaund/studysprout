@@ -262,8 +262,16 @@ export function useDir({
         }
         setIsLoading(true);
         isNavigatingAfterDeleteRef.current = true;
-        const parentWorkspaceId = (details as any).workspaceId;
-        const parentFolderId = (details as any).folderId;
+        const parentWorkspaceId = (details as any)?.workspaceId;
+        const parentFolderId = (details as any)?.folderId;
+        if((dirType === "folder" && !parentWorkspaceId) || (dirType === "file" && !parentFolderId)){
+            toast({
+                title: "Error",
+                description: "Parent context missing. Cannot perform deletion",
+                variant: "destructive",
+            });
+            return;
+        }
         try {
             const response = await hardDeleteDir(dirType, dirId);
             if(dirType === "workspace"){
@@ -322,7 +330,8 @@ export function useDir({
         toast,
         router,
         params,
-        session?.user._id
+        session?.user._id,
+        details,
     ])
 
     /**

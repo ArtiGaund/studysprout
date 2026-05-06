@@ -98,15 +98,38 @@ export const selectCurrentFile = (
  * This provides a unified "Recycle Bin" view without redundant database queries.
  */
 export const selectTrashFiles = createSelector(
-    [ (state: RootState) => state.file.filesByFolder],
-    (filesByFolder) => 
-        Object.values(filesByFolder)
-        .flatMap(folder =>
-            folder.allIds.map(id => folder.byId[id])
-        )
-        .filter(file => file.inTrash)
-);
+    [ 
+        (state: RootState) => state.file.filesByFolder,
+        (state: RootState) => state.folder.foldersByWorkspace,
+        ( _state: RootState, workspaceId: string | undefined ) => workspaceId
+    ],
+    (filesByFolder, foldersByWorkspace , workspaceId) => {
+        // if(!workspaceId || !filesByFolder || !filesByFolder[workspaceId]) return [];
+        if(!workspaceId || !foldersByWorkspace[workspaceId]) return [];
 
+        // Targeted Scan: Only look at folders inside this workspace
+        const workspaceFolderIds = foldersByWorkspace[workspaceId].allIds;
+
+        return workspaceFolderIds.flatMap(folderId => {
+            const bucket = filesByFolder[folderId];
+            if(!bucket) return [];
+
+            return bucket.allIds
+            .map(id => bucket.byId[id])
+            .filter(file => file && file.inTrash);
+        })
+    }
+)
+
+// export const selectTrashFiles = createSelector(
+//     [ (state: RootState) => state.file.filesByFolder],
+//     (filesByFolder) => 
+//         Object.values(filesByFolder)
+//         .flatMap(folder =>
+//             folder.allIds.map(id => folder.byId[id])
+//         )
+//         .filter(file => file.inTrash)
+// );
 /**
  * @method selectFileLoading
  * @description Global loading state for file-related operations.

@@ -13,6 +13,7 @@
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { selectTrashFiles } from "@/store/selectors/fileSelector";
 import { selectTrashFolders } from "@/store/selectors/folderSelector";
+import { RootState } from "@/store/store";
 import { FileIcon, FolderIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
@@ -26,20 +27,15 @@ const TrashRestore = () => {
     
     const workspaceId = currentWorkspace?._id;
 
-    // --- State Selection ---
-    // Accesses memoized selectors for all items marked 'inTrash: true'
-    const trashedFolders = useSelector(selectTrashFolders);
-    const trashedFiles = useSelector(selectTrashFiles);
-   
     // --- Filtering Logic ---
     // Ensures users only see trash from their currently active workspace
-    const workspaceTrashFolder = trashedFolders.filter(
-        folder => folder.workspaceId === workspaceId
-    )
+    const workspaceTrashFolder = useSelector((state: RootState) => 
+    selectTrashFolders(state, workspaceId)
+    );
 
-    const workspaceTrashFile = trashedFiles.filter(
-        file => file.workspaceId === workspaceId
-    )
+    const workspaceTrashFile = useSelector((state: RootState) =>
+    selectTrashFiles(state, workspaceId)
+    );
     // Safety check: Don't render if the workspace context isn't loaded
     if(!workspaceId) return null;
 
@@ -52,7 +48,7 @@ const TrashRestore = () => {
                      <Link 
                      href={`/dashboard/${folder.workspaceId}/${folder._id}`} 
                      key={folder._id}
-                     className="hover:bg-muted rounded-md p-2 flex items-center justify-between"
+                     className="hover:bg-neutral-800/50 rounded-md p-2 flex items-center justify-between group transition-colors"
                      >
                         <article>
                             <aside className="flex items-center gap-2">
@@ -73,7 +69,7 @@ const TrashRestore = () => {
                     <Link 
                     href={`/dashboard/${file.workspaceId}/${file.folderId}/${file._id}`} 
                     key={file._id}
-                    className="hover:bg-muted rounded-md p-2 flex items-center justify-between"
+                   className="hover:bg-neutral-800/50 rounded-md p-2 flex items-center justify-between group transition-colors"
                     >
                        <article>
                            <aside className="flex items-center gap-2">
