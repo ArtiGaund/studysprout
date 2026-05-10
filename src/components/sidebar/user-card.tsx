@@ -45,12 +45,13 @@ const UserCard = () => {
 
     return(
         <article
-        className={`hidden sm:flex justify-between items-center px-4 py-2
-           ${!isRevisionSidebarOpen && 'bg-Neutrals/neutrals-12'}  rounded-3xl`}
+        className={`hidden sm:flex justify-between items-center p-2.5 rounded-2xl
+           ${!isRevisionSidebarOpen && 'bg-[#0D1414] border border-white/10 hover:bg-white/5'}
+            transition-all group cursor-pointer `}
         >
           {/* Identity Section: Only visible when the sidebar is expanded */}
            {!isRevisionSidebarOpen && ( <aside
-            className="flex justify-center items-center gap-2"
+            className="flex justify-center items-center gap-3 min-w-0"
             >
                 <Avatar>
                     <AvatarImage src={""}/>

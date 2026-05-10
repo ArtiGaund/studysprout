@@ -13,7 +13,7 @@
 
 import React, { useMemo } from "react";
 import TooltipComponent from "../global/tooltip-component";
-import { PlusIcon } from "lucide-react";
+import { FileInput, PlusIcon } from "lucide-react";
 import { useToast } from "../ui/use-toast";
 import {
     Accordion,
@@ -22,12 +22,13 @@ import {  useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import Dropdown from "./dropdown";
 import { useFolder } from "@/hooks/useFolder";
-import { ReduxFile, ReduxFolder } from "@/types/state.type";
+import { ReduxFolder } from "@/types/state.type";
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import { HoverCard, HoverCardTrigger } from "../ui/hover-card";
 import DisabledHoverMessage from "../ui/disabled-hover-message";
 import { makeSelectFolders, selectCurrentFolder } from "@/store/selectors/folderSelector";
 import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
+import { UploadPDFModal } from "../pdf-import/upload-pdf-modal";
   
 
 
@@ -57,9 +58,12 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
      */
     const selectFolders = useMemo(makeSelectFolders,[]);
     const EMPTY_FOLDER: ReduxFolder[] = [];
-    const folders = useSelector( (state: RootState) =>
-    workspaceId ? selectFolders(state,workspaceId) : EMPTY_FOLDER
-    )
+    const folders = useSelector( (state: RootState) =>{
+    // workspaceId ? selectFolders(state,workspaceId) : EMPTY_FOLDER
+    const workspace = state.folder.foldersByWorkspace[workspaceId];
+    if(!workspace) return EMPTY_FOLDER;
+    return workspace.allIds.map(id => workspace.byId[id]);
+    })
 
     // Defensive UI: Ensure users don't see deleted folders in the main navigation
     const filteredFolder = folders.filter(folder => !folder.inTrash); 
@@ -96,19 +100,20 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                     description: "Please try again later",
                     variant: "destructive"
                 })
-             }
-           
-       
+             }  
     }
-   
+
     return(
         <>
             {/* Contextual Header: Displays Privacy status only when in Sidebar */}
-            <div className={`flex sticky z-20 top-2 bg-background w-full h-10 group/title justify-between
-             items-center pr-4 text-Neutrals/neutrals-8 
+            <div className={`flex sticky z-20 top-2 w-full h-10 group/title items-center
+             text-Neutrals/neutrals-8 ${isRevisionSidebarOpen 
+                ? 'justify-center px-0'
+                : 'justify-between pr-4'    
+            }
              `}>
-                { usedWhere === "sidebar" && (
-                    <span className="font-bold text-Neutrals-8 text-[11px]">
+                { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
+                    <span className={`font-bold text-muted-foreground/70 tracking-widest text-[11px]`}>
                        {currentWorkspace?.isPublic ? "PUBLIC" : "PRIVATE" }
                     </span>
                 )}
@@ -116,17 +121,19 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
             </div>
 
             {/* Revision Mode Safeguard: Uses a HoverCard to explain disabled states */}
-            <HoverCard>
+           {!isRevisionSidebarOpen && ( <HoverCard>
                 <HoverCardTrigger asChild>
-            <div className={`${usedWhere === "sidebar" && isRevisionSidebarOpen ?
-                 'bg-slate-gray cursor-not-allowed rounded-lg  w-[3rem] mt-2' : ''}`}>
+            <div 
+            className={`${usedWhere === "sidebar" && isRevisionSidebarOpen 
+                ? 'bg-slate-gray cursor-not-allowed rounded-lg  w-full mt-2 overflow-hidden' 
+                 : ''}`}
+            >
                     {/* Section Label & Action Icon */}
                 <div className="flex sticky z-20 top-0 w-full h-10 group/title justify-between
                 items-center pr-4 text-Neutrals/neutrals-8 pl-4 m-1">
                 
                 { usedWhere === "sidebar" && (
-                    <span className={`font-bold text-Neutrals-8 
-                     ${isRevisionSidebarOpen ? 'flex ml-[-17.5px] text-[9px] text-gray-300' : 'text-xs'}`}>
+                    <span className={`font-bold text-Neutrals-8 truncate text-xs`}>
                         FOLDERS
                     </span>
                 )}
@@ -135,21 +142,28 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                     FOLDERS
                     </span>
                 )}
-                { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
-                    <TooltipComponent message="Create Folder">
-                    <PlusIcon
-                    onClick={addFolderHandler}
-                     size={16}
-                     className="group-hover/title:inline-block hidden cursor-pointer hover:text-white"/>
-
-                </TooltipComponent>
+                { usedWhere === "sidebar" && (
+                    <div className="flex flex-row gap-2">
+                        <TooltipComponent message="Create Folder">
+                            <PlusIcon
+                            onClick={addFolderHandler}
+                            size={16}
+                            className="group-hover/title:inline-block hidden cursor-pointer hover:text-white"/>
+                        </TooltipComponent>
+                        <TooltipComponent message="Upload PDF">
+                            <UploadPDFModal>
+                                <FileInput
+                                    size={16}
+                                    className="group-hover/title:inline-block hidden cursor-pointer hover:text-white"
+                                />
+                            </UploadPDFModal>
+                        </TooltipComponent>
+                    </div>
                 )}
                 
                 </div>
                 {/* Rendering all the folder */}
-                <div className={`flex pl-5 transition-all ${isRevisionSidebarOpen && usedWhere === "sidebar" ? 
-                    'opacity-50 pointer-events-none cursor-not-allowed' 
-                    : ''}`}>
+                <div className={`flex transition-all pl-5`}>
                 <Accordion
                 type="multiple"
                 defaultValue={[ currentFolder?.toString() || '']}
@@ -167,7 +181,9 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                     />)
                    ))
                    ) : (
-                    <div className="text-Neutrals/neutrals-7 text-sm py-2">No folders found.</div>
+                    <div className="text-Neutrals/neutrals-7 text-sm py-2">
+                        No folders found.
+                    </div>
                    )
                    
                    }
@@ -178,7 +194,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
         {isRevisionSidebarOpen && usedWhere === "sidebar" && (
             <DisabledHoverMessage />
         )}
-        </HoverCard>
+        </HoverCard>)}
         </>
     )
 }

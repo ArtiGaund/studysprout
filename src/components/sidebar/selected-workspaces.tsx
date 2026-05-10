@@ -47,7 +47,7 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
             if(onClick) 
                 onClick(workspace)
             }}
-            className="flex rounded-md hover:bg-muted transition-all flex-row p-2 gap-2 
+            className="flex rounded-md hover:bg-white/5 transition-all flex-row p-2 gap-2 
             justify-start cursor-pointer items-center my-1 group/item overflow-hidden"
             >
                 {/* --- WORKSPACE ICON SECTION --- */}

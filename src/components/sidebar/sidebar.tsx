@@ -22,8 +22,13 @@ import UserCard from "./user-card";
 import SidebarExpandButton from "./sidebar-expand-button";
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import { useSelector } from "react-redux";
-import { selectCurrentWorkspace, selectWorkspaceError, selectWorkspaceLoading, selectWorkspaces } from "@/store/selectors/workspaceSelector";
-import { makeSelectFolders, selectCurrentFolder, selectFolderError, selectFolderLoading } from "@/store/selectors/folderSelector";
+import { 
+  selectCurrentWorkspace, 
+  selectWorkspaceError, 
+  selectWorkspaceLoading, 
+  selectWorkspaces 
+} from "@/store/selectors/workspaceSelector";
+import { makeSelectFolders } from "@/store/selectors/folderSelector";
 import { ReduxFolder } from "@/types/state.type";
 import { RootState } from "@/store/store";
 
@@ -73,7 +78,9 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
      */
     if (workspaceLoading) {
         return (
-            <aside className={twMerge('hidden sm:flex sm:flex-col w-[280px] shrink-0 p-4 md:gap-4 !justify-between', className)}>
+            <aside className={twMerge('hidden sm:flex sm:flex-col shrink-0 p-4',
+             'md:gap-4 !justify-between w-[240px] md:w-[260px] lg:w-[280px] xl:w-[300px]', 
+             className)}>
                 <p>Loading workspaces...</p>
             </aside>
         );
@@ -82,11 +89,17 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
 
     // check for user, check for folders, check for error, get all the workspaces which is private collaborating 
     // and shared workspaces
-    return (<aside className={twMerge(`hidden sm:flex sm:flex-col
-      ${isRevisionSidebarOpen ? 'w-[80px]' : 'w-[280px]'} shrink-0 p-4 md:gap-4 !justify-between`,
+    return (<aside className={twMerge(
+      `hidden sm:flex sm:flex-col  shrink-0 p-4 md:gap-4 !justify-between transition-all
+       duration-300  bg-[#080C0C] border-r border-white/5',
+       ${isRevisionSidebarOpen 
+        ? 'w-[80px]' 
+        : 'w-[240px] md:w-[260px] lg:w-[280px] xl:w-[300px]'
+      }
+     `,
       className
     )}>
-        <div>
+        <div className="flex-1 flex flex-col min-[]:">
             { workspaces.length > 0 && currentWorkspace ? (
               <>
               {/* Expansion Trigger: Allows users to toggle sidebar width */}
@@ -101,10 +114,15 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
               {/* Main Navigation: Links to Home, Trash, and Settings */}
               <NativeNavigation myWorkspaceId={params.workspaceId}/>
 
+               {/* <div className="m-4 pt-4 border-t border-white/5" /> */}
+
               {/* Hierarchical Folder List: Wrapped in ScrollArea for deep structures */}
-              <ScrollArea className="overflow-scroll relative h-[450px]">
+              <ScrollArea 
+              // className="overflow-scroll relative h-[450px]"
+              className="flex-1 overflow-y-auto mt-4 pr-2 custom-scrollable"
+              >
                   <div className="w-full pointer-events-none absolute bottom-0 h-20 bg-gradient-to-t
-                   from-background to-transparent z-40"/>
+                   from-[#080C0C] to-transparent z-40"/>
                    <FoldersDropdownList 
                    workspaceFolders={folders || []}
                    workspaceId={params.workspaceId}
@@ -120,7 +138,9 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
         </div>
 
         {/* Profile & Account Settings: Fixed to the bottom of the sidebar */}
-        <UserCard />
+        {/* <div className="mt-auto pt-4 border-t border-white/5"> */}
+          <UserCard />
+        {/* </div> */}
     </aside>)
 }
 

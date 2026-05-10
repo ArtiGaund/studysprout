@@ -18,7 +18,7 @@ import clsx from "clsx";
 import EmojiPicker from "../global/emoji-picker";
 import { useToast } from "../ui/use-toast";
 import TooltipComponent from "../global/tooltip-component";
-import { PlusIcon, Trash } from "lucide-react";
+import { PlusIcon, RefreshCw, Trash } from "lucide-react";
 import { File as MongooseFile} from "@/model/file.model";
 import { Folder as MongooseFolder } from "@/model/folder.model";
 import { useFolder } from "@/hooks/useFolder";
@@ -34,6 +34,7 @@ import { makeSelectFiles } from "@/store/selectors/fileSelector";
 import { ReduxFile } from "@/types/state.type";
 import { RootState } from "@/store/store";
 import { selectUserId } from "@/store/selectors/userSelector";
+import { usePDFProcessor } from "@/hooks/usePDFProcessor";
 
 interface DropdownProps {
     title: string;
@@ -63,7 +64,19 @@ const Dropdown: React.FC<DropdownProps> = ({
 
     // --- Redux Selectors ---
     const currentWorkspace = useSelector(selectCurrentWorkspace);
+    const folder = useSelector((state: RootState) => 
+    state.folder.foldersByWorkspace[currentWorkspace?._id || '']?.byId[id]
+    );
    
+    const folderStatus = folder?.status || "completed";
+    const totalFiles = folder?.totalFiles || 0;
+    const currentFileCount = folder?.currentFileCount || 0;
+
+    const isError = folder?.status === "error";
+    const {
+        isRetrying,
+        retryPDFToFolder,
+    } = usePDFProcessor();
     const { updateFolder } = useFolder(); 
 
     // Select files if this dropdown is a folder (Recursive Data Fetching)
@@ -204,20 +217,6 @@ const Dropdown: React.FC<DropdownProps> = ({
         }
 
         clickCount.current = 0; // Reset click count for double click
-        
-        // // Add a small delay for folders before starting edit to allow DOM to settle
-        // if (listType === 'folder') {
-        //     // setTimeout(() => {
-        //         if (!isCurrentlyEditingFromHook) { // Re-check effective state from hook after delay
-        //             handleStartEditing(); // Call the local handleStartEditing
-        //         }
-        //     // }, 300); // Increased delay for folders to 300ms
-        // } else {
-        //     // For files, start editing immediately as before, but ensure local state is set
-        //     if (!isCurrentlyEditingFromHook) { // Use effective state from hook
-        //         handleStartEditing(); // Call the local handleStartEditing
-        //     } 
-        // }
 
         if(!isCurrentlyEditingFromHook){
             handleStartEditing();
@@ -291,17 +290,18 @@ const Dropdown: React.FC<DropdownProps> = ({
       );
 
     const groupIdentifies = clsx(
-        'dark:text-white whitespace-nowrap flex justify-between items-center w-[11rem] relative',
-        {
-          'group/folder': isFolder,
-          'group/file': !isFolder,
-        }
-      );
+    'dark:text-white whitespace-nowrap flex justify-between items-center relative overflow-hidden',
+    'w-[9rem] md:w-[10rem] lg:w-[11rem]',
+    {
+      'group/folder': isFolder,
+      'group/file': !isFolder,
+    }
+  );
 
     const hoverStyles = useMemo(
         () =>
           clsx(
-            'h-full hidden rounded-sm absolute right-0 items-center justify-center flex space-x-1',
+            'h-full hidden rounded-sm right-0 items-center justify-center flex space-x-1 flex-shrink-0 bg-transparent',
             {
               'group-hover/file:flex': listType === 'file',
               'group-hover/folder:flex': listType === 'folder',
@@ -426,14 +426,22 @@ const Dropdown: React.FC<DropdownProps> = ({
         }
     }
 
+    const handleRetry = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            const workspaceId = currentWorkspace?._id;
+            if(!workspaceId) return;
+            const result = await retryPDFToFolder(id, workspaceId);
+        } catch (error) {
+            console.error("[Dropdown] Failed to handle retry: ",error);
+        }
+    }
     const filesInCurrentFolder = useMemo(() => {
         return files.filter((file) => !file.inTrash);
     },[
         files,
     ])
 
-    // console.log("[Dropdown] filesInCurrentFolder: ",filesInCurrentFolder);
-   
         return (
         <AccordionItem 
             value={id} 
@@ -458,7 +466,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 {/* This div now contains both the icon/input and the action buttons */}
                 {/* Ensure this container has a defined max-width or flex-basis to prevent overflow */}
                 <div  className={groupIdentifies}> {/* Added overflow-hidden */}
-                    <div className="flex gap-4 items-center justify-start w-full min-w-0 overflow-hidden">
+                    <div className="flex gap-4 items-center justify-start min-w-0 flex-1">
                     <div className="relative flex-shrink-0"> 
                         <EmojiPicker getValue={onChangeEmoji}>
                             {currentIcon}
@@ -499,12 +507,13 @@ const Dropdown: React.FC<DropdownProps> = ({
                         
                         >
                             <div className={clsx(
-                                "flex items-center flex-nowrap flex-grow w-full gap-2 px-1 rounded-md transition-all duration-300 min-w-0",
+                                "flex items-center flex-nowrap flex-grow gap-2 px-1 rounded-md transition-all duration-300 min-w-0",
                                 isLockedByRemote && "bg-emerald-950/40 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
                             )}>
                                 <span
                                 className={clsx(
-                                    "block truncate flex-grow transition-colors min-w-0",
+                                    "block truncate transition-colors",
+                                    "flex-grow  min-w-0",
                                     // Use remoteEditing object just to trigger a class
                                     isLockedByRemote 
                                     ? "text-emerald-400 font-semibold italic opacity-90 cursor-not-allowed select-none" 
@@ -529,6 +538,15 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 )}
                         </div>
                         </TooltipComponent>
+                    )}
+
+                    {/* Show File count progress */}
+                    {folderStatus === "processing" && totalFiles > 0 && currentFileCount < totalFiles && (
+                        <div className="ml-auto flex items-center gap-2 pr-2">
+                            <span className="text-[10px] font-mono text-blue-400 whitespace-nowrap">
+                                {currentFileCount}/{totalFiles}
+                            </span>
+                        </div>
                     )}
                     </div>
                 </div>
@@ -556,11 +574,33 @@ const Dropdown: React.FC<DropdownProps> = ({
                     </TooltipComponent>)}
                 </div>)}
                 </div>
+
+                {/* Retry button */}
+                {isError && (
+                <div className="ml-auto flex items-center pr-2">
+                    <TooltipComponent 
+                    message="Processing failed. Click to Retry"
+                    >
+                        <RefreshCw 
+                            onClick={handleRetry}
+                            className="w-4 h-4 text-red-500 hover:rotate-180 transition-all cursor-pointer"
+                        />
+                    </TooltipComponent>
+                </div>
+                )}
             </AccordionTrigger>
-            
+            {folderStatus === "processing" && totalFiles > 0 && currentFileCount < totalFiles && (
+                <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white/5">
+                    <div 
+                    className="h-full bg-blue-500 transition-all duration-500"
+                    style={{width: `${(currentFileCount / totalFiles) * 100}%`}}
+                    />
+                </div>
+            )}
+
             {/* It will show files for the folders */}
             {listType === 'folder' && (<AccordionContent>
-                    {filesInCurrentFolder.map((file) => {
+                    {filesInCurrentFolder.map((file: ReduxFile) => {
                         return (
                             <Dropdown 
                                 key={file._id}

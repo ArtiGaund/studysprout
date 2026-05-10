@@ -322,120 +322,126 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
     ])
 
     // --- RENDER ---
-    return(
+    return (
         <>
             {isRevisionSidebarOpen && (
                 <aside
-                className={twMerge('flex sm:flex-col w-[350px] shrink-0 p-2 md:gap-4 !justify-between',
-                    className
-                )}
+                    className={twMerge(
+                        // Fixed width column; flex-col so children stack vertically
+                        "hidden sm:flex sm:flex-col shrink-0 p-2 gap-2 h-full overflow-hidden",
+                        "w-[260px] md:w-[280px] lg:w-[300px] xl:w-[320px]",
+                        className
+                    )}
                 >
-                    <div className="flex flex-col">
-                        <span className="flex py-3 px-2 font-bold text-sm">
-                            Revision Bar
-                        </span>
+                    {/* ── TOP SECTION (header + progress + buttons) ── */}
+                    {/* min-w-0 stops this flex child from overflowing the aside */}
+                    <div className="flex flex-col w-full min-w-0 gap-1">
+                        <span className="py-3 px-2 font-bold text-sm">Revision Bar</span>
 
-                        {/* 1. Progress State UI */}
                         {myProgress && showProgress && (
-                            <ProgressBar 
-                            title="Your Generation"
-                            currentProgress={myProgress.progress}
-                            currentCount={myProgress.currentCount}
-                            totalCards={myProgress.totalCards}
+                            <ProgressBar
+                                title="Your Generation"
+                                currentProgress={myProgress.progress}
+                                currentCount={myProgress.currentCount}
+                                totalCards={myProgress.totalCards}
                             />
-                            )}
-                             {/*Others Progress bar  */}
-                            {otherProgress && (
-                                <ProgressBar
+                        )}
+                        {otherProgress && (
+                            <ProgressBar
                                 title={`${otherProgress.username} is generating...`}
                                 currentProgress={otherProgress.progress}
                                 currentCount={otherProgress.currentCount}
                                 totalCards={otherProgress.totalCards}
                                 others={true}
                                 onMinimize={() => setShowProgress(false)}
-                                />
-                            )}
-                            {/* Action Button  */}
-                            <div 
-                            // className="flex flex-col lg:flex-row gap-2 w-full items-stretch lg:items-center px-2"
-                            className="flex lg:flex-row flex-col lg:w-full w-[200px] items-center gap-4 p-2 pl-6"
-                            >
-                                {/* <div 
-                                // className="flex items-center gap-2 w-full"
-                                > */}
-                                <Button
-                                // className="flex-1 w-[200px] bg-purple-950 hover:bg-purple-800 text-sm sm:text-sm px-2 truncate order-1 lg:order-none"
-                                className="flex-1 bg-purple-950 hover:bg-purple-800 text-sm"
+                            />
+                        )}
+
+                        {/* ── BUTTON ROW ──
+                            Generate button: flex-1 min-w-0 → takes all remaining space.
+                            Plus button:     plain <button> with fixed w-10 h-10 shrink-0.
+                            SheetTrigger is intentionally NOT used here — it can collapse
+                            in a flex row. State is controlled manually via useState.       */}
+                        {/*
+                          ── BUTTON ROW ──
+                          Using CSS Grid instead of Flexbox.
+                          grid-cols-[1fr_40px] gives the Generate button all remaining
+                          space and locks the Plus button to exactly 40px — no child
+                          component styles (e.g. Button's internal w-full) can override
+                          a grid column's explicit size.
+                        */}
+                        <div className="flex flex-row gap-2 px-2 py-1 w-full">
+
+                            {/* Column 1: Generate button — fills 1fr */}
+                            <Button
+                                className="flex-1 min-w-0 w-full bg-purple-950
+                                 hover:bg-purple-800 text-sm"
                                 onClick={generateFlashcardOnThisLevel}
                                 disabled={isCurrentLocationLocked || isRequesting}
-                                >
-                                    {isCurrentLocationLocked 
-                                    ? (
-                                    <div className="flex items-center gap-2">
-                                        <Loader2 className="w-3 h-3 animate-spin shrink-0"/>
-                                        <span className="text-sm truncate">{isLocalActor ? "Generating..."  :"Busy..."}</span>
+                            >
+                                {isCurrentLocationLocked ? (
+                                    <div className="flex items-center gap-2 overflow-hidden w-full">
+                                        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                                        <span className="truncate text-sm">
+                                            {isLocalActor ? "Generating..." : "Busy..."}
+                                        </span>
                                     </div>
-                                ) 
-                                    : "Generate Flashcard"}
-                                </Button>
-                                {/* Custom Config sheet trigger */}
-                                <div className="flex-1">
-                                <Sheet 
-                                open={isFlashcardTypeSheetOpen}
-                                onOpenChange={setFlashcardTypeSheetOpen}
-                                >
-                                    <SheetTrigger asChild>
-                                        <button
-                                        className={twMerge(
-                                            "h-10 px-2 flex items-center justify-center hover:bg-gray-800 rounded-md transition-colors shrink-0 border border-gray-800 lg:border-none",
-                                            "order-2 lg:order-none"
-                                        )}
-                                        >
-                                            <div className="flex items-center gap-2 lg:block">
-                                            <PlusIcon className="w-5 h-5"/>
-                                            </div>
-                                        </button>
-                                    </SheetTrigger>
-                                    <FlashcardTypesForm 
-                                    closeFlashcardTypeSheet={closeFlashcardTypeSheet}
-                                    openFlashcardSetViewerSheet={openFlashcardSetViewerSheet}
-                                    />
-                                </Sheet>
-                                </div>
-                                {/* </div> */}
-                            </div>
+                                ) : (
+                                    <span className="truncate">Generate Flashcard</span>
+                                )}
+                            </Button>
+
+                            {/* Column 2: Plus button — locked to 40px by the grid column */}
+                            <button
+                                onClick={() => setFlashcardTypeSheetOpen(true)}
+                                className="flex-1 min-w-0 h-10 w-full flex items-center justify-center
+                                           border border-gray-700 hover:bg-gray-800
+                                           rounded-md transition-colors"
+                            >
+                                <PlusIcon className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Sheet lives outside the grid row — portal-based, no layout impact */}
+                        <Sheet
+                            open={isFlashcardTypeSheetOpen}
+                            onOpenChange={setFlashcardTypeSheetOpen}
+                        >
+                            <FlashcardTypesForm
+                                closeFlashcardTypeSheet={closeFlashcardTypeSheet}
+                                openFlashcardSetViewerSheet={openFlashcardSetViewerSheet}
+                            />
+                        </Sheet>
                     </div>
 
-                    {/* Flashcard set List */}
-                    <div className="flex-1 mt-5 overflow-y-auto">
-                        {loading 
-                        ? (
+                    {/* ── FLASHCARD SET LIST ──
+                        flex-1 fills remaining height; overflow-y-auto enables scroll;
+                        min-w-0 prevents list items from blowing out the column.          */}
+                    <div className="flex-1 overflow-y-auto min-w-0">
+                        {loading ? (
                             <div className="flex justify-center py-10">
-                                <Loader2 
-                                className="w-6 h-6 animate-spin text-purple-500"
-                                />
+                                <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
                             </div>
-                        ) 
-                        : (
-                            <RevisionFlashcardSetList 
-                            sets={sets}
-                            onOpen={openFlashcardSetViewerSheet}
-                            onDelete={deleteFlashcard}
+                        ) : (
+                            <RevisionFlashcardSetList
+                                sets={sets}
+                                onOpen={openFlashcardSetViewerSheet}
+                                onDelete={deleteFlashcard}
                             />
                         )}
                     </div>
 
-                    {/* Viewer Sheets */}
-                    <Sheet 
-                    open={!!flashcardSetViewerId}
-                    onOpenChange={closeFlashcardSetViewerSheet}
+                    {/* Viewer Sheet */}
+                    <Sheet
+                        open={!!flashcardSetViewerId}
+                        onOpenChange={closeFlashcardSetViewerSheet}
                     >
-                        <FlashcardSetViewerSheet setId={flashcardSetViewerId!}/>
+                        <FlashcardSetViewerSheet setId={flashcardSetViewerId!} />
                     </Sheet>
                 </aside>
             )}
         </>
-    )
+    );
 }
 
 export default RevisionSidebar;
