@@ -1,47 +1,82 @@
 "use client"
-import { Menu } from "lucide-react"
+import { ArrowLeft, Menu, X } from "lucide-react"
 import React, { useState } from "react"
 import CypressPageIcon from "../icons/CypressPageIcon"
 import clsx from "clsx"
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider"
 
 interface MobileSidebarProps{
-    children: React.ReactNode
+    children: React.ReactNode;  //This is the main sidebar
+    revisionContent: React.ReactNode; 
 }
 
-export const nativeNavigations = [
-    {
-        title: 'Sidebar',
-        id: 'sidebar',
-        customIcon: Menu,
-    },
-    {
-        title: 'Pages',
-        id: 'pages',
-        customIcon: CypressPageIcon,
+
+const MobileSidebar: React.FC<MobileSidebarProps> = ({ children, revisionContent }) => {
+    const [ isOpen, setIsOpen ] = useState(false);
+
+    const { isRevisionSidebarOpen, setRevisionSidebarOpen } = useRevisionSidebar();
+
+    const handleClose = () => {
+        setIsOpen(false);
+        setRevisionSidebarOpen(false);
     }
-] as const
-const MobileSidebar: React.FC<MobileSidebarProps> = ({ children }) => {
-    const [ selectedNav, setSelectedNav ] = useState('')
 
     return(
         <>
-        {selectedNav === 'sidebar' && <>{children}</>}
-        <nav className="bg-black/10 backdrop-blur-lg sm:hidden fixed z-50 bottom-0 right-0 left-0">
-            <ul className="flex justify-between items-center p-4">
-                {nativeNavigations.map((item) => (
-                    <li
-                     className="flex items-center flex-col justify-center"
-                      key={item.id}
-                      onClick={() => setSelectedNav(item.id)}
-                      >
-                        <item.customIcon></item.customIcon>
-                        <small className={clsx('',{'text-muted-foreground':selectedNav !== item.id})}>
-                            {item.title}
-                        </small>
-                    </li>
-                ))}
-            </ul>
-        </nav>
+            {/*1. TOP MENU BUTTON  */}
+            <nav className="sm:hidden fixed top-0 left-0 p-4 z-50">
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="p-2 bg-background/50 backdrop-blur-md rounded-md border
+                     border-white/10"
+                >
+                    <Menu className="w-6 h-6 text-white"/>
+                </button>
+            </nav>
+
+            {/* 2. OVERLAY BACKDROP */}
+            <div 
+                className={clsx(
+                    "fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] transition-opacity duration-300 sm:hidden",
+                    isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                )}
+                onClick={handleClose}
+            />
+
+            {/* 3. SLIDING SIDEBAR CONTAINER */}
+            <aside
+                className={clsx(
+                    "fixed top-0 left-0 h-full w-[300px] bg-[#080C0C] z-[70] transition-transform",
+                    "duration-300 ease-in-out sm:hidden border-r border-white/10",
+                    isOpen ? "translate-x-0" : "-translate-x-full"
+                )}
+            >
+                    {isRevisionSidebarOpen && (
+                        <div className="flex items-center justify-between p-4 border-b
+                         border-white/5">
+                            <button
+                            onClick={() => setRevisionSidebarOpen(false)}
+                            className="flex items-center gap-2 text-muted-foreground hover:text-white
+                            transition-colors"
+                            >
+                                <ArrowLeft className="w-5 h-5"/>
+                                <span className="text-sm font-medium">
+                                    Back
+                                </span>
+                            </button>
+                        </div>
+                    )}
+                    
+                    <button 
+                    onClick={handleClose}
+                    className="absolute top-4 right-4 z-[80]"
+                    >
+                        <X className="w-5 h-5 text-muted-foreground"/>
+                    </button>
+                    <div className="overflow-y-auto h-full">
+                        { isRevisionSidebarOpen ? revisionContent : children }
+                    </div>
+            </aside>
         </>
     )
 }

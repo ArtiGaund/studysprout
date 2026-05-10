@@ -90,8 +90,8 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
     // check for user, check for folders, check for error, get all the workspaces which is private collaborating 
     // and shared workspaces
     return (<aside className={twMerge(
-      `hidden sm:flex sm:flex-col  shrink-0 p-4 md:gap-4 !justify-between transition-all
-       duration-300  bg-[#080C0C] border-r border-white/5',
+      `hidden sm:flex flex-col  shrink-0 p-4 md:gap-4 !justify-between transition-all
+       duration-300  bg-[#080C0C] border-r border-white/5 h-full',
        ${isRevisionSidebarOpen 
         ? 'w-[80px]' 
         : 'w-[240px] md:w-[260px] lg:w-[280px] xl:w-[300px]'
@@ -99,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
      `,
       className
     )}>
-        <div className="flex-1 flex flex-col min-[]:">
+        <div className="flex-1 flex flex-col min-h-0">
             { workspaces.length > 0 && currentWorkspace ? (
               <>
               {/* Expansion Trigger: Allows users to toggle sidebar width */}

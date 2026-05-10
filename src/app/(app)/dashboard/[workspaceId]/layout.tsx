@@ -27,6 +27,7 @@ import { clearFlashcards } from "@/store/slices/flashcardSlice";
 import { RESET_FILES } from "@/store/slices/fileSlice";
 import { SET_WORKSPACE_LOADING } from "@/store/slices/workspaceSlice";
 import { WorkspaceSocketManager } from "@/components/socket/workspace-socket-manager";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 interface LayoutProps{
     children: React.ReactNode,
     params: any
@@ -54,10 +55,13 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
     const {
         getFlashcardSets
     } = useFlashcardSet(params.workspaceId);
+
+    const { isRevisionSidebarOpen } = useRevisionSidebar();
     
     /** * EFFECT: Workspace Data fetching & Cleanup
      * Logic runs whenever the workspaceId in the URL changes.
      */
+
     useEffect(() => {
         if(!userId || !params.workspaceId) return;
 
@@ -108,15 +112,24 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
     return(
         <main className="flex overflow-hidden h-screen w-screen">
             <WorkspaceSocketManager />
-            <Sidebar params={params} />
-            <div className="border-neutral-12/70 border-l-[1px] relative overflow-scroll">
+            <Sidebar params={params} className="hidden sm:flex" />
+            {isRevisionSidebarOpen && (
+                <div className="hidden sm:flex border-neutral-12/70 border-l-[1px] relative 
+                overflow-scroll">
                  <RevisionSidebar params={params}/>
-            </div>
+            </div>)}
            
-            <MobileSidebar>
+            <MobileSidebar
+                revisionContent={
+                    <RevisionSidebar 
+                        params={params}
+                        className="flex"
+                    />
+                }
+            >
                 <Sidebar 
                 params={params}
-                className="w-screen inline-block sm:hidden"
+                className="w-full flex h-full"
                 />
             </MobileSidebar>
             <div className="border-neutral-12/70 border-l-[1px] w-full relative overflow-scroll">

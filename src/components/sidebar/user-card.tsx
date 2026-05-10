@@ -45,9 +45,9 @@ const UserCard = () => {
 
     return(
         <article
-        className={`hidden sm:flex justify-between items-center p-2.5 rounded-2xl
-           ${!isRevisionSidebarOpen && 'bg-[#0D1414] border border-white/10 hover:bg-white/5'}
-            transition-all group cursor-pointer `}
+          className={`flex justify-between items-center p-2.5 rounded-2xl transition-all group cursor-pointer w-full
+        ${!isRevisionSidebarOpen ? 'bg-[#0D1414] border border-white/10 hover:bg-white/5' : ''}
+      `}
         >
           {/* Identity Section: Only visible when the sidebar is expanded */}
            {!isRevisionSidebarOpen && ( <aside
