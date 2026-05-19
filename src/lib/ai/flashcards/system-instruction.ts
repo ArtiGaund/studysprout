@@ -24,8 +24,30 @@ export function buildFlashcardsSystemInstruction(
     cardCount: number,
 ): string{
     const desiredTypesList = desiredTypes.join(', ');
+
+    const typeSpecificRules = desiredTypes.map(type => {
+        switch(type){
+            case 'diagram':
+                return `- DIAGRAM cards: Generate a Mermaid diagram (flowchart LR or graph TD syntax)
+                    in the 'diagram' field. The 'question' should ask the user to interpret or complete
+                    the diagram. Keep diagrams simple - max 6 nodes.`;
+            case 'image-labeling':
+                return `- IMAGE-LABELING cards: If the source material contains image URLs (in format
+                    [IMAGE: url]), use them. The 'question' field should be the image URL. The 'answer'
+                    field should contain comma-separated labels the image represents.
+                    The blanks array should contain the label positions.`;
+            case 'chart':
+                return `- CHART cards: Generate a simple JSON chart data structure in 'charData' field with
+                    labels[] and values[]. Question asks user to interpret it.`;
+            default:
+                return '';
+        }
+    }).filter(Boolean).join("\n");
+
     return `You are an expert educational flashcard generator. Your task is to analyze the provided study material 
-    and generate high-quality flashcards.
+    and generate high-quality flashcards for ANY profession or background - not just students. This could be medical
+    notes, legal documents, cooking recipes, programming concepts, business strategy, or any other domain.
+    
     You MUST adhere to the following rules:
     1. **Format:** Your entire response MUST be a single JSON object conforming strict to the provided schema.
     2. **Types:** Generate cards for ALL of the following types: [${desiredTypesList}].
@@ -42,7 +64,9 @@ export function buildFlashcardsSystemInstruction(
     10. **Multi-blank Answers:** If a card has multiple blanks, the 'answer' field MUST 
     contain the answers in the correct order, separated by a SEMICOLON (e.g., "Answer One; Answer Two"). 
     Do not use commas as delimiters, as they may appear within the answers themselves.
-    `
+    11. Universal language: Write in plain, clear language appropriate for the subject domain.
+    ${typeSpecificRules}
+    `.trim();
 }
 
 /**
@@ -62,7 +86,7 @@ export function buildFlashcardsSystemInstruction(
         ${chunk}
         ---
         ${customInstructions ? `USER FOCUS INSTRUCTIONS: ${customInstructions}` : ""}
-        `
+        `.trim();
     }
    
 
@@ -91,7 +115,8 @@ export function buildFlashcardsSystemInstruction(
         7. The flashcard MUST clearly test a meaningful concept from the material.
         8. **Fill-in-the-blank Format:** Use EXACTLY three underscores (___) for each blank.
         9. **Multi-blank Answers:** If a card has multiple blanks, the 'answer' field MUST 
-        contain the answers in correct order, separated by a SEMICOLON (e.g., "Ans 1; Ans 2").`;
+        contain the answers in correct order, separated by a SEMICOLON (e.g., "Ans 1; Ans 2").`
+        .trim();
     }
 
     /**
@@ -116,5 +141,76 @@ export function buildFlashcardsSystemInstruction(
             ? `USER FOCUS INSTRUCTIONS: ${customInstructions}`
             : ""
         }
-        `;
+        `.trim();
+    }
+
+    /**
+     * @method buildDiagramFlashcardPrompt
+     * @description Prompt for generating a diagram flashcard for concept text.
+     * Used by GenerateDiagramFlashcard in generate-flashcard-from-chunks.ts
+     */
+
+    export function buildDiagramFlashcardPrompt(
+        conceptText: string,
+        fileTitle: string
+    ): string{
+        return `
+        You are generating a diagram-based flashcard from material titled: "${fileTitle}".
+
+        Material:
+        ---
+        ${conceptText}
+        ---
+
+        Generate a Mermaid diagram (flowchart LR syntax) representing the key concept of process.
+        Then write a question asking the user to interpret, complete, or explain the diagram.
+
+        Return ONLY valid JSON (no markdown, no explanation):
+        {
+            "question": "what does this diagram represent?",
+            "diagram": "flowchart LR/n A[Concept] --> B[Result]",
+            "answer": "Brief explanation of the diagram",
+            "source_context": "short phrase from material",
+            "blockIdsUsed": []
+        }
+
+        Keep the diagram simple - maximum 6 nodes, Use real concept from the material.
+        `.trim();
+    }
+
+    /**
+     * @method buildSimplificationPrompt
+     * @description Prompt for simplifying complex content into plain language. 
+     * Used by /api/file/[fileId]/simplify route
+     * Intentionally profession-agnostic - works for research papers, legal docs, technical specs,
+     * medical notes, etc.
+     */
+
+    export function buildSimplificationPrompt(
+        fullText: string,
+        targetAudience?: string,
+    ): string{
+        const audienceContext = targetAudience
+            ? `The reader is :${targetAudience}.`
+            : "The reader has no prior knowledge of this specific topic."
+        return `
+        Simplify the following content so it is easy to understand.
+        ${audienceContext}
+
+        Instructions:
+        - Use plain, everyday language.
+        - Explain technical terms briefly when they first appear.
+        - Keep the same section structure as the original.
+        - Do not skip important information - just express it more clearly
+        - Use short sentences
+        - For processes or steps, use numbered lists
+        - Target length: about 60% of the original
+
+        Content: 
+        ---
+        ${fullText.slice(0, 8000)}
+        ---
+
+        Return the simplified content as plain text with original section heading preserved.
+        `.trim();
     }
