@@ -29,19 +29,23 @@ type WorkspaceEventHandlers = {
         username: string;
         action: "added" | "removed";
     }) => void;
+    onPDFProgress?: (data: { 
+        folderId: string; 
+        progress: number
+    }) => void;
 }; 
 export function registerWorkspaceEvents(
     socket: Socket,
      dispatch: AppDispatch,
      currentUserId: string,
      handlers?: WorkspaceEventHandlers,
-     
 ){
   
     // clear previous listener to avoid duplicates and stale closures
     socket.off("presence:update");
     socket.off("member:update");
     socket.off("workspace:tree:update");
+    socket.off("pdf:progressing:update");
 
     /** * @event presence:update
      * Updates the list of active users in the workspace header.
@@ -61,6 +65,8 @@ export function registerWorkspaceEvents(
             type,
             payload
         }) => {
+            console.log("[Socket-event] type: ",type);
+            console.log("[Socket-event] payload: ",payload);
             // 1. Ego-Filter: If I am the sender, ignore to avoid redundant state updates.
             if(socket.id === payload.senderSocketId) return;
             switch(type){
@@ -108,10 +114,12 @@ export function registerWorkspaceEvents(
                     const fileToTransform = payload.file || payload.data?.file;
                     if(!fileToTransform) return;
                     const newFile = transformFile(fileToTransform);
+                    if(newFile){
                     dispatch(ADD_FILE({
                         folderId: payload.folderId,
                         file: newFile
                     }));
+                }
                     break;
                 case "file_deleted":
                     dispatch(DELETE_FILE({
@@ -161,6 +169,77 @@ export function registerWorkspaceEvents(
                 dispatch(setRemoteEditing({
                     itemId: payload.itemId,
                     data: null,
+                }));
+                break;
+
+                // ---PDF BACKGROUNG PROCESSING ---
+            case "pdf_processing":
+                // Route progress to the UI handler 
+                handlers?.onPDFProgress?.({
+                    folderId: payload.folderId,
+                    progress: payload.progress,
+                });
+                break;
+            case "pdf_file_created":
+                console.log("[Socket-event] pdf file created payload: ",payload);
+                const newPdfFile = transformFile(payload);
+                if(newPdfFile){
+                dispatch(ADD_FILE({
+                    folderId: payload.folderId,
+                    file: newPdfFile,
+                }));
+
+                // Increament the counter in the Folder Object
+                dispatch(UPDATE_FOLDER({
+                    workspaceId: payload.workspaceId,
+                    id: payload.folderId,
+                    updates: {
+                        currentFileCount: payload.currentFileCount,
+                    } as any
+                }));
+            }
+                break;
+            case "pdf_folder_completed":
+                // Update the folder icon/status in Redux
+                dispatch(UPDATE_FOLDER({
+                    workspaceId: payload.workspaceId,
+                    id: payload.folderId,
+                    updates: {
+                        iconId: "📁",
+                        progress: 100,
+                        status: "completed",
+                    } as any,
+                }));
+                // Remove progress bar after 3 seconds
+                setTimeout(() => {
+                    dispatch(UPDATE_FOLDER({
+                        workspaceId: payload.workspaceId,
+                        id: payload.folderId,
+                        updates: {
+                            progress: undefined,
+                            totalFiles: 0,
+                            currentFileCount: 0,
+                        } as any,
+                    }));
+                },3000)
+                break;
+            case "pdf_folder_error": 
+                dispatch(UPDATE_FOLDER({
+                    workspaceId: payload.workspaceId,
+                    id: payload.folderId,
+                    updates: {
+                        iconId: "⚠️",
+                        status: "error",
+                    } as any
+                }));
+                break;
+            case "pdf_total_files_update":
+                dispatch(UPDATE_FOLDER({
+                    workspaceId: payload.workspaceId,
+                    id: payload.folderId,
+                    updates: {
+                        totalFiles: payload.totalFileCount,
+                    } as any
                 }));
                 break;
             }
