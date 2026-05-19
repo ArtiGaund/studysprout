@@ -5,6 +5,7 @@ export interface ChunkBlocks{
     blockId: string;
     text: string;
     updatedAt: Date;
+    contentHash: string | null;
 }
 export function chunkBlocks(blocks: ChunkBlocks[], maxChunkChars = 12000){
     const chunks: ChunkBlocks[][] = [];
