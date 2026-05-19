@@ -1,15 +1,14 @@
 /**
- * @service GenerateFlashcardsFromChunks
- * @description An advanced AI orchestration service that leverages Gemini 2.5 Flash to transform unstructured text into structured, schema-validated flashcards.
- * * CORE ARCHITECTURAL PATTERNS:
- * 1. Schema Enforcement: Uses `responseSchema` to guarantee that the LLM output strictly follows the `UnifiedFlashcardSchema`.
- * 2. Distributed Processing: Chunks text to bypass context window limitations and prevent "lost-in-the-middle" performance degradation.
- * 3. Resiliency (Exponential Backoff): Implements a `callGemini` helper with retry logic for 503 (Overloaded) errors.
- * 4. Contextual Mapping: Tracks `blockIdsUsed` for each card, enabling "source-to-flashcard" traceability for the end user.
+ * @service GenerativeFlashcardsFromChunks
+ * @description Transform text chunks into schema-validated flashcards using Gemini.
+ * 
+ * Uses shared gemini client and callGeminiWithRetry from lib/ai/gemini-client.ts instead of 
+ * defining its own retry logic.
  */
 
 import { UnifiedFlashcardSchema } from "./flashcard-json-schema";
-import { buildFlashcardsSystemInstruction, buildUserPrompt } from "./system-instruction";
+import { callGeminiWithRetry, GEMINI_MODEL } from "./gemini-client";
+import { buildDiagramFlashcardPrompt, buildFlashcardsSystemInstruction, buildUserPrompt } from "./system-instruction";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize the Generative AI client as a singleton
@@ -26,39 +25,6 @@ export async function GenerateFlashcardsFromChunks(
      desiredTypes: string[],
      customInstructions: string = ""
     ){
-
-        /**
-         * @innerHelper callGemini
-         * Handles transient API failures. Implements a basic retry loop 
-         * to manage service availability issues without failing the entire batch.
-         */
-        async function callGemini(
-            modelInstance: ReturnType<typeof gemini.getGenerativeModel>,
-            userPrompt: string,
-            retries = 5
-        ):Promise<any>{
-            for(let i=0;i<retries;i++){
-                try {
-                    return await modelInstance.generateContent({
-                        contents: [
-                            {
-                                role: "user",
-                                parts: [{ text: userPrompt }],
-                            },
-                        ],
-                    });
-                } catch (error: any) {
-                    if(error.status === 503 && i < retries - 1){
-                        console.warn(`Gemini overloaded. Retrying ${i+2}/${retries}...`);
-                        await new Promise((res) => 
-                        setTimeout(res, 300*(i+1))
-                        );
-                        continue;
-                    }
-                    throw error;
-                }
-            }
-        }
     try {
         // // 1. Input Validation: Fail-fast pattern to save API costs and processing time
         if(aggregatedTexts.length === 0){
@@ -109,7 +75,7 @@ export async function GenerateFlashcardsFromChunks(
             //  Build the dynamic User prompt for this chunk
             const userPrompt = buildUserPrompt(rawText, chunkIndex, aggregatedTexts.length, customInstructions);
             try {
-                const response = await callGemini(modelInstance, userPrompt);
+                const response = await callGeminiWithRetry(modelInstance, userPrompt);
                 const result = await response.response;
                 const jsonText = await result.text();
             
@@ -149,6 +115,55 @@ export async function GenerateFlashcardsFromChunks(
             success: false,
             message: "Failed to generate flashcards",
         }
+    }
+}
+
+/**
+ * Generate a single diagram Flashcard from concept/text content.
+ * Called when user requests diagram-type cards for a specific concept.
+ */
+
+export async function GenerateDiagramFlashcard(
+    conceptText: string,
+    fileTitle: string,
+    blockIds: string[]
+){
+    try {
+        const modelInstance = gemini.getGenerativeModel({
+            model: GEMINI_MODEL,
+            generationConfig: {
+                responseMimeType: "application/json",
+            },
+        });
+
+        const prompt = buildDiagramFlashcardPrompt(conceptText, fileTitle);
+        const response = await callGeminiWithRetry(modelInstance, prompt);
+        const result = await response.response;
+        const jsonText = await result.text();
+        const parsed = JSON.parse(
+            jsonText.replace(/```json|```/g, "").trim()
+        );
+
+        return {
+            success: true,
+            card: {
+                type: "diagram",
+                question: parsed.question || "What does this diagram represent?",
+                answer: parsed.answer || "",
+                diagram: parsed.diagram || "",
+                source_context: parsed.source_context || "",
+                blockIdsUsed: blockIds,
+                options: [],
+                chartData: null,
+            },
+        };
+        
+    } catch (error) {
+        console.warn("[GenerateDiagramFlashcard] Failed: ",error);
+        return {
+            success: false,
+            card: null,
+        };
     }
 }
 

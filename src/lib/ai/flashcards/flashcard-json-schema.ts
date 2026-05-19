@@ -6,6 +6,14 @@
  * - Ensures the model outputs predictable, typed JSON.
  * - Used by the flashcard generation route call before calling Gemini.
  * 
+ * Supports:
+ * - question-answer    
+ * - fill-in-the-blank  
+ * - mcq                
+ * - diagram            
+ * - image-labeling
+ * - chart
+ * 
  * Notes:
  * - Does NOT contain business logic.
  * - Does NOT validate user input; only controls model output format.

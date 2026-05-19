@@ -2,46 +2,14 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { buildSingleFlashcardSystemInstruction, buildSingleFlashcardUserPrompt } from "./system-instruction";
 import { UnifiedFlashcardSchema } from "./flashcard-json-schema";
 import { chunkBlocks } from "@/helpers/chunkBlocks";
+import { callGeminiWithRetry, gemini, GEMINI_MODEL } from "./gemini-client";
 
-
-// Initialize the client once
-export const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-// Define a common configuration for the model
-const MODAL_NAME = "gemini-2.5-flash";
 
 export async function GenerateSingleFlashcard(
     preparedText: string,
     type: string,
     blockIds: string[]
 ){
-    async function callGemini(
-        modelInstance: ReturnType<typeof gemini.getGenerativeModel>,
-        userPrompt: string,
-        retries = 5
-    ):Promise<any>{
-        for(let i=0;i<retries;i++){
-            try {
-                  return await modelInstance.generateContent({
-                        contents: [
-                            {
-                                role: "user",
-                                parts: [{ text: userPrompt }],
-                            },
-                        ],
-                    });
-            } catch (error: any) {
-                if(error.status === 503 && i < retries - 1){
-                        console.warn(`Gemini overloaded. Retrying ${i+2}/${retries}...`);
-                        await new Promise((res) => 
-                        setTimeout(res, 300*(i+1))
-                        );
-                        continue;
-                    }
-                    throw error;
-            }
-        }
-    }
     try {
         if(preparedText.length === 0){
             return  {
@@ -56,7 +24,7 @@ export async function GenerateSingleFlashcard(
          const finalFlashcardSchema = UnifiedFlashcardSchema([type]);
 
           const modelInstance = gemini.getGenerativeModel({
-                     model: MODAL_NAME,
+                     model: GEMINI_MODEL,
                      systemInstruction,
                      generationConfig: {
                          responseMimeType: "application/json",
@@ -67,7 +35,7 @@ export async function GenerateSingleFlashcard(
         const userPrompt = buildSingleFlashcardUserPrompt(preparedText);
 
         try {
-            const response = await callGemini(modelInstance, userPrompt);
+            const response = await callGeminiWithRetry(modelInstance, userPrompt);
             const result = await response.response;
             const jsonText = await result.text();
             
