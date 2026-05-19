@@ -1,15 +1,18 @@
 /**
  * @schema FlashcardProgress
- * @description The data model for tracking Spaced Repetition System (SRS) metrics.
- * * ARCHITECTURAL IMPACT:
- * 1. SM-2 Implementation: Stores the core variables (Interval, Ease Factor, Repetition) 
- * required to calculate the next review date.
- * 2. Performance Indexing: A unique compound index on {userId, flashcardId, dueDate} 
- * ensures query efficiency for "Today's Review" queues and prevents duplicate tracking.
- * 3. Workspace Isolation: Includes `workspaceId` to allow for rapid multi-tenant 
- * cleanup and workspace-level statistics.
- * 4. Normalization: Separates static flashcard content from dynamic user progress 
- * to optimize storage and performance.
+ * @description Stores per-user spaced repetition (SM-2) progress for each flashcard.
+ *
+ * KEY FIELDS:
+ * - interval: days until next review
+ * - difficulty (ease factor): starts at 2.5 adjusts based on ratings.
+ * - repetition: how many times reviewed correctly in a row
+ * - dueDate: when to show this card next
+ * - lastReviewed: when the user last rated this card
+ * - flagged: user manually marked for review
+ * 
+ * CRITICAL: compound unique index on {userId, flashcardId}
+ * This ensures each user has exactly one progress record per card, and make per-user per-card
+ * lookups O(log n)
  */
 import { Schema, Types } from "mongoose";
 
@@ -24,6 +27,7 @@ export interface IFlashcardProgress{
     repetition: number;    // Success streak: Consecutive correct answers
     dueDate: Date;         // The next scheduled time this card appears in the UI
     lastReviewed?: Date;   // Audit trail for history/streaks
+    flagged?: boolean;     //user manually flagged for extra attention
 }
 
 export const FlashcardProgressSchema = new Schema<IFlashcardProgress>({
@@ -60,6 +64,10 @@ export const FlashcardProgressSchema = new Schema<IFlashcardProgress>({
     },
     lastReviewed: {
         type: Date,
+    },
+    flagged: {
+        type: Boolean,
+        default: false,
     },
 }, {
     timestamps: true,

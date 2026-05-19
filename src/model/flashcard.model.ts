@@ -14,8 +14,23 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 export interface Flashcard{ 
     question: string;
     answer: string;
-    type: "question-answer" | "fill-in-the-blank" | "mcq";
+    type:
+         "question-answer" | 
+         "fill-in-the-blank" | 
+         "mcq" |
+         "diagram" |
+         "chart" |
+         "image-labeling";
     options?: string[]; //for mcq
+
+    diagram?: string;
+    chartData?: {
+        chartType: "bar" | "line" | "pie";
+        labels: string[];
+        values: number[];
+        title?: string;
+    } | null;
+    source_context?: string;
 
     parentSetId?: Types.ObjectId | string; //link back to Flashcardset
     resourceId: Types.ObjectId | string; //workspace/folder/file
@@ -33,6 +48,7 @@ export interface Flashcard{
         endBlockId?: string;
         blocksState: Record<string, {
             updatedAt: Date;
+            contentHash?: string;
         }>;
     },
 }
@@ -61,6 +77,9 @@ const SourceSchema = new Schema({
                 type: Date,
                 required: true,
             },
+            contentHash: {
+                type: String,
+            },
         }, { _id: false }),
         required: true,
        }
@@ -85,7 +104,17 @@ export const FlashcardSchema: Schema<Flashcard> = new Schema({
    options: {
        type: [String],
    },
-
+   diagram: {
+        type: String,
+        default: "",
+   },
+   chartData:{
+        type: mongoose.Schema.Types.Mixed,
+        default: null,
+   },
+   source_context: {
+        type: String,
+   },
    // Hierarchical Relationships
    parentSetId: {
        type: mongoose.Schema.Types.ObjectId,

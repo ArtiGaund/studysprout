@@ -12,15 +12,31 @@
  * pre-process content for the Gemini API, reducing server-side compute.
  * 4. Cache-Efficiency: By keeping a JSON "Preview" of blocks, the system can render 
  * sidebars and summaries without decoding the heavy binary buffer.
+ * 
+ * IBlock additions:
+ * - plainText: plain text version for AI
+ * - structuredText: same as plainText - used by flashcard-generation
+ * - contentHash: SHA-256 of content - for accurate flashcard outdated detection
+ * - Without this, editing then reverting text triggers false "outdated" on flashcards.
+ * 
+ * Fields:
+ * - readingTimeMinutes: estimated read time - for study planner
+ * - autosummary: heading + first sentence per section
+ * - prerequisites: file IDs this file depends on - for study planner ordering
+ * - contentHash: hash of all block content combined - for PDF version diffing
+ * - simplifiedContent: cached AI simplification of this file's content
+ * - simplificationOutdated: true when content changes, until re-simplified
+ * - source: "editor" | "pdf"
  */
 
-import { Schema } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 
 export interface IBlock{
     id: string;
     type: string;
     props: any;
     content: any;
+    
     plainText: string;
     structuredText: any;
     updatedAt: Date;
@@ -89,6 +105,19 @@ export interface File{
 
     // optional 
     blockMap?:BlockMapEntry[];
+    contentHash?: string;
+
+    prerequisites?: [Types.ObjectId];
+    readingTimeMinutes?: number;
+    plainText?: string;
+    structuredText?: string;
+    autoSummary?: any;
+    simplifiedContent?: string;
+    simplificationOutdated?: boolean;
+    simplifiedAt?: Date;
+    source?: string;
+    pageNumber?: number;
+    terms?: string[];
 }
 
 /**
@@ -160,6 +189,48 @@ export const FileSchema = new Schema<File>({
         type: Date,
         default: Date.now
     },
+    contentHash: {
+        type: String,
+    },
+    prerequisites: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "File"
+    }],
+    readingTimeMinutes: {
+        type: Number,
+    },
+    plainText: {
+        type: String,
+    },
+    structuredText: {
+        type: String,
+    },
+    autoSummary: {
+        type: mongoose.Schema.Types.Mixed,
+    },
+    simplifiedContent: {
+        type: String,
+    },
+    simplificationOutdated: {
+        type: Boolean,
+        default: false,
+    },
+    simplifiedAt: {
+        type: Date,
+    },
+    source: {
+        type: String,
+        enum: ["editor", "pdf"],
+        default: "editor",
+    },
+    pageNumber: {
+        type: Number,
+    },
+    terms: {
+        type: [String],
+        default: [],
+        index: true,
+    }
 },
 
 )
