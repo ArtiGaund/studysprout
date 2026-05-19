@@ -121,15 +121,6 @@ export const selectTrashFiles = createSelector(
     }
 )
 
-// export const selectTrashFiles = createSelector(
-//     [ (state: RootState) => state.file.filesByFolder],
-//     (filesByFolder) => 
-//         Object.values(filesByFolder)
-//         .flatMap(folder =>
-//             folder.allIds.map(id => folder.byId[id])
-//         )
-//         .filter(file => file.inTrash)
-// );
 /**
  * @method selectFileLoading
  * @description Global loading state for file-related operations.

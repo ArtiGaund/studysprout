@@ -104,13 +104,27 @@ export const selectCurrentFolder = (
  * without duplicating data in the store.
  */
 export const selectTrashFolders = createSelector(
-    [(state: RootState) => state.folder.foldersByWorkspace],
-    foldersByWorkspace =>
-        Object.values(foldersByWorkspace)
-        .flatMap(workspace => workspace.allIds.map(id => workspace.byId[id]))
-        .filter(folder => folder.inTrash)
-);
+    [
+        ( state: RootState ) => state.folder.foldersByWorkspace,
+        ( _state: RootState, workspaceId: string | undefined ) => workspaceId
+    ],
+    ( foldersByWorkspace, workspaceId ) => {
+        if(!workspaceId || !foldersByWorkspace || !foldersByWorkspace[workspaceId]) return [];
 
+        const workspace = foldersByWorkspace[workspaceId];
+
+        if(!workspace.allIds) return [];
+
+        return workspace.allIds
+        .map( id => workspace.byId[id] )
+        .filter( folder => 
+            folder &&
+            folder.inTrash !== null &&
+            folder.inTrash !== undefined &&
+            folder.inTrash !== ""
+        );
+    }
+)
 /**
  * @method selectFolderLoading
  * Exposes the 'Loading' status specifically for folder-related async operations.
