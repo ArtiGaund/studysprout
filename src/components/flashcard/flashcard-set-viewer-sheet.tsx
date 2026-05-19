@@ -37,6 +37,11 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
 }) => {
         const dispatch = useDispatch();
         const [ activeIndex, setActiveIndex ] = useState(0);
+
+        const [ sessionMode, setSessionMode ] = useState<"all" | "due-only">("due-only");
+        const [ sessionStats, setSessionStats ] = useState({
+            again: 0, hard: 0, good: 0, easy: 0, startTime: new Date(),
+        });
         
         const EMPTY: any[] = [];
 
@@ -47,7 +52,9 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
             return map && map[setId] ? map[setId] : EMPTY;
             });
 
-        const set = useSelector((state: RootState) => state.flashcardSet.sets.find((s) => s._id === setId));
+        const set = useSelector((state: RootState) => 
+            state.flashcardSet.sets.find((s) => s._id === setId)
+        );
         
         /**
          * @memoized stats
@@ -68,6 +75,18 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
             }, { new: 0, due: 0, completed: 0});
         },[cards]);
         
+        const sessionCards = useMemo(() => {
+            if(sessionMode === "all") return cards;
+            const today = new Date();
+            return cards.filter(card => {
+                if(!card.progress?.dueDate) return true;
+                return new Date(card.progress.dueDate) <= today;
+            });
+        },[
+            cards,
+            sessionMode,
+        ])
+
         const isSessionFinished = activeIndex >= cards.length && cards.length > 0;
 
         const todoCount = stats.new + stats.due;
@@ -123,6 +142,13 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                     }));
                     
                     setActiveIndex(0);
+                    setSessionStats({
+                        again: 0,
+                        hard: 0,
+                        good: 0,
+                        easy: 0,
+                        startTime: new Date(),
+                    });
                 } catch (error: any) {
                     console.error("[FlashcardSetViewerSheet] Error regenerating flashcard set in catch", 
                         error?.response?.status,
@@ -193,6 +219,10 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                                 <span className="text-[11px] font-bold text-gray-400">
                                     DONE: {stats.completed}
                                 </span>
+                            </div>
+
+                            <div>
+                                
                             </div>
                         </div>
                     <VisuallyHidden>

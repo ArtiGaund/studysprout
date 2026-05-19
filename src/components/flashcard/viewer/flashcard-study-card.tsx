@@ -17,9 +17,10 @@ import { useFlashcardGenerator } from "@/hooks/flashcard/useFlashcardGenerator";
 import { useFlashcardSRS } from "@/hooks/flashcard/useFlashcardSRS";
 import { resetSingleFlashcard, updateFlashcard } from "@/store/slices/flashcardSlice";
 import { format } from "date-fns";
-import { Loader2, RotateCcw, Undo2 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import { Loader2, RotateCcw } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import { FlashcardContentRenderer } from "./flashcard-content-renderer";
 
 
 interface FlashcardStudyCardProps{
@@ -28,6 +29,7 @@ interface FlashcardStudyCardProps{
     total: number;
     onNext: () => void;
 }
+
 const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
     card,
     index,
@@ -62,7 +64,7 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
         return new Date(card.progress.dueDate) > new Date();
     },[ 
         card.progress?.dueDate,
-        card._id, 
+        // card._id, 
     ]);
 
     /**
@@ -110,6 +112,33 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
         setChecked(false);
         setUserAnswer({});
     },[card._id]);
+
+    // Keyboard shortcut for SRS rating
+    useEffect(() => {
+        if(!revealAnswer && !checked) return; //only active when answer is visible
+
+        const handleKeydown = (e: KeyboardEvent) => {
+            // Prevent triggering when user is typing in fill-in-the-blank input
+            if(e.target instanceof HTMLInputElement) return;
+
+            switch(e.key){
+                case '1': handleRating("again"); break;
+                case '2' : handleRating("hard"); break;
+                case '3' : handleRating("good"); break;
+                case '4' : handleRating("easy"); break;
+                case ' ' : // space to reveal answer
+                    if(!revealAnswer) setRevealAnswer(true);
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeydown);
+        return () => window.removeEventListener('keydown', handleKeydown);
+    },[
+        revealAnswer,
+        checked,
+        handleRating,
+    ])
    
     return (
         <Card className="
@@ -184,201 +213,89 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
           
           {/* MODE 1: Standard Question & Answer */}
            {card.type === "question-answer" &&( 
-                <CardContent>
-                    <span className="p-2 text-gray-600">Question: </span>
-                    <div 
-                    className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm leading-relaxed"
-                    >{card.question}</div>
-                    {!revealAnswer ? (<button 
-                    onClick={() => setRevealAnswer(true)}
-                    className="
-                    mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-300 transition
-                     disabled:text-gray-500 disabled:cursor-not-allowed
-                    "
-                    >Reveal Answer</button>) : (
-                        <button 
-                        onClick={() => setRevealAnswer(false)}
-                         className="mt-3 flex items-center gap-1 px-3 py-1"
-                        >
-                           <Undo2 size={20}/>
-                        </button>
-                    )}
-                   { revealAnswer &&
-                   ( <>
-                        <span className="p-2 text-gray-600">Answer: </span>
-                        <div className="text-[15px]">{card.answer}</div>
-                    </>
-                    )}
-                </CardContent>
+                <FlashcardContentRenderer 
+                    card={card}
+                    revealAnswer={revealAnswer}
+                    setRevealAnswer={setRevealAnswer}
+                    checked={checked}
+                    setChecked={setChecked}
+                    selectedOption={selectedOption}
+                    setSelectedOption={setSelectedOption}
+                    userAnswer=""
+                    setUserAnswer={setUserAnswer}
+                />
             )}
 
             {/* MODE 2: Multiple Choice (MCQ) */}
             {card.type === "mcq" && (
-                <CardContent>
-                    <span className="p-2 text-gray-600">Question: </span>
-                    <div 
-                    // className="bg-gray-900 p-3 text-[15px]"
-                      className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm leading-relaxed"
-                    >
-                        {card.question}
-                    </div>
-                     {card.options?.map(( option: string, key: number) =>{ 
-                        const isCorrect = option === card.answer;
-                        const isSelected = option === selectedOption;
-
-                        let optionStyle = "border-gray-300";
-
-                        if(checked){
-                            if(isSelected && isCorrect) optionStyle = "text-green-600";
-                            else if(isSelected && !isCorrect) optionStyle = "text-red-600";
-                            else if(isCorrect) optionStyle = "text-green-600";
-                        }
-
-
-                        return(
-                        <div key={key} 
-                        onClick={() => !checked && setSelectedOption(option)}
-                        className={`p-3 border rounded-lg cursor-pointer text-sm transition ${optionStyle}`}
-                        >
-                            <input 
-                            type="radio"
-                            name={`option-${card._id}`}
-                            value={option}
-                            // checked={selected}
-                            />
-                            <span>{option}</span>
-                         </div>
-                     )})}
-                     <div className="flex flex-row gap-3">
-                    <button 
-                    onClick={() => setChecked(true)}
-                    disabled={!selectedOption || revealAnswer}
-                     className="
-                    mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-300 transition
-                     disabled:text-gray-500 disabled:cursor-not-allowed disabled:bg-gray-300
-                    "
-                    >Check Answer</button>
-                    
-                        {!revealAnswer && (<button 
-                        onClick={() =>{ 
-                            setRevealAnswer(true);
-                            setSelectedOption(card.answer);
-                            setChecked(true);
-                        }}
-                        className="
-                        mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
-                        disabled:text-gray-500 disabled:cursor-not-allowed
-                        "
-                        >Reveal Answer</button>)}
-                        {(checked || revealAnswer) && (
-                            <button
-                            onClick={() => {
-                                setSelectedOption(null);
-                                setChecked(false);
-                                setRevealAnswer(false);
-                            }}
-                             className="mt-3 flex items-center gap-1 px-3 py-1"
-                            >
-                               <Undo2 size={20}/>
-                            </button>
-                        )}
-                        </div>
-                </CardContent>
+                 <FlashcardContentRenderer 
+                    card={card}
+                    revealAnswer={revealAnswer}
+                    setRevealAnswer={setRevealAnswer}
+                    checked={checked}
+                    setChecked={setChecked}
+                    selectedOption={selectedOption}
+                    setSelectedOption={setSelectedOption}
+                    userAnswer=""
+                    setUserAnswer={setUserAnswer}
+                />
             )}
 
             {/* MODE 3: Fill-in-the-Blanks (Advanced Multi-Input Logic) */}
             {card.type === "fill-in-the-blank" && (
-                <CardContent className="space-y-4">
-                    <div className="bg-[#0f172a] p-6 rounded-xl border border-slate-800 leading-relaxed">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-3 text-lg">
-                            {card.question.split(/_{3,}/).map((
-                                part: string,
-                                i: number,
-                                arr: any[]
-                            ) => {
-                                const answerArray = card.answer.split(";").map((s:string) => s.trim());
-                                const currentVal = userAnswer[i] || "";
-                                return (
-                                <React.Fragment key={i}>
-                                    <span className="text-slate-200">{part}</span>
-                                    {i !== arr.length - 1 && (
-                                        <div className="inline-grid items-center align-bottom">
-                                            <span className="invisible whitespace-pre px-1 col-start-1 row-start-1 text-lg">
-                                                {
-                                                   ( revealAnswer 
-                                                    ? answerArray[i]
-                                                    : (currentVal || "...")) + " "
-                                                }
-                                            </span>
-                                            <input
-                                            autoFocus = { i=== 0}
-                                            disabled={revealAnswer || checked}
-                                            value={revealAnswer ? (answerArray[i] || "") : currentVal}
-                                            onChange={(e) => setUserAnswer(prev => ({
-                                                ...prev,
-                                                [i]: e.target.value
-                                            }))}
-                                            // style={{ width: '100%'}}
-                                            className={`
-                                                col-start-1 row-start-1 bg-transparent border-b-2 text-center outline-none
-                                                transition-all px-1 w-full
-                                                ${checked
-                                                    ? (currentVal.trim().toLowerCase() === (answerArray[i] || "").toLowerCase()
-                                                        ? "border-green-500 text-green-400"
-                                                        : "border-red-500 text-red-400")
-                                                    : "border-purple-500 focus:border-white"
-                                                }
-                                                `}
-                                                placeholder="..."
-                                            />
-                                        </div>
-                                    )}
-                                </React.Fragment>
-                            )})}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-row gap-3">
-                    {/* Control Bar for Fill-in-the-Blanks */}
-                        {!checked && !revealAnswer && (
-                            <>
-                                <button
-                                disabled={Object.keys(userAnswer).length === 0}
-                                onClick={() => setChecked(true)}
-                                className={`
-                                    px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800
-                                    disabled:bg-gray-700 transition
-                                    `}
-                                >
-                                    Check Answer
-                                </button>
-                                <button
-                                onClick={() => setRevealAnswer(true)}
-                                className={`
-                                    px-4 py-2 rounded-lg border border-purple-600 text-purple-400 text-sm
-                                    hover:bg-purple-900/30 transition
-                                    `}
-                                >   
-                                    Reveal Answer
-                                </button>
-                            </>
-                        )}
-                        {(checked || revealAnswer) && (
-                            <button
-                            onClick={() => {
-                                setUserAnswer({});
-                                setChecked(false);
-                                setRevealAnswer(false);
-                            }}
-                            className="flex items-center gap-1 px-3 py-1 text-gray-400 hover:text-white"
-                            >
-                                <Undo2 size={20}/>
-                                <span className="text-xs">Reset</span>
-                            </button>
-                        )}
-                    </div>
-                </CardContent>
+                 <FlashcardContentRenderer 
+                    card={card}
+                    revealAnswer={revealAnswer}
+                    setRevealAnswer={setRevealAnswer}
+                    checked={checked}
+                    setChecked={setChecked}
+                    selectedOption={selectedOption}
+                    setSelectedOption={setSelectedOption}
+                    userAnswer=""
+                    setUserAnswer={setUserAnswer}
+                />
             )}
+            {/* MODE 4: Diagram Flashcard */}
+            {card.type === "diagram" && 
+                <FlashcardContentRenderer 
+                    heading = "Concept Diagram"
+                    card={card}
+                    revealAnswer={revealAnswer}
+                    setRevealAnswer={setRevealAnswer}
+                    setChecked={setChecked}
+                    setSelectedOption={setSelectedOption}
+                    userAnswer=""
+                    setUserAnswer={setUserAnswer}
+                />
+            }
+
+            {/* MODE 5: Chart Flashcard */}
+            {card.type === "chart" && card.chartData && 
+                <FlashcardContentRenderer 
+                    heading = "Data Visualization"
+                    card={card}
+                    revealAnswer={revealAnswer}
+                    setRevealAnswer={setRevealAnswer}
+                    setChecked={setChecked}
+                    setSelectedOption={setSelectedOption}
+                    userAnswer=""
+                    setUserAnswer={setUserAnswer}
+                />
+            }
+
+            {/* MODE 6: Image Flashcard */}
+            {card.type === "image-labeling" && 
+                <FlashcardContentRenderer 
+                    heading = "Label the image"
+                    card={card}
+                    revealAnswer={revealAnswer}
+                    setRevealAnswer={setRevealAnswer}
+                    setChecked={setChecked}
+                    setSelectedOption={setSelectedOption}
+                    userAnswer=""
+                    setUserAnswer={setUserAnswer}
+                />
+            }
 
             {/* SRS Rating Footer: Only visible once the answer is known */}
             <CardFooter className="flex justify-between items-center gap-2 mt-4">

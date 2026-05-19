@@ -109,11 +109,21 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
       const formData = new FormData(e.currentTarget);
       const finalCardCount = Number(formData.get('cardCount'));
       // Collecting desired card formats from checkbox group
-      const desiredTypes: ('question-answer' | 'fill-in-the-blank' | 'mcq')[] = [];
+      const desiredTypes: (
+        'question-answer' | 
+        'fill-in-the-blank' | 
+        'mcq' |
+        'diagram' |
+        'chart' |
+        'image-labeling'
+      )[] = [];
 
       if(formData.has('question-answer')) desiredTypes.push('question-answer');
       if(formData.has('fill-in-the-blank')) desiredTypes.push('fill-in-the-blank');
       if(formData.has('mcq')) desiredTypes.push('mcq');
+      if(formData.has('diagram')) desiredTypes.push('diagram');
+      if(formData.has('chart')) desiredTypes.push('chart');
+      if(formData.has('image-labeling')) desiredTypes.push('image-labeling');
 
       // Business Logic Validation
       if(
@@ -280,6 +290,33 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
           <div className="flex flex-row gap-3">
             <Checkbox id="mcq" name="mcq"/>
             <Label htmlFor="mcq">Multiple Choice (MCQ)</Label>
+          </div>
+          <div className="flex flex-row gap-3">
+              <Checkbox id="diagram" name="diagram"/>
+              <Label htmlFor="diagram">
+                Concept Diagram
+                <span className="ml-2 text-xs text-gray-500">
+                  Visual flow/relationship maps
+                </span>
+              </Label>
+          </div>
+          <div className="flex flex-row gap-3">
+              <Checkbox id="chart" name="chart"/>
+              <Label htmlFor="chart">
+                Chart-based
+                <span className="ml-2 text-xs text-gray-500">
+                    Data Visiualization questions
+                </span>
+              </Label>
+          </div>
+          <div className="flex flex-row gap-3">
+              <Checkbox id="image-labeling" name="image-labeling"/>
+              <Label htmlFor="image-labeling">
+                  Image Labeling
+                  <span className="ml-2 text-xs text-gray-500">
+                    Label parts of diagram or images
+                  </span>
+              </Label>
           </div>
         </div>
       
