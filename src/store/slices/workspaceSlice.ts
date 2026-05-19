@@ -19,7 +19,7 @@ const initialState: WorkspacesState = {
     byId: {},
     allIds: [],
     currentWorkspace: null, // Stores the ID
-    loading: true, // Add loading state
+    loading: false, // Add loading state
     error: null, // Add error state
 }
 
@@ -66,6 +66,30 @@ const workspaceSlice = createSlice({
             // Update in byId directly
             if (state.byId[action.payload._id]) { // Check if it exists
                 state.byId[action.payload._id] = action.payload;
+            }
+
+            // Sync currentWorkspace 
+            if(state.currentWorkspace?._id === action.payload._id){
+               state.currentWorkspace = action.payload;
+            }
+        },
+        UPDATE_WORKSPACE_PARTIAL: (
+            state,
+            action: PayloadAction<{
+                id: string,
+                updates: Partial<ReduxWorkSpace>
+            }>
+        ) => {
+            const { id, updates } = action.payload;
+
+            if(state.byId[id]){
+                state.byId[id] = { ...state.byId[id], ...updates };
+            }
+            if(state.currentWorkspace?._id === id){
+                state.currentWorkspace = {
+                    ...state.currentWorkspace,
+                    ...updates,
+                };
             }
         },
 
@@ -140,6 +164,7 @@ export const {
     ADD_WORKSPACE,
     DELETE_WORKSPACE,
     UPDATE_WORKSPACE,
+    UPDATE_WORKSPACE_PARTIAL,
     SET_WORKSPACES,
     SET_CURRENT_WORKSPACE,
     SET_WORKSPACE_LOADING,

@@ -59,13 +59,22 @@ const folderSlice = createSlice({
             const workspace = state.foldersByWorkspace[workspaceId];
 
             // check if exists: this prevents the second dispatch (from socket) from adding it again
-            if(workspace.byId[folder._id]){
-                workspace.byId[folder._id] = { ...workspace.byId[folder._id], ...folder };
-                return;
+            // if(workspace.byId[folder._id]){
+            //     workspace.byId[folder._id] = { ...workspace.byId[folder._id], ...folder };
+            //     return;
+            // }
+            // // new folder addition
+            // workspace.byId[folder._id] = folder;
+
+            workspace.byId[folder._id] = {
+                ...workspace.byId[folder._id],
+                ...folder
+            };
+
+            if(!workspace.allIds.includes(folder._id)){
+                 workspace.allIds.push(folder._id);
             }
-            // new folder addition
-            workspace.byId[folder._id] = folder;
-            workspace.allIds.push(folder._id);
+           
         },
 
         /**
@@ -120,6 +129,13 @@ const folderSlice = createSlice({
                             ...state.foldersByWorkspace[workspaceId].byId[id],
                             ...updates,
                         }
+                    }
+
+                    if(state.currentFolder?._id === id){
+                        state.currentFolder = {
+                            ...state.currentFolder,
+                            ...updates,
+                        };
                     }
                 },
 
