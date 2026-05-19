@@ -26,7 +26,14 @@ export interface GenerationPayload{
     resourceId: string;
     resourceType: 'Workspace' | 'Folder' | 'File';
     cardCount: number;
-    desiredTypes: ( 'question-answer' | 'fill-in-the-blank' | 'mcq')[];
+    desiredTypes: ( 
+        'question-answer' | 
+        'fill-in-the-blank' | 
+        'mcq' |
+        'diagram' |
+        'chart' |
+        'image-labeling'
+    )[];
 }
 
 /** Normalized response returned by flashcard API */

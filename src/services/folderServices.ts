@@ -12,6 +12,7 @@
  * 4. Observability: Includes strategic logging (e.g., `console.log`) to monitor 
  * folder-to-file data flow during development.
  */
+import { ConceptGraph } from "@/types/state.type";
 import axios from "axios"
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
@@ -64,5 +65,40 @@ export async function addFolder(workspaceId: string) {
     return data.data;
    } catch (error) {
     console.warn("[FolderServices] Failed to add folder due to following error: ",error);
+   }
+}
+
+
+export async function conceptGraphService(folderId: string){
+   try {
+      const relativePath = `/api/folder/${folderId}/concept-graph`;
+      const url = `${BASE_URL}${relativePath}`
+      const { data } = await axios.post(url);
+      
+      if(!data.success){
+         throw new Error(data.message);
+      }
+      return data.data;
+
+   } catch (error: any) {
+      console.error("[FolderServices] Failed to generate concept graph due to following error: ",
+         error);
+   }
+}
+
+export async function learningPathService(folderId: string) {
+   try {
+      const relativePath = `/api/folder/${folderId}/learning-path`;
+      const url = `${BASE_URL}${relativePath}`;
+      const { data } = await axios.get(url);
+
+      if(!data.success){
+         throw new Error(data.message);
+      }
+      return data.data;
+   } catch (error) {
+      console.error("[FolderService] Failed to generate learning path for folder due to following error: ",
+         error
+      );
    }
 }

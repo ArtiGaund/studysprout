@@ -12,8 +12,10 @@
  * 4. Resource Hierarchy: Orchestrates the retrieval of nested entities (Folders) 
  * scoped specifically to a Workspace ID.
  */
+import { LearningPathFileNode } from "@/components/dashboard-shared/learning-path-view";
 import { Folder } from "@/model/folder.model";
 import { WorkSpace } from "@/model/workspace.model";
+import { ReduxWorkSpace } from "@/types/state.type";
 import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
@@ -52,7 +54,6 @@ export async function getUserWorkspaces(userId:string):Promise<WorkSpace[]>{
  */
 export async function getCurrentWorkspace(workspaceId:string): Promise<WorkSpace>{
     const relativePath = `/api/workspace/${workspaceId}`;
-    console.log("[Workspace Services] getCurrentWorkspace workspaceId: ",workspaceId);
     const url = `${BASE_URL}${relativePath}`
     const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);
@@ -124,7 +125,6 @@ export async function updateLogo(
     formData.append("newLogo", logoFile);
     
    try {
-    // const relativePath = `/api/update-workspace-logo`;
     const relativePath = `/api/workspace/${workspaceId}/logo`;
     const url = `${BASE_URL}${relativePath}`
      const { data } = await axios.post(url, formData, {
@@ -151,3 +151,92 @@ export async function updateLogo(
    }
 }
 
+export async function fetchWorkspaceTermIndex(
+    workspaceId: string,
+    signal: any,
+): Promise<{
+    success: boolean;
+    data?: any;
+    message?: string;
+}>{
+    try {
+        const relativePath = `/api/workspace/${workspaceId}/term-index`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.get(url, signal);
+         if(!data.success){
+            return {
+                success: false,
+                message: data.message || "Failed to fetch workspace term index."
+            }
+        }
+        return {
+            success: true,
+            data: data.data,
+        }
+    } catch (error: any) {
+        console.error('Service error in fetching workspace term index:', error);
+        return {
+            success: false,
+            message: error.response?.data?.message || error.message || "An unexpected error occurred."
+        };
+    }
+}
+
+export async function workspaceConceptGraphService(workspaceId: string): Promise<{
+    success: boolean;
+    data?: ReduxWorkSpace;
+    message?: string;
+    statusCode?: number;
+}>{
+    try {
+        const relativePath = `/api/workspace/${workspaceId}/concept-graph`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.post(url);
+        if(!data.success) return {
+            success: false,
+            message: data.message,
+            statusCode: data.statusCode,
+        }
+        return {
+            success: true,
+            data: data.data as ReduxWorkSpace,
+        }
+    } catch (error: any) {
+        console.error("[Workspace Service] workspaceConceptGraphService failed: ",error.message);
+        return {
+            success: false,
+            message: error.response?.data?.message || error.message || "An unexpected error occurred."
+        };
+    }
+}
+
+export async function workspaceLearningPathService(
+    workspaceId: string
+): Promise<{
+    success: boolean;
+    learningPath?: LearningPathFileNode[];
+    message?: string;
+    statusCode?: number;
+} | undefined >{
+    try {
+        const relativePath = `/api/workspace/${workspaceId}/learning-path`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.get(url);
+        if(!data.success) return {
+            success: false,
+            message: data.message,
+            statusCode: data.statusCode,
+        }
+        return {
+            success: true,
+            learningPath: data.data.learningPath as LearningPathFileNode[],
+            statusCode: data.statusCode,
+        };
+    } catch (error: any) {
+        console.error("[Workspace Service] workspaceLearningPath failed: ",error.message);
+        return {
+            success: false,
+            message: error.response?.data?.message || error.message || "An unexpected error occurred."
+        };
+    }
+}
