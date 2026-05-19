@@ -9,7 +9,7 @@
  */
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { Folder as MongooseFolder } from "@/model/folder.model";
@@ -22,8 +22,8 @@ import {
     UPDATE_FOLDER 
 } from "@/store/slices/folderSlice";
 import { getAllFolders } from "@/services/workspaceServices";
-import { ReduxFolder } from "@/types/state.type";
-import { addFolder, getCurrentFolder } from "@/services/folderServices";
+import { ConceptGraph, ReduxFolder } from "@/types/state.type";
+import { addFolder, conceptGraphService, getCurrentFolder, learningPathService } from "@/services/folderServices";
 import { updateDir } from "@/services/dirServices";
 import { transformFolder } from "@/utils/data-transformers";
 import { hasFetchedFoldersByWorkspaceRef } from "@/cache/folderCache";
@@ -34,6 +34,8 @@ import {
      selectFolderLoading
  } from "@/store/selectors/folderSelector";
 import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
+import { useToast } from "@/components/ui/use-toast";
+import { LearningPathFileNode } from "@/components/dashboard-shared/learning-path-view";
 
 const EMPTY_ARRAY: ReduxFolder[] = [];
 export function useFolder(){
@@ -52,6 +54,9 @@ export function useFolder(){
 
    const folderLoading = useSelector(selectFolderLoading);
    const folderError = useSelector(selectFolderError);
+   const { toast } = useToast();
+
+   const learningPathCacheRef = useRef<Map<string, LearningPathFileNode[]>>(new Map());
    
    /**
      * @method getFolders
@@ -351,6 +356,110 @@ export function useFolder(){
         currentFolder,
     ])
 
+    const generateConceptGraph = useCallback(async (folderId: string): Promise<{
+        success: boolean,
+        data?: ReduxFolder,
+        error?: string,
+    }> => {
+        if(!folderId || !workspaceId){
+            return {
+                success: false,
+                error: "FolderId and WorkspaceId are required."
+            }
+        }
+
+        // Set generating status in Redux immediately
+        dispatch(UPDATE_FOLDER({
+            workspaceId,
+            id: folderId,
+            updates: {
+                conceptGraphStatus: "generating",
+            }
+        }));
+
+        try {
+            const result = await conceptGraphService(folderId);
+            if(!result?.updatedFolder){
+                return {
+                    success: false,
+                    error: result.message ||"Failed to generate concept graph",
+                }
+            }
+            const folder = transformFolder(result.updatedFolder);
+
+            // Update the folder in Redux with the new concept graph and set status to 'completed'
+            dispatch(UPDATE_FOLDER({
+                workspaceId,
+                id: folderId,
+                updates: folder,
+            }));
+
+            return {
+                success: true,
+                data: folder as ReduxFolder,
+            }
+
+        } catch (error) {
+            console.error('Error generating concept graph in hook:', error);
+            const errorMessage = error instanceof Error ? error.message : "Failed to generate concept graph";
+            dispatch(UPDATE_FOLDER({
+                workspaceId,
+                id: folderId,
+                updates: {
+                    conceptGraphStatus: "error",
+                }
+            }));
+            return {
+                success: false,
+                error: errorMessage,
+            }
+        }
+    },[
+        workspaceId,
+    ])
+
+    const getLearningPath = useCallback(async (folderId: string):Promise<{
+        success: boolean,
+        data?: LearningPathFileNode[],
+        error?: string,
+    }> => {
+        if(!folderId){
+            return {
+                success: false,
+                error: "FolderId is required",
+            };
+        }
+
+        if(learningPathCacheRef.current.has(folderId)){
+            return {
+                success: true,
+                data: learningPathCacheRef.current.get(folderId)!,
+            };
+        }
+
+        try {
+            const result = await learningPathService(folderId);
+            if(!result){
+                return {
+                    success: false,
+                    error: "Failed to load learning path",
+                };
+            }
+
+            learningPathCacheRef.current.set(folderId, result.learningPath);
+            
+            return {
+                success: true,
+                data: result.learningPath,
+            };
+        } catch (error) {
+            const errorMessage = error instanceof Error 
+                ? error.message 
+                : "Failed to load learning path";
+            return { success: false, error: errorMessage };
+        }
+    },[])
+
    /**
      * @method invalidateFolderCaches
      * @description Explicitly clears the fetch-tracking refs for a workspace.
@@ -391,6 +500,8 @@ export function useFolder(){
         createFolder,
         updateFolder,
         currentFolderDetail,
+        generateConceptGraph,
+        getLearningPath,
         invalidateFolderCaches,
      }
 

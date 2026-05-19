@@ -9,14 +9,16 @@
  */
 "use client";
 
-import { WorkSpace as MongooseWorkSpace} from "@/model/workspace.model";
+import { WorkSpace as MongooseWorkSpace, WorkSpace} from "@/model/workspace.model";
 import { hardDeleteDir } from "@/services/dirServices";
 import { 
     addWorkspace, 
     getCurrentWorkspace, 
     getUserWorkspaces, 
     updateLogo, 
-    updateWorkspace 
+    updateWorkspace, 
+    workspaceConceptGraphService,
+    workspaceLearningPathService
 } from "@/services/workspaceServices";
 import { 
     ADD_WORKSPACE, 
@@ -25,10 +27,11 @@ import {
     SET_WORKSPACE_ERROR, 
     SET_WORKSPACE_LOADING, 
     SET_WORKSPACES, 
-    UPDATE_WORKSPACE 
+    UPDATE_WORKSPACE, 
+    UPDATE_WORKSPACE_PARTIAL
 } from "@/store/slices/workspaceSlice";
 import { RootState } from "@/store/store";
-import { ReduxWorkSpace } from "@/types/state.type";
+import { ConceptGraph, ReduxWorkSpace } from "@/types/state.type";
 import { transformWorkspace } from "@/utils/data-transformers";
 import { useCallback, useMemo} from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -38,6 +41,7 @@ import {
     hasFetchedCurrentWorkspaceDetailsRef
 } from "@/cache/workspaceCache";
 import { selectAuthStatus, selectUserId } from "@/store/selectors/userSelector";
+import { LearningPathFileNode } from "@/components/dashboard-shared/learning-path-view";
 
 export function useWorkspace() {
     // const { data: session, status } = useSession();
@@ -76,6 +80,7 @@ export function useWorkspace() {
        
         // Guards against redundant calls for this specific fetch
         if(hasFetchedAllWorkspaceRef.has(currentUserId)){
+            dispatch(SET_WORKSPACE_LOADING(false));
             return {
                 success: true,
                 data: allWorkspaceIds.map(id => workspacesById[id]).filter(Boolean) as ReduxWorkSpace[]
@@ -140,6 +145,7 @@ export function useWorkspace() {
 
         // 1. Cache Hit: Prevent unnecessary network latency
         if(workspacesById[workspaceId]){
+            dispatch(SET_WORKSPACE_LOADING(false));
             dispatch(SET_CURRENT_WORKSPACE(workspacesById[workspaceId]));
             return { 
                 success: true, 
@@ -252,10 +258,12 @@ export function useWorkspace() {
 
         // 1. Immediate Return: If this workspace is already the current one in Redux
         if(currentWorkspace?._id === workspaceId && workspacesById[workspaceId]){
+            dispatch(SET_WORKSPACE_LOADING(false));
             return { success: true, data: workspacesById[workspaceId] }; // Return Redux data from store
         }
         // 2. Cache Check: Prevent duplicate inflight requests for the same ID
         if (hasFetchedCurrentWorkspaceDetailsRef.has(workspaceId)) {
+            dispatch(SET_WORKSPACE_LOADING(false));
             return { success: true, data: workspacesById[workspaceId] }; // Return Redux data from store
         }
         dispatch(SET_WORKSPACE_LOADING(true));
@@ -451,6 +459,7 @@ export function useWorkspace() {
         }
 
         if(hasCheckedUserWorkspaceStatusRef.has(userIDToCheck)){
+            dispatch(SET_WORKSPACE_LOADING(false));
             return {
                 success: true,
                 data: allWorkspaceIds.length > 0
@@ -484,6 +493,96 @@ export function useWorkspace() {
         dispatch
     ])
 
+    const generateWorkspaceConceptGraph = useCallback(async (workspaceId: string ): Promise<{
+        success: boolean;
+        data?: ConceptGraph;
+        error?: string;
+    }> => {
+
+        if(!workspaceId) return {
+            success: false,
+            error: "WorkspaceId is required",
+        }
+
+        dispatch(UPDATE_WORKSPACE_PARTIAL({
+            id: workspaceId,
+            updates: {
+                conceptGraphStatus: "generating",
+            },
+        }));
+        try {
+            const result = await workspaceConceptGraphService(workspaceId);
+            if(!result.success || !result.data){
+                dispatch(UPDATE_WORKSPACE_PARTIAL({
+                    id: workspaceId,
+                    updates: {
+                        conceptGraphStatus: "error",
+                    },
+                }));
+                return {
+                    success: false,
+                    error: result.message,
+                };
+            }
+
+            const sanitized = {
+                ...result.data,
+                inTrash: result.data.inTrash ?? undefined,
+                logo: result.data.logo ?? undefined, 
+            }
+            const workspace = transformWorkspace(sanitized as WorkSpace);
+            dispatch(UPDATE_WORKSPACE(workspace));
+
+            return {
+                success: true,
+                data: workspace.conceptGraph ?? undefined,
+            };
+        } catch (error) {
+            console.error("[useWorkspace] Failed to generateWorkspaceConceptGraph: ",error);
+            dispatch(UPDATE_WORKSPACE_PARTIAL({
+                id: workspaceId,
+                updates: {
+                    conceptGraphStatus: "error",
+                },
+            }));
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : "Failed",
+            }
+        }
+    },[
+        dispatch,
+    ]);
+
+    const getWorkspaceLearningPath = useCallback(async( workspaceId: string): Promise<{
+        success: boolean;
+        data?: LearningPathFileNode[];
+        error?: string;
+    }> => {
+        if(!workspaceId) return {
+            success: false,
+            error: "WorkspaceId is required",
+        }
+
+        try {
+            const result = await workspaceLearningPathService(workspaceId);
+            if(!result) return {
+                success: false,
+                error: "Failed to fetc",
+            }
+
+            return {
+                success: true,
+                data: result.learningPath,
+            }
+        } catch (error) {   
+            console.error("[useWorkspace] Failed to get workspace learning path: ",error);
+            return { 
+                success: false, 
+                error: error instanceof Error ? error.message : "Failed" 
+            };
+        }
+    },[])
     // --- Memoized Derived Exports ---
     const allWorkspacesArray = useMemo(() => {
         return allWorkspaceIds.map( id => workspacesById[id]);
@@ -512,5 +611,7 @@ export function useWorkspace() {
         updateWorkspaceLogo,
         checkUserHaveCreatedWorkspace,
         deleteWorkspace,
+        generateWorkspaceConceptGraph,
+        getWorkspaceLearningPath,
     }
 }

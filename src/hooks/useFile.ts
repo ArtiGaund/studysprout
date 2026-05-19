@@ -89,7 +89,19 @@ export function useFile() {
             dispatch(SET_FILE_ERROR(null));
             try {
                 const newFile = await addFile(payload);
+                if(!newFile){
+                    return {
+                        success: false,
+                        error: "Failed to create new file",
+                    };
+                }
                 const transformedFile = transformFile(newFile as MongooseFile);
+                if(!transformedFile){
+                    return{
+                        success: false,
+                        error: "Failed to transform new file",
+                    };
+                }
 
                 // Sync Redux
                 dispatch(ADD_FILE({
@@ -155,6 +167,12 @@ export function useFile() {
                 }
             }
             const transformedFile = transformFile(file);
+            if(!transformedFile){
+                return {
+                    success: false,
+                    error: "Failed to transform updated file",
+                };
+            }
             dispatch(UPDATE_FILE({
                 folderId: file.folderId.toString(),
                 id: file._id,
@@ -273,10 +291,17 @@ export function useFile() {
         try {
             const fetchFiles = await getAllFiles(folderId);
 
-            const transformedFiles = (Array.isArray(fetchFiles)
-            ? fetchFiles
-            : [fetchFiles]
-            ).filter(Boolean).map(file => transformFile(file as MongooseFile));
+            const transformedFiles: ReduxFile[] = 
+                (Array.isArray(fetchFiles) ? fetchFiles : [fetchFiles])
+                .map(file => (file ? transformFile(file as MongooseFile) : null ))
+                .filter((file): file is ReduxFile => file !== null);
+
+            if(!transformedFiles){
+                return {
+                    success: false,
+                    error: "Failed to transformed all files",
+                }
+            }
            
              if(transformedFiles.length > 0 && !hasFetchedFolderFilesRef.has(folderId)){
                 dispatch(SET_FILES({
@@ -358,6 +383,12 @@ export function useFile() {
                 }
             }
             const transformedFile = transformFile(file);
+            if(!transformedFile){
+                return {
+                    success: false,
+                    error: "Failed to transform file",
+                };
+            }
             dispatch(ADD_FILE({
                 folderId:file.folderId,
                 file: transformedFile
