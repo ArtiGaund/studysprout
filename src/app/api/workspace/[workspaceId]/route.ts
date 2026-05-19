@@ -26,7 +26,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options"
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
-import { imageDeletion } from "@/lib/image-handler/imageDeletion"
+import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion"
 import { isValidId } from "@/helpers/validateId";
 
 export async function GET(
@@ -295,7 +295,7 @@ export async function DELETE(
                 )}}
             ).select('public_id').lean();
             const actualCloudinaryPublicIds = imageModels.map(image => image.public_id);
-            await imageDeletion(actualCloudinaryPublicIds);
+            await resourceDeletion(actualCloudinaryPublicIds);
         }
 
         // 7. delete all files within the folders

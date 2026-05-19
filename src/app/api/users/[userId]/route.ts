@@ -18,7 +18,7 @@ import{
     UserModel
 } from "@/model/index";
 import ImageModel from "@/model/image.model";
-import { imageDeletion } from "@/lib/image-handler/imageDeletion";
+import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion";
 import mongoose from "mongoose";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 
@@ -135,7 +135,7 @@ export async function DELETE(request: Request){
         const actualCloudinaryPublicIds = imageModels.map(img => img.public_id);
 
         // Perform image deletion using the new function
-        await imageDeletion(actualCloudinaryPublicIds);
+        await resourceDeletion(actualCloudinaryPublicIds);
 
         // Proceed with database document deletions
         // delete files first (children)

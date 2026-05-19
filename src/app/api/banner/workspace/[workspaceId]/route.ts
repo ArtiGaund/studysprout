@@ -7,12 +7,12 @@
 import dbConnect from "@/lib/dbConnect";
 import ImageModel from "@/model/image.model";
 import {WorkSpaceModel} from "@/model/index";
-import { imageDeletion } from "@/lib/image-handler/imageDeletion";
+import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion";
 import mongoose from "mongoose";
 import { 
-    deleteImageFromCloudinary, 
-    uploadImageToCloudinary 
-} from "@/lib/image-handler/upload-and-delete-image-cloudinary";
+    deleteFromCloudinary, 
+    uploadToCloudinary 
+} from "@/lib/cloudinary-utils/upload-and-delete-from-cloudinary";
 
 export async function POST(request: Request) {
     await dbConnect()
@@ -56,14 +56,14 @@ export async function POST(request: Request) {
             // Find public_id from Image collection to perform Cloudinary deletion
             const publicIdsToDelete = await ImageModel.find({ _id: oldBannerId }).select('public_id').lean();
             if (publicIdsToDelete.length > 0 && publicIdsToDelete[0].public_id) {
-                await imageDeletion([publicIdsToDelete[0].public_id]);
+                await resourceDeletion([publicIdsToDelete[0].public_id]);
             } else {
              // Log a warning if an old logo ID exists but no corresponding ImageModel public_id was found
                 console.warn(`Workspace ${workspaceId} had old logo ID ${oldBannerId}, but no corresponding ImageModel public_id found for deletion.`);
             }
         }
         //3. Upload new asset to Cloudinary
-        const updatedBannerResult = await uploadImageToCloudinary(newBanner, "studysprout") as { secure_url: string, public_id: string}
+        const updatedBannerResult = await uploadToCloudinary(newBanner, "studysprout") as { secure_url: string, public_id: string}
 
         if(!updatedBannerResult){
             return Response.json({
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         if(!savedBannerImage){
             // Rollback Cloudinary upload if saving to DB fails
             if (uploadedNewBannerPublicId) {
-                await deleteImageFromCloudinary(uploadedNewBannerPublicId); // Use direct Cloudinary delete for this specific rollback step
+                await deleteFromCloudinary(uploadedNewBannerPublicId); // Use direct Cloudinary delete for this specific rollback step
             }
             return Response.json({
                 statusCode: 500,
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
         if(!updatedWorkspace){
             // Comprehensive rollback if updating the workspace document fails
             if (uploadedNewBannerPublicId) {
-                await deleteImageFromCloudinary(uploadedNewBannerPublicId);
+                await deleteFromCloudinary(uploadedNewBannerPublicId);
             }
             if (savedNewBannerImageId) {
                 await ImageModel.findByIdAndDelete(savedNewBannerImageId);
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
         // --- Comprehensive Rollback in Catch Block ---
         // Attempt to clean up Cloudinary and ImageModel entries if an error occurred after they were created.
         if (uploadedNewBannerPublicId) {
-           await deleteImageFromCloudinary(uploadedNewBannerPublicId).catch(err =>
+           await deleteFromCloudinary(uploadedNewBannerPublicId).catch(err =>
                console.error("Rollback error: Could not delete new banner from Cloudinary:", err)
            );
         }
@@ -210,7 +210,7 @@ export async function DELETE(request:Request) {
             mongoose.Types.ObjectId.isValid(id)) } }).select('public_id').lean();
         const actualCloudinaryPublicIds = imageModels.map(img => img.public_id);
         if (actualCloudinaryPublicIds.length > 0) {
-            await imageDeletion(actualCloudinaryPublicIds);
+            await resourceDeletion(actualCloudinaryPublicIds);
         } else {
             console.warn(`Workspace ${workspaceId} had bannerUrl ${imageToDelete} but no corresponding ImageModel found.`);
         }

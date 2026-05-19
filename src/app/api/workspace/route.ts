@@ -13,9 +13,9 @@
  */
 import dbConnect from "@/lib/dbConnect";
 import {
-     deleteImageFromCloudinary, 
-     uploadImageToCloudinary
- } from "@/lib/image-handler/upload-and-delete-image-cloudinary";
+     deleteFromCloudinary, 
+     uploadToCloudinary
+ } from "@/lib/cloudinary-utils/upload-and-delete-from-cloudinary";
 import ImageModel from "@/model/image.model";
 import {UserModel, WorkSpaceModel} from "@/model/index";
 import { isValidId } from "@/helpers/validateId";
@@ -59,7 +59,7 @@ export async function POST(request: any){
             );
         }
         // uploading image in cloudinary
-        const imageData = await uploadImageToCloudinary(image, "studysprout") as { secure_url: string ,public_id: string }
+        const imageData = await uploadToCloudinary(image, "studysprout") as { secure_url: string ,public_id: string }
       
         // saving image in image schema database
         if(imageData){
@@ -89,7 +89,7 @@ export async function POST(request: any){
         // console.log("workspace have been added into user model ",user)
         if(!newWorkspace){
             // deleting from cloudinary first
-            await deleteImageFromCloudinary(savedImage?.public_id)
+            await deleteFromCloudinary(savedImage?.public_id)
             // deleting from image schema database
             await ImageModel.findByIdAndDelete(savedImage._id)
             return errorResponse(

@@ -17,12 +17,13 @@ import {
     WorkSpaceModel
 } from "@/model/index"
 import { AnyExpression } from "mongoose";
-import { imageDeletion } from "@/lib/image-handler/imageDeletion"
+import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion"
 import { isValidId } from "@/helpers/validateId";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options";
 import { emitRealtimeEvent } from "@/lib/realtime-fetch";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
+import { extractPublicIdFromUrl } from "@/lib/cloudinary-utils/extract-public-id";
 
 export async function GET(
     request: Request,
@@ -250,6 +251,15 @@ export async function DELETE(
             );
         }
 
+        // Deleting pdf reference from cloudinary
+        if(folderToDelete.isPDFWorkspace && folderToDelete.pdfUrl){
+            // 1. Extract the public_id from the cloudinary URL
+            const publicId = extractPublicIdFromUrl(folderToDelete.pdfUrl);
+
+            // 2. delete the pdf from cloudinary using publicId
+            await resourceDeletion([publicId], "image");
+        }
+
         // start cascading deletion for files and images
         const imagePublicIdsToDelete: (string | mongoose.Types.ObjectId)[] = [];
 
@@ -278,7 +288,7 @@ export async function DELETE(
                 ) } 
             }).select('public_id').lean();
             const actualCloudinaryPublicIds = imageModels.map(image => image.public_id);
-            await imageDeletion(actualCloudinaryPublicIds);
+            await resourceDeletion(actualCloudinaryPublicIds, "image");
         }
 
         // 6. delete all files within the folder

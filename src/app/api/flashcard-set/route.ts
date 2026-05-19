@@ -1,7 +1,7 @@
 /**
  * RESOURCE: Flashcard Generation Engine
  * ------------------------------------
- * Endpoint: POST /api/generate-flashcards
+ * Endpoint: POST /api/flashcard-set
  * Role: Orchestrates the AI-driven transformation of notes into study sets.
  * * Logic Flow:
  * 1. Aggregation: Resolves files based on ResourceType (Workspace/Folder/File).
@@ -142,10 +142,12 @@ export async function POST(request: NextRequest){
             blockId: string;
             text: string;
             updatedAt: Date;
+            contentHash: string | null;
         }
         interface BlockLookupEntry {
             fileId: string;
             updatedAt: Date;
+            contentHash: string | null;
         }
         // Flatten into global ordered block stream
         const globalBlocks: GlobalBlockEntry[] = [];
@@ -155,22 +157,35 @@ export async function POST(request: NextRequest){
             const fileId = file._id?.toString();
             if(!fileId) continue;
             for(const blockId of file.blockOrder){
-                const blocks = file.blocks as any;
-                const block = blocks[blockId];
+                const blocksRaw = file.blocks as any;
+                const block = blocksRaw instanceof Map
+                    ? blocksRaw.get(blockId)
+                    : blocksRaw?.[blockId];
 
                 if(!block?.structuredText){
                     continue;
                 }
 
+                const blockText = 
+                    block?.structuredText ||
+                    block?.plainText ||
+                    block?.content || 
+                    "";
+                
+                if(!blockText.trim()) continue;
+
                 globalBlocks.push({
-                    fileId: fileId,
+                    fileId,
                     blockId,
-                    text: block.structuredText,
-                    updatedAt: block.updatedAt,
+                    text: blockText,
+                    updatedAt: block?.updatedAt || new Date(),
+                    contentHash: block?.contentHash || null,
                 });
+
                 blockLookup[blockId] = {
-                    fileId: fileId,
-                    updatedAt: block.updatedAt
+                    fileId,
+                    updatedAt: block?.updatedAt || new Date(),
+                    contentHash: block?.contentHash || null,
                 };
             }
         }
@@ -208,7 +223,13 @@ export async function POST(request: NextRequest){
                 startBlockId: chunk[0].blockId,
                 endBlockId: chunk[chunk.length -1].blockId,
                 blocksState: Object.fromEntries(
-                    chunk.map(block => [block.blockId, { updatedAt: block.updatedAt}])
+                    chunk.map(block => [
+                        block.blockId, 
+                        { 
+                            updatedAt: block.updatedAt,
+                            contentHash: block.contentHash,
+                        }
+                    ])
                 )
             }
         }));
@@ -234,7 +255,7 @@ export async function POST(request: NextRequest){
 
             //  --- TOGGLING FOR TESTING
 
-            const USE_MOCK = true;
+            const USE_MOCK = process.env.FLASHCARD_USE_MOCK === "true";
 
             if(USE_MOCK){
                 console.log("[Flashcard set route] running use mock")
@@ -282,7 +303,7 @@ export async function POST(request: NextRequest){
                 const result = await GenerateFlashcardsFromChunks(
                 [chunkData],
                 target,
-                desiredTypes
+                desiredTypes,
             );
             
             if(result?.data?.flashcards){
@@ -305,6 +326,8 @@ export async function POST(request: NextRequest){
                 question: card.question,
                 answer: card.answer,
                 options: card.options ?? [],
+                diagram: card.diagram ?? "",
+                chartData: card.chartData ?? null,
                 source_context: card.source_context,
 
                 source: {
@@ -319,7 +342,10 @@ export async function POST(request: NextRequest){
                     blocksState: Object.fromEntries(
                         safeIds.map(id => [
                             id,
-                            { updatedAt: blockLookup[id].updatedAt },
+                            { 
+                                updatedAt: blockLookup[id].updatedAt,
+                                contentHash: blockLookup[id].contentHash, 
+                            },
                         ])
                     )
                 },
@@ -329,7 +355,7 @@ export async function POST(request: NextRequest){
             }
             
         })
-          const flashcardInserted = await FlashcardModel.insertMany(flashcardsToInsert);
+        const flashcardInserted = await FlashcardModel.insertMany(flashcardsToInsert);
 
         const flashcardIds = flashcardInserted.map(flashcard => flashcard._id);
 

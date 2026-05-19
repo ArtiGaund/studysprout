@@ -8,8 +8,8 @@ import dbConnect from "@/lib/dbConnect";
 import { FileModel } from "@/model/index";
 import ImageModel from "@/model/image.model";
 import mongoose from "mongoose";
-import { imageDeletion } from "@/lib/image-handler/imageDeletion";
-import { uploadImageToCloudinary } from "@/lib/image-handler/upload-and-delete-image-cloudinary";
+import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion";
+import { uploadToCloudinary } from "@/lib/cloudinary-utils/upload-and-delete-from-cloudinary";
 
 export async function POST(request: Request) {
     await dbConnect()
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
             ).select('public_id').lean();
             const actualCloudinaryPublicIds = imageModels.map(img => img.public_id);
             if(actualCloudinaryPublicIds.length > 0){
-                await imageDeletion(actualCloudinaryPublicIds);
+                await resourceDeletion(actualCloudinaryPublicIds);
             }else{
                 console.warn(`File ${fileId} had old banner ID ${oldBannerId} but no corresponding ImageModel found for deletion.`);
             }
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
             }, { status: 400 });
         }
         // uploading new banner to cloudinary
-        const bannerImageUploadResult  = await uploadImageToCloudinary(newBanner, "studysprout") as { secure_url: string, public_id: string}
+        const bannerImageUploadResult  = await uploadToCloudinary(newBanner, "studysprout") as { secure_url: string, public_id: string}
 
         if(!bannerImageUploadResult ){
             return Response.json({
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
         // failed to upload image in database then delete the image from cloudinary
         if(!savedBannerImage){
             if (uploadedNewBannerPublicId) {
-                await imageDeletion([uploadedNewBannerPublicId]); // Use utility for rollback
+                await resourceDeletion([uploadedNewBannerPublicId]); // Use utility for rollback
             }
            return Response.json({
                 statusCode: 500,
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
         //  6. Final check and manual rollback if update failed
          if(!updatedFile){
             if(uploadedNewBannerPublicId){
-                await imageDeletion([uploadedNewBannerPublicId])
+                await resourceDeletion([uploadedNewBannerPublicId])
             }
             if(savedNewBannerImageId){
                 await ImageModel.findByIdAndDelete(savedNewBannerImageId)
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
         console.error("Error while uploading the banner for file:", error);
         // --- Manual Rollback in case of an error during creation/update steps ---
         if (uploadedNewBannerPublicId) {
-            await imageDeletion([uploadedNewBannerPublicId]).catch(err => console.error("Rollback error deleting new banner from cloud:", err));
+            await resourceDeletion([uploadedNewBannerPublicId]).catch(err => console.error("Rollback error deleting new banner from cloud:", err));
         }
         if (savedNewBannerImageId) {
             await ImageModel.findByIdAndDelete(savedNewBannerImageId).catch(err => console.error("Rollback error deleting new banner from DB:", err));
@@ -205,7 +205,7 @@ export async function DELETE(request:Request) {
          const actualCloudinaryPublicIds = imageModels.map(image => image.public_id);
 
          if(actualCloudinaryPublicIds.length > 0){
-            await imageDeletion(actualCloudinaryPublicIds);
+            await resourceDeletion(actualCloudinaryPublicIds);
          }else{
             console.warn(`File ${fileId} had bannerUrl ${imageIdToDelete} but no corresponding ImageModel found.`);
          }

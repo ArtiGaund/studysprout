@@ -20,7 +20,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options";
 import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
 import ImageModel from "@/model/image.model"
-import { imageDeletion } from "@/lib/image-handler/imageDeletion"
+import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion"
 import { isValidId } from "@/helpers/validateId";
 import { emitRealtimeEvent } from "@/lib/realtime-fetch";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
@@ -322,7 +322,7 @@ export async function DELETE(
                 )}}
             ).select('public_id').lean();
             const actualCloudinaryPublicIds = imageModels.map(image => image.public_id);
-            await imageDeletion(actualCloudinaryPublicIds);
+            await resourceDeletion(actualCloudinaryPublicIds);
         }
          // 4. remove file reference from parent folder 
          const folderUpdateResult = await FolderModel.updateOne(

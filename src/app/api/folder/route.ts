@@ -92,6 +92,8 @@ export async function POST(request: Request) {
                 inTrash: undefined,
                 workspaceId: folderData.workspaceId,
                 bannerUrl: '',
+                isPDFWorkspace: false,
+                conceptGraph: null,
               };
         // 2. Create the new folder document
         const newFolder = await FolderModel.create(newFolderData)
@@ -127,16 +129,16 @@ export async function POST(request: Request) {
         actorId: String(userId),
     }
 
-   try {
-     await emitRealtimeEvent(
-         'workspace-tree-update',
-         String(newFolder.workspaceId),
-         'folder_created',
-         payload,
-     );
-   } catch (socketError) {
-        console.warn("[Socket Emission Failed] Folder created: ",socketError);
-   }
+    try {
+            await emitRealtimeEvent(
+                'workspace-tree-update',
+                String(newFolder.workspaceId),
+                'folder_created',
+                payload,
+            );
+        } catch (socketError) {
+                console.warn("[Socket Emission Failed] Folder created: ",socketError);
+        }
     
        const data = { 
                 folder: newFolder.toObject(), // Convert to plain object if not already by .create()
@@ -212,35 +214,52 @@ export async function GET(request: Request){
          }
    
     try {
-        const workspace = await WorkSpaceModel.findById(workspaceId).populate('folders')
-        if(!workspace){
+
+        const foldersData = await FolderModel.find({
+            workspaceId: workspaceId,
+        }).sort({ createdAt: 1}).lean();
+
+        if(!foldersData){
             return errorResponse(
-                "No workspace of this id found in the database",
-                404,
-                404,
+                "No folder found",
+                400,
+                400,
             );
         }
 
-        const userId = session.user._id;
-        const hasAccess = hasWorkspaceAccess(workspace, userId);
+        const thirtyMinAgo = new Date(Date.now() - 30*60*1000);
 
-        if(!hasAccess){
-            return errorResponse(
-                "Unauthorized",
-                401,
-                401,
-            );
-        }
-        
-         // 3. Sort files by createdAt date
-        const foldersData = workspace?.folders
-        ? workspace.folders.sort((a: any,b: any) => 
-                 new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) : [];
+        const processedFolders = foldersData.map(folder => {
+             // STALE JOB LOGIC 
+            // If a folder is 'processing' but created more than 30 min ago, we treat it as an error so
+            // the user can Retry/Delete
+            if(
+                folder.status === "processing" &&
+                new Date(folder.createdAt) < thirtyMinAgo
+            ){
+                return {
+                    ...folder,
+                    status: "error" as const
+                };
+            }
 
+            // PARTIAL COMPLETION CHECK: Marked Completed but files are missing
+            if(folder.isPDFWorkspace && folder.status === "completed" && folder.pageCount){
+                const expectedParts = Math.ceil(folder.pageCount / 20);
+                const filesLength = folder.files?.length || 0;
+                if(filesLength < expectedParts || filesLength === 0){
+                    return {
+                        ...folder,
+                        status: "error" as const
+                    }
+                }
+            }
+            return folder;
+        })
         // 4. Return success response
         return successResponse(
             "Successfully fetched all files for the folder.",
-            foldersData,
+            processedFolders,
             200,
             200,
         );

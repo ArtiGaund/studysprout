@@ -101,10 +101,12 @@ export async function POST(
             blockId: string;
             text: string;
             updatedAt: Date;
+            contentHash: string | null;
         }
         interface BlockLookupEntry {
             fileId: string;
             updatedAt: Date;
+            contentHash: string | null;
         }
         // Flatten into global ordered block stream
         const globalBlocks: GlobalBlockEntry[] = [];
@@ -112,21 +114,31 @@ export async function POST(
 
         for(const file of filesToProcess){
             for(const blockId of file.blockOrder){
-                const block = file.blocks[blockId];
+               const blocksRaw = file.blocks;
+               const block = blocksRaw instanceof Map
+                    ? blocksRaw.get(blockId)
+                    : blocksRaw?.[blockId];
 
-                if(!block?.structuredText){
-                    continue;
-                }
+                const blockText = 
+                    block?.structuredText ||
+                    block?.plainText ||
+                    block?.content ||
+                    "";
+
+                if(!blockText.trim()) continue;
 
                 globalBlocks.push({
                     fileId: file._id.toString(),
                     blockId,
-                    text: block.structuredText,
-                    updatedAt: block.updatedAt,
+                    text: blockText,
+                    updatedAt: block?.updatedAt || new Date(),
+                    contentHash: block?.contentHash || null,
                 });
+
                 blockLookup[blockId] = {
                     fileId: file._id.toString(),
-                    updatedAt: block.updatedAt
+                    updatedAt: block?.updatedAt || new Date(),
+                    contentHash: block?.contentHash || null,
                 };
             }
         }
@@ -164,9 +176,15 @@ export async function POST(
                 startBlockId: chunk[0].blockId,
                 endBlockId: chunk[chunk.length -1].blockId,
                 blocksState: Object.fromEntries(
-                    chunk.map(block => [block.blockId, { updatedAt: block.updatedAt}])
-                )
-            }
+                    chunk.map(block => [
+                        block.blockId, 
+                        { 
+                            updatedAt: block.updatedAt,
+                            contentHash: block.contentHash,
+                        },
+                    ]),
+                ),
+            },
         }));
         const chunkCount = preparedChunks.length;
         const base = Math.floor(cardCount/chunkCount);
@@ -210,6 +228,8 @@ export async function POST(
                 question: card.question,
                 answer: card.answer,
                 options: card.options ?? [],
+                diagram: card.diagram ?? "",
+                chartData: card.chartData ?? null,
                 source_context: card.source_context,
 
                 source: {
@@ -224,7 +244,10 @@ export async function POST(
                     blocksState: Object.fromEntries(
                         safeIds.map(id => [
                             id,
-                            { updatedAt: blockLookup[id].updatedAt },
+                            { 
+                                updatedAt: blockLookup[id].updatedAt,
+                                contentHash: blockLookup[id].contentHash, 
+                            },
                         ])
                     )
                 },

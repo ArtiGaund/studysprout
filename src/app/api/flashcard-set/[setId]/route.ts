@@ -89,16 +89,35 @@ export async function GET(
         // Process Live Data for Set and Block timestamps for flashcard
         let liveTotalBlocks = 0;
         let liveTotalChars = 0;
-        const latestBlockTimestamps: Record<string, Date> = {};
+        // const latestBlockTimestamps: Record<string, Date> = {};
+        const latestBlockState: Record<
+                string,
+                {
+                    updatedAt: Date;
+                    contentHash: string | null
+                }
+            > = {};
 
         for(const file of files){
             for(const bId of file.blockOrder){
-                const block = file.blocks[bId];
-                if(!block?.structuredText) continue;
+                const blocksRaw = file.blocks as any;
+                const block = blocksRaw instanceof Map
+                    ? blocksRaw.get(bId)
+                    : blocksRaw?.[bId];
+
+                const textContent = 
+                    block?.structuredText || 
+                    block?.plainText ||
+                    block?.content ||
+                    "";
 
                 liveTotalBlocks++;
-                liveTotalChars+= block.structuredText.length;
-                if(block.updatedAt) latestBlockTimestamps[bId] = block.updatedAt;
+                liveTotalChars+= textContent.length;
+                
+                latestBlockState[bId] = {
+                    updatedAt: block.updatedAt,
+                    contentHash: block.contentHash || null,
+                };
             }
         }
 
@@ -125,9 +144,23 @@ export async function GET(
 
             const userProgress = progressMap.get(card._id.toString());
             const isCardOutdated = card.source.blockIds.some(id => {
-                const latest = latestBlockTimestamps[id];
-                const snapshot = card.source.blocksState?.[id]?.updatedAt;
-                return latest && snapshot && new Date(latest) > new Date(snapshot);
+                // const latest = latestBlockState[id];
+                // const snapshot = card.source.blocksState?.[id]?.updatedAt;
+                // return latest && snapshot && new Date(latest) > new Date(snapshot);
+                const liveState = latestBlockState[id];
+                if(!liveState) return false;
+
+                const snapshotState = card.source?.blocksState?.[id];
+                if(!snapshotState) return false;
+
+                if(liveState.contentHash && snapshotState.contentHash){
+                    return liveState.contentHash !== snapshotState.contentHash;
+                }
+
+                const latest = liveState.updatedAt;
+                const snapshot = snapshotState.updatedAt;
+                if(!latest || !snapshot) return false;
+                return new Date(latest) > new Date(snapshot);
             }) ?? false;
 
             return {

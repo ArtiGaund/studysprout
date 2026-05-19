@@ -8,11 +8,11 @@
  */
 
 import dbConnect from "@/lib/dbConnect";
-import { imageDeletion } from "@/lib/image-handler/imageDeletion";
+import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion";
 import { 
-    deleteImageFromCloudinary,
-     uploadImageToCloudinary 
-} from "@/lib/image-handler/upload-and-delete-image-cloudinary";
+    deleteFromCloudinary,
+     uploadToCloudinary 
+} from "@/lib/cloudinary-utils/upload-and-delete-from-cloudinary";
 import ImageModel from "@/model/image.model";
 import {WorkSpaceModel} from "@/model/index";
 import mongoose from "mongoose";
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
          if(oldLogoImageModelId && mongoose.Types.ObjectId.isValid(oldLogoImageModelId)){
              const publicIdsToDelete = await ImageModel.find({ _id: oldLogoImageModelId }).select('public_id').lean();
             if (publicIdsToDelete.length > 0 && publicIdsToDelete[0].public_id) {
-                await imageDeletion([publicIdsToDelete[0].public_id]);
+                await resourceDeletion([publicIdsToDelete[0].public_id]);
             } else {
                 // Log a warning if an old logo ID exists but no corresponding ImageModel public_id was found
                 console.warn(`Workspace ${workspaceId} had old logo ID ${oldLogoImageModelId}, but no corresponding ImageModel public_id found for deletion.`);
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
          }
 
           // 5. Upload New Logo to Cloudinary
-          const uploadLogoResult = await uploadImageToCloudinary(newLogo, "studysprout")  as { secure_url: string ,public_id: string }
+          const uploadLogoResult = await uploadToCloudinary(newLogo, "studysprout")  as { secure_url: string ,public_id: string }
             if(!uploadLogoResult){
                     return errorResponse(
                         "Failed to upload new logo to cloud storage.",
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
              if (!savedImage) {
                     // Rollback Cloudinary upload if saving to DB fails
                     if (uploadedNewLogoPublicId) {
-                        await deleteImageFromCloudinary(uploadedNewLogoPublicId); // Use direct Cloudinary delete for this specific rollback step
+                        await deleteFromCloudinary(uploadedNewLogoPublicId); // Use direct Cloudinary delete for this specific rollback step
                     }
                     return errorResponse(
                         "Failed to save new logo information in the database.",
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
         if(!updatedWorkspace){
             // Comprehensive rollback if updating the workspace document fails
             if (uploadedNewLogoPublicId) {
-                await deleteImageFromCloudinary(uploadedNewLogoPublicId);
+                await deleteFromCloudinary(uploadedNewLogoPublicId);
             }
             if (savedNewLogoImageId) {
                 await ImageModel.findByIdAndDelete(savedNewLogoImageId);
@@ -173,7 +173,7 @@ export async function POST(request: Request) {
         // --- Comprehensive Rollback in Catch Block ---
         // Attempt to clean up Cloudinary and ImageModel entries if an error occurred after they were created.
         if (uploadedNewLogoPublicId) {
-            await deleteImageFromCloudinary(uploadedNewLogoPublicId).catch(err =>
+            await deleteFromCloudinary(uploadedNewLogoPublicId).catch(err =>
                 console.error("Rollback error: Could not delete new logo from Cloudinary:", err)
             );
         }
