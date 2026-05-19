@@ -36,6 +36,21 @@ export interface ReduxFile{
     blockOrder: string[];
     deletedAt?: string | null;
 }
+export interface ConceptGraphNode {
+    id: string;
+    label: string;
+    fileCount: number;
+}
+
+export interface ConceptGraphEdge{
+    source: string; //fileId
+    target: string; //term
+}
+
+export interface ConceptGraph {
+    nodes: ConceptGraphNode[];
+    edges: ConceptGraphEdge[];
+}
 
 // Folder document
 export interface ReduxFolder{
@@ -47,7 +62,16 @@ export interface ReduxFolder{
     inTrash?: string | null;
     bannerUrl?: string;
     workspaceId?: string;
-    files?: string[] //Array of file _ids for normalization
+    files?: string[]; //Array of file _ids for normalization
+    status?: "idle" | "processing" | "completed" | "error";
+    progress?: number;
+    isPDFWorkspace?: boolean;
+    totalFiles?: number;
+    currentFileCount?:number;
+    conceptGraph?: ConceptGraph | null;
+    conceptGraphStale?: boolean;
+    conceptGraphStatus?: "idle" | "generating" | "completed" | "error";
+    readingTimeMinutes?: number;
 }
 export type WorkspaceRole = "editor" | "viewer";
 
@@ -70,6 +94,10 @@ export interface ReduxWorkSpace {
     updatedAt?: string;
     members?: WorkspaceMemberState[];
     isPublic: boolean;
+    conceptGraph?: ConceptGraph | null;
+    conceptGraphStale?: boolean;
+    conceptGraphStatus?: "idle" | "generating" | "completed" | "error";
+    readingTimeMinutes?: number;
 }
 // Image document
 export interface ReduxImage{
@@ -140,6 +168,7 @@ export interface FoldersState {
        currentFolder: ReduxFolder | null;
        loading: boolean;
        error: string | null;
+       totalFiles?: number;
 }
 
 export interface ImagesState {

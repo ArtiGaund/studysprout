@@ -50,9 +50,12 @@ export const transformWorkspace = (workspace: WorkSpace): ReduxWorkSpace => {
         folders: (workspace.folders || []).map(id => toStr(id) as string),
         isPublic: workspace.isPublic ?? false,
         members: (workspace.members ?? []).map(m => ({
-        userId: toStr(m.userId) as string,
-        role: m.role,
+            userId: toStr(m.userId) as string,
+            role: m.role,
         })),
+        conceptGraph: workspace.conceptGraph ?? null,
+        conceptGraphStale: workspace.conceptGraphStale ?? true,
+        conceptGraphStatus: workspace.conceptGraphStatus ?? "idle",
     }
 }
 
@@ -65,7 +68,8 @@ export const transformFolder = (folder: Folder): ReduxFolder => {
     if(!folder){
         throw new Error("transformFolder: received undefined or null folder object");
     }
-    return{
+    const transformed ={
+        ...folder,
         _id: toStr(folder._id) as string,
         createdAt: toStr(folder.createdAt) as string,
         title: folder.title || 'Untitled',
@@ -75,7 +79,15 @@ export const transformFolder = (folder: Folder): ReduxFolder => {
         bannerUrl: folder.bannerUrl || undefined,
         workspaceId: toStr(folder.workspaceId) as string,
         files: (folder.files || []).map(id => toStr(id) as string),
+        conceptGraph: folder.conceptGraph ?? null,
+        conceptGraphStale: folder.conceptGraphStale ?? true,
+        conceptGraphStatus: folder.conceptGraphStatus ?? "idle",
     }
+    if (transformed.status === "idle") {
+        delete (transformed as any).status;
+    }
+
+    return transformed as ReduxFolder;
 }
 
 /**
@@ -111,9 +123,12 @@ const parseDataSafety = (dataString: string | undefined): any[] => {
  * - Order Persistence: Guarantees `blockOrder` is always an array to prevent 
  * iterator errors in the Editor component.
  */
-export const transformFile = (file: File): ReduxFile => {
+export const transformFile = (file: any): ReduxFile | null=> {
+    if(!file) return null;
+    
+    const safeId = (file._id || file.fileId || file.id || "").toString();
     return{
-        _id: toStr(file._id) as string,
+        _id: safeId,
         title: file.title || 'Untitled',
         iconId: file.iconId || '📄',
        
