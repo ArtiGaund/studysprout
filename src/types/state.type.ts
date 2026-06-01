@@ -169,6 +169,7 @@ export interface FoldersState {
        loading: boolean;
        error: string | null;
        totalFiles?: number;
+       statsStale: boolean;
 }
 
 export interface ImagesState {
@@ -203,6 +204,7 @@ export interface WorkspacesState {
     currentWorkspace: ReduxWorkSpace | null; 
     loading: boolean;
     error: string | null;
+    statsStale: boolean;
 }
 
 // --- Root Redux State (Combines all slices) ---
@@ -279,10 +281,22 @@ export interface ReduxFlashcardSet{
 export interface FlashcardSetState{
     sets: ReduxFlashcardSet[];
     loading: boolean;
+    flashcardSetsStale: boolean;
 }
 
 export interface ReduxUserState{
     userId: string | null;
     status: "loading" | "authenticated" | "unauthenticated";
     token?: string | null;
+}
+
+export interface LastStudiedState{
+    setId: string;
+    setTitle: string;
+    cardIndex: number;
+    totalCards: number;
+    resourceType: "Workspace" | "Folder" | "File";
+    workspaceId: string;
+    folderId?: string;
+    studiedAt: string;
 }
