@@ -28,6 +28,7 @@ import { RESET_FILES } from "@/store/slices/fileSlice";
 import { SET_WORKSPACE_LOADING } from "@/store/slices/workspaceSlice";
 import { WorkspaceSocketManager } from "@/components/socket/workspace-socket-manager";
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
+import { useLastStudied } from "@/hooks/useLastSudied";
 interface LayoutProps{
     children: React.ReactNode,
     params: any
@@ -57,6 +58,7 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
     } = useFlashcardSet(params.workspaceId);
 
     const { isRevisionSidebarOpen } = useRevisionSidebar();
+    const { fetchLastStudied } = useLastStudied();
     
     /** * EFFECT: Workspace Data fetching & Cleanup
      * Logic runs whenever the workspaceId in the URL changes.
@@ -89,6 +91,7 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
                     getWorkspaceFiles(currentWorkspaceId),
                     getWorkspaces(),
                     getFlashcardSets(currentWorkspaceId),
+                    fetchLastStudied(),
                 ]);
                 // Persist the user's choice for their next session
                  setLastWorkspace(userId, currentWorkspaceId);

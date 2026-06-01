@@ -8,10 +8,7 @@
  * 3. Loading Safety: Ensures UI components only render once Redux data matches the URL. 
  */
 
-"use client"
-import BannerSection from '@/components/banner-upload/banner-section'
-import DashboardOverview from '@/components/dashboard-overview/dashboard-overview'
-import ResourceStats from '@/components/stats/resource-stats'
+"use client";
 import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
 import { RootState } from '@/store/store'
 import React, { useEffect } from 'react'
@@ -20,6 +17,9 @@ import {
     selectCurrentWorkspace, 
     selectWorkspaceLoading 
 } from '@/store/selectors/workspaceSelector'
+import { NavHeader } from '@/components/banner-upload/nav-header'
+import { SystemOverviewHeader } from '@/components/workspace-view/system-overview-header';
+import { MetricsOverview } from '@/components/workspace-view/metrics-overview';
 
 const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }) => {
     const dispatch = useDispatch();
@@ -63,34 +63,18 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
         );
     }
     return (
-        <div className='relative'>
+        <div className='flex flex-col gap-y-8 pb-10'>
             {currentWorkspace && (
-                <BannerSection 
-                    dirType="workspace"
+                <NavHeader 
+                    dirType='workspace'
                     fileId={params.workspaceId}
                     dirDetails={currentWorkspace}
                 />
             )}
-           <div>
-            { currentWorkspace && (
-                <DashboardOverview 
-                dirDetails={currentWorkspace}
-                fileId={params.workspaceId}
-                dirType='workspace'
-                params={params.workspaceId}
-                globalEditingItem={globalEditingItems}
-                />
-            )}
-           </div>
-           <div>
-            {currentWorkspace && (
-                <ResourceStats 
-                dirType='workspace'
-                folders={currentWorkspace.folders.length}
-                // files={currentWorkspace.fol}
-                />
-            )}
-           </div>
+            <div className='px-4 sm:px-6 lg:px-10 flex flex-col gap-y-10 max-w-[1600px] mx-auto w-full'>
+                <SystemOverviewHeader workspaceId={params.workspaceId}/>
+                <MetricsOverview workspaceId={params.workspaceId}/>
+            </div>
         </div>
     )
 }
