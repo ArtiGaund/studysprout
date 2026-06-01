@@ -346,7 +346,13 @@ export const initPDFWorker = () => {
                 // ── 6. Intelligence layer (non-fatal) ─────────────────────────
 
                 try {
-                    const graph = await buildFolderConceptGraph(fileIds, job.data.workspaceId);
+                    const graph = await buildFolderConceptGraph(
+                        fileIds, 
+                        job.data.workspaceId,
+                        2,
+                        folderId,
+                        title,
+                    );
                     await FolderModel.findByIdAndUpdate(folderId, { $set: { conceptGraph: graph } });
                     console.log(`[PDF Worker] Concept graph: ${graph.nodes.length} concepts`);
                 } catch (err) {
