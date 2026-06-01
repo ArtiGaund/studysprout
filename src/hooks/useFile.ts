@@ -52,6 +52,7 @@ import {
      selectFileLoading
  } from "@/store/selectors/fileSelector";
 import { selectCurrentFolder } from "@/store/selectors/folderSelector";
+import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
 
 const EMPTY_ARRAY: ReduxFile[] = [];
 export function useFile() {
@@ -109,6 +110,7 @@ export function useFile() {
                     file: transformedFile
                 }));
                 dispatch(SET_CURRENT_FILE(transformedFile));
+                dispatch(MARK_ACTIVITY_STALE());
                 
                 // Invalidate Cache to ensure navigation lists are fresh
                 if (payload.workspaceId) {
@@ -178,6 +180,7 @@ export function useFile() {
                 id: file._id,
                 updates: transformedFile
             }));
+            dispatch(MARK_ACTIVITY_STALE());
         
             // Clear Cache for this specific item
                 hasFetchedCurrentFileRef.delete(fileId);

@@ -22,6 +22,7 @@ import { useCallback, useState } from "react";
 import { useDispatch } from "react-redux";
 import { updateFlashcard } from "@/store/slices/flashcardSlice";
 import { useSocket } from "@/lib/providers/socket-provider";
+import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
 
 interface FlashcardGeneratorOptions{
     onSuccess?: (setId: string) => void;
@@ -132,6 +133,7 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
             if(options?.onSuccess){
                 options.onSuccess(newSet._id);
             }
+            dispatch(MARK_ACTIVITY_STALE());
             return result;
         } catch (error) {
             console.log("[useFlashcardGenerator] Error generating flashcards: ",error);
@@ -173,6 +175,7 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
                 description: "Successfully deleted flashcard set",
             })
             dispatch(removeSet({ setId }));
+            dispatch(MARK_ACTIVITY_STALE());
             return result;
         } catch (error) {
             console.warn("[useFlashcardGenerator] Error deleting flashcard set: ",error);

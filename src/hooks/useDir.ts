@@ -33,6 +33,7 @@ import { useFile } from "./useFile";
 import { useFolder } from "./useFolder";
 import { clearLastWorkspace } from "@/lib/local-storage-workspace";
 import { useSession } from "next-auth/react";
+import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
 
 type DirType = "workspace" | "folder" | "file";
 
@@ -285,6 +286,7 @@ export function useDir({
                     workspaceId: parentWorkspaceId,
                     folderId: dirId
                 }));
+                dispatch(MARK_ACTIVITY_STALE());
                 router.replace(
                     params.workspaceId
                      ? `/dashboard/${params.workspaceId}`

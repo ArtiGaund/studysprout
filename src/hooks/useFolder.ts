@@ -23,7 +23,16 @@ import {
 } from "@/store/slices/folderSlice";
 import { getAllFolders } from "@/services/workspaceServices";
 import { ConceptGraph, ReduxFolder } from "@/types/state.type";
-import { addFolder, conceptGraphService, getCurrentFolder, learningPathService } from "@/services/folderServices";
+import { 
+    addFolder, 
+    conceptGraphService, 
+    getCurrentFolder, 
+    getLearningGoalService, 
+    getStudyPlanService, 
+    LearningGoalData, 
+    learningPathService, 
+    updateLearningGoalService 
+} from "@/services/folderServices";
 import { updateDir } from "@/services/dirServices";
 import { transformFolder } from "@/utils/data-transformers";
 import { hasFetchedFoldersByWorkspaceRef } from "@/cache/folderCache";
@@ -36,6 +45,8 @@ import {
 import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
 import { useToast } from "@/components/ui/use-toast";
 import { LearningPathFileNode } from "@/components/dashboard-shared/learning-path-view";
+import { StudyPlanFile } from "@/components/folder-view/weekly-learning-goal";
+import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
 
 const EMPTY_ARRAY: ReduxFolder[] = [];
 export function useFolder(){
@@ -170,6 +181,7 @@ export function useFolder(){
                     folder: transformedFolder
                 }));
                 dispatch(SET_CURRENT_FOLDER(transformedFolder));
+                dispatch(MARK_ACTIVITY_STALE());
                 // Invalidate cache to maintain data integrity
                 if (workspaceId) {
                     hasFetchedFoldersByWorkspaceRef.delete(workspaceId);
@@ -393,7 +405,7 @@ export function useFolder(){
                 id: folderId,
                 updates: folder,
             }));
-
+            dispatch(MARK_ACTIVITY_STALE());
             return {
                 success: true,
                 data: folder as ReduxFolder,
@@ -471,6 +483,143 @@ export function useFolder(){
             hasFetchedFoldersByWorkspaceRef.delete(workspaceId);
         }
     },[])
+
+
+    /**
+     * @method getLearningGoal
+     * Fetched weekly hour progress for the circular ring on the folder dashboard
+     */
+
+    const getLearningGoal = useCallback( async (
+        folderId: string,
+        workspaceId: string,
+    ): Promise<{
+        success: boolean;
+        data?: LearningGoalData;
+        error?: string;
+    }> => {
+        if(!folderId) return {
+            success: false,
+            error: "[GetLearningGoal] FolderId is required",
+        }
+        if(!workspaceId) return {
+            success: false,
+            error: "[GetLearningGoal] WorkspaceId is required",
+        }
+
+        try {
+            const result = await getLearningGoalService(folderId, workspaceId);
+            if(!result.success){
+                return {
+                    success: false,
+                    error: result.message || "[GetLearningGoal] Failed",
+                }
+            }
+            return {
+                success: true,
+                data: result.data,
+            }
+        } catch (error: any) {
+            console.error("[useFolder] getLearningGoal failed: ", error.message);
+            return { 
+                success: false, 
+                error: error.message || "Failed to fetch learning goal" 
+            };
+        }
+    },[])
+
+    /**
+     * @method updateLearningGoal
+     * Saves the weekly target hours + subject label.
+     * Called by the "Adjust Goal" modal Save button
+     */
+
+    const updateLearningGoal = useCallback(async (
+        folderId: string,
+        workspaceId: string,
+        weeklyTargetHours: number,
+        subjectLabel?: string,
+    ): Promise<{
+        success: boolean;
+        data?: LearningGoalData;
+        error?: string;
+    }> => {
+        if(!folderId) return {
+            success: false,
+            error: "[UpdateLearningGoal] FolderId is required",
+        }
+        if(!workspaceId) return {
+            success: false,
+            error: "[UpdateLearningGoal] WorkspaceId is required",
+        }
+        try {
+            const result = await updateLearningGoalService(
+                folderId,
+                workspaceId,
+                weeklyTargetHours,
+                subjectLabel
+            );
+            if(!result.success) return {
+                success: false,
+                error: result.message || "[UpdateLearningGoal] Failed",
+            }
+            return {
+                success: true,
+                data: result.data,
+            }
+        } catch (error: any) {
+            console.error("[useFolder] updateLearningGoal failed: ", error.message);
+            return { 
+                success: false, 
+                error: error.message || "Failed to update learning goal" 
+            };
+        }
+    },[])
+
+    /**
+     * @method getStudyPlan
+     * Fetches a prerequisite-aware ordered file list for a Deep Session.
+     */
+
+    const getStudPlan = useCallback(async(
+        folderId: string,
+        availableMinutes: number,
+    ): Promise<{
+        success: boolean;
+        data?: {
+            files: StudyPlanFile[];
+            totalMinutes: number;
+            remainingFiles: number;
+            message: string;
+        };
+        error?: string;
+    }> => {
+        if(!folderId) return {
+            success: false,
+            error: "[GetStudyPlan] FolderId is required",
+        }
+        if(!availableMinutes || availableMinutes <= 0) return {
+            success: false,
+            error: "[GetStudyPlan] availableMinutes must be a positive number",
+        }
+        try {
+            const result = await getStudyPlanService(folderId, availableMinutes);
+            if(!result.success) return {
+                success: false,
+                error: result.message || "[GetStudyPlan] Failed",
+            }   
+            return {
+                success: true,
+                data: result.data,
+            }
+        } catch (error: any) {
+            console.error("[useFolder] getStudyPlan failed: ", error.message);
+            return { 
+                success: false, 
+                error: error.message || "Failed to generate study plan" 
+            };
+        }
+    },[])
      // --- Derived States ---
    
     // To resolve above issue, use useMemo
@@ -503,6 +652,9 @@ export function useFolder(){
         generateConceptGraph,
         getLearningPath,
         invalidateFolderCaches,
+        getLearningGoal,
+        updateLearningGoal,
+        getStudPlan,
      }
 
 }

@@ -13,8 +13,12 @@ import { WorkSpace as MongooseWorkSpace, WorkSpace} from "@/model/workspace.mode
 import { hardDeleteDir } from "@/services/dirServices";
 import { 
     addWorkspace, 
+    getActivityService, 
     getCurrentWorkspace, 
+    getRecentActivityService, 
+    getResearchGraphService, 
     getUserWorkspaces, 
+    savingGoalService, 
     updateLogo, 
     updateWorkspace, 
     workspaceConceptGraphService,
@@ -42,6 +46,24 @@ import {
 } from "@/cache/workspaceCache";
 import { selectAuthStatus, selectUserId } from "@/store/selectors/userSelector";
 import { LearningPathFileNode } from "@/components/dashboard-shared/learning-path-view";
+import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
+
+// ---GraphData type---
+export interface GraphDayData{
+    date: string;
+    label: string;
+    score: number;
+    cardsReviewed: number;
+    filesTouched: number;
+}
+
+export interface GraphData{
+    days: GraphDayData[];
+    dailyTarget: number;
+    weeklyTotal: number;
+    weeklyTargetTotal: number;
+    percentComplete: number;
+}
 
 export function useWorkspace() {
     // const { data: session, status } = useSession();
@@ -532,7 +554,7 @@ export function useWorkspace() {
             }
             const workspace = transformWorkspace(sanitized as WorkSpace);
             dispatch(UPDATE_WORKSPACE(workspace));
-
+            dispatch(MARK_ACTIVITY_STALE());
             return {
                 success: true,
                 data: workspace.conceptGraph ?? undefined,
@@ -568,7 +590,7 @@ export function useWorkspace() {
             const result = await workspaceLearningPathService(workspaceId);
             if(!result) return {
                 success: false,
-                error: "Failed to fetc",
+                error: "Failed to fetch",
             }
 
             return {
@@ -583,6 +605,67 @@ export function useWorkspace() {
             };
         }
     },[])
+
+    const saveGoal = useCallback(async(workspaceId: string, dailyTarget: number): Promise<{
+        success: boolean;
+        data?: any;
+        error?: string;
+    }> => {
+        if(!workspaceId || !dailyTarget) return {
+            success: false,
+            error: "[Save Goal] WorkspaceId and dailyTarget is required"
+        }
+
+        try {
+            const result = await savingGoalService(workspaceId, dailyTarget);
+             if(!result) return {
+                success: false,
+                error: "Failed to save goal",
+            }
+
+            return {
+                success: true,
+                data: result.data,
+            }
+        } catch (error: any) {
+            console.error("[Save Goal] Failed: ",error.message);
+            return { 
+                success: false, 
+                error: error instanceof Error ? error.message : "Failed" 
+            };
+        }
+    },[])
+
+    const getResearchGraph = useCallback(async( workspaceId: string ): Promise<{
+        success: boolean;
+        data?: GraphData;
+        error?: string;
+    }> => {
+        if(!workspaceId) return {
+            success: false,
+            error: "[getResearchGraph] WorkspaceId and dailyTarget is required"
+        }
+        try {
+            const result = await getResearchGraphService(workspaceId);
+             if(!result) return {
+                success: false,
+                error: "Failed to fetch research graph",
+            }
+
+            return {
+                success: true,
+                data: result.data as GraphData,
+            }
+        } catch (error: any) {
+            console.error("[getResearchGraph] Failed: ",error.message);
+            return { 
+                success: false, 
+                error: error instanceof Error ? error.message : "Failed" 
+            };
+        }
+    },[]);
+
+    
     // --- Memoized Derived Exports ---
     const allWorkspacesArray = useMemo(() => {
         return allWorkspaceIds.map( id => workspacesById[id]);
@@ -613,5 +696,7 @@ export function useWorkspace() {
         deleteWorkspace,
         generateWorkspaceConceptGraph,
         getWorkspaceLearningPath,
+        saveGoal,
+        getResearchGraph,
     }
 }

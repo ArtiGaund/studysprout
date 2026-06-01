@@ -7,7 +7,10 @@
  * 3. Atomic Updates: Performs targeted card updates within a specific set, ensuring the UI reflects the next review date immediately.
  */
 import { updateFlashcardSRSService } from "@/services/flashcardServices";
+import { MARK_FLASHCARD_SETS_STALE } from "@/store/slices/flashcardSetSlice";
 import { updateFlashcard } from "@/store/slices/flashcardSlice";
+import { MARK_FOLDER_STATS_STALE } from "@/store/slices/folderSlice";
+import { MARK_STATS_STALE } from "@/store/slices/workspaceSlice";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -37,9 +40,11 @@ export function useFlashcardSRS(){
                 card: {
                     _id: cardId,
                     progress: progress
-                }
-            }));
-           
+                    }
+                }));
+                dispatch(MARK_STATS_STALE());
+                dispatch(MARK_FOLDER_STATS_STALE());
+                dispatch(MARK_FLASHCARD_SETS_STALE());
             }
              return response;
         } catch (error) {

@@ -9,12 +9,12 @@
  * 4. Force-Refresh Capability: Provides a `forceRefresh` flag to bypass local cache when necessary.
  */
 import { useToast } from "@/components/ui/use-toast";
-import { getFlashcardSetService, regenerateFlashcardSetService } from "@/services/flashcardSetServices";
-import { setFlashcardSets, updateSingleSet } from "@/store/slices/flashcardSetSlice";
+import { getFlashcardSetOverviewService, getFlashcardSetService, regenerateFlashcardSetService } from "@/services/flashcardSetServices";
+import { MARK_FLASHCARD_SETS_FRESH, setFlashcardSets, updateSingleSet } from "@/store/slices/flashcardSetSlice";
 import { setFlashcardsForSet } from "@/store/slices/flashcardSlice";
+import { RootState } from "@/store/store";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-
+import { useDispatch, useSelector } from "react-redux";
 
 export function useFlashcardSet(workspaceId: string){
     const [ loading, setLoading ] = useState(false);
@@ -30,7 +30,16 @@ export function useFlashcardSet(workspaceId: string){
     const { toast } = useToast();
    
     const dispatch = useDispatch();
+    const flashcardSetsStale = useSelector(
+        (state: RootState) => state.flashcardSet.flashcardSetsStale
+    );
 
+    useEffect(() => {
+        getFlashcardSets(workspaceId);
+    },[
+        workspaceId,
+        flashcardSetsStale,
+    ]);
     /**
      * @method getFlashcardSets
      * Retrieves all sets for a given context (Workspace or Folder).
@@ -51,7 +60,8 @@ export function useFlashcardSet(workspaceId: string){
         try {
             const response = await getFlashcardSetService(id);
             dispatch(setFlashcardSets(response));
-             hasFetchedRef.current = id;
+            dispatch(MARK_FLASHCARD_SETS_FRESH());
+            hasFetchedRef.current = id;
         } catch (error) {   
             console.warn("[useFlashcardSet] [getFlashcardSets] Error fetching flashcard sets: ",
                 error
@@ -104,6 +114,38 @@ export function useFlashcardSet(workspaceId: string){
         toast
     ])
 
+    const getFlashcardSetOverview = useCallback(async (
+        resourceId: string,
+        resourceType: string,
+        workspaceId: string,
+    ) => {
+        setLoading(true);
+        try {
+            const response = await getFlashcardSetOverviewService(
+                resourceId,
+                resourceType,
+                workspaceId
+            );
+
+            if(!response || !response.success){
+                toast({
+                    title: "Failed to load the flashcard set",
+                    description: response.message,
+                    variant: "destructive",
+                });
+                return;
+            }
+            return response;
+        } catch (error) {
+            console.error("[GetFlashcardSetOverview] Failed: ",error);
+        }finally{
+            setLoading(false);
+        }
+    },[
+        workspaceId,
+        toast,
+    ])
+
     /**
      * @effect Auto-Hydration
      * Triggers whenever the workspace context changes, ensuring the user 
@@ -120,5 +162,6 @@ export function useFlashcardSet(workspaceId: string){
         regenerating,
         regenerateFlashcardSet,
         getFlashcardSets,
+        getFlashcardSetOverview,
     }
 }
