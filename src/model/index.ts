@@ -23,7 +23,7 @@ import { Image, ImageSchema } from "./image.model";
 import { Flashcard, FlashcardSchema } from "./flashcard.model";
 import { FlashcardSet, FlashcardSetSchema } from "./flashcardset.model";
 import { FlashcardProgressSchema, IFlashcardProgress } from "./flashcard-progress.model";
-import { IStudyGoal, StudyGoalSchema } from "./study-goad.model";
+import { IStudyGoal, StudyGoalSchema } from "./study-goal.model";
 import { IActivityEvent, ActivityEventSchema } from "./activity-event.model";
 import { IUserProgress, UserProgressSchema } from "./user-progress.model";
 
