@@ -12,7 +12,10 @@
  * 4. Resource Hierarchy: Orchestrates the retrieval of nested entities (Folders) 
  * scoped specifically to a Workspace ID.
  */
+// import { ActivityEvent } from "@/app/(app)/dashboard/[workspaceId]/activity/page";
 import { LearningPathFileNode } from "@/components/dashboard-shared/learning-path-view";
+import { ActivityEvent, ActivityPagination } from "@/components/workspace-view/acitivity-feed";
+// import { ActivityEvent } from "@/components/workspace-view/activity-card";
 import { Folder } from "@/model/folder.model";
 import { WorkSpace } from "@/model/workspace.model";
 import { ReduxWorkSpace } from "@/types/state.type";
@@ -237,6 +240,151 @@ export async function workspaceLearningPathService(
         return {
             success: false,
             message: error.response?.data?.message || error.message || "An unexpected error occurred."
+        };
+    }
+}
+
+export async function savingGoalService(workspaceId: string, dailyTarget: number): Promise<{
+    success: boolean;
+    message?: string;
+    data?: any;
+    statusCode?: number;
+}>{
+    try {
+        const relativePath = `/api/workspace/${workspaceId}/goal`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.patch(url, { dailyTarget });
+        if(!data.success) return {
+            success: false,
+            message: data.message,
+            statusCode: data.statusCode,
+        }
+
+        return {
+            success: true,
+            data: data.data,
+            statusCode: data.statusCode,
+        }
+
+    } catch (error: any) {
+        console.error("[SavingGoalService] Failed: ",error.message);
+        return {
+            success: false,
+            message: error.response?.data?.message || error.message || "An unexpected error occurred."
+        };
+    }
+}
+
+export async function getResearchGraphService(workspaceId: string): Promise<{
+    success: boolean;
+    message?: string;
+    data?: any;
+    statusCode?: number;
+}>{
+    try {
+        const relativePath = `/api/workspace/${workspaceId}/research-graph`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.get(url);
+        if(!data.success) return {
+            success: false,
+            message: data.message,
+            statusCode: data.statusCode,
+        }
+
+        return {
+            success: true,
+            data: data.data,
+            statusCode: data.statusCode,
+        }
+
+    } catch (error: any) {
+        console.error("[GetResearchGraphService] Failed: ",error.message);
+        return {
+            success: false,
+            message: error.response?.data?.message || error.message || "An unexpected error occurred."
+        };
+    }
+}
+
+export async function getRecentActivityService(
+    workspaceId: string,
+    limit: number = 4,
+): Promise<{
+    success: boolean;
+    data?: {
+        events: ActivityEvent[];
+        pagination: ActivityPagination;
+    };
+    message?: string;
+    statusCode?: number;
+}> {
+    try {
+        const relativePath = `/api/workspace/${workspaceId}/activity?limit=${limit}`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.get(url);
+        if(!data.success) return {
+            success: false,
+            message: data.message,
+            statusCode: data.statusCode,
+        };
+
+        return {
+            success: true,
+            data: data.data,
+            statusCode: data.statusCode,
+        }
+    } catch (error: any) {
+        console.error("[GetRecentActivityService] Failed: ",error.message);
+        return {
+            success: false,
+            message: error.response?.data?.message || error.message || "An unexpected error occurred.",
+        }
+    }
+}
+
+export async function getActivityService(
+    workspaceId: string,
+    params: {
+        page?: number,
+        limit?: number,
+        type?: string,
+        folderId?: string,
+    } = {},
+): Promise<{
+    success: boolean;
+    data?: {
+        events: ActivityEvent[];
+        pagination: ActivityPagination;
+    };
+    message?: string;
+    statusCode?: number;
+}>{
+    try {
+        const { page = 1, limit = 20, type, folderId } = params;
+        const query = new URLSearchParams({
+            page: String(page),
+            limit: String(limit),
+            ...(type ? { type } : {}),
+            ...(folderId ? { folderId } : {}),
+        });
+        const relativePath = `/api/workspace/${workspaceId}/activity?${query.toString()}`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.get(url);
+        if(!data.success) return {
+            success: false,
+            message: data.message,
+            statusCode: data.statusCode,
+        }
+        return {
+            success: true,
+            data: data.data,
+            statusCode: data.statusCode,
+        }
+    } catch (error: any) {
+        console.error("[GetActivityService] Failed: ",error.message);
+        return {
+        success: false,
+        message: error.response?.data?.message || error.message || "An unexpected error occurred.",
         };
     }
 }

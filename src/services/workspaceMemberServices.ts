@@ -34,7 +34,7 @@ export async function getWorkspaceMembers(workspaceId: string){
  * Essential for scaling collaboration beyond known contacts.
  */
 export async function SearchUsers(value: string){
-    const relativePath = `/api/users/search?q=${value}`;
+    const relativePath = `/api/user/search?q=${value}`;
     const url = `${BASE_URL}${relativePath}`;
     const { data } = await axios.get(url);
     if(!data.success) throw new Error(data.message);

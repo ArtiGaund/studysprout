@@ -12,7 +12,7 @@
  * 4. Observability: Includes strategic logging (e.g., `console.log`) to monitor 
  * folder-to-file data flow during development.
  */
-import { ConceptGraph } from "@/types/state.type";
+import { StudyPlanFile } from "@/components/folder-view/weekly-learning-goal";
 import axios from "axios"
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL;
@@ -100,5 +100,151 @@ export async function learningPathService(folderId: string) {
       console.error("[FolderService] Failed to generate learning path for folder due to following error: ",
          error
       );
+   }
+}
+
+// ---- Learning Goal Services ----
+
+export interface LearningGoalData{
+   hoursThisWeek: number;
+   weeklyTargetHours: number;
+   progressPercent: number;
+   subConceptsToday: number;
+   subjectLabel: string | null;
+   goalExists: boolean;
+}
+
+/**
+ * @method getLearningGoalService
+ * Fetches weekly learning goal progress for a folder.
+ * Powers the circular progress ring on the folder dashboard.
+ * 
+ * GET /api/folder/[folderId]/learing-goal?workspaceId=xxx
+ */
+
+export async function getLearningGoalService(
+   folderId: string,
+   workspaceId: string,
+): Promise<{
+   success: boolean;
+   data?: LearningGoalData;
+   message?: string;
+   statusCode?: number;
+}>{
+   try {
+      const relativePath = `/api/folder/${folderId}/learning-goal?workspaceId=${workspaceId}`;
+      const url = `${BASE_URL}${relativePath}`;
+      const { data } = await axios.get(url);
+      if(!data.success) return {
+         success: false,
+         message: data.message || "[GetLearningGoalService] Failed to fetch learnig goal",
+         statusCode: data.statusCode,
+      } 
+      return {
+         success: true,
+         data: data.data as LearningGoalData,
+         statusCode: data.statusCode,
+      }
+   } catch (error: any) {
+      console.error("[GetLearningGoalService] Failed: ",error.message);
+      return {
+         success: false,
+         message: error.response?.data?.message || error.message || "An unexpected error occurred.",
+      }
+   }
+}
+
+/**
+ * @method updateLearningGoalService
+ * Creates or updates the weekly hour target and subject label for a folder
+ * Called by the "Adjust Goal" modal.
+ * 
+ * PATCH /api/folder/[folderId]/learing-goal
+ */
+
+export async function updateLearningGoalService(
+   folderId: string,
+   workspaceId: string,
+   weeklyTargetHours: number,
+   subjectLabel?: string,
+): Promise<{
+   success: boolean;
+   data?: LearningGoalData;
+   message?: string;
+   statusCode?: number;
+}>{
+   try {
+      const relativePath = `/api/folder/${folderId}/learing-goal`;
+      const url = `${BASE_URL}${relativePath}`;
+      const { data } = await axios.patch(url, {
+         weeklyTargetHours,
+         subjectLabel,
+         workspaceId,
+      });
+      if (!data.success)
+      return {
+        success: false,
+        message: data.message || "Failed to update learning goal.",
+        statusCode: data.statusCode,
+      };
+    return {
+      success: true,
+      data: data.data as LearningGoalData,
+      statusCode: data.statusCode,
+    };
+   } catch (error: any) {
+      console.error("[UpdateLearningGoalService] Failed: ", error.message);
+    return {
+      success: false,
+      message: error.response?.data?.message || error.message || "An unexpected error occurred.",
+    };
+   }
+}
+
+// ---- Study plan Service (Deep Session button) ----
+
+/**
+ * @method getStudyPlanService
+ * Fetched a prerequisites-aware ordered file list for a Deep session.
+ * 
+ * GET /api/folder/[folderId]/study-plan?minutes=60
+ */
+
+export async function getStudyPlanService(
+   folderId: string,
+   availableMinutes: number,
+): Promise<{
+   success: boolean;
+   data?: {
+      files: StudyPlanFile[];
+      totalMinutes: number;
+      remainingFiles: number;
+      message: string;
+   };
+   message?: string;
+   statusCode?: number;
+}> {
+   try {
+      const relativePath = `/api/folder/${folderId}/study-plan?minutes=${availableMinutes}`;
+      const url = `${BASE_URL}${relativePath}`;
+      const { data } = await axios.get(url);
+
+      if (!data.success)
+      return {
+        success: false,
+        message: data.message || "Failed to generate study plan.",
+        statusCode: data.statusCode,
+      };
+      return {
+         success: true,
+         data: data.data,
+         statusCode: data.statusCode,
+      };
+   } catch (error: any) {
+      console.error("[GetStudyPlanService] Failed: ", error.message);
+      return {
+         success: false,
+         message: error.response?.data?.message || error.message || "An unexpected error occurred.",
+      };
    }
 }
