@@ -25,7 +25,7 @@ import { useFolder } from "@/hooks/useFolder";
 import { useFile } from "@/hooks/useFile";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
 import { useUser } from "@/lib/providers/user-provider";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 // --- State Management ---
 import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
@@ -35,6 +35,7 @@ import { ReduxFile } from "@/types/state.type";
 import { RootState } from "@/store/store";
 import { selectUserId } from "@/store/selectors/userSelector";
 import { usePDFProcessor } from "@/hooks/usePDFProcessor";
+import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
 
 interface DropdownProps {
     title: string;
@@ -56,7 +57,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     parentFolderId,
     ...props
 }) => {
-    
+    const dispatch = useDispatch();
     const router = useRouter();
     const { toast } = useToast();
     const [ currentIcon, setCurrentIcon ] = useState(iconId)
@@ -409,7 +410,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                         variant: "destructive"
                     })
                 } else {
-                                 
+                    dispatch(MARK_ACTIVITY_STALE());  
                     toast({
                         title: "File moved to trash successfully",
                         description: "Keep it safe",
