@@ -15,6 +15,8 @@ export async function register(){
 
         // DYNAMIC IMPORT: Ensures the worker code is only loaded on the server
         const { initFileSyncWorker } = await import(`@/lib/workers/syncWorker`);
+        const { initPDFWorker } = await import(`@/lib/workers/pdfWorker`);
+        const { initTermIndexWorker } = await import(`@/lib/workers/workspace-term-index`);
 
         /** *INITIALIZE BULLMQ SYNC WORKER:
          * This worker listens for "persist-file" jobs from the Realtime Server.
@@ -22,5 +24,9 @@ export async function register(){
          * document content.
          */
         initFileSyncWorker();
+        initPDFWorker();
+        initTermIndexWorker();
+
+        console.log("Background Workers (Sync & PDF) Initialized");
     }
 }
