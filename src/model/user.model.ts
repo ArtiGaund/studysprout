@@ -24,6 +24,16 @@ export interface User{
     avatarType: "image" | "initial";
     avatarUrl?: string; //cloudinary / OAuth image
     avatarInitials: string;
+    lastStudied?: {
+        setId: string;
+        setTitle: string;
+        cardIndex: number;
+        totalCards: number;
+        resourceType: "Workspace" | "Folder" | "File";
+        workspaceId: string;
+        folderId?: string;
+        studiedAt: Date;
+    };
 }
 
 // --- Mongoose Schema Definition ---
@@ -74,7 +84,36 @@ export const UserSchema: Schema<User> = new Schema({
         type: String,
         required: true,
     },
-
+    lastStudied: {
+        setId: {
+            type: String,
+        },
+        setTitle: {
+            type: String,
+        },
+        cardIndex: {
+            type: Number,
+            default: 0,
+        },
+        totalCards: {
+            type: Number,
+        },
+        resourceType: {
+            type: String,
+            enum: [ "Workspace", "Folder", "File"],
+        },
+        workspaceId: {
+            type: String,
+        },
+        folderId:{
+            type: String,
+            default: null,
+        },
+        studiedAt: {
+            type: Date,
+            default: Date.now,
+        },
+    },
 },{
     timestamps: true
 })

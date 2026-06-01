@@ -23,6 +23,9 @@ import { Image, ImageSchema } from "./image.model";
 import { Flashcard, FlashcardSchema } from "./flashcard.model";
 import { FlashcardSet, FlashcardSetSchema } from "./flashcardset.model";
 import { FlashcardProgressSchema, IFlashcardProgress } from "./flashcard-progress.model";
+import { IStudyGoal, StudyGoalSchema } from "./study-goad.model";
+import { IActivityEvent, ActivityEventSchema } from "./activity-event.model";
+import { IUserProgress, UserProgressSchema } from "./user-progress.model";
 
 /**
  * @section Singleton Model Initialization
@@ -32,22 +35,39 @@ import { FlashcardProgressSchema, IFlashcardProgress } from "./flashcard-progres
  */
 
 const UserModel = 
-(mongoose.models.User as mongoose.Model<User>) || (mongoose.model<User>("User", UserSchema))
+    (mongoose.models.User as mongoose.Model<User>) || 
+    (mongoose.model<User>("User", UserSchema));
 const FolderModel = 
-(mongoose.models.Folder as mongoose.Model<Folder>) || mongoose.model<Folder>("Folder", FolderSchema);
+    (mongoose.models.Folder as mongoose.Model<Folder>) || 
+    mongoose.model<Folder>("Folder", FolderSchema);
 const FileModel =
- (mongoose.models.File as mongoose.Model<File>) || mongoose.model<File>("File", FileSchema);
+    (mongoose.models.File as mongoose.Model<File>) || 
+    mongoose.model<File>("File", FileSchema);
 const WorkSpaceModel = 
-(mongoose.models.WorkSpace as mongoose.Model<WorkSpace>) || mongoose.model<WorkSpace>("WorkSpace", WorkspaceSchema);
+    (mongoose.models.WorkSpace as mongoose.Model<WorkSpace>) || 
+    mongoose.model<WorkSpace>("WorkSpace", WorkspaceSchema);
 const ImageModel = 
-(mongoose.models.Image as mongoose.Model<Image>) || mongoose.model<Image>("Image", ImageSchema);
+    (mongoose.models.Image as mongoose.Model<Image>) || 
+    mongoose.model<Image>("Image", ImageSchema);
 const FlashcardModel = 
-(mongoose.models.Flashcard as mongoose.Model<Flashcard>) || mongoose.model<Flashcard>("Flashcard", FlashcardSchema);
+    (mongoose.models.Flashcard as mongoose.Model<Flashcard>) || 
+    mongoose.model<Flashcard>("Flashcard", FlashcardSchema);
 const FlashcardSetModel =
-(mongoose.models.FlashcardSet as mongoose.Model<FlashcardSet>) || mongoose.model<FlashcardSet>("FlashcardSet", FlashcardSetSchema);
+    (mongoose.models.FlashcardSet as mongoose.Model<FlashcardSet>) || 
+    mongoose.model<FlashcardSet>("FlashcardSet", FlashcardSetSchema);
 const FlashcardProgressModel = 
-(mongoose.models.FlashcardProgress as mongoose.Model<IFlashcardProgress>) || 
-mongoose.model<IFlashcardProgress>("FlashcardProgress", FlashcardProgressSchema);
+    (mongoose.models.FlashcardProgress as mongoose.Model<IFlashcardProgress>) || 
+    mongoose.model<IFlashcardProgress>("FlashcardProgress", FlashcardProgressSchema);
+const StudyGoalModel = 
+    (mongoose.models.IStudyGoal as mongoose.Model<IStudyGoal>) || 
+    mongoose.model<IStudyGoal>("IStudyGoal", StudyGoalSchema);
+const ActivityEventModel = 
+    (mongoose.models.IActivityEvent as mongoose.Model<IActivityEvent>) ||
+    mongoose.model<IActivityEvent>("IActivityEvent", ActivityEventSchema);
+const UserProgressModel = 
+    (mongoose.models.IUserProgress as mongoose.Model<IUserProgress>) || 
+    mongoose.model<IUserProgress>("IUserProgress", UserProgressSchema);
+
 export {
     UserModel,
     FolderModel,
@@ -57,4 +77,7 @@ export {
     FlashcardModel,
     FlashcardSetModel,
     FlashcardProgressModel,
+    StudyGoalModel,
+    ActivityEventModel,
+    UserProgressModel,
 }

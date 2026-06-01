@@ -35,6 +35,23 @@ export interface WorkSpace{
     folders?: Types.ObjectId[] | string[],  // One-to-Many relationship with Folders
     members?: WorkspaceMemberDB[];           // Collaborative members
     isPublic?: boolean;                      // Privacy toggle
+    termIndex?: Record<string, string[]>;
+    termIndexStale?: boolean;
+    termIndexLastBuilt?: Date;
+    conceptGraph?:{
+        nodes:{
+            id: string;
+            label: string;
+            fileCount: number;
+        }[];
+        edges:{
+            source: string;
+            target: string;
+        }[];
+        generatedAt: Date;
+    } | null;
+    conceptGraphStale?: boolean;
+    conceptGraphStatus?: "idle" | "generating" | "completed" | "error";
 }
 
 // --- Schema Definition ---
@@ -96,6 +113,31 @@ export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
     isPublic: {
         type: Boolean,
         default: false,
+    },
+    termIndex: {
+        type: Map,
+        of: [ String ],
+        default: {},
+    },
+    termIndexStale: {
+        type: Boolean,
+        default: false,
+    },
+    termIndexLastBuilt: {
+        type: Date,
+    },
+     conceptGraph: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null,
+    },
+    conceptGraphStale: {
+        type: Boolean,
+        default: true,
+    },
+    conceptGraphStatus: {
+        type: String,
+        enum: ["idle", "generating", "completed", "error"],
+        default: "idle",
     },
 },
 {
