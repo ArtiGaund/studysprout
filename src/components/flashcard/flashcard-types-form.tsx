@@ -214,7 +214,7 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
   }
  
     return (
-        <SheetContent>
+        <SheetContent className="!w-full sm:!max-w-md overflow-y-auto">
             <SheetHeader>
                 <SheetTitle>Customize Flashcard Generation</SheetTitle> 
                 <SheetDescription>

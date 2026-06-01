@@ -142,7 +142,8 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
    
     return (
         <Card className="
-        p-4 rounded-xl shadow-md border border-gray-400 flex flex-col gap-4 max-h-[70vh] overflow-y-auto
+        p-4 rounded-xl shadow-md border border-gray-400 flex flex-col gap-4 max-h-[80svh] 
+        sm:max-h-[70vh] overflow-y-auto
         ">
             <CardTitle
             className="text-center text-sm font-semibold text-purple-700"
@@ -170,7 +171,8 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
             )}
 
             {/* SRS Status Indicators */}
-            <div className="flex flex-row gap-6 items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 items-start sm:items-center
+             justify-between">
                 <div>
                       {isReviewed ? (
                             <div className="flex items-center gap-2 text-green-500 text-sm font-medium pl-6">
@@ -221,7 +223,7 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                     setChecked={setChecked}
                     selectedOption={selectedOption}
                     setSelectedOption={setSelectedOption}
-                    userAnswer=""
+                    userAnswer={userAnswer}
                     setUserAnswer={setUserAnswer}
                 />
             )}
@@ -236,7 +238,7 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                     setChecked={setChecked}
                     selectedOption={selectedOption}
                     setSelectedOption={setSelectedOption}
-                    userAnswer=""
+                    userAnswer={userAnswer}
                     setUserAnswer={setUserAnswer}
                 />
             )}
@@ -251,7 +253,7 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                     setChecked={setChecked}
                     selectedOption={selectedOption}
                     setSelectedOption={setSelectedOption}
-                    userAnswer=""
+                    userAnswer={userAnswer}
                     setUserAnswer={setUserAnswer}
                 />
             )}
@@ -313,7 +315,7 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                 >
                     Again
                 </button>
-                <span className="flex-1 ml-12 text-gray-700 font-bold">|</span>
+                <span className="text-gray-700 font-bold px-1">|</span>
                 <button
                 onClick={() => handleRating("hard")}
                 className="flex-1 py-2 text-orange-700 font-bold text-sm transition"

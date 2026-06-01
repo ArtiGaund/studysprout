@@ -18,7 +18,7 @@ import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from "../ui/s
 import FlashcardSetHeader from "./viewer/flashcard-set-header";
 import FlashcardStudyCard from "./viewer/flashcard-study-card";
 import FlashcardProgressList from "./viewer/flashcard-progress-list";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FlashcardLoading from "../ui/flashcard-loading";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
@@ -27,16 +27,19 @@ import { RootState } from "@/store/store";
 import { useFlashcardSet } from "@/hooks/flashcard/useFlashcardSet";
 import { setFlashcardsForSet } from "@/store/slices/flashcardSlice";
 import { updateSingleSet } from "@/store/slices/flashcardSetSlice";
+import { useLastStudied } from "@/hooks/useLastSudied";
 
 interface FlashcardSetViewerSheetProps{
     setId: string;
+    initialIndex?: number;
 }
 
 const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({ 
-    setId
+    setId,
+    initialIndex = 0,
 }) => {
         const dispatch = useDispatch();
-        const [ activeIndex, setActiveIndex ] = useState(0);
+        const [ activeIndex, setActiveIndex ] = useState(initialIndex);
 
         const [ sessionMode, setSessionMode ] = useState<"all" | "due-only">("due-only");
         const [ sessionStats, setSessionStats ] = useState({
@@ -56,6 +59,30 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
             state.flashcardSet.sets.find((s) => s._id === setId)
         );
         
+        const { updateLastStudied } = useLastStudied();
+
+        useEffect(() => {
+            setActiveIndex(initialIndex);
+        },[setId]);
+
+        useEffect(() => {
+            if(!set || cards.length === 0) return;
+
+            updateLastStudied({
+                setId: set._id,
+                setTitle: set.title,
+                cardIndex: activeIndex,
+                totalCards: cards.length,
+                resourceType: set.resourceType,
+                workspaceId: set.workspaceId,
+                folderId: set.folderId,
+            });
+        },[
+            activeIndex,
+            setId,
+            set?._id,
+            cards.length,
+        ])
         /**
          * @memoized stats
          * Calculates flashcard categories (New, Due, Completed) based on SRS metadata.
@@ -162,7 +189,7 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
             // --- Conditional Rendering: Loading & Empty States ---
             if(loading){
                 return(
-                    <SheetContent className="w-full !max-w-[800px]">
+                    <SheetContent className="!w-full sm:!max-w-[800px]">
                         <VisuallyHidden>
                             <SheetTitle></SheetTitle>
                             <SheetDescription></SheetDescription>
@@ -174,7 +201,7 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
 
             if(!cards || cards.length === 0){
                 return(
-                    <SheetContent className="w-full !max-w-[800px]">
+                    <SheetContent className="!w-full sm:!max-w-[800px]">
                         <VisuallyHidden>
                             <SheetTitle></SheetTitle>
                             <SheetDescription></SheetDescription>
@@ -185,9 +212,10 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
             }
 
             return (
-                <SheetContent className="w-full !max-w-[800px] flex flex-col h-full">
+                <SheetContent className="!w-full sm:!max-w-[800px] flex flex-col h-full">
                     <SheetHeader>
-                    <SheetTitle className="flex items-center justify-between border-b border-gray-700 py-2 bg-background gap-5">
+                    <SheetTitle className="flex flex-wrap items-center justify-between border-b
+                     border-gray-700 py-2 bg-background gap-2 sm:gap-5">
                             <FlashcardSetHeader  setTitle={set?.title!}/>
                             {regenerating 
                             ? <Loader2 className="animate-spin w-6 h-6"/>
@@ -201,7 +229,8 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                             </button>}
                         </SheetTitle>
                         {/* SRS Progress Dashboard */}
-                        <div className="flex items-center gap-4 px-4 py-2 bg-gray-900/30 border-b border-gray-800">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-4
+                         py-2 bg-gray-900/30 border-b border-gray-800">
                             <div className="flex items-center gap-1.5">
                                 <div className="w-2 h-2 rounded-full bg-blue-500" />
                                 <span className="text-[11px] font-bold text-gray-400">
