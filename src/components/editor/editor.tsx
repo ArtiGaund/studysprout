@@ -33,6 +33,11 @@ import {
 
 import { cursorColor } from "@/utils/cursor-color";
 import { useSocket } from "@/lib/providers/socket-provider";
+import { getWordAtCursor } from "@/utils/intelligence/get-word-at-cursor";
+import { useBacklinks } from "@/hooks/intelligence/useBacklinks";
+import { useSelector } from "react-redux";
+import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
+import { selectCurrentFile } from "@/store/selectors/fileSelector";
 
 /**
  * @class SocketCollaborationProvider
@@ -61,6 +66,13 @@ const TextEditor: React.FC<TextEditorProps> = ({
     const { socket, isConnected } = useSocket();
     const isHydrated = useRef(false);
     const { toast } = useToast();
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
+    const currentFile = useSelector(selectCurrentFile);
+
+    const {
+        activeBacklink,
+        checkWordAtCursor,
+    } = useBacklinks(currentWorkspace?._id!, currentFile?._id!);
 
     // --- 1. SHARED STATE INITIALIZATION ---
     // Initialize the Y.Doc as a singleton for the lifecycle of this file
@@ -196,15 +208,25 @@ const TextEditor: React.FC<TextEditorProps> = ({
     
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
         console.log("File upload triggered:", file.name);
-        // file upload
-        // TODO: Implement actual file upload logic to your backend/storage
-        // This should return the URL of the uploaded file
+        
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/upload/image", {
+            method: "POST",
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if(!data.data?.url) throw new Error("Upload failed");
+
         toast({
             title: "File Upload",
             description: "File upload functionality is not yet implemented.",
             variant: "default"
         });
-        return "";
+        return data.data.url;
     }
    
     // --- 4. EDITOR CONFIGURATION ---
@@ -296,6 +318,25 @@ const TextEditor: React.FC<TextEditorProps> = ({
         }
     });
 
+    editor.onChange(() => {
+        const phrase = getWordAtCursor(editor);
+        checkWordAtCursor(phrase);
+    });
+
+    // Render the backlink indicator
+    {activeBacklink && (
+        <div className="backlink-chip">
+            <span>📎 Defined in:</span>
+            {activeBacklink.files.map(f => (
+                <a
+                key={f.id}
+                href={`/file/${f.id}`}
+                >
+                    {f.title}
+                </a>
+            ))}
+        </div>
+    )}
     return(
         <div className="p-5">
             <BlockNoteView  

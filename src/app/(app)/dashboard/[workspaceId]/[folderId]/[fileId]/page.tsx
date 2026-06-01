@@ -11,7 +11,6 @@
 "use client"
 
 import dynamic from 'next/dynamic'
-import BannerSection from '@/components/banner-upload/banner-section'
 import { useFile } from '@/hooks/useFile'
 import { ReduxFile } from '@/types/state.type'
 import { useRouter } from 'next/navigation'
@@ -24,6 +23,7 @@ import { useFilePresence } from '@/hooks/socket/useFilePresence'
 import { useUser } from '@/lib/providers/user-provider'
 import TooltipComponent from '@/components/global/tooltip-component'
 import { FileUtilityDrawer } from '@/components/file-presence/file-utility-drawer'
+import { NavHeader } from '@/components/banner-upload/nav-header'
 
 // Optimized: Load editor only on the client to avoid hydration mismatches.
 const DynamicTextEditor = dynamic(
@@ -34,7 +34,9 @@ const DynamicTextEditor = dynamic(
     }
 )
 
-const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folderId?: string }}> = ({ params }) => {
+const FilePage: React.FC<{ 
+    params : { fileId: string, workspaceId?: string,folderId?: string }
+}> = ({ params }) => {
     const fileId = params.fileId;
     const [ isDrawerOpen, setIsDrawerOpen ] = useState(false);
     const { user } = useUser();
@@ -147,12 +149,11 @@ const FilePage: React.FC<{ params : { fileId: string, workspaceId?: string,folde
         <div className='relative'>
             { currentFile && (
                 <>
-                    {/* Banner Section */}
-                    <BannerSection
+                <NavHeader 
                     dirType='file'
                     fileId={params.fileId}
                     dirDetails={currentFile}
-                    ></BannerSection>
+                />
                     {/* Editor wrapper */}
                     <div 
                     className='flex flex-row w-full relative'
