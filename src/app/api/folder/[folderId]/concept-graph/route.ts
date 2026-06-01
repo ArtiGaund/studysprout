@@ -1,4 +1,5 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { onSynthesisCompleted } from "@/lib/activity-hooks";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
 import { rebuildTermIndex } from "@/lib/workers/workspace-term-index";
@@ -60,7 +61,14 @@ export async function POST(
 
         await rebuildTermIndex(workspaceId);
 
-        const graph = await buildFolderConceptGraph(fileIds, workspaceId);
+        const graph = await buildFolderConceptGraph(
+            fileIds, 
+            workspaceId,
+            2,
+            folderId,
+            String(session.user._id),
+            folder.title,
+        );
 
         const updatedFolder = await FolderModel.findByIdAndUpdate(folderId, {
             $set: {
@@ -69,6 +77,16 @@ export async function POST(
                 conceptGraphStatus: "idle", //reset the status
             },
         }, { new: true }).lean();
+
+        onSynthesisCompleted(
+            String(workspaceId),
+            String(session.user._id),
+            graph.nodes.length ?? 0,
+            folder.title,
+            {
+                folderId,
+            }
+        );
 
         const data = { updatedFolder }
         

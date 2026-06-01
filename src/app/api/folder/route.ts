@@ -18,7 +18,7 @@ import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
 import { isValidId } from "@/helpers/validateId";
 import { emitRealtimeEvent } from "@/lib/realtime-fetch";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
-
+import { onFolderCreated } from "@/lib/activity-hooks";
 
 /**
  * CREATE FOLDER
@@ -106,6 +106,7 @@ export async function POST(request: Request) {
             );
         }
         
+        
          // 3. Update the parent workspace to include the new folder's reference
          const updatedWorkspace = await WorkSpaceModel.findByIdAndUpdate(
             folderData.workspaceId,
@@ -123,6 +124,12 @@ export async function POST(request: Request) {
             );
         }
 
+        onFolderCreated(
+            updatedWorkspace._id.toString(),
+            newFolder._id,
+            userId,
+            newFolder.title, 
+        );
     const payload = {
         workspaceId: String(newFolder.workspaceId),
         folder: newFolder,

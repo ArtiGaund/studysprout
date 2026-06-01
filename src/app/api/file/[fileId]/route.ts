@@ -24,6 +24,7 @@ import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion"
 import { isValidId } from "@/helpers/validateId";
 import { emitRealtimeEvent } from "@/lib/realtime-fetch";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
+import { onFileArchived, onFileUpdated } from "@/lib/activity-hooks";
 
 
 export async function GET(
@@ -195,6 +196,23 @@ export async function POST(
           ), 500);
       } catch (socketError) {
         console.error("[Socket Emission Failed] File update: ",socketError);
+      }
+
+      if(eventType === "file_updated"){
+        onFileUpdated(
+            String(file.workspaceId),
+            String(file.folderId),
+            String(file._id),
+            String(userId),
+            file.title || "Untitled"
+        );
+      }else if(eventType === "file_trashed"){
+        onFileArchived(
+            String(file.workspaceId),
+            String(userId),
+            1,
+            String(file.folderId),
+        );
       }
         
              return successResponse(

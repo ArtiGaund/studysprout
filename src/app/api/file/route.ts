@@ -22,6 +22,7 @@ import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
 import { isValidId } from "@/helpers/validateId";
 import { emitRealtimeEvent } from "@/lib/realtime-fetch";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
+import { onFileCreated } from "@/lib/activity-hooks";
 
 /**
  * CREATE FILE
@@ -152,16 +153,15 @@ export async function POST(request: Request) {
        } catch (socketError) {
         console.error("[Socket Emission Failed] File Create: ",socketError);
        }
-        // return Response.json({
-        //     statusCode: 201, // 201 Created is the appropriate status for successful resource creation
-        //     message: 
-        //     success: true,
-        //     data: { 
-        //         file: newFile.toObject(), // Convert to plain object if not already by .create()
-        //         // updatedFolder: updatedFolder 
-        //     }
-        // }, { status: 201 });
 
+        onFileCreated(
+            String(newFile.workspaceId),
+            String(newFile.folderId),
+            String(newFile._id),
+            String(userId),
+            newFile.title || "Untitled"
+        );
+        
         const data = {
             file: newFile.toObject()
         }

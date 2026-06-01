@@ -1,5 +1,5 @@
 /**
- * RESOURCE: Flashcard Generation Engine
+ * RESOURCE: Flashcard Set Generation Engine
  * ------------------------------------
  * Endpoint: POST /api/flashcard-set
  * Role: Orchestrates the AI-driven transformation of notes into study sets.
@@ -24,6 +24,7 @@ import { chunkBlocks } from "@/helpers/chunkBlocks";
 import { getMockFlashcards } from "@/lib/testing/mock-flashcard-generator";
 import { File } from "@/model/file.model";
 import { emitServerEvent } from "@/lib/server-realtime";
+import { onFlashcardSetGenerated } from "@/lib/activity-hooks";
 
 
 export async function POST(request: NextRequest){
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest){
         // current user session
         const session = await getServerSession(authOptions);
 
-        if(!session || !session.user){
+        if(!session || !session.user || !session.user._id){
             return errorResponse(
                 "You must be logged in to generate flashcards",
                 401,
@@ -256,6 +257,7 @@ export async function POST(request: NextRequest){
             //  --- TOGGLING FOR TESTING
 
             const USE_MOCK = process.env.FLASHCARD_USE_MOCK === "true";
+            console.log("[Flashcard set route] USE_MOCK: ",USE_MOCK);
 
             if(USE_MOCK){
                 console.log("[Flashcard set route] running use mock")
@@ -371,13 +373,19 @@ export async function POST(request: NextRequest){
             resourceName = file?.title ?? "File";
         }
         const flashcardSetTitle = generateFlashcardsSetTitle(resourceType, resourceName);
-
+        let actualFolderId = folderId;
+        if(resourceType === "File" && !actualFolderId){
+            const file = await FileModel.findById(resourceId).select("folderId").lean();
+            actualFolderId = file?.folderId;
+        }else if(resourceType === "Folder"){
+            actualFolderId = resourceId;
+        }
 
          // Creating a flashcardset
         const newFlashcardSet = await FlashcardSetModel.create({
             title: flashcardSetTitle ?? "Generated flashcards",
             workspaceId,
-            folderId: folderId ||null,
+            folderId: actualFolderId ||null,
             resourceId,
             resourceType,
             createdBy: userId,
@@ -415,6 +423,18 @@ export async function POST(request: NextRequest){
             )
         }
 
+        onFlashcardSetGenerated(
+            workspaceId,
+            userId,
+            newFlashcardSet.title,
+            newFlashcardSet.totalCards,
+            resourceType === "File"
+                ? { fileId: resourceId, fileTitle: resourceName }
+                : resourceType === "Folder"
+                    ? { folderId: resourceId, folderTitle: resourceName }
+                    : undefined //workspace level - no source needed
+        );
+
         // Return the generated flashcards
         return successResponse(
             "Flashcards generated successfully",
@@ -432,5 +452,73 @@ export async function POST(request: NextRequest){
             500,
             500
         )
+    }
+}
+
+
+export async function GET(request: NextRequest){
+    await dbConnect();
+    try {
+        const session = await getServerSession(authOptions);
+        if(!session || !session.user) return errorResponse(
+            "[Flashcard Set GET route] Unauthorized.",
+            401,
+            401,
+        );
+
+        const userId = session.user._id;
+        const { searchParams } = new URL(request.url);
+        const resourceId = searchParams.get("resourceId");
+        const resourceType = searchParams.get("resourceType");
+        const workspaceId = searchParams.get("workspaceId");
+
+        if(!resourceId || !resourceType || !workspaceId) return errorResponse(
+            "[Flashcard Set GET route] resourceId, resourceType and workspaceId is required",
+            400,
+            400,
+        );
+
+        // 1. Fetch current level's Flashcard set
+        const current = await FlashcardSetModel.findOne({
+            resourceId,
+            resourceType,
+        }).lean();
+
+        // 2. Fetch children sets (one level below)
+        let children: any[] = [];
+
+        if(resourceType === "Workspace"){
+            // Children = folder-level sets within this workspace
+            children = await FlashcardSetModel.find({
+                workspaceId,
+                resourceType: "Folder",
+            }).lean();
+        }else if(resourceType === "Folder"){
+            // Children = file-level sets within this folder
+            children = await FlashcardSetModel.find({
+                folderId: resourceId,
+                resourceType: "File",
+            }).lean();
+        }
+
+        // File-level -> no children
+
+        return successResponse(
+            "[Flashcard Set GET route] Flashcard sets fetched successfully",
+            {
+                current: current ?? null,
+                children,
+            },
+            200,
+            200,
+        );
+
+    } catch (error: any) {
+        console.error("[Flashcard Set GET route] Error: ",error.message);
+        return errorResponse(
+            error.message ?? "[Flashcard Set GET route] Failed to fetch flashcard sets",
+            500,
+            500
+        );
     }
 }

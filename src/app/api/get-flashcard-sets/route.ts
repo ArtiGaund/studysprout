@@ -95,7 +95,9 @@ export async function GET(request: Request){
                     resourceType: set.resourceType,
                     workspaceId: set.workspaceId,
                     totalCards: cards.length,
-                    dueCount
+                    resourceId: set.resourceId,
+                    folderId: set.folderId ?? null,
+                    dueCount,
                 }
             })
         )

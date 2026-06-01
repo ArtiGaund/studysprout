@@ -11,6 +11,7 @@ import {
  } from "@/model";
 import { getServerSession } from "next-auth";
 import { emitServerEvent } from "@/lib/server-realtime";
+import { onFlashcardSetDeleted } from "@/lib/activity-hooks";
 
 /**
  * RESOURCE: Flashcard Set Detail & Sync Status
@@ -63,7 +64,7 @@ export async function GET(
                 404
             )
         }
-
+        
         // Fetch progress only for this specific user
         const cardIds = flashcards.map(flashcard => flashcard._id);
         const progressRecord = await FlashcardProgressModel.find({
@@ -260,6 +261,8 @@ export async function DELETE(
             )
         }
 
+        const workspaceId = set?.workspaceId;
+
         // 4. Pre-delete cleanup: Identify all cards to remove progress
         const cardsInSet = await FlashcardModel.find({ parentSetId: setId }).select("_id").lean();
         const cardIds = cardsInSet.map(card => card._id);
@@ -276,6 +279,13 @@ export async function DELETE(
 
         // 7. Delete set
         await FlashcardSetModel.deleteOne({ _id: setId });
+
+        onFlashcardSetDeleted(
+            String(workspaceId),
+            String(userId),
+            String(set?.title),
+            Number(set?.totalCards)
+        );
 
         try {
             const workspaceId = String(set?.workspaceId);

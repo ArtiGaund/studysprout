@@ -24,6 +24,7 @@ import { authOptions } from "../../auth/[...nextauth]/options";
 import { emitRealtimeEvent } from "@/lib/realtime-fetch";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { extractPublicIdFromUrl } from "@/lib/cloudinary-utils/extract-public-id";
+import { onFolderDelete } from "@/lib/activity-hooks";
 
 export async function GET(
     request: Request,
@@ -250,6 +251,15 @@ export async function DELETE(
                 404,
             );
         }
+        const title = folderToDelete.title;
+        const workspaceId = folderToDelete.workspaceId;
+        if(!workspaceId){
+            return errorResponse(
+                "Workspace Id not found in folder",
+                400,
+                400,
+            );
+        }
 
         // Deleting pdf reference from cloudinary
         if(folderToDelete.isPDFWorkspace && folderToDelete.pdfUrl){
@@ -303,13 +313,13 @@ export async function DELETE(
 
 
          // 7. Remove folder reference from its parent workspace
-         const workspaceUpdateResult = await WorkSpaceModel.updateOne(
+         const workspace = await WorkSpaceModel.updateOne(
            { folders: new mongoose.Types.ObjectId(folderId) },
            { $pull: { 
             folders: new mongoose.Types.ObjectId(folderId)
            }}
         );
-        if(workspaceUpdateResult.modifiedCount === 0){
+        if(workspace.modifiedCount === 0){
             console.warn(`Folder reference ${folderId} not found or already removed from any workspace.`);
         }
 
@@ -323,6 +333,12 @@ export async function DELETE(
             }, { status: 500 })
         }
        
+        onFolderDelete(
+           workspaceId,
+            folderId,
+            userId,
+           title
+        )
         const payload = {
             workspaceId: String(folderToDelete.workspaceId),
             folderId: String(folderToDelete._id),
@@ -341,7 +357,7 @@ export async function DELETE(
 
         return successResponse(
             "Successfully deleted the folder",
-            workspaceUpdateResult,
+            workspace,
             200,
             200,
         );

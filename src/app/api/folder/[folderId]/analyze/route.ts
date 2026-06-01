@@ -21,6 +21,7 @@
  */
 
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { onSynthesisCompleted } from "@/lib/activity-hooks";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
 import { FileModel, FolderModel } from "@/model";
@@ -83,7 +84,14 @@ export async function POST(
 
         // Run both in parallel - concept graph needs Gemini, prerequisites does not
         const [ graph, prereqs ] = await Promise.allSettled([
-            buildFolderConceptGraph(fileIds, workspaceId),
+            buildFolderConceptGraph(
+                fileIds, 
+                workspaceId,
+                2,
+                folderId,
+                String(session.user._id),
+                folder.title,
+            ),
             detectFilePrerequisites(fileIds, workspaceId ),
         ]);
 
@@ -92,6 +100,16 @@ export async function POST(
             await FolderModel.findByIdAndUpdate(folderId, {
                 $set: { conceptGraph: graph },
             });
+
+            onSynthesisCompleted(
+                String(workspaceId),
+                String(session.user._id),
+                graph.value.nodes.length ?? 0,
+                folder.title,
+                {
+                     folderId,
+                }
+            );
         }
 
         // Save prerequisites to each file
