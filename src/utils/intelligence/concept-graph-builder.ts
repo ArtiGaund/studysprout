@@ -11,6 +11,7 @@
  * Where stored: folder.conceptGraph 
  */
 
+import { onSynthesisCompleted } from "@/lib/activity-hooks";
 import dbConnect from "@/lib/dbConnect";
 import { FileModel, FolderModel, WorkSpaceModel } from "@/model";
 
@@ -48,6 +49,9 @@ export async function buildFolderConceptGraph(
     fileIds: string[],
     workspaceId: string,
     minFiles = 2,
+    folderId?: string,
+    userId?: string,
+    folderTitle?: string,
 ): Promise<ConceptGraph>{
     try {
         await dbConnect();
@@ -92,6 +96,15 @@ export async function buildFolderConceptGraph(
         `${fileIds.length} files.`
         );
 
+        if(folderId && workspaceId){
+            onSynthesisCompleted(
+                workspaceId,
+                userId ?? "system",
+                nodes.length,
+                String(workspace?.title)
+            )
+        }
+
         return {
             nodes,
             edges,
@@ -102,7 +115,10 @@ export async function buildFolderConceptGraph(
     }
 }
 
-export async function buildWorkspaceConceptGraph(workspaceId: string){
+export async function buildWorkspaceConceptGraph(
+    workspaceId: string,
+    userId?: string,
+){
     try {
         const workspace = await WorkSpaceModel.findById(workspaceId, {
             termIndex: 1,
@@ -193,6 +209,13 @@ export async function buildWorkspaceConceptGraph(workspaceId: string){
                 }
             }
         }
+
+        onSynthesisCompleted(
+            workspaceId,
+            userId ?? "system",
+            nodes.length,
+            String(workspace?.title ?? "Workspace")
+        );
 
         return {
             nodes,
