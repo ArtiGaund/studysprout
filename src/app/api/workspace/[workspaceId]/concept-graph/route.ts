@@ -1,4 +1,5 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { onSynthesisCompleted } from "@/lib/activity-hooks";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
 import { FileModel, WorkSpaceModel } from "@/model";
@@ -40,6 +41,13 @@ export async function POST(
             },
             { new: true }
         ).lean();
+
+        onSynthesisCompleted(
+            workspaceId,
+            String(session.user._id),
+            graph.nodes.length ?? 0,
+            updatedWorkspace?.title ?? "Workspace",
+        );
 
         return successResponse(
             "Workspace concept graph built",
