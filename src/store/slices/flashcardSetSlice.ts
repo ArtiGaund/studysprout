@@ -18,6 +18,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 const initialState: FlashcardSetState = {
     sets: [],
     loading: false,
+    flashcardSetsStale: false,
 };
 
 const flashcardSetSlice = createSlice({
@@ -74,11 +75,17 @@ const flashcardSetSlice = createSlice({
         ){
             const updated = action.payload;
             state.sets = state.sets.map((s) =>
-                 s._id === updated._id
-             ?{ ...s, ...updated }
-            : s
-        );
-        }
+                s._id === updated._id
+                    ?{ ...s, ...updated }
+                    : s
+            );
+        },
+        MARK_FLASHCARD_SETS_STALE:(state) => {
+            state.flashcardSetsStale = true;
+        },
+        MARK_FLASHCARD_SETS_FRESH:(state) => {
+            state.flashcardSetsStale = false;
+        },
     },
 });
 
@@ -90,6 +97,8 @@ export const {
     removeSet,
     clearSet,
     updateSingleSet,
+    MARK_FLASHCARD_SETS_FRESH,
+    MARK_FLASHCARD_SETS_STALE,
 } = flashcardSetSlice.actions;
 
 export default flashcardSetSlice.reducer;

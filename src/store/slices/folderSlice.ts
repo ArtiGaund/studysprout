@@ -21,6 +21,7 @@ const initialState: FoldersState = {
     currentFolder: null,
     loading: false,
     error: null,
+    statsStale: false,
 }
 
 const folderSlice = createSlice({
@@ -242,6 +243,12 @@ const folderSlice = createSlice({
             // Option B: Total cleanup (Use on Logout)
             state.foldersByWorkspace = {};
         },
+         MARK_FOLDER_STATS_STALE:(state) => {
+            state.statsStale = true;
+        },
+        MARK_FOLDER_STATS_FRESH:(state) => {
+            state.statsStale = false;
+        }
     }
 })
 
@@ -255,6 +262,8 @@ export const {
     SET_FOLDER_ERROR,
     CLEAR_WORKSPACE_FOLDERS,
     RESET_FOLDERS_STATE,
+    MARK_FOLDER_STATS_FRESH,
+    MARK_FOLDER_STATS_STALE,
 } = folderSlice.actions
 
 export default folderSlice.reducer;

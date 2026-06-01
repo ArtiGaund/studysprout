@@ -23,6 +23,8 @@ import flashcardSetReducer from "./slices/flashcardSetSlice"
 import workspaceMembersReducer from "./slices/workspaceMembersSlice"
 import workspacePresenceReducer from "./slices/workspacePresenceSlice"
 import userReducer from "./slices/userSlice";
+import lastStudiedReducer from "./slices/lastStudiedSlice";
+import activityReducer from "./slices/activitySlice";
 
 /**
  * @section Store Configuration
@@ -40,6 +42,8 @@ const store = configureStore({
         flashcardSet: flashcardSetReducer, // Metadata for Flashcard Groups
         workspaceMembers: workspaceMembersReducer, // Collaborative Access Lists
         workspacePresence: workspacePresenceReducer, // Real-time Cursor & User Status
+        lastStudied: lastStudiedReducer,
+        activity: activityReducer,
     }
 })
 

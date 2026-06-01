@@ -21,6 +21,7 @@ const initialState: WorkspacesState = {
     currentWorkspace: null, // Stores the ID
     loading: false, // Add loading state
     error: null, // Add error state
+    statsStale: false,
 }
 
 const workspaceSlice = createSlice({
@@ -157,6 +158,12 @@ const workspaceSlice = createSlice({
         SET_WORKSPACE_ERROR: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload;
         },
+        MARK_STATS_STALE:(state) => {
+            state.statsStale = true;
+        },
+        MARK_STATS_FRESH:(state) => {
+            state.statsStale = false;
+        }
     }   
 })
 
@@ -169,6 +176,8 @@ export const {
     SET_CURRENT_WORKSPACE,
     SET_WORKSPACE_LOADING,
     SET_WORKSPACE_ERROR,
+    MARK_STATS_FRESH,
+    MARK_STATS_STALE,
 } = workspaceSlice.actions
 
 export default workspaceSlice.reducer;
