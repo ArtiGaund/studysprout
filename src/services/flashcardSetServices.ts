@@ -72,3 +72,45 @@ export async function regenerateFlashcardSetService(
         throw error
     }
 }
+
+export async function getFlashcardSetOverviewService(
+    resourceId: string,
+    resourceType: string,
+    workspaceId: string,
+): Promise<{
+    success: boolean;
+    data?: any;
+    message?: string;
+    statusCode?: number;
+}>{
+    try {
+        const relativePath = `/api/flashcard-set`;
+        const url = `${BASE_URL}${relativePath}`
+        
+        const { data } = await axios.get(url,{ 
+            params: { 
+                resourceId,
+                resourceType,
+                workspaceId,
+             },
+         });
+        if(!data.success || !data.data) return {
+            success: false,
+            message: data.message,
+            statusCode: data.statusCode,
+        }
+        
+        return {
+            success: true,
+            data: data.data,
+            statusCode: data.statusCode,
+        }
+    } catch (error: any) {
+        console.error("[GetFlashcardSetOverviewService] Failed: ",error.message);
+        return {
+            success: false,
+            message: error.message ?? "[GetFlashcardSetOverviewService] Internal Server Error",
+            statusCode: error.statusCode,
+        }
+    }
+}
