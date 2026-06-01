@@ -18,6 +18,11 @@ const config = {
       },
     },
     extend: {
+      screens: {
+        'xs': '400px',   // small phones — Samsung Galaxy S8+, iPhone SE
+        '3xl': '1920px', // large monitors
+        '4xl': '2560px', // ultra-wide / 4K
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
