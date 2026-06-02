@@ -39,6 +39,7 @@ const FolderPage: React.FC<{
 }> = ({ params }) => {
     const router = useRouter()
     const dispatch = useDispatch();
+   
     // Memoized selectors for performance
     const selectFolders = useMemo(makeSelectFolders,[]);
     const EMPTY_FOLDER: ReduxFolder[] = [];
@@ -68,6 +69,8 @@ const FolderPage: React.FC<{
     },[
         files,
     ]);
+
+    
 
     /** * EFFECT: Folder Data Synchronization
      * Ensures Redux state reflects the folder being viewed in the URL
@@ -141,6 +144,7 @@ const FolderPage: React.FC<{
                         <FolderStatsRow />
                         {/* Search & File List Placeholder */}
                         <FolderFileList 
+                            workspaceId={params.workspaceId}
                             folderId={params.folderId}
                             files={filteredFiles}
                         />
