@@ -18,7 +18,7 @@ import clsx from "clsx";
 import EmojiPicker from "../global/emoji-picker";
 import { useToast } from "../ui/use-toast";
 import TooltipComponent from "../global/tooltip-component";
-import { PlusIcon, RefreshCw, Trash } from "lucide-react";
+import { Pencil, PlusIcon, RefreshCw, Trash } from "lucide-react";
 import { File as MongooseFile} from "@/model/file.model";
 import { Folder as MongooseFolder } from "@/model/folder.model";
 import { useFolder } from "@/hooks/useFolder";
@@ -29,13 +29,13 @@ import { useDispatch, useSelector } from "react-redux";
 
 // --- State Management ---
 import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
-import { selectCurrentFolder } from "@/store/selectors/folderSelector";
 import { makeSelectFiles } from "@/store/selectors/fileSelector";
 import { ReduxFile } from "@/types/state.type";
 import { RootState } from "@/store/store";
 import { selectUserId } from "@/store/selectors/userSelector";
 import { usePDFProcessor } from "@/hooks/usePDFProcessor";
 import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
+import { useClickDifferentiator } from "@/hooks/useClickDifferentiator";
 
 interface DropdownProps {
     title: string;
@@ -74,10 +74,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     const currentFileCount = folder?.currentFileCount || 0;
 
     const isError = folder?.status === "error";
-    const {
-        isRetrying,
-        retryPDFToFolder,
-    } = usePDFProcessor();
+    const { retryPDFToFolder } = usePDFProcessor();
     const { updateFolder } = useFolder(); 
 
     // Select files if this dropdown is a folder (Recursive Data Fetching)
@@ -88,10 +85,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         listType === 'folder' ? selectFiles(state, id) : EMPTY_FILE
     );
 
-    const {  
-        createFile, 
-        updateFile 
-    } = useFile();
+    const { createFile, updateFile } = useFile();
 
     // Collaborative state: check if another user is currently editing this specific ID
     const remoteEditing = useSelector((state: RootState) => state.ui.remoteEditing[id]);
@@ -121,17 +115,21 @@ const Dropdown: React.FC<DropdownProps> = ({
         onEditingStop: handleEditingStop // Pass the new callback
     });
 
+    const { handleMouseClickInterception } = useClickDifferentiator({
+        onSingleClickAction: () => navigatePage(id, listType),
+        onDoubleClickAction: () => {
+            if(!isCurrentlyEditingFromHook){
+                handleStartEditing();
+            }
+        }
+    });
+
     // Adjust handleStartEditing for Dropdown component
     const handleStartEditing = useCallback(() => {
         setIsEditingLocally(true); // Set local state to true immediately
         // Always dispatch to Redux for global awareness (e.g., to disable other editing)
         handleStartEditingFromHook(); 
     }, [handleStartEditingFromHook]);
-
-
-    // --- Click Management (Single vs Double) ---
-    const clickTimer = useRef<NodeJS.Timeout | null>(null);
-    const clickCount = useRef(0);
 
     const currentUserId = useSelector(selectUserId);
     // To Determine if the item is "Locked" by someone else
@@ -167,7 +165,6 @@ const Dropdown: React.FC<DropdownProps> = ({
             router.push(`/dashboard/${currentWorkspace?._id}/${accordionId}`);
         }
         if (type === 'file') {
-            // const parentFile = files.find(file => file._id === accordionId);
             if(parentFolderId){
                 router.push(`/dashboard/${currentWorkspace._id}/${parentFolderId}/${accordionId}`);
             }else{
@@ -185,47 +182,6 @@ const Dropdown: React.FC<DropdownProps> = ({
         router,
         toast,
     ]);
-
-    const handleCombinedClick = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-
-        clickCount.current+=1;
-        if(clickCount.current === 1){
-            // This is the first click in a potential double-click sequence
-            clickTimer.current = setTimeout(() => {
-                if(clickCount.current === 1){
-                    // if after the timeout, clickCount is still 1, it was a single click
-                    navigatePage(id, listType);
-                }
-                clickCount.current = 0;
-                clickTimer.current = null;
-            }, 300); // Small delay to differentiate single from double click
-        }
-    }, [
-        id,
-        listType,
-        navigatePage,
-    ])
-
-
-    const handleCombinedDoubleClick = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-
-        // clear the single click timer if it's running
-        if(clickTimer.current){
-            clearTimeout(clickTimer.current);
-            clickTimer.current = null;
-        }
-
-        clickCount.current = 0; // Reset click count for double click
-
-        if(!isCurrentlyEditingFromHook){
-            handleStartEditing();
-        }
-    }, [
-        handleStartEditing, // Use local handleStartEditing
-        isCurrentlyEditingFromHook, // Use effective state from hook
-    ])
 
     /**
      * @method onChangeEmoji
@@ -299,20 +255,17 @@ const Dropdown: React.FC<DropdownProps> = ({
     }
   );
 
-    const hoverStyles = useMemo(
-        () =>
-          clsx(
+    const hoverStyles = useMemo(() =>
+        clsx(
             'h-full hidden rounded-sm right-0 items-center justify-center flex space-x-1 flex-shrink-0 bg-transparent',
             {
               'group-hover/file:flex': listType === 'file',
               'group-hover/folder:flex': listType === 'folder',
             }
-          ),
+        ),
         [listType]
-      );
+    );
     
-    
-
     // add new file
     const addNewFile = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -337,9 +290,6 @@ const Dropdown: React.FC<DropdownProps> = ({
                 description: "Start working on it",
             })
             }
-            
-            
-                
         } catch (error) {
             console.log("Error while creating file in folder ",error)
             toast({
@@ -355,10 +305,10 @@ const Dropdown: React.FC<DropdownProps> = ({
     const moveToTrash = async(e: React.MouseEvent) => {
         e.stopPropagation();
         const username = user?.username
-         if(!id) {
-                    console.error(`[Move to trash] ${listType} Id is required`);
-                    return;
-                }
+        if(!id){
+            console.error(`[Move to trash] ${listType} Id is required`);
+            return;
+        }
         // For folders, `id` is the folder ID.
         // For files, `id` is the file ID.
         // The `id.split('folder')` logic might be problematic if your IDs can contain 'folder' string or are not structured like that.
@@ -370,7 +320,6 @@ const Dropdown: React.FC<DropdownProps> = ({
                 inTrash: trashValue
             }
             try {
-               
                 const result = await updateFolder(id, updatedFolder); // Use `id` directly
                 console.log("[Dropdown] moveToTrash result of folder: ",result);
                 if(!result.success){ // Check result.success for hook's return
@@ -380,8 +329,6 @@ const Dropdown: React.FC<DropdownProps> = ({
                         variant: "destructive"
                     })
                 } else {
-                   
-
                     toast({
                         title: "Folder moved to trash successfully",
                         description: "Keep it safe",
@@ -417,7 +364,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                     })
                 }
             } catch (error) {
-                console.log("Error while moving file to the trash", error)
+                console.error("Error while moving file to the trash", error)
                 toast({
                     title: "Error while moving file to the trash ",
                     description: "Please try again later",
@@ -432,7 +379,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         try {
             const workspaceId = currentWorkspace?._id;
             if(!workspaceId) return;
-            const result = await retryPDFToFolder(id, workspaceId);
+            await retryPDFToFolder(id, workspaceId);
         } catch (error) {
             console.error("[Dropdown] Failed to handle retry: ",error);
         }
@@ -443,7 +390,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         files,
     ])
 
-        return (
+    return (
         <AccordionItem 
             value={id} 
             className={listStyles} 
@@ -451,10 +398,10 @@ const Dropdown: React.FC<DropdownProps> = ({
         >
             <AccordionTrigger
                 id={listType}
-               className="hover:no-underline p-2 text-muted-foreground text-sm"
+                className="hover:no-underline p-2 text-muted-foreground text-sm"
                 disabled={listType === 'file'} 
                 onMouseDownCapture={(e) => {
-                    if (e.detail === 2) {   
+                    if(e.detail === 2) {   
                         e.preventDefault(); 
                         e.stopPropagation(); 
                         console.log(`[${title}] AccordionTrigger: Preventing default onMouseDownCapture due to double-click.`);
@@ -469,9 +416,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 <div  className={groupIdentifies}> {/* Added overflow-hidden */}
                     <div className="flex gap-4 items-center justify-start min-w-0 flex-1">
                     <div className="relative flex-shrink-0"> 
-                        <EmojiPicker getValue={onChangeEmoji}>
-                            {currentIcon}
-                        </EmojiPicker>
+                        <EmojiPicker getValue={onChangeEmoji}>{currentIcon}</EmojiPicker>
                     </div>
                     <div className="flex items-center flex-grow min-w-0 overflow-hidden w-full">
                     {isCurrentlyEditingFromHook ? ( 
@@ -479,11 +424,8 @@ const Dropdown: React.FC<DropdownProps> = ({
                             ref={inputRef}
                             type="text"
                             value={typeof displayedTitle === 'string' ? displayedTitle : ''}
-                            className={clsx(
-                                'outline-none bg-muted cursor-text flex-grow text-Neutrals/neutrals-7', // Use flex-grow
-                                'z-20 p-1 rounded-sm min-w-0', // Added min-w-0 to allow shrinking
-                                'w-full' // Ensure it takes full available width within its flex context
-                            )}
+                            className="text-sm font-bold text-white bg-zinc-900 outline-none
+                            border border-purple-500/50 rounded px-2 py-0.5 w-full"
                             readOnly={false}
                             onClick={(e) => e.stopPropagation()}
                             onDoubleClick={(e) => e.stopPropagation()} 
@@ -512,22 +454,20 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 isLockedByRemote && "bg-emerald-950/40 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]"
                             )}>
                                 <span
-                                className={clsx(
-                                    "block truncate transition-colors",
-                                    "flex-grow  min-w-0",
-                                    // Use remoteEditing object just to trigger a class
-                                    isLockedByRemote 
-                                    ? "text-emerald-400 font-semibold italic opacity-90 cursor-not-allowed select-none" 
-                                    : "hover:text-white cursor-pointer"
-                                )}
-                                // DISABLE clicks if locked
-                                onClick={(e) => !isLockedByRemote && handleCombinedClick(e)} 
-                                onDoubleClick={(e) => !isLockedByRemote && handleCombinedDoubleClick(e)} 
-                            >
-                                {String(displayedTitle)}
-                                
-                                
-                            </span>
+                                    className={clsx(
+                                        "block truncate transition-colors",
+                                        "flex-grow  min-w-0",
+                                        // Use remoteEditing object just to trigger a class
+                                        isLockedByRemote 
+                                        ? "text-emerald-400 font-semibold italic opacity-90 cursor-not-allowed select-none" 
+                                        : "hover:text-white cursor-pointer"
+                                    )}
+                                    // DISABLE clicks if locked
+                                    onClick={(e) => !isLockedByRemote && handleMouseClickInterception(e)} 
+                                    // onDoubleClick={(e) => !isLockedByRemote && handleCombinedDoubleClick(e)} 
+                                >
+                                    {String(displayedTitle)}
+                                 </span>
                             {/* Visual Indicator: A small pulse dot instead of text to save space */}
                                 {isLockedByRemote && (
                                     <div className="ml-2 flex-shrink-0 items-center pr-2">
@@ -553,50 +493,68 @@ const Dropdown: React.FC<DropdownProps> = ({
                 </div>
                 {/* Action buttons remain, now correctly part of the flex container */}
                
-                {!isLockedByRemote && (<div className={hoverStyles}> 
-
-                  <TooltipComponent
-                //   className="bg-amber-50"
-                     message={`Delete ${listType === 'folder' ? 'Folder' : 'File'}`}
-                >
-                        <Trash 
-                            onClick={(e) => { e.stopPropagation(); moveToTrash(e); }} 
-                            size={15}
-                            className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
-                        />
-                    </TooltipComponent>
-                    {/* Show add button only for folder title  */}
-                   { listType === 'folder' && ( <TooltipComponent message="Add File">
-                        <PlusIcon 
-                            onClick={(e) => { e.stopPropagation(); addNewFile(e); }} 
-                            size={15}
-                            className="hover:text-white transition-colors"
-                        />
-                    </TooltipComponent>)}
-                </div>)}
+                {!isLockedByRemote && (
+                    <div className={clsx(
+                        hoverStyles,
+                        "gap-x-2 px-1 text-gray-500"
+                    )}> 
+                        <TooltipComponent message="Rename">
+                            <Pencil 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if(!isCurrentlyEditingFromHook){
+                                        handleStartEditing();
+                                    }
+                                }}
+                                size={14}
+                                className="hover:text-white transition-colors cursor-pointer"
+                            />
+                        </TooltipComponent>
+                        <TooltipComponent
+                        message={`Delete ${listType === 'folder' ? 'Folder' : 'File'}`}
+                        >
+                            <Trash 
+                                onClick={(e) => { e.stopPropagation(); moveToTrash(e); }} 
+                                size={15}
+                                className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
+                            />
+                        </TooltipComponent>
+                        {/* Show add button only for folder title  */}
+                        { listType === 'folder' && ( <TooltipComponent message="Add File">
+                            <PlusIcon 
+                                onClick={(e) => { e.stopPropagation(); addNewFile(e); }} 
+                                size={15}
+                                className="hover:text-white transition-colors"
+                            />
+                        </TooltipComponent>
+                    )}
+                    </div>
+                )}
                 </div>
 
                 {/* Retry button */}
                 {isError && (
-                <div className="ml-auto flex items-center pr-2">
-                    <TooltipComponent 
-                    message="Processing failed. Click to Retry"
-                    >
-                        <RefreshCw 
-                            onClick={handleRetry}
-                            className="w-4 h-4 text-red-500 hover:rotate-180 transition-all cursor-pointer"
-                        />
-                    </TooltipComponent>
-                </div>
+                    <div className="ml-auto flex items-center pr-2">
+                        <TooltipComponent 
+                        message="Processing failed. Click to Retry"
+                        >
+                            <RefreshCw 
+                                onClick={handleRetry}
+                                className="w-4 h-4 text-red-500 hover:rotate-180
+                                 transition-all cursor-pointer"
+                            />
+                        </TooltipComponent>
+                    </div>
                 )}
             </AccordionTrigger>
-            {folderStatus === "processing" && totalFiles > 0 && currentFileCount < totalFiles && (
-                <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white/5">
-                    <div 
-                    className="h-full bg-blue-500 transition-all duration-500"
-                    style={{width: `${(currentFileCount / totalFiles) * 100}%`}}
-                    />
-                </div>
+            {folderStatus === "processing" && totalFiles > 0 && currentFileCount < totalFiles && 
+                (
+                    <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white/5">
+                        <div 
+                        className="h-full bg-blue-500 transition-all duration-500"
+                        style={{width: `${(currentFileCount / totalFiles) * 100}%`}}
+                        />
+                    </div>
             )}
 
             {/* It will show files for the folders */}
