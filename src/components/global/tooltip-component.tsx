@@ -27,6 +27,11 @@ import {
     className?: string;
   }
   const TooltipComponent: React.FC<TooltipComponentProps> = ({ children, message, className }) => {
+    
+    // If there is no active system notification message, bypass rendering the portal container
+    // entirely
+    if(!message || message.trim() === "") return <>{children}</>
+
     return(
         <TooltipProvider>
             <Tooltip>
