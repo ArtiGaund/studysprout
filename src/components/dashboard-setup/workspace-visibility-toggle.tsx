@@ -23,7 +23,10 @@ export default function WorkspaceVisibilityToggle({
 }: WorkspaceVisibilityToggleProps){
    
     return(
-        <div className="flex justify-center items-center gap-3">
+        <div 
+            className="flex justify-center items-center gap-3"
+            onClick={(e) => e.preventDefault()}
+        >
             {/* The underlying UI primitive for the toggle action */}
             <ToggleSwitch 
             checked={value}

@@ -268,3 +268,31 @@ SANDBOX / DASHBOARD PREVIEW
     (SandboxContent always in DOM but hidden via opacity)
 
 ─────────────────────────────────────────────────────────────────────────────── */
+@keyframes floatAmbient {
+  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.8; }
+  50% { transform: translateY(-4px) scale(1.08); opacity: 1; }
+}
+
+@keyframes pulseAmbient {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+@keyframes connectAmbient {
+  0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.8; }
+  33% { transform: rotate(3deg) scale(1.05); }
+  66% { transform: rotate(-3deg) scale(0.95); opacity: 0.7; }
+}
+
+/* Helper utility binding hooks */
+.animate-ambient-float {
+  animation: floatAmbient 4s ease-in-out infinite;
+}
+
+.animate-ambient-pulse {
+  animation: pulseAmbient 3.5s ease-in-out infinite;
+}
+
+.animate-ambient-connect {
+  animation: connectAmbient 5s ease-in-out infinite;
+}
