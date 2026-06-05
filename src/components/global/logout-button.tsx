@@ -14,12 +14,14 @@ import React from "react"
 import { Button } from "../ui/button"
 import { useRouter } from "next/navigation"
 import { disconnectSocket } from "@/lib/socket/socket"
+import clsx from "clsx"
 
 interface LogoutButtonProps{
-    children: React.ReactNode
+    children: React.ReactNode;
+    className?: string;
 }
 
-const LogoutButton: React.FC<LogoutButtonProps> = ({ children }) => {
+const LogoutButton: React.FC<LogoutButtonProps> = ({ children, className }) => {
     const { data: session } = useSession()
     const router = useRouter()
 
@@ -54,7 +56,7 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ children }) => {
         <Button
         variant="ghost"
         size="icon"
-        className="p-0"
+        className={clsx("p-0 h-auto w-auto hover:bg-transparent hover:text-inherit", className)}
         onClick={logout}
         >
             {children}
