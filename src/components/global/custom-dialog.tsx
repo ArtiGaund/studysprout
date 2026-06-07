@@ -16,6 +16,8 @@ import clsx from "clsx";
     children?: React.ReactNode;
     description?: string;
     className?: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void; 
   }
 
 const CustomDialogTrigger: React.FC<CustomDialogProps> = ({ 
@@ -23,13 +25,17 @@ const CustomDialogTrigger: React.FC<CustomDialogProps> = ({
     content,
     children, 
     description, 
-    className
+    className,
+    open,
+    onOpenChange,
 }) => {
     return (
-       <Dialog>
+       <Dialog open={open} onOpenChange={onOpenChange}>
         {/* When we click on children whole children element is triggerred and will bring dialog on screen */}
-            <DialogTrigger className={clsx('',className)}>
-                {children}
+            <DialogTrigger asChild>
+                <div className={clsx('',className)}>
+                    {children}
+                </div>            
             </DialogTrigger>
             <DialogContent className="max-w-md w-full h-full sm:h-auto md:max-h-[85vh] bg-[#0c0c0e]
             border border-white/5 p-0 overflow-hidden flex flex-col rounded-none sm:rounded-2xl
