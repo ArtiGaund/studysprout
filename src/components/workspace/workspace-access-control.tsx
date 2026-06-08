@@ -14,23 +14,28 @@ import WorkspaceMembersAvatarGroup from "./workspace-members-avatar-group";
 import WorkspaceMembersManager from "./workspace-members-manager";
 
 const WorkspaceAccessControl = ({ 
-    editable,
+    editable = false,
     workspaceId
  }: { 
     editable?: boolean;
     workspaceId: string
 }) => {
     return(
-        <div className={`flex items-center gap-2 ${editable ? 'cursor-pointer' : 'cursor-not-allowed'} `}>
-          { editable && (
+        <div className={`flex items-center gap-2 ${editable ? 'cursor-pointer' : 'cursor-default'} `}>
+          { editable ? (
             <CustomDialogTrigger
-            header="Workspace Access"
-            content={
-                <WorkspaceMembersManager workspaceId={workspaceId}/>
-            }
+                header="Workspace Access"
+                content={
+                    <WorkspaceMembersManager workspaceId={workspaceId}/>
+                }
             >
-                 <WorkspaceMembersAvatarGroup workspaceId={workspaceId}/>
-            </CustomDialogTrigger>)}
+                <div>
+                    <WorkspaceMembersAvatarGroup workspaceId={workspaceId}/>
+                 </div>
+            </CustomDialogTrigger>
+            ) : (
+                <WorkspaceMembersAvatarGroup workspaceId={workspaceId}/>
+            )}
         </div>
     )
 }

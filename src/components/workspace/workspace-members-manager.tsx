@@ -105,7 +105,7 @@ const WorkspaceMembersManager = ({ workspaceId }: { workspaceId: string}) => {
     }
     
     return (
-        <div>
+        <div className="px-6 pb-6 overflow-y-auto max-h-[65vh] scrollbar-thin scrollbar-thumb-zinc-800/60">
             <Separator className="my-4"/>
             {/* 1. MEMBERSHIP VISUALIZATION SECTION */}
             <div className="space-y-4">
