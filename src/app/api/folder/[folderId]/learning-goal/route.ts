@@ -19,7 +19,7 @@ import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
-export async function getLeaningGoal(
+async function getLeaningGoal(
     request: NextRequest,
     folderId: string,
     userId: string,
