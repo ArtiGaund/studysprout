@@ -423,7 +423,7 @@ export async function POST(request: NextRequest){
             )
         }
 
-        onFlashcardSetGenerated(
+        await onFlashcardSetGenerated(
             workspaceId,
             userId,
             newFlashcardSet.title,

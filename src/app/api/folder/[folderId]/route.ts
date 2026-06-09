@@ -333,7 +333,7 @@ export async function DELETE(
             }, { status: 500 })
         }
        
-        onFolderDelete(
+        await onFolderDelete(
            workspaceId,
             folderId,
             userId,

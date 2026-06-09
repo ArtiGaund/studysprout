@@ -154,7 +154,7 @@ export async function POST(request: Request) {
         console.error("[Socket Emission Failed] File Create: ",socketError);
        }
 
-        onFileCreated(
+        await onFileCreated(
             String(newFile.workspaceId),
             String(newFile.folderId),
             String(newFile._id),

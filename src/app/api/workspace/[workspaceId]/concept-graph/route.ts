@@ -42,7 +42,7 @@ export async function POST(
             { new: true }
         ).lean();
 
-        onSynthesisCompleted(
+        await onSynthesisCompleted(
             workspaceId,
             String(session.user._id),
             graph.nodes.length ?? 0,

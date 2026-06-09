@@ -199,7 +199,7 @@ export async function POST(
       }
 
       if(eventType === "file_updated"){
-        onFileUpdated(
+        await onFileUpdated(
             String(file.workspaceId),
             String(file.folderId),
             String(file._id),
@@ -207,7 +207,7 @@ export async function POST(
             file.title || "Untitled"
         );
       }else if(eventType === "file_trashed"){
-        onFileArchived(
+        await onFileArchived(
             String(file.workspaceId),
             String(userId),
             1,

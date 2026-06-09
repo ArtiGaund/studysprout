@@ -101,7 +101,7 @@ export async function POST(
                 $set: { conceptGraph: graph },
             });
 
-            onSynthesisCompleted(
+            await onSynthesisCompleted(
                 String(workspaceId),
                 String(session.user._id),
                 graph.value.nodes.length ?? 0,

@@ -124,7 +124,7 @@ export async function POST(request: Request) {
             );
         }
 
-        onFolderCreated(
+        await onFolderCreated(
             updatedWorkspace._id.toString(),
             newFolder._id,
             userId,

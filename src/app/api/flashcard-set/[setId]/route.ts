@@ -280,7 +280,7 @@ export async function DELETE(
         // 7. Delete set
         await FlashcardSetModel.deleteOne({ _id: setId });
 
-        onFlashcardSetDeleted(
+        await onFlashcardSetDeleted(
             String(workspaceId),
             String(userId),
             String(set?.title),

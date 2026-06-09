@@ -1,16 +1,33 @@
 import { createEvent } from "@/utils/create-event";
 import mongoose from "mongoose";
+import { Types } from "mongoose";
 
+
+function toObjectId(value: string | undefined, field: string): Types.ObjectId{
+    if(!value || !Types.ObjectId.isValid(value)){
+        throw new Error(`[activity-hooks] Invalid ObjectId for field "${field}: ${value}`);
+    }
+    return new Types.ObjectId(value);
+}
+
+function toOptionalObjectId(value: string | undefined, field: string): Types.ObjectId | undefined{
+    if(!value) return undefined;
+    if(!Types.ObjectId.isValid(value)){
+        console.warn(`[activity-hook] Skipping invalid optional ObjectId for field "${field}: ${value}"`);
+        return undefined;
+    }
+    return new Types.ObjectId(value);
+}
 export async function onFolderCreated(
     workspaceId: string,
     folderId: string,
     userId: string,
     title: string,
 ){
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        folderId: new mongoose.Types.ObjectId(folderId),
-        userId:  new mongoose.Types.ObjectId(userId),
+   await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
+        folderId: toObjectId(folderId, "folderId"),
+        userId:  toObjectId(userId, "userId"),
         type: "FOLDER_CREATED",
         description: `Created ${title} folder.`,
         metadata: {
@@ -25,10 +42,10 @@ export async function onFolderDelete(
     userId: string,
     title: string,
 ){
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        folderId: new mongoose.Types.ObjectId(folderId),
-        userId: new mongoose.Types.ObjectId(userId),
+   await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
+        folderId: toObjectId(folderId, "folderId"),
+        userId: toObjectId(userId, "userId"),
         type: "FOLDER_DELETED",
         description: `Deleted ${title} folder.`,
         metadata: {
@@ -45,11 +62,11 @@ export async function onFileCreated(
     userId: string,
     title: string,
 ){
-    createEvent({
-        workspaceId:new mongoose.Types.ObjectId(workspaceId),
-        folderId: new mongoose.Types.ObjectId(folderId),
-        fileId: new mongoose.Types.ObjectId(fileId),
-        userId: new mongoose.Types.ObjectId(userId),
+   await createEvent({
+        workspaceId:toObjectId(workspaceId, "workspaceId"),
+        folderId: toObjectId(folderId, "folderId"),
+        fileId: toObjectId(fileId, "fileId"),
+        userId: toObjectId(userId, "userId"),
         type: "FILE_CREATED",
         description: `Created ${title} file.`,
         metadata: {
@@ -66,11 +83,11 @@ export async function onFileUpdated(
     userId: string,
     title: string,
 ){
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        folderId: new mongoose.Types.ObjectId(folderId),
-        fileId: new mongoose.Types.ObjectId(fileId),
-        userId: new mongoose.Types.ObjectId(userId),
+   await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
+        folderId: toObjectId(folderId, "folderId"),
+        fileId: toObjectId(fileId, "fileId"),
+        userId: toObjectId(userId, "userId"),
         type: "FILE_UPDATED",
         description: `Updated project architecture in  ${title}`,
         metadata: {
@@ -101,14 +118,14 @@ export async function onFlashcardSetGenerated(
         description += ` for this workspace`;
     }
 
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        userId: new mongoose.Types.ObjectId(userId),
+    await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
+        userId: toObjectId(userId, "userId"),
         folderId: source?.folderId 
-            ? new mongoose.Types.ObjectId(source.folderId)
+            ? toObjectId(source.folderId, "folderId")
             : undefined,
         fileId: source?.fileId
-            ? new mongoose.Types.ObjectId(source.fileId)
+            ? toObjectId(source.fileId, "fileId")
             : undefined,
         type: "FLASHCARD_SET_GENERATED",
         description,
@@ -126,9 +143,9 @@ export async function onFlashcardSetDeleted(
     setTitle: string,
     cardCount: number,
 ){
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        userId: new mongoose.Types.ObjectId(userId),
+    await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
+        userId: toObjectId(userId, "userId"),
         type: "FLASHCARD_SET_DELETED",
         description: `Deleted flashcard set "${setTitle}" (${cardCount} cards)`,
         metadata: {
@@ -148,12 +165,12 @@ export async function onSynthesisCompleted(
         folderId?: string,
     }
 ){
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
+    await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
         folderId: options?.folderId
-            ? new mongoose.Types.ObjectId(options.folderId)
+            ? toObjectId(options.folderId, "folderId")
             : undefined,
-        userId:new mongoose.Types.ObjectId(userId),
+        userId:toObjectId(userId, "userId"),
         type: "SYNTHESIS_COMPLETED",
         description: `Synthesized ${nodeCount} nodes from ${sourceTitle}`,
         metadata: {
@@ -170,11 +187,11 @@ export async function onFileArchived(
     fileCount: number,
     folderId?: string,
 ) {
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        userId: new mongoose.Types.ObjectId(userId),
+    await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
+        userId: toObjectId(userId, "userId"),
         folderId: folderId
-            ? new mongoose.Types.ObjectId(folderId)
+            ? toObjectId(folderId, "folderId")
             : undefined,
         type: "FILE_ARCHIVED",
         description: `Archived ${fileCount} reference file${fileCount > 1 ? "s" : ""}`,
@@ -190,11 +207,11 @@ export async function onConnectionCreated(
     userId: string,
     folderId?: string,
 ){
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        userId: new mongoose.Types.ObjectId(userId),
+    await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
+        userId: toObjectId(userId, "userId"),
         folderId: folderId
-            ? new mongoose.Types.ObjectId(folderId)
+            ? toObjectId(folderId, "folderId")
             : undefined,
         type: "CONNECTION_CREATED",
         description: `Created new connection group`,
@@ -208,9 +225,9 @@ export async function onMemberJoined(
     memberName: string,
     memberEmail: string,
 ){
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        userId: new mongoose.Types.ObjectId(userId),
+    await createEvent({
+        workspaceId:toObjectId(workspaceId, "workspaceId"),
+        userId: toObjectId(userId, "userId"),
         folderId: undefined,
         fileId: undefined,
         type: "MEMBER_JOINED",
@@ -228,9 +245,9 @@ export async function onMemberRemoved(
     memberName: string,
     memberEmail: string
 ){
-    createEvent({
-        workspaceId: new mongoose.Types.ObjectId(workspaceId),
-        userId: new mongoose.Types.ObjectId(userId),
+    await createEvent({
+        workspaceId: toObjectId(workspaceId, "workspaceId"),
+        userId: toObjectId(userId, "userId"),
         folderId: undefined,
         fileId: undefined,
         type: "MEMBER_REMOVED",
