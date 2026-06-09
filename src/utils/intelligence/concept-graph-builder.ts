@@ -97,7 +97,7 @@ export async function buildFolderConceptGraph(
         );
 
         if(folderId && workspaceId){
-            onSynthesisCompleted(
+            await onSynthesisCompleted(
                 workspaceId,
                 userId ?? "system",
                 nodes.length,
@@ -210,7 +210,7 @@ export async function buildWorkspaceConceptGraph(
             }
         }
 
-        onSynthesisCompleted(
+        await onSynthesisCompleted(
             workspaceId,
             userId ?? "system",
             nodes.length,
