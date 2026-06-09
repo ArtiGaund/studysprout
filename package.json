@@ -44,6 +44,7 @@
     "date-fns": "^4.1.0",
     "emoji-picker-react": "^4.10.0",
     "formidable": "^3.5.1",
+    "framer-motion": "^12.40.0",
     "ioredis": "^5.10.1",
     "lucide-react": "^0.390.0",
     "mongoose": "^8.4.1",
