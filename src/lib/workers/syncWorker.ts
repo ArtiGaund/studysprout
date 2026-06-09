@@ -24,12 +24,6 @@ import { redisConnection } from "../bullmq/redis-connection";
 import { markTermIndexStale } from "@/lib/workers/workspace-term-index";
 import { onFileUpdated } from "../activity-hooks";
 
-// const connection: ConnectionOptions = {
-//     host: process.env.REDIS_HOST || "127.0.0.1",
-//     port: parseInt(process.env.REDIS_PORT || "6379"),
-//     maxRetriesPerRequest: null,
-// };
-
 let worker: Worker | null = null;
 
 export const initFileSyncWorker = () => {
@@ -37,7 +31,7 @@ export const initFileSyncWorker = () => {
     if(worker) return;
     worker = new Worker("file-sync-queue", async (job) => {
 
-        const { fileId, contentBinary } = job.data;
+        const { fileId, contentBinary, userId } = job.data;
 
         await dbConnect();
         try {
@@ -119,22 +113,15 @@ export const initFileSyncWorker = () => {
             }   
 
             if(existingFile?.workspaceId && existingFile.folderId){
-                onFileUpdated(
+                await onFileUpdated(
                     String(existingFile.workspaceId),
                     String(existingFile.folderId),
                     String(fileId),
-                    "system",
+                    userId,
                     existingFile.title || "Untitled",
                 );
             }
-           
-            // console.log(
-            //         `[SyncWorker] Persisted: ${fileId} | ${blockOrder.length} blocks | 
-            //         ${readingTime}min read`
-            // );
-
-            // console.log("[SyncWorker] file.terms: ",existingFile?.terms);
-           
+        
         } catch (error) {
             console.error("[SyncWorker] error: ",error);
             throw error;
