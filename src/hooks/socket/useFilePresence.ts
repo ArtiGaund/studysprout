@@ -57,7 +57,9 @@ export const useFilePresence = (
         };
     },[
         fileId,
-        currentUser?._id
+        currentUser?._id,
+        socket,
+        isConnected,
     ])
 
     /**
