@@ -20,7 +20,6 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/style.css"
 import "@blocknote/mantine/style.css"
 import "@/app/styles/blocknote-overrides.css"
-import { useTheme } from "next-themes";
 import { useToast } from "../ui/use-toast";
 
 // Yjs & Protocols
@@ -338,7 +337,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
         </div>
     )}
     return(
-        <div className="p-5">
+        <div className="p-1">
             <BlockNoteView  
                 editor={editor}
                 theme= "dark"
