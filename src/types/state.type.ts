@@ -35,6 +35,12 @@ export interface ReduxFile{
     blocks: Record<string, IBlock>;
     blockOrder: string[];
     deletedAt?: string | null;
+
+    readingTimeMinutes: number;
+    terms?: string[];
+    prerequisites?: string[];
+    plainText?: string;
+    autoSummary?: any;
 }
 export interface ConceptGraphNode {
     id: string;
