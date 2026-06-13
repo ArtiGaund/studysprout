@@ -133,3 +133,15 @@ export async function deleteBlock(fileId: string, blockId: string){
         console.warn("[FileServices] Failed to delete block due to following error: ",error);
     }
 }
+
+export async function detectFilePrerequisitesService(fileId: string){
+    try {
+        const relativePath = `/api/file/${fileId}/prerequisites`;
+        const url = `${BASE_URL}${relativePath}`;
+        const { data } = await axios.post(url);
+        if(!data.success) throw new Error(data.message);
+        return data.data;
+    } catch (error) {
+         console.warn("[FileServices] Failed to detect file prerequisites due to following error: ",error);
+    }
+}

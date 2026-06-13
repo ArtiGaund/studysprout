@@ -31,6 +31,7 @@ import {
     addBlock, 
     addFile, 
     deleteBlock, 
+    detectFilePrerequisitesService, 
     getAllFilesByWorkspaceId, 
     getCurrentFile, 
     updateBlock 
@@ -416,6 +417,54 @@ export function useFile() {
         files,
     ]);
 
+    const detectFilePrerequisites = useCallback(async(fileId: string ): Promise<{
+        success: boolean;
+        data?: { id: string; title: string}[];
+        error?: string;
+    }> => {
+        if(!fileId) return {
+            success: false,
+            error: "[useFile] detectFilePrerequisites, file id required",
+        };
+
+        dispatch(SET_FILE_LOADING(true));
+        dispatch(SET_FILE_ERROR(null));
+        try {
+            const result = await detectFilePrerequisitesService(fileId);
+            if(!result) return {
+                success: false,
+                error: "[useFile] detectFilePrerequisites, failed to detect file prerequisites",
+            };
+
+            const prerequisites = result.data?.prerequisites ?? result.prerequisites ?? [];
+            dispatch(UPDATE_FILE({
+                folderId: currentFile?.folderId || "",
+                id: fileId,
+                updates: {
+                    prerequisites: prerequisites.map((p: { id: string}) => p.id),
+                },
+            }));
+
+            return {
+                success: true,
+                data: prerequisites
+            };
+        } catch (error: any) {
+            console.error("[useFile] detectFilePrerequisites failed: ",error);
+            const errorMessage = error.message || "Failed to detect file prerequisites";
+            dispatch(SET_FILE_ERROR(errorMessage));
+            return {
+                success: false,
+                error: errorMessage,
+            };
+        }finally{
+            dispatch(SET_FILE_LOADING(false));
+        }
+    },[
+        dispatch,
+        currentFile?.folderId,
+    ]);
+
     // function to explicitly invalidate caches
     const invalidateFileCaches = useCallback((
         workspaceId?: string,
@@ -621,5 +670,6 @@ export function useFile() {
         updateBlockHandler,
         deleteBlockHandler,
         getWorkspaceFilesFromStore,
+        detectFilePrerequisites,
      }
 }
