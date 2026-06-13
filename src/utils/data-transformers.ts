@@ -12,7 +12,7 @@
 import { Types } from "mongoose";
 import { WorkSpace } from "@/model/workspace.model";
 import { Folder } from "@/model/folder.model";
-import { File, IBlock } from "@/model/file.model";
+import { IBlock } from "@/model/file.model";
 import { 
     ReduxWorkSpace,
     ReduxFolder,
@@ -140,14 +140,20 @@ export const transformFile = (file: any): ReduxFile | null=> {
         ? toStr(file.contentLastModified)
         : new Date().toISOString()) ?? new Date().toISOString(),
 
-         createdAt: toStr(file.createdAt) as string,
-          lastUpdated: toStr(file.lastUpdated) as string,
-           workspaceId: toStr(file.workspaceId) as string,
+        createdAt: toStr(file.createdAt) as string,
+        lastUpdated: toStr(file.lastUpdated) as string,
+        workspaceId: toStr(file.workspaceId) as string,
         folderId: toStr(file.folderId) as string,
-         inTrash: file.inTrash ?? undefined,
+        inTrash: file.inTrash ?? undefined,
         bannerUrl: file.bannerUrl ?? undefined,
-       deletedAt: file.deletedAt?.toString(),
-       
+        deletedAt: file.deletedAt?.toString(),
+        readingTimeMinutes: file.readingTimeMinutes ?? 0,
+        terms: file.terms ?? [],
+        prerequisites: file.prerequisites !== null 
+            ? file.prerequisites?.map((id: string) => id.toString()) 
+            : undefined,
+        plainText: file.plainText ?? '',
+        autoSummary: file.autoSummary ?? null,
     }
 }
 
