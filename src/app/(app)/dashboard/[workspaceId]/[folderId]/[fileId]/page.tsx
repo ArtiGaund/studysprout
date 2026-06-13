@@ -12,18 +12,19 @@
 
 import dynamic from 'next/dynamic'
 import { useFile } from '@/hooks/useFile'
-import { ReduxFile } from '@/types/state.type'
+import { ReduxFile, ReduxFlashcardSet } from '@/types/state.type'
 import { useRouter } from 'next/navigation'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { SET_CURRENT_RESOURCE } from '@/store/slices/contextSlice'
-import { selectCurrentFile } from '@/store/selectors/fileSelector'
-import { FilePresenceAvatar } from '@/components/file-presence/file-presence-avatar'
+import { makeSelectFiles, selectCurrentFile } from '@/store/selectors/fileSelector'
 import { useFilePresence } from '@/hooks/socket/useFilePresence'
 import { useUser } from '@/lib/providers/user-provider'
-import TooltipComponent from '@/components/global/tooltip-component'
-import { FileUtilityDrawer } from '@/components/file-presence/file-utility-drawer'
 import { NavHeader } from '@/components/banner-upload/nav-header'
+import { FileHeader } from '@/components/file-view/file-header'
+import { FileInsightsPanel, FlashcardSet, ParentSet } from '@/components/file-view/file-insights-pannel'
+import { RootState } from '@/store/store'
+import { selectCurrentFolder } from '@/store/selectors/folderSelector'
 
 // Optimized: Load editor only on the client to avoid hydration mismatches.
 const DynamicTextEditor = dynamic(
@@ -38,24 +39,161 @@ const FilePage: React.FC<{
     params : { fileId: string, workspaceId?: string,folderId?: string }
 }> = ({ params }) => {
     const fileId = params.fileId;
-    const [ isDrawerOpen, setIsDrawerOpen ] = useState(false);
     const { user } = useUser();
-    
     const router = useRouter()
     const dispatch = useDispatch();
-    const { 
-        currentFileDetails, 
-     } = useFile();
 
-     const currentFile = useSelector(selectCurrentFile);
-     const [ loading, setLoading ] = useState(false);
+    const { currentFileDetails, detectFilePrerequisites } = useFile();
+
+    const currentFile = useSelector(selectCurrentFile);
+    const currentFolder = useSelector(selectCurrentFolder);
+    
+    const folderId = currentFolder?._id ?? "";
+
+    const [ loading, setLoading ] = useState(false);
+    const [ prereqLoading, setPrereqLoading ] = useState(false);
+
     const onChangeHandler = ( content: string ) => {
         // console.log("Live updated content of file ",content);
     }
    
     // SOCKET HOOK: Manages presence list for current file
-    const activeFileUsers = useFilePresence(params.fileId, user);
+    const rawActiveUsers = useFilePresence(params.fileId, user);
+    const activeFileUsers = (rawActiveUsers ?? []).map((user: any) => ({
+        id: user.id ?? user._id ?? user.userId ?? '',
+        username: user.username ?? user.name ?? 'Unknown',
+        avatarUrl: user.avatarUrl ?? user.avatar ?? undefined,
+        color: user.color ?? undefined,
+    }));
 
+    // Flashcard sets from Redux
+    const allSets: ReduxFlashcardSet[] = useSelector(
+        (state: RootState) => state.flashcardSet.sets ?? []
+    );
+
+    // File-level set: resourceType === 'File' and resourceId === fileId
+    const fileFlashcardSet = useMemo<FlashcardSet | null>(() => {
+        const match = allSets.find(
+            set => set.resourceType === "File" && set.resourceId === fileId
+        );
+        if(!match) return null;
+        const mastery = match.totalCards > 0
+            ? Math.round(((match.totalCards - match.dueCount) / match.totalCards) * 100)
+            : 0;
+        return {
+            _id: match._id,
+            title: match.title,
+            cardCount: match.cardCount,
+            drillType: match.desiredTypes?.[0] ?? 'Mixed',
+            mastery,
+            isActive: mastery > 0 && mastery < 100,
+        }
+    },[
+        allSets,
+        fileId,
+    ]);
+
+    /**
+     * Parent sets: folder or workspace sets that include this file in their sourceSnapshot
+     */
+    const parentSets = useMemo<ParentSet[]>(() => {
+        return allSets
+            .filter(s => 
+                (s.resourceType === 'Folder' || s.resourceType === 'Workspace') &&
+                (s.sourceSnapshot?.fileIds ?? []).includes(fileId)
+            )
+            .map(s => ({
+                title: s.title,
+                type: s.resourceType === 'Folder' ? 'folder' : 'workspace',
+                cardCount: s.cardCount,
+            }));
+    },[
+        allSets,
+        fileId,
+    ]);
+
+    // File Statistics derived from Redux
+
+    /**
+     * Reading Time: stored directly on the File document by FileSyncWorker.
+     */
+    const readingTimeMin = currentFile?.readingTimeMinutes;
+
+    /**
+     * Complexity: derived from block count.
+     * <20 blocks = low, 20-60 = medium, >60 = high
+     */
+    const complexity = useMemo((): 'low' | 'medium' | 'high' => {
+        const count = currentFile?.blockOrder.length ?? 0;
+        if(count < 20) return 'low';
+        if(count < 60) return 'medium';
+        return 'high';
+    },[
+        currentFile?.blockOrder
+    ]);
+
+    /**
+     * Mention + connected concepts: from parent folder's concept graph
+     * - mention = edge where this file is the source (how many terms this file defines/user)
+     * - connectedConcept = unique term linked to this file
+     */
+    const { mentions, connectedConcepts } = useMemo(() => {
+        const graph = currentFolder?.conceptGraph;
+        if(!graph){
+            return {
+                mentions: 0,
+                connectedConcepts: 0,
+            }
+        }
+        const fileEdges = graph.edges.filter(e => e.source === fileId);
+        return {
+            mentions: fileEdges.length,
+            connectedConcepts: new Set(fileEdges.map(e => e.target)).size,
+        }
+    },[
+        currentFolder?.conceptGraph,
+        fileId,
+    ]);
+
+    const documentMasteryPct = fileFlashcardSet?.mastery ?? 0;
+
+    // --- Prerequisites
+    const selectFiles = useMemo(makeSelectFiles,[]);
+    const siblingFiles = useSelector((state: RootState) => 
+        selectFiles(state, folderId)
+    );
+
+    const prereqItems = useMemo(() => {
+        return (currentFile?.prerequisites ?? [])
+            .map((id) => siblingFiles.find((f) => f._id === String(id)))
+            .filter(Boolean)
+            .map((f) => ({ id: f!._id, title: f!.title }));
+    },[
+        currentFile?.prerequisites,
+        siblingFiles,
+    ]);
+
+    const prereqNeverRun = 
+        currentFile?.prerequisites === undefined ||
+        currentFile.prerequisites === null ||
+        currentFile.prerequisites.length === 0;
+
+    const handleDetectFilePrerequisites = async () => {
+        if(!fileId) return;
+        setPrereqLoading(true);
+        await detectFilePrerequisites(fileId);
+        setPrereqLoading(false);
+    }
+
+    const handlePrereqClick = useCallback((prereqFileId: string) => {
+        router.push(
+            `/dashboard/${params.workspaceId}/${params.folderId}/${prereqFileId}`
+        );
+    },[
+        params.workspaceId,
+        params.folderId,
+        router,
+    ])
     /** * Effect: Initial File Data Load
      * Fetches file metadata and content if not present in Redux.
      */
@@ -146,57 +284,61 @@ const FilePage: React.FC<{
         return <div>Loading file content...</div>
     }
     return (
-        <div className='relative'>
-            { currentFile && (
-                <>
-                <NavHeader 
+        <>
+            <NavHeader 
                     dirType='file'
                     fileId={params.fileId}
                     dirDetails={currentFile}
                 />
-                    {/* Editor wrapper */}
-                    <div 
-                    className='flex flex-row w-full relative'
-                    >
+        <div className='flex flex-col md:flex-row h-screen overflow-y-auto md:overflow-hidden'>
+    
+            {/*Center: Editor column  */}
+            <main className='flex-1 md:overflow-y-auto'>
+                <div className='px-4 sm:px-10 pt-8 pb-24'>
 
-                        {/* Presence Toolbar */}
-                        <TooltipComponent
-                        message='View Active Users'
-                        >
-                            <div 
-                            className='absolute flex flex-row p-2 rounded-md top-2 right-2 z-20 bg-emerald-950/40 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-                            onClick={() => setIsDrawerOpen(true)}
-                            >
-                                <div className="ml-2 mt-2 flex-shrink-0 items-center pr-2">
-                                    <span className="relative flex h-2.5 w-2.5">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"/>
-                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"/>
-                                    </span>
-                                </div>
-                                <FilePresenceAvatar 
-                                activeUsers={activeFileUsers}
-                                
-                                />
-                            </div>
-                        </TooltipComponent>
+                    <FileHeader 
+                        currentFile={currentFile}
+                    />
+
+                    {/* Editor content render */}
+                    {/* [&_.bn-editor]:!px-0 overrides BlockNotes internal horizontal padding */}
+                    <div className='mt-6 [&_.bn-editor]:!px-0 [&_.bn-block-outer]:!mx-0'>
                         <DynamicTextEditor
-                        key={`${params.fileId}-${!!binaryData}`} 
-                        fileId={params.fileId}
-                        initialContentBinary={binaryData}
-                        username={user?.username || ''}
-                        // onChange= {onChangeHandler}
-                        editable={!currentFile.inTrash}
-                        />
-
-                        <FileUtilityDrawer 
-                        isOpen={isDrawerOpen}
-                        onClose={() => setIsDrawerOpen(false)}
-                        activeUsers={activeFileUsers}
+                            key={`${params.fileId}-${!!binaryData}`} 
+                            fileId={params.fileId}
+                            initialContentBinary={binaryData}
+                            username={user?.username || ''}
+                            // onChange= {onChangeHandler}
+                            editable={!currentFile.inTrash}
                         />
                     </div>
-                </>
-            )}
+                </div>
+            </main>
+
+            {/* Right: Insight panel */}
+            <aside className='w-full md:w-[320px] xl:w-[360px] flex-shrink-0 border-t md:border-t-0
+            md:border-l border-white/10 md:overflow-y-auto'>
+                <FileInsightsPanel 
+                    fileId={params.fileId}
+                    currentFile={currentFile}
+                    activeUsers={activeFileUsers}
+                    flashcardSet={fileFlashcardSet}
+                    parentSets={parentSets}
+                    readingTimeMin={readingTimeMin}
+                    complexity={complexity}
+                    mentions={mentions}
+                    connectedConcepts={connectedConcepts}
+                    documentMasteryPct={documentMasteryPct}
+                    relatedConcepts={currentFile.terms ?? []}
+                    prereqItems={prereqItems}
+                    prereqNeverRun={prereqNeverRun}
+                    prereqLoading={prereqLoading}
+                    onDetectPrerequisites={handleDetectFilePrerequisites}
+                    onPrereqClick={handlePrereqClick}
+                />
+            </aside>
         </div>
+        </>
     )
 }
 
