@@ -98,13 +98,19 @@ const fileSlice = createSlice({
 
             const file = state.filesByFolder[folderId].byId[id];
             if(!file) return;
-            state.filesByFolder[folderId].byId[id] = {
+            const updated = {
                 ...file,
                 ...updates,
                 // keep these consistent unless explicitly part of the update
                 blocks: updates.blocks !== undefined ? updates.blocks : file.blocks,
                 blockOrder: updates.blockOrder !== undefined ? updates.blockOrder : file.blockOrder,
             };
+
+            state.filesByFolder[folderId].byId[id] = updated;
+
+            if(state.currentFile?._id === id){
+                state.currentFile = updated;
+            }
         },
 
         /**
