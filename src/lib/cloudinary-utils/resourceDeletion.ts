@@ -16,7 +16,6 @@ export async function resourceDeletion(
     ).filter(Boolean) as string[];
 
     if(stringPublicIds.length === 0){
-        console.log("No valid string public IDs after conversion for resource deletion.");
         return;
     }
     const results = await Promise.allSettled(stringPublicIds.map(async (publicId) => {

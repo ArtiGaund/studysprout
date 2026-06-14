@@ -29,7 +29,7 @@ export async function getFlashcardSetService(workspaceId: string){
         if(!data) throw new Error(data.message);
         return data.data;
     } catch (error) {
-        console.log("[FlashcardSetServices] Failed to get flashcard sets due to following error: ",error);
+        console.error("[FlashcardSetServices] Failed to get flashcard sets due to following error: ",error);
         throw error;
     }
 }

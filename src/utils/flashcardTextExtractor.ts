@@ -87,7 +87,7 @@ export function getAggregatedPlainText(fileContentsArray: string[]): string{
                 aggregatedText += extractReadableText(blocks, 0);
                 aggregatedText += '=== DOCUMENT END ===\n';
             } catch (error) {
-                console.log("Failed to parse BlockNote JSON during extraction: ",error);
+                console.error("Failed to parse BlockNote JSON during extraction: ",error);
                 aggregatedText+= `[ERROR: Failed to process document. Skipping content.]\n\n`
             }
         }

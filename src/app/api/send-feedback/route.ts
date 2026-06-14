@@ -7,7 +7,6 @@ export async function POST(request:Request) {
 
     try {
         const sendFeedback = await sendFeedbackEmail(userEmail, feedbacks);
-        console.log("Feedback sent route: ", sendFeedback);
         if(!sendFeedback.success){
             return Response.json({
                 statusCode: 400,

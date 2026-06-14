@@ -43,8 +43,6 @@ const FOL_FILTER = process.env.FOLDER_ID ?? null;
 async function reExtractAllFileTerms(): Promise<Map<string, string[]>>{
     // await dbConnect();
 
-    console.log("---Step 1: Re-extracting file.terms ---");
-    
     const query = WS_FILTER ? { workspaceId: WS_FILTER } : {};
     const files = await FileModel.find(query, {
         _id: 1,
@@ -53,8 +51,6 @@ async function reExtractAllFileTerms(): Promise<Map<string, string[]>>{
         terms: 1,
         workspaceId: 1,
     }).lean();
-
-    console.log(`Found ${files.length} files to process`);
 
     let changed = 0;
     let unchanged = 0;
@@ -95,16 +91,7 @@ async function reExtractAllFileTerms(): Promise<Map<string, string[]>>{
                 }
             });
         }
-
-        console.log(
-            `   ${DRY_RUN ? "[DRY]" : "✓"} ${String(file._id)}: ` +
-            `${oldTerms.length} → ${newTerms.length} terms`
-        );
     }
-
-    console.log(
-        `\n   Summary: ${changed} files updated, ${unchanged} unchanged\n`
-    );
 
     return changedByWorkspace;
 }
@@ -113,18 +100,13 @@ async function reExtractAllFileTerms(): Promise<Map<string, string[]>>{
 async function rebuildAllTermIndexes(changedByWorkspace: Map<string,string[]>){
     // await dbConnect();
 
-    console.log("---Step 2: Rebuilding workspace.terms ---");
-
     const workspaceIds = WS_FILTER 
         ? [WS_FILTER]
         : Array.from(changedByWorkspace.keys());
     
     if(workspaceIds.length === 0){
-        console.log("No workspace need rebuilding - skipping ");
         return;
     }
-
-    console.log(`Rebuilding ${workspaceIds.length} workspace(s)`);
 
     for(const wsId of workspaceIds){
         if(wsId === "unknown") continue;
@@ -149,8 +131,7 @@ async function rebuildAllTermIndexes(changedByWorkspace: Map<string,string[]>){
         }
 
         const termCount = Object.keys(termIndex).length;
-        console.log(`   ${DRY_RUN ? "[DRY]" : "✓"} Workspace ${wsId}: ${termCount} terms`);
- 
+   
         if (!DRY_RUN) {
             await WorkSpaceModel.findByIdAndUpdate(wsId, {
                 $set: {
@@ -161,13 +142,11 @@ async function rebuildAllTermIndexes(changedByWorkspace: Map<string,string[]>){
             });
         }
     }
-    console.log();
 }
 
 // --- Rebuild existing concept graph
 async function rebuildExistingConceptGraphs() {
-    console.log("━━━ Step 3: Rebuilding folder.conceptGraph ━━━");
- 
+   
     // Only rebuild folders that already HAVE a concept graph
     const query: any = { conceptGraph: { $ne: null } };
     if (FOL_FILTER) query._id = FOL_FILTER;
@@ -178,23 +157,18 @@ async function rebuildExistingConceptGraphs() {
     }).lean();
  
     if (folders.length === 0) {
-        console.log("   No folders with existing concept graphs — skipping\n");
         return;
     }
- 
-    console.log(`   Found ${folders.length} folder(s) to rebuild`);
  
     for (const folder of folders) {
         const fileIds    = (folder.files ?? []).map(String);
         const workspaceId = String(folder.workspaceId ?? "");
  
         if (fileIds.length < 2) {
-            console.log(`   ⚠ Skipping "${folder.title}" — only ${fileIds.length} file(s)`);
             continue;
         }
  
         if (!workspaceId) {
-            console.log(`   ⚠ Skipping "${folder.title}" — no workspaceId`);
             continue;
         }
  
@@ -203,11 +177,6 @@ async function rebuildExistingConceptGraphs() {
             workspaceId,
             2,
             folder._id,
-        );
- 
-        console.log(
-            `   ${DRY_RUN ? "[DRY]" : "✓"} "${folder.title}": ` +
-            `${graph.nodes.length} nodes, ${graph.edges.length} edges`
         );
  
         if (!DRY_RUN) {
@@ -219,24 +188,16 @@ async function rebuildExistingConceptGraphs() {
             });
         }
     }
- 
-    console.log();
+
 }
 
 async function main() {
-    console.log("\n🌱 StudySprout — Concept Graph Migration");
-    console.log(`   Mode:      ${DRY_RUN ? "DRY RUN (no writes)" : "LIVE"}`);
-    if (WS_FILTER)  console.log(`   Workspace: ${WS_FILTER}`);
-    if (FOL_FILTER) console.log(`   Folder:    ${FOL_FILTER}`);
-    console.log();
- 
     await dbConnect();
  
     const changedByWorkspace = await reExtractAllFileTerms();
     await rebuildAllTermIndexes(changedByWorkspace);
     await rebuildExistingConceptGraphs();
  
-    console.log("━━━ Migration complete ━━━\n");
     await mongoose.disconnect();
     process.exit(0);
 }

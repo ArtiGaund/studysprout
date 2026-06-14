@@ -39,7 +39,6 @@ export const Navbar = () => {
                     if (el) {
                         observer.observe(el);
                         observedSections.add(id);
-                        console.log(`✅ Observing section: ${id}`);
                     }
                 }
             });

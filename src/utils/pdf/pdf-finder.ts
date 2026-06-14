@@ -58,7 +58,6 @@ export const findDocumentBoundaries = (
     for(let i = 0; i < Math.min(pageCount, 30); i++){
         const pageText = physicalPages[i];
         if(isStartAnchor(pageText)){
-            console.log(`[PDF finder] Found start of content at page ${i+1} with text snippet: `, physicalPages[i].substring(0, 300));
             detectedStart = i + 1;
             break;
         }
@@ -81,7 +80,6 @@ export const findDocumentBoundaries = (
         // Only flag as back matter if the WHOLE PAGE starts with there headers
         // not if "index" just appears somewhere in the middle of the content
          if (backMatterRegex.test(physicalPages[j].trim().substring(0, 200))) {
-            console.log(`[PDF finder] Found end of content at page ${j+1} with text snippet: `, physicalPages[j].substring(0, 300));
             detectedEnd = j; // page before this one
             break;
         }

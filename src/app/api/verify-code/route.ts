@@ -6,7 +6,6 @@ export async function POST( request: Request){
     await dbConnect()
     try {
         const { username, code } = await request.json()
-        console.log("code in verify code ", code);
         // decoding values from url (space is converted into %20%)
         const decodedUsername = decodeURIComponent(username)
         const tempUser = await unverifiedUserModel.findOne({ username: decodedUsername })

@@ -122,9 +122,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
                     doc.transact(() => {
                         Y.applyUpdate(doc, uint8Array, "rehydration");
                     }, "rehydration");
-                    console.log("[Editor] Successfully hydrated Y.Doc from DB. Fragment length: ",fragment.length);
                     const availableType = Array.from(doc.share.keys());
-                    console.log("[Editor] Available Yjs Types: ",availableType);
                     isHydrated.current = true;
                 }
                 // isHydrated.current = true;
@@ -197,17 +195,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
         username,
     ])
 
-        
-        useEffect(() => {
-            console.log("Editor received binary: ", initialContentBinary?.length);
-        },[
-            initialContentBinary
-        ]);
-
-    
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
-        console.log("File upload triggered:", file.name);
-        
+       
         const formData = new FormData();
         formData.append("file", file);
 

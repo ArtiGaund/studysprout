@@ -91,11 +91,7 @@ export async function buildFolderConceptGraph(
         }
         // Sort nodes by fileCount descending - most cross-cutting concept first
         nodes.sort((a, b) => b.fileCount - a.fileCount);
-        console.log(
-            `[ConceptGraph] ${nodes.length} concept nodes, ${edges.length} edges from ` +
-        `${fileIds.length} files.`
-        );
-
+   
         if(folderId && workspaceId){
             await onSynthesisCompleted(
                 workspaceId,
@@ -222,7 +218,7 @@ export async function buildWorkspaceConceptGraph(
             edges,
         }
     } catch (error) {
-        console.log("[BuildWorkspaceConceptGraph] error: ",error);
+        console.error("[BuildWorkspaceConceptGraph] error: ",error);
         throw error;
     }
 }

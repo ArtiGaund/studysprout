@@ -93,9 +93,6 @@ export const PDFUploadForm = () => {
                 range.end,
             );
 
-            if(result.folderId){
-                console.log("[PDF upload form] onSumbit, folderId is :",result.folderId);
-            }
         } catch (error) {
             console.error("[PDF upload form] Sumbit error: ",error);
         }finally{

@@ -10,7 +10,6 @@ export interface UIBlock {
     uiPlainText?: string;
 }
 export function normalizeBlockUI(block: any): UIBlock{
-    // console.log("[normalizeBlockUI] block: ",block);
     const rawContent = block?.content ?? [];
     return {
         id: block.id,
@@ -26,30 +25,7 @@ export function normalizeBlockUI(block: any): UIBlock{
     }
 }
 function extractPlainText(block: any): string{
-    // if(!block) return "";
-    // if(block.textContent) return block.textContent;
-    // if(block.content){
-    //     return block.content
-    //     .map((c: any) => (typeof c.text === "string" ? c.text : ""))
-    //     .join(" ");
-    // }
-    // return "";
     const c = block?.content;
-
-    // content is already plain string
-    // if(typeof c === "string") return c;
-
-    // // content is an array of spans 
-    // if(Array.isArray(c)){
-    //     return c
-    //     .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
-    //     .join(" ");
-    // }
-
-    // // content is some object 
-    // if(c && typeof c === "object" && "text" in c){
-    //     return c.text ?? "";
-    // }
     return extractNode(c).trim();
 }
 

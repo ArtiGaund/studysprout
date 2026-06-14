@@ -173,9 +173,7 @@ export async function POST(
                   bumpFileVersion(file);
             // 4. Await the save operation
            await file.save();
-        console.log("[update 9file route] eventType: ",eventType);
-
-
+    
         const payload = {
             fileId: String(file._id),
             folderId: String(file.folderId),
@@ -294,7 +292,6 @@ export async function DELETE(
     try {
         // Find the file first to get its details, including any associated images, before deleting it
         const fileToDelete = await FileModel.findById(fileId).lean();
-        console.log("File to delete ",fileToDelete);
         if(!fileToDelete){
              return errorResponse(
                 "File not found.",
@@ -392,7 +389,7 @@ export async function DELETE(
             200,
         );
     } catch (error: any) {
-        console.log("Error while deleting the file ",error.message)
+        console.error("Error while deleting the file ",error.message)
         return errorResponse(
             `Internal Server Error: ${error.message || 'An unknown error occurred.'}`,
             500,

@@ -70,7 +70,6 @@ export const initFileSyncWorker = () => {
                         seenIds.add(newBlock.id);
                         // Check if the block is effectively empty (whitespace only)
                         const isContentEmpty = newBlock.content.trim().length === 0;
-                        // console.log("[SyncWorker] isContentEmpty: ",isContentEmpty);
                         const existingBlock = (existingBlocks as Record<string, IBlock>)[newBlock.id];
                         
                         // always keep id in blockOrder to maintain editor structure

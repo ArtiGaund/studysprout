@@ -16,15 +16,11 @@ export async function GET(request: Request ) {
         })
     }
     const imageId = queryParams.imageId
-    console.log("Image id in get image ",imageId)
     try {
                     
         const image = await ImageModel.findById({
             _id: imageId
         })
-        // console.log("Image in get image ",image)
-        // TODO show image by public id not by image url
-        // const publicId = image?.public_id
         const imageUrl = image?.image_url
         if(!imageUrl){
             return Response.json({

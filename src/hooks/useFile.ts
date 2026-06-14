@@ -155,7 +155,6 @@ export function useFile() {
             const payloadToSend = { ...updatedData };
         try {
             const result = await updateDir("file",fileId, payloadToSend);
-            console.log("[useFile] updateFile result: ",result);
             const file = result
             if(!result){
                 return {

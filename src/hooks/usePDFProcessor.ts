@@ -73,10 +73,6 @@ export const usePDFProcessor = () => {
             );
 
             if(data.folderId){
-                console.log("DISPATCHING TO REDUX:", {
-                    workspaceId,
-                    folderId: data.folderId
-                });
                 dispatch(ADD_FOLDER({
                     workspaceId:String(workspaceId).trim(),
                     folder: {

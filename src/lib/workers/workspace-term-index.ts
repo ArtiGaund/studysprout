@@ -91,9 +91,6 @@ export async function rebuildTermIndex(workspaceId: string): Promise<void>{
             },
         });
 
-        console.log(`[TermIndex] Rebuilt for workspace ${workspaceId}: ` + 
-            `${Object.keys(termIndex).length} terms across ${files.length} files`
-        );
     } catch (error) {
         console.error(`[TermIndex] Failed: `,error);
     }
@@ -135,10 +132,6 @@ export const initTermIndexWorker = () => {
  
             if (staleWorkspaces.length === 0) return;
  
-            console.log(
-                `[TermIndex] Rebuilding ${staleWorkspaces.length} stale workspace(s)`
-            );
- 
             // Rebuild each stale workspace — sequential to avoid DB hammering
             for (const ws of staleWorkspaces) {
                 try {
@@ -162,5 +155,4 @@ export const initTermIndexWorker = () => {
         console.error(`[TermIndex] Worker job ${job?.id} failed: `,err)
     );
 
-    console.log("[TermIndex] Periodic rebuild worker started (30s interval)");
 }

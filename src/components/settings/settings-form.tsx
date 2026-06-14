@@ -179,7 +179,6 @@ const SettingsForm = () => {
             const response = await axios.delete(`/api/delete-account?userId=${userId}`)
     
             if(!response.data.success){
-                    console.log("Error while deleting user account", response.data.message)
                     toast({
                         title: "Failed to delete account",
                         description: response.data.message,
@@ -194,7 +193,7 @@ const SettingsForm = () => {
                     await signOut({ callbackUrl: "/sign-up" });
                 }
         } catch (error) {
-            console.log("Error while deleting user account", error)
+            console.error("Error while deleting user account", error)
             toast({
                 title: "Failed to delete account",
                 description: "Something went wrong",

@@ -225,7 +225,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 });
             }
         } catch (error) {
-            console.log(`Error to update the ${listType} emoji `, error);
+            console.error(`Error to update the ${listType} emoji `, error);
             toast({
                 title: `Failed to update emoji for ${listType}`,
                 description: "An unexpected error occurred",
@@ -291,7 +291,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             })
             }
         } catch (error) {
-            console.log("Error while creating file in folder ",error)
+            console.error("Error while creating file in folder ",error)
             toast({
                 title: "Failed to create file",
                 description: "Error while creating file in folder",
@@ -321,7 +321,6 @@ const Dropdown: React.FC<DropdownProps> = ({
             }
             try {
                 const result = await updateFolder(id, updatedFolder); // Use `id` directly
-                console.log("[Dropdown] moveToTrash result of folder: ",result);
                 if(!result.success){ // Check result.success for hook's return
                     toast({
                         title: "Failed to move folder to trash ",
@@ -335,7 +334,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                     })
                 }
             } catch (error) {
-                console.log("Error while moving folder to the trash", error)
+                console.error("Error while moving folder to the trash", error)
                 toast({
                     title: "Error while moving folder to the trash ",
                     description: "Please try again later",
@@ -404,11 +403,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                     if(e.detail === 2) {   
                         e.preventDefault(); 
                         e.stopPropagation(); 
-                        console.log(`[${title}] AccordionTrigger: Preventing default onMouseDownCapture due to double-click.`);
                     }
-                }}
-                onClick={(e) => {
-                    console.log(`[${title}] AccordionTrigger: Default onClick allowed.`);
                 }}
             >       
                 {/* This div now contains both the icon/input and the action buttons */}

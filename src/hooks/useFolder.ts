@@ -170,7 +170,6 @@ export function useFolder(){
             try {
                 const result = await addFolder(workspaceId);
                 const newFolder = result.folder;
-                // console.log("[ADD new Folder] newFolder: ",newFolder);
                 if(!newFolder || !newFolder._id){
                     throw new Error("[Add new Folder] Server returned a folder without an ID");
                 }

@@ -57,15 +57,6 @@ export const generatePDFFolderService = async(
         formData.append("startOffset", startOffset.toString());
         formData.append("endOffset", endOffset.toString());
         if(parentFolderId) formData.append("parentFolderId", parentFolderId);
-
-        // if(metadata?.startOffset){
-        //     formData.append("startOffset", metadata.startOffset.toString());
-        // }
-
-        // if(metadata?.endOffset){
-        //     formData.append("endOffset", metadata.endOffset.toString());
-        // }
-
         const relativePath = `/api/pdf/generate`;
         const url = `${BASE_URL}${relativePath}`;
         const{ data } = await axios.post(url, formData, {
@@ -74,7 +65,6 @@ export const generatePDFFolderService = async(
             },
         });
 
-        console.log("[PDF service] generatePDFFolder service data: ",data);
         if(!data.success) throw new Error(data.message);
         
         return data.data;

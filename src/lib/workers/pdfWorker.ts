@@ -153,17 +153,11 @@ export const initPDFWorker = () => {
                     }
                 ).catch(() => {});
 
-                console.log(`[PDF Worker] Parsed pages ${startOffset}-${endOffset}: ${allBlocks.length} blocks`);
-
                 // ── 3. Split into topic chunks ────────────────────────────────
                 // startOffset/endOffset already define the content window —
                 // no second front-matter filter needed.
                 const contentBlocks = allBlocks;
                 const chunks = splitIntoTopicChunks(contentBlocks, blockPageMap);
-
-                console.log(
-                    `[PDF Worker] ${allBlocks.length} blocks → ${chunks.length} topic files`
-                );
 
                 await FolderModel.findByIdAndUpdate(folderId, {
                     $set: { totalFileCount: chunks.length },
@@ -354,7 +348,6 @@ export const initPDFWorker = () => {
                         title,
                     );
                     await FolderModel.findByIdAndUpdate(folderId, { $set: { conceptGraph: graph } });
-                    console.log(`[PDF Worker] Concept graph: ${graph.nodes.length} concepts`);
                 } catch (err) {
                     console.error("[PDF Worker] Concept graph failed (non-fatal):", err);
                 }
@@ -366,7 +359,6 @@ export const initPDFWorker = () => {
                             FileModel.findByIdAndUpdate(fileId, { $set: { prerequisites } })
                         )
                     );
-                    console.log("[PDF Worker] Prerequisites detected");
                 } catch (err) {
                     console.error("[PDF Worker] Prerequisites failed (non-fatal):", err);
                 }

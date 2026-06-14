@@ -91,7 +91,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                     const userId = session.user._id
                     const response = await axios.get(`/api/get-user?userId=${userId}`)
                     const userData = response.data.data 
-                    // console.log("[User Provider] userData: ",userData);
                     isFetching.current = true;
                     if(!userData){
                         toast({
@@ -105,7 +104,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                         return;
                     }
                     
-                    // console.log("User in user provider ",userData)
                     setUser(userData)
                     if(session.user._id){
                          dispatch(SET_USER({
@@ -116,16 +114,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                     }
                    
                 } catch (error: any) {
-                    console.log("Throwing error ",error.response.status);
+                    console.error("Throwing error ",error.response.status);
                     if (error?.response?.status === 404) {
-                        console.log("Redirecting to sign-up...");
-                        // Make sure router is ready, then push
-                        
                         setUser(null);
                         signOut({ callbackUrl: "/sign-up"});
                         return;
                     }
-                    console.log("Error while fetching user from the database ", error)
                     toast({
                         title: "Error",
                         description: "Error while fetching user from the database ",

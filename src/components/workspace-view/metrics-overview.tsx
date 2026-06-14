@@ -37,7 +37,6 @@ export const MetricsOverview = ({ workspaceId }: { workspaceId: string}) => {
             : '-'
 
     const handleMapGraph = async () => {
-        console.log("[Metrics overview] going inside handleMapGraph method");
         if(!currentWorkspace?._id) return;
         try {
            if(hasGraph && !currentWorkspace?.conceptGraphStale){

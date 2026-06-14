@@ -41,9 +41,7 @@ export function useFlashcardSetDetails(setId?: string | null){
        const fetchDetails = async () => {
         setLoading(true);
         try {
-            const result = await getFlashcardSetDetailBySetIdService(setId);
-            console.log("[useFlashcardSetDetails] result: ",result);
-            
+            const result = await getFlashcardSetDetailBySetIdService(setId); 
             const setResponse = result.set;
             const cardResponse = result.flashcards || [];
             // 1. Sync card entities to the flashcard slice

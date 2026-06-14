@@ -236,7 +236,7 @@ export async function DELETE(request:Request) {
         }, { status: 200 });
         
     } catch (error: any) {
-        console.log("Error while deleting banner for the file ",error)
+        console.error("Error while deleting banner for the file ",error)
         return Response.json({
             statusCode: 500,
             message: `Internal Server Error: ${error.message || 'An unknown error occurred.'}`,

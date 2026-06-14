@@ -16,7 +16,6 @@ export async function PATCH(request: NextRequest){
         );
 
         const body = await request.json();
-        console.log("[Users Last Studied PATCH route] body: ",body);
         const { 
             setId,
             setTitle,
@@ -40,8 +39,6 @@ export async function PATCH(request: NextRequest){
             }
         });
     
-        console.log("[Users Last Studied PATCH route] user: ",user);
-
         return successResponse(
             "[Last Studied PATCH route] Successfully updated last studied",
             {},

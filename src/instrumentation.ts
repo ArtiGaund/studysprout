@@ -27,6 +27,5 @@ export async function register(){
         initPDFWorker();
         initTermIndexWorker();
 
-        console.log("Background Workers (Sync & PDF) Initialized");
     }
 }

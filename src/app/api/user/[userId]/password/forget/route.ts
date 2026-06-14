@@ -67,7 +67,7 @@ export async function POST( request: Request ){
             200
         );
     } catch (error) {
-        console.log("Error while sending password reset email ",error);
+        console.error("Error while sending password reset email ",error);
         return errorResponse(
             "Failed to send password reset email",
             500,

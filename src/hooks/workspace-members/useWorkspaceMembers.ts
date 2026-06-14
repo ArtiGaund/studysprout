@@ -80,7 +80,7 @@ export function useWorkspaceMembers(
             }));
             // await fetchMembers(workspaceId);
         } catch (error) {
-            console.log("[useWorkspaceMembers] Failed to add workspace member: ",error);
+            console.error("[useWorkspaceMembers] Failed to add workspace member: ",error);
         }
     },[
         workspaceId,

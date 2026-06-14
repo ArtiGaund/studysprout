@@ -57,7 +57,7 @@ export async function POST(request:Request) {
             200,
         )
     } catch (error) {
-        console.log("Error while resetting password ",error)
+        console.error("Error while resetting password ",error)
         return errorResponse(
             "Failed to reset password. Please try again",
             500,

@@ -136,7 +136,7 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
             dispatch(MARK_ACTIVITY_STALE());
             return result;
         } catch (error) {
-            console.log("[useFlashcardGenerator] Error generating flashcards: ",error);
+            console.error("[useFlashcardGenerator] Error generating flashcards: ",error);
             toast({
                 title: "Failed",
                 description: "Something went wrong, in catch block of useFlashcardGenerator",

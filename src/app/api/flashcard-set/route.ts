@@ -257,27 +257,20 @@ export async function POST(request: NextRequest){
             //  --- TOGGLING FOR TESTING
 
             const USE_MOCK = process.env.FLASHCARD_USE_MOCK === "true";
-            console.log("[Flashcard set route] USE_MOCK: ",USE_MOCK);
 
             if(USE_MOCK){
-                console.log("[Flashcard set route] running use mock")
                 await new Promise(resolve => setTimeout(resolve, 800));
 
                 const mockCards = getMockFlashcards(target, blockIds);
 
                 allGeneratedCards.push(...mockCards);
 
-                console.log("[Flashcard set route] mockCards length: ",mockCards.length);
-
                 // Calculate
                 const percent = Math.round(((i+1)/ preparedChunks.length) * 100);
-
-                console.log("[Flashcard set route] percent: ",percent);
 
                 // EMIT PROGRESS via an internal fetch to realtime server
                 // This triggers the 'report_progress' logic on server.ts
                 try {
-                    console.log("[Flashcard set route] emitting server");
                    const socketRes = await fetch("http://localhost:4000/emit/progress-update", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -289,8 +282,6 @@ export async function POST(request: NextRequest){
                             totalCards: cardCount,
                         }),
                     });
-
-                    console.log("[Flashcard set route] socketRes: ",socketRes);
 
                     if(!socketRes.ok){
                         console.warn(`[Flashcard set route] Socket Server rejected update (likely

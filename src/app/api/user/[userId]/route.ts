@@ -54,7 +54,7 @@ export async function GET( request: Request ){
         );
         
     } catch (error:any) {
-        console.log("Error while finding the workspace under the current user ",error)
+        console.error("Error while finding the workspace under the current user ",error)
         return errorResponse(
             error.message,
             500,

@@ -52,6 +52,5 @@ async function migrageUserAvatar(){
 
 // Error handling for the migration process
 migrageUserAvatar().catch(error => {
-    console.log("Migration failed",error);
     process.exit(1);
 });

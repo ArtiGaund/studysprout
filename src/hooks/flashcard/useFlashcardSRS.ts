@@ -29,7 +29,6 @@ export function useFlashcardSRS(){
         setLoading(true);
         try {
             const response = await updateFlashcardSRSService(cardId, rating);
-            console.log("[useFlashcardSRS] rateCard response: ",rateCard);
             if(!response){
                 console.warn("[useFlashcardSRS] response not found in SRS update");
             }

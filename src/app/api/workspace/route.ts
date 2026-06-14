@@ -86,7 +86,6 @@ export async function POST(request: any){
                 $push: { workspace: newWorkspace._id }
             }
         )
-        // console.log("workspace have been added into user model ",user)
         if(!newWorkspace){
             // deleting from cloudinary first
             await deleteFromCloudinary(savedImage?.public_id)

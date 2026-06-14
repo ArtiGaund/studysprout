@@ -12,7 +12,6 @@ export async function POST(request: Request){
     await dbConnect()
     try {
         const { username, email, password } = await request.json();
-        console.log("email in sign-up route ",email);
         // any of the field is missing
         if(!username || !email || !password){
             return Response.json({

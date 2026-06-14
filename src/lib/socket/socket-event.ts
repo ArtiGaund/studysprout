@@ -65,8 +65,6 @@ export function registerWorkspaceEvents(
             type,
             payload
         }) => {
-            console.log("[Socket-event] type: ",type);
-            console.log("[Socket-event] payload: ",payload);
             // 1. Ego-Filter: If I am the sender, ignore to avoid redundant state updates.
             if(socket.id === payload.senderSocketId) return;
             switch(type){
@@ -181,7 +179,6 @@ export function registerWorkspaceEvents(
                 });
                 break;
             case "pdf_file_created":
-                console.log("[Socket-event] pdf file created payload: ",payload);
                 const newPdfFile = transformFile(payload);
                 if(newPdfFile){
                 dispatch(ADD_FILE({

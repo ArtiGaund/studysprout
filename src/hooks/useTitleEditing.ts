@@ -266,18 +266,6 @@ export const useTitleEditing = ({
         const value = e.target.value;
 
         dispatch(updateEditingItemTitle(value));
-        console.log("[useTitleEditing] DEBUG: Emitting typing.",{
-            workspaceId,
-            id,
-            value,
-        })
-        // EMIT: "I am currently typing this..."
-        // socket.emit("presence:remote-editing-typing", {
-        //     workspaceId,
-        //     itemId: id,
-        //     tempTitle: value
-        // });
-
         emitRealtimeEvent(
             'workspace-tree-update',
             String(workspaceId),

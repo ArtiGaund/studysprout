@@ -179,7 +179,6 @@ export function useWorkspace() {
         dispatch(SET_WORKSPACE_ERROR(null));
         try {
             const workspace = await getCurrentWorkspace(workspaceId);
-            // console.log("[useWorkspace] fetchCurrentWorkspace: ",workspace);
             if(!workspace){
                 return {
                     success: false,
@@ -292,7 +291,6 @@ export function useWorkspace() {
         dispatch(SET_WORKSPACE_ERROR(null));
         try {
             const workspace = await getCurrentWorkspace(workspaceId);
-            console.log("[useWorkspace] currentWorkspaceDetails: ",workspace);
             if(!workspace){
                 return{
                     success: false,

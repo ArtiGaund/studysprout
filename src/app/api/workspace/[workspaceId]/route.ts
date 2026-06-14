@@ -303,7 +303,6 @@ export async function DELETE(
             const deleteFilesResult = await FileModel.deleteMany(
                 { _id: { $in: fileIdsToDelete}}
             )
-            console.log(`Deleted ${deleteFilesResult.deletedCount} files within workspace ${workspaceId}.`);
         }
         // 8. delete all folders within the workspace
         if(folderIdsToDelete.length > 0){
