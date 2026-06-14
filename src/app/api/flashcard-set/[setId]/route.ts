@@ -112,9 +112,25 @@ export async function GET(
                     block?.content ||
                     "";
 
+                if(!block?.structuredText) continue;
+                if(!textContent.trim()) continue;
+
                 liveTotalBlocks++;
                 liveTotalChars+= textContent.length;
                 
+                latestBlockState[bId] = {
+                    updatedAt: block.updatedAt,
+                    contentHash: block.contentHash || null,
+                };
+            }
+
+            for(const bId of file.blockOrder){
+                if(latestBlockState[bId]) continue;
+                const blocksRaw = file.blocks as any;
+                const block = blocksRaw instanceof Map
+                    ? blocksRaw.get(bId)
+                    : blocksRaw?.[bId];
+                if(!block) continue;
                 latestBlockState[bId] = {
                     updatedAt: block.updatedAt,
                     contentHash: block.contentHash || null,

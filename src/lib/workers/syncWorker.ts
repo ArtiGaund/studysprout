@@ -51,6 +51,11 @@ export const initFileSyncWorker = () => {
             // 2. Mapping Logic (for Flashcards)
             const blockMap = new Map<string, IBlock>();
             const blockOrder: string[] = [];
+
+            // Track whether ANY block actually changed content, or whether the set of block IDs
+            // changed (added/removed)
+            let hasContentChanged = false;
+            const seenIds = new Set<string>();
     
             /**
              * @function crawl
@@ -62,6 +67,7 @@ export const initFileSyncWorker = () => {
                 if(node instanceof Y.XmlElement && node.nodeName === "blockContainer"){
                     const newBlock = normalizeYjsBlock(node);
                     if(newBlock){
+                        seenIds.add(newBlock.id);
                         // Check if the block is effectively empty (whitespace only)
                         const isContentEmpty = newBlock.content.trim().length === 0;
                         // console.log("[SyncWorker] isContentEmpty: ",isContentEmpty);
@@ -86,40 +92,55 @@ export const initFileSyncWorker = () => {
             };
     
             crawl(fragment);
+
+            // Detect block deletions: any exisiting block Id not seen in the new crawl
+            const existingIds = Object.keys(existingBlocks);
+            const hasDeletions = existingIds.some(id => !seenIds.has(id));
+            if(hasDeletions) hasContentChanged = true;
     
             const blocksObject = Object.fromEntries(blockMap);
-            const readingTime = estimateReadingTimeFromBlocks(blocksObject, blockOrder);
+
+            // Database Persistance
+            const baseUpdate: Record<string, any> = {
+                contentBinary: buffer,
+                blocks: blocksObject,
+                blockOrder: blockOrder,
+            };
+
+            if(hasContentChanged){
+                const readingTime = estimateReadingTimeFromBlocks(blocksObject, blockOrder);
     
-            const autoSummary = generateAutoSummary(blocksObject, blockOrder);
-            const terms = extractTermsFromBlocks(blocksObject, blockOrder);
-            // 3. Database Persistence
-            // Save the raw binary for the next editor session and mapped the blocks for flashcards
-            await FileModel.findByIdAndUpdate(fileId, {
-                $set: {
-                    contentBinary: buffer,
-                    blocks: blocksObject,
-                    blockOrder: blockOrder,
+                const autoSummary = generateAutoSummary(blocksObject, blockOrder);
+                const terms = extractTermsFromBlocks(blocksObject, blockOrder);
+
+                Object.assign(baseUpdate, {
                     contentLastModified: new Date(),
                     lastUpdated: new Date(),
                     readingTimeMinutes: readingTime,
                     autoSummary,
                     simplificationOutdated: true,
                     terms,
+                });
+            }
+            
+            // 3. Database Persistence
+            // Save the raw binary for the next editor session and mapped the blocks for flashcards
+            await FileModel.findByIdAndUpdate(fileId, { $set: baseUpdate });
+
+            if(hasContentChanged){
+                if(existingFile?.workspaceId){
+                    await markTermIndexStale(existingFile?.workspaceId);
+                }   
+
+                if(existingFile?.workspaceId && existingFile.folderId){
+                    await onFileUpdated(
+                        String(existingFile.workspaceId),
+                        String(existingFile.folderId),
+                        String(fileId),
+                        userId,
+                        existingFile.title || "Untitled",
+                    );
                 }
-            });
-
-            if(existingFile?.workspaceId){
-                 await markTermIndexStale(existingFile?.workspaceId);
-            }   
-
-            if(existingFile?.workspaceId && existingFile.folderId){
-                await onFileUpdated(
-                    String(existingFile.workspaceId),
-                    String(existingFile.folderId),
-                    String(fileId),
-                    userId,
-                    existingFile.title || "Untitled",
-                );
             }
         
         } catch (error) {
