@@ -13,7 +13,7 @@
 import mongoose, { Schema, Types } from "mongoose";
 import { number } from "zod";
 
-export interface IStudyGoal{
+export interface StudyGoal{
     userId: Types.ObjectId;
     workspaceId: Types.ObjectId;
     folderId?: Types.ObjectId | null;   //null = workspace-level goal
@@ -31,7 +31,7 @@ export interface IStudyGoal{
     createdAt: Date;
 }
 
-export const StudyGoalSchema = new Schema<IStudyGoal>(
+export const StudyGoalSchema = new Schema<StudyGoal>(
     {
         userId: {
             type: Schema.Types.ObjectId,

@@ -10,7 +10,7 @@
  */
 import { Schema, Types } from "mongoose";
 
-export interface IUserProgress{
+export interface UserProgress{
     userId: Types.ObjectId;
     fileId: Types.ObjectId;
     folderId: Types.ObjectId;
@@ -25,7 +25,7 @@ export interface IUserProgress{
     completedViaFlashcards?: boolean;
 }
 
-export const UserProgressSchema = new Schema<IUserProgress>(
+export const UserProgressSchema = new Schema<UserProgress>(
     {
         userId: {
             type: Schema.Types.ObjectId,
