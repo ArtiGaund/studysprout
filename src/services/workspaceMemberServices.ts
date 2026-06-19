@@ -79,3 +79,40 @@ export async function removeWorkspaceMember(
     if(!data.success) throw new Error(data.message);
     return data.data;
 }
+
+/* Send an invitation to a user */
+export async function sendWorkspaceInvitationService(
+    userId: string,
+    workspaceId: string,
+    role: "editor" | "viewer" = "editor",
+){
+    const relativePath = `/api/workspace/invitations`;
+    const url = `${BASE_URL}${relativePath}`;
+    const { data } = await axios.post(url, { userId, workspaceId, role });
+    if(!data.success) throw new Error(data.message);
+    return data.data;
+}
+
+/*Accept or reject an invitation */
+export async function respondToInvitationService(
+    invitationId: string,
+    action: "accepted" | "rejected",
+){
+    // console.log("[respondToInvitationService] workspaceId: ",workspaceId);
+    const relativePath = `/api/workspace/invitations/${invitationId}`;
+    const url = `${BASE_URL}${relativePath}`;
+    const { data } = await axios.patch(url, { action });
+    if(!data.success) throw new Error(data.message);
+    return data.data;
+}
+
+/*Get current user's pending invitations */
+export async function getPendingInvitationService(workspaceId: string){
+    const relativePath = `/api/workspace/invitations`;
+    const url = `${BASE_URL}${relativePath}`;
+    const { data } = await axios.get(url, { 
+        params: { workspaceId }
+     });
+    if(!data.success) throw new Error(data.message);
+    return data.data;
+}
