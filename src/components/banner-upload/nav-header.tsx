@@ -4,9 +4,8 @@ import { selectCurrentFolder, selectFolderById } from "@/store/selectors/folderS
 import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
 import { RootState } from "@/store/store";
 import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { useToast } from "../ui/use-toast";
 import { usePathname } from "next/navigation";
 import { useTitleEditing } from "@/hooks/useTitleEditing";
 import { useDir } from "@/hooks/useDir";
@@ -14,9 +13,7 @@ import { Button } from "../ui/button";
 import Feedback from "../feedback/feedback";
 import { Badge } from "../ui/badge";
 import WorkspaceAccessControl from "../workspace/workspace-access-control";
-import { Separator } from "../ui/separator";
-import { BellIcon } from "lucide-react";
-import { devNull } from "node:os";
+import { NotificationCenter } from "../notifications/notification-center";
 
 interface NavHeaderProps{
     dirDetails: ReduxWorkSpace | ReduxFolder | ReduxFile;
@@ -92,8 +89,6 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
         const workspaceTitle = currentWorkspace.title || '';
         const workspaceIcon = currentWorkspace.iconId || '';
     
-        // const workspaceBreadCrumb = `${currentWorkspace.iconId || ''} ${currentWorkspace.title || ''}`;
-    
         // 2. Resolve Folder breadcramp
         let folderObj: ReduxFolder | null = null;
         if(dirType === 'file'){
@@ -109,13 +104,8 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
         if(dirType === 'folder' && isCurrentlyEditingThisItem){
             folderTitle = displayedTitle ?? '';
         }
-    
-        // const folderBreadCrumb = folderTitle 
-        //     ? `/ ${folderIconId} ${folderTitle}`
-        //     : '';
-    
+
         // 3. Resolve File breadcramp
-        // let fileBreadCrumb = "";
         let fileTitle = "";
         let fileIcon = "";
         if(dirType === 'file'){
@@ -124,11 +114,9 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
             if(isCurrentlyEditingThisItem){
                 fileTitle = displayedTitle ?? '';
             }
-            // fileBreadCrumb = `/ ${fileIconId} ${fileTitle}`;
         }
     
-        // return `${workspaceBreadCrumb} ${folderBreadCrumb} ${fileBreadCrumb}`;
-        return {
+       return {
             workspace: { title: workspaceTitle, icon: workspaceIcon },
             folder: folderTitle ? { title: folderTitle, icon: folderIcon } : null,
             file: fileTitle ? { title: fileTitle, icon: fileIcon } : null,
@@ -250,10 +238,7 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
                             
                 {/* Divider */}
                 <span className="w-px h-6 bg-gray-600 shrink-0" aria-hidden="true" />
-                <button className="p-1 rounded-md text-gray-400 hover:text-white shrink-0
-                hover:bg-white/5 transition-colors bg-transparent border-none cursor-pointer">
-                    <BellIcon size={18}/>
-                </button>
+                <NotificationCenter />
                 <div className="shrink-0 flex items-center">
                     <WorkspaceAccessControl
                         workspaceId={currentWorkspace?._id!}
