@@ -35,14 +35,13 @@ import {
 import { useAppSelector } from "@/store/hooks";
 import { useSelector } from "react-redux";
 import { selectUserId } from "@/store/selectors/userSelector";
+import { useWorkspaceInvitations } from "@/hooks/workspace-members/useWorkspaceInvitations";
+import { Badge } from "../ui/badge";
 
 
 const WorkspaceMembersManager = ({ workspaceId }: { workspaceId: string}) => {
     // --- AUTHENTICATION & IDENTITY ---
     const currentUserId = useSelector(selectUserId);
-
-    // Track specific user IDs currently undergoing async operations to show granular spinners
-    const [ addingUserId, setAddingUserId ] = useState<string | null>(null);
     const [ removeUserId, setRemoveUserId ] = useState<string | null>(null);
 
     // --- CUSTOM HOOKS (Business Logic Layer) ---
@@ -54,9 +53,15 @@ const WorkspaceMembersManager = ({ workspaceId }: { workspaceId: string}) => {
     } = useWorkspaceMembersSearch();
 
     const {
-        addMember,
+        // addMember,
         removeMember
     } = useWorkspaceMembers(workspaceId)
+
+    const {
+        sendInvite,
+        sendingInviteId,
+        invitedUserIds,
+    } = useWorkspaceInvitations(workspaceId);
 
     // --- MEMOIZED SELECTORS ---
    const owner = useAppSelector( state => 
@@ -81,17 +86,19 @@ const WorkspaceMembersManager = ({ workspaceId }: { workspaceId: string}) => {
         userId === owner?._id || 
         members.some( member => member._id === userId);
 
-        // --- HANDLERS ---
-    const handleAddUser = async (user: UserSearch) => {
-        setAddingUserId(user._id);
+    /* Prevent duplicate invites in the same session */
+    const isAlreadyInvited = (userId: string) => invitedUserIds.has(userId);
+
+    const handleInviteUser = async(user: UserSearch) => {
         try {
-            const member = await addMember(user._id);
+            await sendInvite(user._id);
         } catch (error) {
-            console.error("[WorkspaceMembersManagers] Failed to add member: ",error);
-        }finally{
-            setAddingUserId(null);
+            console.error(
+                "[WorkspaceMembersManager] handleInviteUser, Failed to send invite: ",
+                error
+            );
         }
-    }
+    };
 
     const handleRemoveMember = async (userId: string) => {
         setRemoveUserId(userId);
@@ -117,8 +124,9 @@ const WorkspaceMembersManager = ({ workspaceId }: { workspaceId: string}) => {
                     owner={owner}
                     members={members}
                     isOwner={isOwner}
+                    currentUserId={currentUserId}
                     onRemove={handleRemoveMember}
-                     />
+                    />
                 )
             }
           </div>
@@ -127,69 +135,92 @@ const WorkspaceMembersManager = ({ workspaceId }: { workspaceId: string}) => {
          {isOwner && ( 
             <>
             <Separator className="my-4"/>
-          <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-foreground">Add Members</h4>  
-          <Command>
-            <CommandInput 
-            placeholder="Search by username or email..."
-            onValueChange={searchUsers}
-            />
+            <div className="space-y-4">
+                <h4 className="text-sm font-semibold text-foreground">Invite Members</h4>  
+                <Command>
+                    <CommandInput 
+                    placeholder="Search by username or email..."
+                    onValueChange={searchUsers}
+                    />
 
-            <CommandList
-            className="bg-transparent p-1"
-            >
-                {loading &&
-                 <div className="px-3 py-2 text-sm text-muted-foreground">
-                    Searching...
-                </div>}
-                {!loading && results.length === 0 && query.trim().length >=2 && (
-                    <CommandEmpty>No user found.</CommandEmpty>
-                )}
-               { !loading && results.length > 0 && (
-                <CommandGroup>
-                    <div className="mt-2  rounded-md bg-gray-900">
-                    {results.map((user) => (
-                        <CommandItem
-                        key={user._id}
-                        value={`${user.username} ${user.email}`}
-                        className="
-                        w-full
-                        bg-transparent
-                        rounded-md
-                        hover:bg-primary/10
-                        data-[selected=true]:bg-primary/10
-                        "
-                        >
-                            <div className="flex w-full items-center justify-between text-sm">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium">
-                                        {user.username}
-                                    </span>
-                                    <span className="text-xs text-muted-foreground mt-[5px]">
-                                        ({user.email})
-                                    </span>
-                                </div>
-                               {addingUserId === user._id ? (
-                                <Loader2 className="w-6 h-6 animate-spin"/>
-                               ) : (
-                                 <Button 
-                                className="w-[50px] h-[30px] text-sm"
-                                onClick={() => handleAddUser(user)}
-                                disabled={isAlreadyMember(user._id)}
-                                >
-                                    Add
-                                </Button>
-                               )}
+                    <CommandList
+                    className="bg-transparent p-1"
+                    >
+                        {loading &&
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                                Searching...
                             </div>
-                        </CommandItem>
-                    ))}
-                    </div>
-                 </CommandGroup>
-                )}
-            </CommandList>
-          </Command>
+                        }
+                        {!loading && results.length === 0 && query.trim().length >=2 && (
+                            <CommandEmpty>No user found.</CommandEmpty>
+                        )}
+                         { !loading && results.length > 0 && (
+                            <CommandGroup>
+                                <div className="mt-2  rounded-md bg-gray-900">
+                                    {results.map((user) => (
+                                        <CommandItem
+                                            key={user._id}
+                                            value={`${user.username} ${user.email}`}
+                                            className="
+                                            w-full
+                                            bg-transparent
+                                            rounded-md
+                                            hover:bg-primary/10
+                                            data-[selected=true]:bg-primary/10
+                                            "
+                                        >
+                                            <div className="flex w-full items-center 
+                                            justify-between text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium">
+                                                        {user.username}
+                                                    </span>
+                                                    <span className="text-xs 
+                                                    text-muted-foreground mt-[5px]">
+                                                        ({user.email})
+                                                    </span>
+                                                </div>
+
+                                                {sendingInviteId === user._id ? (
+                                                    <Loader2 className="w-6 h-6 animate-spin"/>
+                                                ) : (
+                                                    isAlreadyMember(user._id) 
+                                                        ? (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="text-[10px] h-6 px-2
+                                                                text-zinc-400 border-zinc-700"
+                                                            >
+                                                                Member
+                                                            </Badge>
+                                                        )
+                                                        : (
+                                                            <Button 
+                                                            className={`${isAlreadyInvited(user._id)
+                                                                ? "w-auto h-auto p-2 bg-red-500"
+                                                                : "w-[50px] h-[30px] text-sm"
+                                                            }`}
+                                                            onClick={() => handleInviteUser(user)}
+                                                            disabled={
+                                                                isAlreadyInvited(user._id)
+                                                            }
+                                                        >
+                                                            {isAlreadyInvited(user._id)
+                                                                ? "Pending"
+                                                                : "Invite"
+                                                            }
+                                                        </Button>)
+                                                )}
+                                            </div>
+                                        </CommandItem>
+                                    ))}
+                                </div>
+                            </CommandGroup>
+                        )}
+                    </CommandList>
+                </Command>
             </div>
-            </>
+        </>
         )}
         </div>
     )
