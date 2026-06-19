@@ -23,9 +23,11 @@ import { Image, ImageSchema } from "./image.model";
 import { Flashcard, FlashcardSchema } from "./flashcard.model";
 import { FlashcardSet, FlashcardSetSchema } from "./flashcardset.model";
 import { FlashcardProgressSchema, IFlashcardProgress } from "./flashcard-progress.model";
-import { IStudyGoal, StudyGoalSchema } from "./study-goal.model";
+import { StudyGoal, StudyGoalSchema } from "./study-goal.model";
 import { IActivityEvent, ActivityEventSchema } from "./activity-event.model";
-import { IUserProgress, UserProgressSchema } from "./user-progress.model";
+import { UserProgress, UserProgressSchema } from "./user-progress.model";
+import { WorkspaceInvitation, WorkspaceInvitationSchema } from "./workspace-invitation-model";
+import { Notification, NotificationSchema } from "./notification.model";
 
 /**
  * @section Singleton Model Initialization
@@ -59,14 +61,20 @@ const FlashcardProgressModel =
     (mongoose.models.FlashcardProgress as mongoose.Model<IFlashcardProgress>) || 
     mongoose.model<IFlashcardProgress>("FlashcardProgress", FlashcardProgressSchema);
 const StudyGoalModel = 
-    (mongoose.models.IStudyGoal as mongoose.Model<IStudyGoal>) || 
-    mongoose.model<IStudyGoal>("IStudyGoal", StudyGoalSchema);
+    (mongoose.models.StudyGoal as mongoose.Model<StudyGoal>) || 
+    mongoose.model<StudyGoal>("StudyGoal", StudyGoalSchema);
 const ActivityEventModel = 
     (mongoose.models.IActivityEvent as mongoose.Model<IActivityEvent>) ||
     mongoose.model<IActivityEvent>("IActivityEvent", ActivityEventSchema);
 const UserProgressModel = 
-    (mongoose.models.IUserProgress as mongoose.Model<IUserProgress>) || 
-    mongoose.model<IUserProgress>("IUserProgress", UserProgressSchema);
+    (mongoose.models.UserProgress as mongoose.Model<UserProgress>) || 
+    mongoose.model<UserProgress>("UserProgress", UserProgressSchema);
+const WorkspaceInvitationModel =
+    (mongoose.models.WorkspaceInvitation as mongoose.Model<WorkspaceInvitation>) ||
+    mongoose.model<WorkspaceInvitation>("WorkspaceInvitation", WorkspaceInvitationSchema);
+const NotificationModel = 
+    (mongoose.models.Notification as mongoose.Model<Notification>) || 
+    mongoose.model<Notification>("Notification", NotificationSchema);
 
 export {
     UserModel,
@@ -80,4 +88,6 @@ export {
     StudyGoalModel,
     ActivityEventModel,
     UserProgressModel,
+    WorkspaceInvitationModel,
+    NotificationModel,
 }
