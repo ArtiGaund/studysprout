@@ -329,19 +329,21 @@ export async function DELETE(
             );
         }
 
-        // only owner can remove members
-        if(workspace.workspace_owner.toString() !== session.user._id){
+        const isSelfRemoval = session.user._id === userId;
+        const isOwnerRemoving = workspace.workspace_owner.toString() === session.user._id;
+
+        if(!isOwnerRemoving && !isSelfRemoval){
             return errorResponse(
-                "Only owner can remove the members",
+                "[Members DELETE route] You do not have permission to remove this member",
                 403,
                 403,
             );
         }
 
-        // Prevent owner removal
+        // Prevent owner from being removed
         if(workspace.workspace_owner.toString() === userId){
             return errorResponse(
-                "Owner cannot be removed",
+                "[Members DELETE route] The Owner cannot be removed",
                 400,
                 400,
             );
@@ -353,7 +355,7 @@ export async function DELETE(
 
         if(!isMember){
             return errorResponse(
-                 "User is not a member of the workspace",
+                 "[Members DELETE route] User is not a member of the workspace",
                  400,
                  400,
             )
