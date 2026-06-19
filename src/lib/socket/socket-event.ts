@@ -61,96 +61,95 @@ export function registerWorkspaceEvents(
         handlers?.onMembersUpdate?.(payload);
     });
         
-        socket.on("workspace:tree:update", ({
-            type,
-            payload
-        }) => {
-            // 1. Ego-Filter: If I am the sender, ignore to avoid redundant state updates.
-            if(socket.id === payload.senderSocketId) return;
-            switch(type){
-                // --- Folder Operations ---
-                case "folder_created":
-                    const folderToTransform = payload.folder || payload.data?.folder;
-                   if(!folderToTransform){
+    socket.on("workspace:tree:update", ({
+        type,
+        payload
+    }) => {
+        // 1. Ego-Filter: If I am the sender, ignore to avoid redundant state updates.
+        if(socket.id === payload.senderSocketId) return;
+        switch(type){
+            // --- Folder Operations ---
+            case "folder_created":
+                const folderToTransform = payload.folder || payload.data?.folder;
+                if(!folderToTransform){
                     console.error("[Socket-events] folder-created missing folder data: ",payload);
                     break;
-                   }
-                    const transformed = transformFolder(folderToTransform);
-                    dispatch(ADD_FOLDER({
-                        workspaceId: payload.workspaceId,
-                        folder: transformed
-                    }));
-                    break;
-                case "folder_deleted":
-                    dispatch(DELETE_FOLDER({
-                        workspaceId: payload.workspaceId,
-                        folderId: payload.folderId
-                    }));
-                    break;
-                case "folder_trashed":
-                case "folder_restored":
-                case "folder_updated":
-                    const folderData = payload.folder || payload.updates;
+                }
+                const transformed = transformFolder(folderToTransform);
+                dispatch(ADD_FOLDER({
+                    workspaceId: payload.workspaceId,
+                    folder: transformed
+                }));
+                break;
+            case "folder_deleted":
+                dispatch(DELETE_FOLDER({
+                    workspaceId: payload.workspaceId,
+                    folderId: payload.folderId
+                }));
+                break;
+            case "folder_trashed":
+            case "folder_restored":
+            case "folder_updated":
+                const folderData = payload.folder || payload.updates;
+                if(!folderData) break;
+                const updatedFolder = transformFolder(payload.updates);
+                dispatch(UPDATE_FOLDER({
+                    workspaceId: payload.workspaceId,
+                    id: payload.folderId,
+                    updates: updatedFolder
+                }));
 
-                    if(!folderData) break;
-                    const updatedFolder = transformFolder(payload.updates);
-                    dispatch(UPDATE_FOLDER({
-                        workspaceId: payload.workspaceId,
-                        id: payload.folderId,
-                        updates: updatedFolder
-                    }));
+                 // Release remote editing locks on successful update
+                dispatch(setRemoteEditing({
+                    itemId: payload.folderId,
+                    data: null
+                }));
+                break;
 
-                     // Release remote editing locks on successful update
-                    dispatch(setRemoteEditing({
-                        itemId: payload.folderId,
-                        data: null
-                    }));
-                    break;
-
-                    // --- File Operations ---
-                case "file_created":
-                    const fileToTransform = payload.file || payload.data?.file;
-                    if(!fileToTransform) return;
-                    const newFile = transformFile(fileToTransform);
-                    if(newFile){
+            // --- File Operations ---
+            case "file_created":
+                const fileToTransform = payload.file || payload.data?.file;
+                if(!fileToTransform) return;
+                const newFile = transformFile(fileToTransform);
+                if(newFile){
                     dispatch(ADD_FILE({
                         folderId: payload.folderId,
                         file: newFile
                     }));
                 }
-                    break;
-                case "file_deleted":
-                    dispatch(DELETE_FILE({
-                        folderId: payload.folderId,
-                        fileId: payload.fileId,
-                    }));
-                    break;
-                case "file_trashed":
-                case "file_restored":
-                case "file_updated":
-                    const fileData = payload.file || payload.data?.file || payload.updates;
-                    if(!fileData) return;
-                    const updatedFile = transformFile(fileData);
-                    dispatch(UPDATE_FILE({
-                        folderId: payload.folderId,
-                        id: payload.fileId,
-                        updates: {
-                            ...updatedFile,
-                            inTrash: fileData.inTrash
-                        }
-                    }));
+                break;
+            case "file_deleted":
+                dispatch(DELETE_FILE({
+                    folderId: payload.folderId,
+                    fileId: payload.fileId,
+                }));
+                break;
+            case "file_trashed":
+            case "file_restored":
+            case "file_updated":
+                const fileData = payload.file || payload.data?.file || payload.updates;
+                if(!fileData) return;
+                const updatedFile = transformFile(fileData);
+                dispatch(UPDATE_FILE({
+                    folderId: payload.folderId,
+                    id: payload.fileId,
+                    updates: {
+                        ...updatedFile,
+                        inTrash: fileData.inTrash
+                    }
+                }));
 
-                    // Clear any remote lock for this specific item
-                    dispatch(setRemoteEditing({
-                        itemId: payload.fileId,
-                        data: null
-                    }));
-                    break;
+                // Clear any remote lock for this specific item
+                dispatch(setRemoteEditing({
+                    itemId: payload.fileId,
+                    data: null
+                }));
+                break;
 
             // --- Collaborative Editing (Multiplayer) ---
             case "presence:remote-editing-start":
                 // Marks an item as "being edited" by another user (disables local editing)
-                 dispatch(setRemoteEditing({
+                dispatch(setRemoteEditing({
                     itemId: payload.itemId,
                     data: payload,
                 }));
@@ -181,20 +180,20 @@ export function registerWorkspaceEvents(
             case "pdf_file_created":
                 const newPdfFile = transformFile(payload);
                 if(newPdfFile){
-                dispatch(ADD_FILE({
-                    folderId: payload.folderId,
-                    file: newPdfFile,
-                }));
+                    dispatch(ADD_FILE({
+                        folderId: payload.folderId,
+                        file: newPdfFile,
+                    }));
 
-                // Increament the counter in the Folder Object
-                dispatch(UPDATE_FOLDER({
-                    workspaceId: payload.workspaceId,
-                    id: payload.folderId,
-                    updates: {
-                        currentFileCount: payload.currentFileCount,
-                    } as any
-                }));
-            }
+                    // Increament the counter in the Folder Object
+                    dispatch(UPDATE_FOLDER({
+                        workspaceId: payload.workspaceId,
+                        id: payload.folderId,
+                        updates: {
+                            currentFileCount: payload.currentFileCount,
+                        } as any
+                    }));
+                }
                 break;
             case "pdf_folder_completed":
                 // Update the folder icon/status in Redux
@@ -240,6 +239,5 @@ export function registerWorkspaceEvents(
                 }));
                 break;
             }
-        })
-        
+        });
 }
