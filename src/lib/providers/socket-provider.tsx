@@ -53,7 +53,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     const onConnect = () => setIsConnected(true);
     const onDisconnect = () => setIsConnected(false);
 
-    socket.on("connect", onConnect);
+    socket.on("connect", () => {
+        onConnect();
+        socket.emit("user:rejoin");
+    });
     socket.on("disconnect", onDisconnect);
 
     // Explicitly trigger connection if the instance is currently idle

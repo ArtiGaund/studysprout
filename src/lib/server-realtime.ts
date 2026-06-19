@@ -6,7 +6,15 @@
  */
 
 export const emitServerEvent = async (
-    endpoint: 'progress-update' | 'set-created' | 'set-deleted' | 'workspace-members-update',
+    endpoint: 
+        'progress-update' | 
+        'set-created' | 
+        'set-deleted' | 
+        'workspace-members-update' | 
+        'workspace-invitation' | 
+        'workspace-invitation-response' |
+        'notification',
+
     payload: any
 ) => {
     try {
