@@ -126,6 +126,18 @@ const workspaceMembersSlice = createSlice({
 
             workspace.members = workspace.members.filter( member => member._id !== userId );
         },
+        LEAVE_WORKSPACE(
+            state,
+            action: PayloadAction<{
+                workspaceId: string;
+                userId: string;
+            }>
+        ){
+            const { workspaceId, userId } = action.payload;
+            const ws = state.byWorkspaceId[workspaceId];
+            if(!ws) return;
+            ws.members = ws.members.filter((m) => m._id !== userId);
+        },
     },
 });
 
@@ -134,6 +146,7 @@ export const {
     SET_WORKSPACE_MEMBERS_LOADING,
     ADD_WORKSPACE_MEMBER,
     REMOVE_WORKSPACE_MEMBER,
+    LEAVE_WORKSPACE,
 } = workspaceMembersSlice.actions;
 
 export default workspaceMembersSlice.reducer;
