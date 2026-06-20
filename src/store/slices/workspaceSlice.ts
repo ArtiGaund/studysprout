@@ -33,8 +33,16 @@ const workspaceSlice = createSlice({
          * Registers a new workspace entity into the normalized store.
          */
         ADD_WORKSPACE: (state, action: PayloadAction<ReduxWorkSpace>) => {
-            state.byId[action.payload._id] = action.payload;
-            state.allIds.push(action.payload._id);
+            // state.byId[action.payload._id] = action.payload;
+            // state.allIds.push(action.payload._id);
+            const workspace = action.payload;
+
+            state.byId[workspace._id] = workspace;
+            
+            // Only push into allId's if not already present
+            if(!state.allIds.includes(workspace._id)){
+                state.allIds.push(workspace._id);
+            }
         },
         /**
          * @reducer DELETE_WORKSPACE
