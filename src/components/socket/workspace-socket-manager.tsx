@@ -9,6 +9,7 @@
  */
 "use client";
 
+import { useGlobalSocketEvents } from "@/hooks/socket/useGlobalSocketEvents";
 import { useWorkspaceSocket } from "@/hooks/socket/useWorkspaceSocket";
 import { selectAuthStatus } from "@/store/selectors/userSelector";
 import { useParams } from "next/navigation";
@@ -26,6 +27,8 @@ export const WorkspaceSocketManager = () => {
      * or if no workspaceId is present in the route.
      */
     useWorkspaceSocket(authStatus === "authenticated" ? workspaceId : null);
+
+    useGlobalSocketEvents();
 
     return null;
 }
