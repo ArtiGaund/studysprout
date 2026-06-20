@@ -98,7 +98,6 @@ export async function respondToInvitationService(
     invitationId: string,
     action: "accepted" | "rejected",
 ){
-    // console.log("[respondToInvitationService] workspaceId: ",workspaceId);
     const relativePath = `/api/workspace/invitations/${invitationId}`;
     const url = `${BASE_URL}${relativePath}`;
     const { data } = await axios.patch(url, { action });
