@@ -9,24 +9,29 @@
  */
 import { 
     addWorkspaceMember,
-     getWorkspaceMembers, 
-     removeWorkspaceMember
-    } from "@/services/workspaceMemberServices";
+    getWorkspaceMembers, 
+    removeWorkspaceMember
+} from "@/services/workspaceMemberServices";
 import { useAppDispatch } from "@/store/hooks";
+import { selectUserId } from "@/store/selectors/userSelector";
 import {
-     ADD_WORKSPACE_MEMBER,
+    ADD_WORKSPACE_MEMBER,
     REMOVE_WORKSPACE_MEMBER,
     SET_WORKSPACE_MEMBERS,
     SET_WORKSPACE_MEMBERS_LOADING 
-    } from "@/store/slices/workspaceMembersSlice";
+} from "@/store/slices/workspaceMembersSlice";
+import { DELETE_WORKSPACE } from "@/store/slices/workspaceSlice";
 import store from "@/store/store";
+import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { useSelector } from "react-redux";
 
 export function useWorkspaceMembers(
     workspaceId?: string | null
 ){
-
+    const currentUserId = useSelector(selectUserId);
     const dispatch = useAppDispatch();
+    const router = useRouter();
     
     /**
      * @method fetchMembers
@@ -40,10 +45,10 @@ export function useWorkspaceMembers(
         // 1. Efficiency Guard: Only fetch if this workspace's member list isn't already cached
         const existing = store.getState().workspaceMembers.byWorkspaceId[id];
         if(existing) return;
-       dispatch(SET_WORKSPACE_MEMBERS_LOADING({
+        dispatch(SET_WORKSPACE_MEMBERS_LOADING({
            workspaceId: id,
            loading: true
-       }));
+        }));
         try {
             const result = await getWorkspaceMembers(id);
             dispatch(SET_WORKSPACE_MEMBERS({
@@ -63,7 +68,7 @@ export function useWorkspaceMembers(
     },[
         workspaceId,
         dispatch
-    ])
+    ]);
 
     /**
      * @method addMember
@@ -78,7 +83,6 @@ export function useWorkspaceMembers(
                 workspaceId,
                 member: newMember
             }));
-            // await fetchMembers(workspaceId);
         } catch (error) {
             console.error("[useWorkspaceMembers] Failed to add workspace member: ",error);
         }
@@ -99,12 +103,18 @@ export function useWorkspaceMembers(
                 workspaceId,
                 userId
             }));
+            if(userId === currentUserId){
+                dispatch(DELETE_WORKSPACE(workspaceId));
+                router.replace("/dashboard");
+            }
         } catch (error) {
             console.error("[useWorkspaceMembers][removeMember] Failed to remove workspace member: ",error);
         }
     },[
         workspaceId,
         dispatch,
+        currentUserId,
+        router,
     ])
 
     return {
