@@ -13,8 +13,9 @@ export const emitServerEvent = async (
         'workspace-members-update' | 
         'workspace-invitation' | 
         'workspace-invitation-response' |
-        'notification',
-
+        'notification' |
+        'workspace-joined' |
+        'workspace-left',
     payload: any
 ) => {
     try {
