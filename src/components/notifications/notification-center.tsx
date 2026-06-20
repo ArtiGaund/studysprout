@@ -342,9 +342,7 @@ export function NotificationCenter(){
         markAllAsRead,
         removeInvitation,
     } = useNotification();
-
-    console.log("[notification-center] invitations: ",invitations);
-
+    
     const { respondToInvite } = useWorkspaceInvitations("");
 
     const handleRespond = async (
