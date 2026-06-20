@@ -77,7 +77,9 @@ export async function GET(
         const isOwner = workspace.workspace_owner.toString() === userId;
 
         const workspaceMember = workspace.members || [];
-        const isMember = workspaceMember.some((member: any) => member.userId.toString() === userId);
+        const isMember = workspaceMember.some((member: any) => 
+            member.userId.toString() === userId
+        );
 
         if(!isOwner && !isMember){
             return errorResponse(
@@ -123,9 +125,9 @@ export async function GET(
         });
 
         const data = {
-                owner: ownerWithRole,
-                members
-            }
+            owner: ownerWithRole,
+            members
+        }
         return successResponse(
             "Workspace members fetched successfully",
             data,
@@ -379,6 +381,12 @@ export async function DELETE(
                 action: "removed", 
         }
         await emitServerEvent("workspace-members-update", payload);
+
+        // Remove user's own client to drop this workspace
+        await emitServerEvent("workspace-left", {
+            recipientId: userId,
+            workspaceId: workspaceId.toString(),
+        });
 
         return successResponse(
             "Member removed successfully",
