@@ -11,13 +11,17 @@
 
 import { useEffect, useRef } from "react";
 import { useWorkspaceMembers } from "../workspace-members/useWorkspaceMembers";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useAppDispatch } from "@/store/hooks";
 import { useToast } from "@/components/ui/use-toast";
 import { useSelector } from "react-redux";
-import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
 import { selectUserId } from "@/store/selectors/userSelector";
 import { registerWorkspaceEvents } from "@/lib/socket/socket-event";
 import { useSocket } from "@/lib/providers/socket-provider";
+import { 
+    ADD_WORKSPACE_MEMBER, 
+    REMOVE_WORKSPACE_MEMBER 
+} from "@/store/slices/workspaceMembersSlice";
+import { WorkspaceMember } from "@/types/workspace-member.type";
 
 export function useWorkspaceSocket(workspaceId?: string | null){
     const { socket, isConnected } = useSocket();
@@ -30,9 +34,7 @@ export function useWorkspaceSocket(workspaceId?: string | null){
     const {
         fetchMembers
     } = useWorkspaceMembers(workspaceId);
-
     const dispatch = useAppDispatch();
-
     const { toast } = useToast();
  
     /**
@@ -67,16 +69,33 @@ export function useWorkspaceSocket(workspaceId?: string | null){
         // 2. Idempotency Guard: Prevent redundant join emissions
         if(joinedRef.current === workspaceId) return;
 
-
         /**
          * @callback handleMembersUpdate
          * UI feedback for peer presence changes.
          */
-        const handleMembersUpdate = ({
+        const handleMembersUpdate = async ({
+            workspaceId,
             userId,
             username,
-            action
-        }: any) => {
+            action,
+            member,
+        }: {
+            workspaceId: string;
+            userId: string;
+            username: string;
+            action: "added" | "removed";
+            member?: WorkspaceMember
+        }) => {
+            if(action === "removed"){
+                dispatch(REMOVE_WORKSPACE_MEMBER({ 
+                    workspaceId,
+                    userId,
+                }));
+            }else if(member){
+                dispatch(ADD_WORKSPACE_MEMBER({ workspaceId, member }));
+            }else{
+                console.warn("[useWorkspaceSocket] action=added but member is missing from payload!")
+            }
             // don't notify the actor
             if(userId === currentUserId) return;
 
@@ -93,10 +112,8 @@ export function useWorkspaceSocket(workspaceId?: string | null){
         registerWorkspaceEvents(
             socket, 
             dispatch,
-            currentUserId, {
-            onMembersUpdate: handleMembersUpdate,
-        }
-    );
+            currentUserId, { onMembersUpdate: handleMembersUpdate, }
+        );
       
         /**
          * @method joinWorkspace
@@ -144,7 +161,7 @@ export function useWorkspaceSocket(workspaceId?: string | null){
        isConnected,
        workspaceId,
        currentUserId,
-         ])
+    ])
 
    
 }
