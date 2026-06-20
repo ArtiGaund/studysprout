@@ -19,7 +19,6 @@ export interface PendingInvitation{
 
 export function useWorkspaceInvitations(workspaceId: string){
     // --- Invites state ---
-    // const [ pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
     const [ loadingInvitations, setLoadingInvitations ] = useState(false);
 
     // --- Owner State ---
@@ -53,15 +52,12 @@ export function useWorkspaceInvitations(workspaceId: string){
         action: "accepted" | "rejected",
     ) => {
         try {
-            console.log(`[respondtoInvite] workspaceId:${workspaceId}, invitationId: ${invitationId}`);
             await respondToInvitationService(invitationId, action);
         } catch (error) {
             console.error("[useWorkspaceInvitations] Failed to respond to invitations: ",error);
             throw error;
         }
-    },[
-        workspaceId,
-    ]);
+    },[]);
 
     // --- Owner -- send invite ----
     const sendInvite = useCallback(async(
@@ -83,12 +79,8 @@ export function useWorkspaceInvitations(workspaceId: string){
     ]);
 
     return {
-        // Invite
-        // pendingInvitations,
         loadingInvitations,
         fetchPendingInvitations,
-        // respondToInvite,
-        // Owner
         sendingInviteId,
         invitedUserIds,
         sendInvite,
