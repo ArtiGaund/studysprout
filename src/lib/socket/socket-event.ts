@@ -18,6 +18,7 @@ import { ADD_FOLDER, DELETE_FOLDER, UPDATE_FOLDER } from "@/store/slices/folderS
 import { setRemoteEditing, updateRemoteTitle } from "@/store/slices/uiSlice";
 import { SET_PRESENCE } from "@/store/slices/workspacePresenceSlice";
 import { AppDispatch, RootState } from "@/store/store";
+import { WorkspaceMember } from "@/types/workspace-member.type";
 import { transformFile, transformFolder } from "@/utils/data-transformers";
 
 import { Socket } from "socket.io-client";
@@ -28,6 +29,7 @@ type WorkspaceEventHandlers = {
         userId: string;
         username: string;
         action: "added" | "removed";
+        member?: WorkspaceMember;
     }) => void;
     onPDFProgress?: (data: { 
         folderId: string; 
@@ -43,7 +45,7 @@ export function registerWorkspaceEvents(
   
     // clear previous listener to avoid duplicates and stale closures
     socket.off("presence:update");
-    socket.off("member:update");
+    socket.off("members:update");
     socket.off("workspace:tree:update");
     socket.off("pdf:progressing:update");
 
