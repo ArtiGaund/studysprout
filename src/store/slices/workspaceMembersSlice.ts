@@ -104,7 +104,22 @@ const workspaceMembersSlice = createSlice({
         ){
             const { workspaceId, member } = action.payload;
 
-            state.byWorkspaceId[workspaceId]?.members.push(member);
+            // state.byWorkspaceId[workspaceId]?.members.push(member);
+            if(!state.byWorkspaceId[workspaceId]){
+                state.byWorkspaceId[workspaceId] = {
+                    owner: null,
+                    members: [],
+                    loading: false,
+                    error: null,
+                };
+            }
+
+            const bucket = state.byWorkspaceId[workspaceId];
+
+            const alreadyExists = bucket.members.some((m) => m._id === member._id);
+            if(!alreadyExists){
+                bucket.members.push(member);
+            }
         },
 
         /**
