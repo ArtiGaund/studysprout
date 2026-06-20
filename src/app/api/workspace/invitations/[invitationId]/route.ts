@@ -5,7 +5,12 @@ import { errorResponse, successResponse } from "@/lib/api-response/api-responses
 import dbConnect from "@/lib/dbConnect";
 import { createNotification } from "@/lib/notifications/createNotification";
 import { emitServerEvent } from "@/lib/server-realtime";
-import { NotificationModel, UserModel, WorkspaceInvitationModel, WorkSpaceModel } from "@/model";
+import { 
+    NotificationModel, 
+    UserModel, 
+    WorkspaceInvitationModel, 
+    WorkSpaceModel 
+} from "@/model";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
@@ -117,7 +122,7 @@ export async function PATCH(
 
             // Fetch the accepting user's username from the real-time payload
             const acceptingUser = await UserModel.findById(session.user._id)
-                .select("username")
+                .select("username email avatarType avatarUrl avatarInitials")
                 .lean();
 
             // Notify all workspace clients to refresh the member list
@@ -126,6 +131,29 @@ export async function PATCH(
                 userId: session.user._id,
                 username: acceptingUser?.username,
                 action: "added",
+                member: {
+                    _id: session.user._id,
+                    username: acceptingUser?.username,
+                    email: acceptingUser?.email,
+                    avatarType: acceptingUser?.avatarType,
+                    avatarUrl: acceptingUser?.avatarUrl,
+                    avatarInitials: acceptingUser?.avatarInitials,
+                    role: invitation.role,
+                },
+            });
+
+            await emitServerEvent("workspace-joined", {
+                recipientId: session.user._id,
+                workspace: {
+                    _id: workspace._id.toString(),
+                    workspace_owner: workspace.workspace_owner.toString(),
+                    title: workspace.title,
+                    iconId: workspace.iconId,
+                    logo: workspace.logo,
+                    bannerUrl: workspace.bannerUrl,
+                    folders: workspace.folders?.map((f: any) => f.toString()),
+                    isPublic: workspace.isPublic,
+                }
             });
         }
 
