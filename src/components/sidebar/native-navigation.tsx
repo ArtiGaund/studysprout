@@ -5,11 +5,11 @@ import { twMerge } from "tailwind-merge";
 import CypressHomeIcon from "../icons/CypressHomeIcon";
 import CypressTrashIcon from "../icons/CypressTrashIcon";
 import Trash from "../trash/trash";
-import Search from "../search/search";
-import CypressSearchIcon from "../icons/CypressSearchIcon";
 import RevisionButton from "../revision/revision-button";
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import TooltipComponent from "../global/tooltip-component";
+import { GlobalSearch } from "../global-search/global-search";
+import { useRouter } from "next/navigation";
 
 
 interface NativeNavigationProps{
@@ -21,27 +21,39 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
     className
 }) => {
     const { isRevisionSidebarOpen } = useRevisionSidebar();
+    const router = useRouter();
     return(
         <nav className={twMerge('my-2',className)}>
             <ul className={`flex flex-col gap-2 ${isRevisionSidebarOpen && 'justify-center items-center gap-4'}`}>
-                {/* <Search> */}
                     <li 
                     className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2 cursor-pointer"
                     >
                         {isRevisionSidebarOpen ? (
                             <>
                                 <TooltipComponent message="Search">
-                                    <CypressSearchIcon />
+                                    <GlobalSearch 
+                                        onNavigateToWorkspace={(id) => 
+                                            router.push(`/dashboard/${id}`)}
+                                        onNavigateToFolder={(wsId, folderId) => 
+                                            router.push(`/dashboard/${wsId}/${folderId}`)}
+                                        onNavigateToFile={(wsId, folderId, fileId) => 
+                                            router.push(`/dashboard/${wsId}/${folderId}/${fileId}`)}
+                                    />
                                 </TooltipComponent>
                             </>
                         ): (
                             <>
-                                <CypressSearchIcon />
-                                <span>Search</span>
+                                 <GlobalSearch 
+                                    onNavigateToWorkspace={(id) => 
+                                        router.push(`/dashboard/${id}`)}
+                                    onNavigateToFolder={(wsId, folderId) => 
+                                        router.push(`/dashboard/${wsId}/${folderId}`)}
+                                    onNavigateToFile={(wsId, folderId, fileId) => 
+                                        router.push(`/dashboard/${wsId}/${folderId}/${fileId}`)}
+                                />
                             </>
                         )}
                     </li>
-                {/* </Search> */}
                 <li>
                     <Link 
                     className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2"
