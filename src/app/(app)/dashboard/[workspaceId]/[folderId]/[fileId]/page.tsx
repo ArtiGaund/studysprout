@@ -25,6 +25,7 @@ import { FileHeader } from '@/components/file-view/file-header'
 import { FileInsightsPanel, FlashcardSet, ParentSet } from '@/components/file-view/file-insights-pannel'
 import { RootState } from '@/store/store'
 import { selectCurrentFolder } from '@/store/selectors/folderSelector'
+import * as Y from "yjs";
 
 // Optimized: Load editor only on the client to avoid hydration mismatches.
 const DynamicTextEditor = dynamic(
@@ -249,35 +250,91 @@ const FilePage: React.FC<{
      */
     const binaryData = useMemo(() => {
         const rawBinary = currentFile?.contentBinary;
-        if(!rawBinary) return null;
-
-        // 1. If its a Base64 string
-        if(typeof rawBinary === 'string'){
-            const binaryString = window.atob(rawBinary);
-            const bytes = new Uint8Array(binaryString.length);
-            for(let i = 0;i<binaryString.length;i++){
-                bytes[i]=binaryString.charCodeAt(i);
+       
+        // Primary path: use stored binary
+        if(rawBinary){
+             // 1. If its a Base64 string
+            if(typeof rawBinary === 'string'){
+                const binaryString = window.atob(rawBinary);
+                const bytes = new Uint8Array(binaryString.length);
+                for(let i = 0;i<binaryString.length;i++){
+                    bytes[i]=binaryString.charCodeAt(i);
+                }
+                if(bytes.length > 0) return bytes;
             }
-            return bytes;
-        }
 
-        // 2. If it's the MongoDb/Node Buffer Object { data: number[] }
-        if(
-            typeof rawBinary === 'object' && 
-            'data' in rawBinary && 
-            Array.isArray((rawBinary as any).data)
-        ){
-            return new Uint8Array((rawBinary as any).data);
+            // 2. If it's the MongoDb/Node Buffer Object { data: number[] }
+            if(
+                typeof rawBinary === 'object' && 
+                'data' in rawBinary && 
+                Array.isArray((rawBinary as any).data)
+            ){
+                const bytes = new Uint8Array((rawBinary as any).data);
+                if(bytes.length > 0) return bytes;
+            }
+             if(rawBinary instanceof Uint8Array) return rawBinary;
+            // 3. If it's already an array-like structure
+            if(Array.isArray(rawBinary) && rawBinary.length > 0){
+                return new Uint8Array(rawBinary)
+            }
         }
+       
+        // Fallback: recontract Yjs from blocks when binary is missing/empty 
+        // This prevent blank editor when contentBinary is corrupted or absent
+        const blocks = currentFile?.blocks;
+        const blockOrder = currentFile?.blockOrder;
 
-        if(rawBinary instanceof Uint8Array) return rawBinary;
-        // 3. If it's already an array-like structure
-        if(Array.isArray(rawBinary)){
-            return new Uint8Array(rawBinary)
+        if(!blocks || !blockOrder || blockOrder.length === 0) return null;
+
+        try {
+            const doc = new Y.Doc();
+            const fragment = doc.getXmlFragment("document-content");
+
+            for(const blockId of blockOrder){
+                const block = blocks[blockId];
+                if(!block) continue;
+
+                const container = new Y.XmlElement("blockContainer");
+                container.setAttribute("id", block.id);
+
+                const type = block.type ?? "paragraph";
+                const inner = new Y.XmlElement(type);
+
+                // Restore ALL props as attributes - covers heading level, codeBlock language,
+                // image url/caption/showPreview, textAlignment,textColor, etc.
+                if(block.props && typeof block.props === "object"){
+                    for(const [key, value] of Object.entries(block.props)){
+                        if(value !== undefined && value !== null){
+                            inner.setAttribute(key, String(value));
+                        }
+                    }
+                }
+
+                // image store data in props.url - no text node needed
+                if(type !== "image"){
+                    const content = 
+                        typeof block.content === "string" && block.content.length > 0
+                            ? block.content
+                            : (block.plainText ?? "");
+                    if(content.length > 0){
+                        inner.insert(0, [new Y.XmlText(content)]);
+                    }
+                }
+
+                container.insert(0, [inner]);
+                fragment.push([container]);
+            }
+
+            const update = Y.encodeStateAsUpdate(doc);
+            return update;
+        } catch (error) {
+            console.error(`[FilePage] Block fallback reconstruction failed: `,error);
+            return null;
         }
-        return null;
     },[
-        currentFile?.contentBinary
+        currentFile?.contentBinary,
+        currentFile?.blocks,
+        currentFile?.blockOrder,
     ]);
 
     if(!currentFile || currentFile._id !== fileId || loading){
