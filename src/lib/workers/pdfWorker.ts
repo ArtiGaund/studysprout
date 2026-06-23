@@ -14,6 +14,7 @@ import { detectFilePrerequisites } from "@/utils/intelligence/prerequisite-detec
 import { callGeminiText } from "../ai/flashcards/gemini-client";
 import { extractTermsFromBlocks } from "@/utils/intelligence/term-extractor";
 import { markTermIndexStale } from "@/lib/workers/workspace-term-index";
+import { deriveFilePlainText } from "@/utils/intelligence/plain-text";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 
@@ -294,6 +295,7 @@ export const initPDFWorker = () => {
                         contentBinary: Buffer.from(binaryUpdate),
                         blocks: blockMap,
                         blockOrder,
+                        plainText: deriveFilePlainText(blockMap, blockOrder),
                         iconId: "📄",
                         createdAt: new Date(),
                         lastUpdated: new Date(),

@@ -23,6 +23,7 @@ import { extractTermsFromBlocks } from "@/utils/intelligence/term-extractor";
 import { redisConnection } from "../bullmq/redis-connection";
 import { markTermIndexStale } from "@/lib/workers/workspace-term-index";
 import { onFileUpdated } from "../activity-hooks";
+import { deriveFilePlainText } from "@/utils/intelligence/plain-text";
 
 let worker: Worker | null = null;
 
@@ -104,6 +105,7 @@ export const initFileSyncWorker = () => {
                 contentBinary: buffer,
                 blocks: blocksObject,
                 blockOrder: blockOrder,
+                plainText: deriveFilePlainText(blocksObject, blockOrder),
             };
 
             if(hasContentChanged){
