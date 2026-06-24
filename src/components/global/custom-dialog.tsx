@@ -39,7 +39,7 @@ const CustomDialogTrigger: React.FC<CustomDialogProps> = ({
             </DialogTrigger>
             <DialogContent className="max-w-md w-full h-full sm:h-auto md:max-h-[85vh] bg-[#0c0c0e]
             border border-white/5 p-0 overflow-hidden flex flex-col rounded-none sm:rounded-2xl
-            z-[150]">
+            z-[200]">
                {(header || description) && ( <DialogHeader className="px-6 pt-6 pb-2 shrink-0 text-left">
                     <DialogTitle className="text-white text-lg font-bold tracking-tight">
                         {header}
