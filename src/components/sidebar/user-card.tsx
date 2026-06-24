@@ -128,8 +128,7 @@ const UserCard = () => {
 
           {/* Authentication Termination Action Row */}
           <LogoutButton>
-            <div 
-              onClick={(e) => e.stopPropagation()}
+            <div
               className="w-full hover:bg-red-500/10 text-zinc-300 hover:text-red-400
                 px-3 py-2.5 rounded-lg flex items-center gap-x-2.5 text-xs font-medium
                 transition-colors select-none cursor-pointer">
