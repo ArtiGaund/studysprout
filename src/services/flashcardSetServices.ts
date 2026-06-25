@@ -114,3 +114,22 @@ export async function getFlashcardSetOverviewService(
         }
     }
 }
+
+export async function getFlashcardUsageService(workspaceId: string | undefined){
+    try {
+        const relativePath = `/api/workspace/${workspaceId}/usage`;
+        const url = `${BASE_URL}${relativePath}`;
+
+        const { data } = await axios.get(url);
+
+        if(!data) throw new Error(data.message);
+        return data.data;        
+    } catch (error: any) {
+        console.error("[flashcardSetService] getFlashcardUsageService Failed: ",error);
+        return {
+            success: false,
+            message: error.message ?? "[flashcardSetService] Internal server error in getFlashcardUsageService",
+            statusCode: error.statusCode,
+        };
+    }
+}
