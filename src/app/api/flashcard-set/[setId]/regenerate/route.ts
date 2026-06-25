@@ -26,8 +26,7 @@ import {  FlashcardModel, FlashcardProgressModel, FlashcardSetModel } from "@/mo
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { chunkBlocks } from "@/helpers/chunkBlocks";
-
-
+import { checkAndIncrementUsage } from "@/lib/flashcard/flashcard-usage";
 
 export async function POST(
     request: NextRequest,
@@ -35,7 +34,6 @@ export async function POST(
 ){
     await dbConnect();
     try {
-    
         const {setId } = params;
         if(!setId){
             return errorResponse(
@@ -46,7 +44,6 @@ export async function POST(
         }
 
         const existingSet = await FlashcardSetModel.findById(setId);
-
         if(!existingSet){
             return errorResponse(
                 "Flashcard set not exists",
@@ -54,11 +51,9 @@ export async function POST(
                 404
             )
         }
-
         
         // current user session
         const session = await getServerSession(authOptions);
-
         if(!session || !session.user){
             return errorResponse(
                 "You must be logged in to generate flashcards",
@@ -68,14 +63,28 @@ export async function POST(
         }
         
         // current user
-        const userId = session.user._id;
-    
+        const userId = session.user._id;    
         const workspaceId = existingSet.workspaceId as string;
         const folderId = existingSet.folderId as string;
         const resourceId = existingSet.resourceId as string;
         const resourceType = existingSet.resourceType;
         const cardCount = existingSet.totalCards;
         const desiredTypes = existingSet.desiredTypes;
+
+         // Check monthly generation limit before calling gemini
+        const usageCheck = await checkAndIncrementUsage(workspaceId);
+        if(!usageCheck.allowed){
+            const resetDate = usageCheck.resetAt.toLocaleDateString("en-Us", {
+                month: "long",
+                day: "numeric",
+            });
+            return errorResponse(
+                `[Flashcard set regenerate POST route] Monthly limit reached. Resets on ${resetDate}`,
+                429,
+                429,
+            );
+        }
+
        
         // Data aggregation (Resolve which files to process based on selected resourceType)
         let filesToProcess = [];
@@ -286,10 +295,6 @@ export async function POST(
         await FlashcardModel.deleteMany({ parentSetId: setId });
 
         // --- END SHARED WORKSPACE CLEANUP ---
-
-
-        
-
         if(allGeneratedCards.length === 0){
             return errorResponse(
                  "Failed to generate flashcards",
@@ -320,7 +325,6 @@ export async function POST(
                 500
             )
         }
-
 
         // Return the generated flashcards
         return successResponse(

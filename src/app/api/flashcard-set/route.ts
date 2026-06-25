@@ -13,10 +13,18 @@
  */
 
 import dbConnect from "@/lib/dbConnect";
-import { GenerateFlashcardsFromChunks } from "@/lib/ai/flashcards/generate-flashcards-from-chunks";
+import { 
+    GenerateFlashcardsFromChunks 
+} from "@/lib/ai/flashcards/generate-flashcards-from-chunks";
 import { NextRequest } from "next/server";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
-import { FileModel, FlashcardModel, FlashcardSetModel, FolderModel, WorkSpaceModel } from "@/model";
+import { 
+    FileModel, 
+    FlashcardModel, 
+    FlashcardSetModel, 
+    FolderModel, 
+    WorkSpaceModel 
+} from "@/model";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 import { generateFlashcardsSetTitle } from "@/lib/ai/flashcards/generate-flashcard-set-title";
@@ -25,6 +33,7 @@ import { getMockFlashcards } from "@/lib/testing/mock-flashcard-generator";
 import { File } from "@/model/file.model";
 import { emitServerEvent } from "@/lib/server-realtime";
 import { onFlashcardSetGenerated } from "@/lib/activity-hooks";
+import { checkAndIncrementUsage } from "@/lib/flashcard/flashcard-usage";
 
 
 export async function POST(request: NextRequest){
@@ -44,15 +53,13 @@ export async function POST(request: NextRequest){
 
         // current user session
         const session = await getServerSession(authOptions);
-
         if(!session || !session.user || !session.user._id){
             return errorResponse(
                 "You must be logged in to generate flashcards",
                 401,
                 401
             )
-        }
-        
+        }       
         // current user
         const userId = session.user._id;
 
@@ -110,6 +117,19 @@ export async function POST(request: NextRequest){
             );
         };
 
+        // Check monthly generation limit before calling gemini
+        const usageCheck = await checkAndIncrementUsage(workspaceId);
+        if(!usageCheck.allowed){
+            const resetDate = usageCheck.resetAt.toLocaleDateString("en-Us", {
+                month: "long",
+                day: "numeric",
+            });
+            return errorResponse(
+                `[Flashcard set POST route] Monthly limit reached. This workspace has used ${usageCheck.used}/${usageCheck.limit} flashcard sets this month. Limit resets on ${resetDate}.`,
+                429,
+                429,
+            );
+        }
 
         // Data aggregation (Resolve which files to process based on selected resourceType)
         let filesToProcess: File[] = [];
@@ -302,9 +322,7 @@ export async function POST(request: NextRequest){
             if(result?.data?.flashcards){
                 allGeneratedCards.push(...result.data.flashcards);
             }
-        }
-
-            
+        }            
         }
 
         allGeneratedCards = allGeneratedCards.slice(0, cardCount);
@@ -457,7 +475,6 @@ export async function GET(request: NextRequest){
             401,
         );
 
-        const userId = session.user._id;
         const { searchParams } = new URL(request.url);
         const resourceId = searchParams.get("resourceId");
         const resourceType = searchParams.get("resourceType");
