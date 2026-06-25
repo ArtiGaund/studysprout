@@ -9,6 +9,7 @@
  * 3. Soft-Deletion Support: Includes an `inTrash` field to allow for "Undo" functionality.
  * 4. Relational Integrity: Links to "User", "Folder", and "Image" collections via MongoDB `ref`.
  */
+import { getEndOfMonth } from "@/lib/flashcard/flashcard-usage";
 import mongoose, { Schema, Types } from "mongoose";
 
 // --- Types --
@@ -52,6 +53,11 @@ export interface WorkSpace{
     } | null;
     conceptGraphStale?: boolean;
     conceptGraphStatus?: "idle" | "generating" | "completed" | "error";
+    //Limit for flashcard generation at workspace level
+    flashcardUsage?:{
+        setsGenerated: number;
+        resetAt: Date;
+    };
 }
 
 // --- Schema Definition ---
@@ -139,6 +145,16 @@ export const WorkspaceSchema: Schema<WorkSpace> = new Schema({
         enum: ["idle", "generating", "completed", "error"],
         default: "idle",
     },
+    flashcardUsage: {
+        setsGenerated: {
+            type: Number,
+            default: 0,
+        },
+        resetAt: {
+            type: Date,
+            default: () => getEndOfMonth(),
+        },
+    }
 },
 {
     timestamps: true   // Automatically generates 'createdAt' and 'updatedAt'
