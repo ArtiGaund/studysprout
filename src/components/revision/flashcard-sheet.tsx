@@ -10,7 +10,7 @@
 'use client';
 
 import { RootState } from "@/store/store";
-import { Trash } from "lucide-react";
+import { Brain, CircleCheck, Trash, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
@@ -63,18 +63,19 @@ const FlashcardSheet = ({
     >
         <div className="flex gap-2 items-center flex-1 min-w-0 mr-2">
             {/* Visual Icon & Title */}
-            <span>{set.icon || "🧠"}</span>
+            <span>{set.icon || <Brain size={14} className="text-purple-400 shrink-0"/>}</span>
             <span className="text-[12px] text-gray-200 truncate max-w-[120px]">{set.title}</span>
             
             {/* Urgency Indicators: Fire icon for due cards, Checkmark for completed */}
             {realDueCount > 0 ? (
-                <span className="text-red-400 text-[11px] shrink-0 font-extrabold">
-                    🔥 {realDueCount} due
+                <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
+                gap-1">
+                    <TrendingUp size={12} className="text-red-400"/> {realDueCount} due
                 </span>
             ) 
             : (
                 <span className="text-green-400 text-[11px] shrink-0 font-extrabold">
-                    ✓
+                    <CircleCheck size={13} className="text-green-400 shrink-0"/>
                 </span>
             )}
 
