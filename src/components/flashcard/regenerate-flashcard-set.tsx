@@ -10,9 +10,11 @@
 "use client";
 
 import { useFlashcardGenerator } from "@/hooks/flashcard/useFlashcardGenerator";
+import { useFlashcardUsage } from "@/hooks/flashcard/useFlashcardUsage";
 import { GenerationPayload } from "@/services/flashcardServices";
+import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
 import { Loader2 } from "lucide-react";
-
+import { useSelector } from "react-redux";
 
 interface RegenerateFlashcardSetProps {
    flashcardSetId: string;
@@ -27,7 +29,7 @@ export default function RegenerateFlashcardSet({
     payload,
     onViewSet
 }: RegenerateFlashcardSetProps){
-
+    const workspace = useSelector(selectCurrentWorkspace);
     /**
      * @hook useFlashcardGenerator
      * Custom hook abstraction for handling API interactions and loading states.
@@ -35,9 +37,9 @@ export default function RegenerateFlashcardSet({
     const {
         generateCards,
         isGeneratingCards,
-        deleteFlashcardSet,
         isDeletingFlashcardSet,
     } = useFlashcardGenerator();
+    const { refreshUsage } = useFlashcardUsage(workspace?._id);
 
     /**
      * @handler handleDeleteAndRegenerate
@@ -57,7 +59,7 @@ export default function RegenerateFlashcardSet({
                 console.warn("[RegenerateFlashcardSet] Error regenerating flashcard set", regenerateFlashcard);
                 return;
             }
-           
+           await refreshUsage();
             
         } catch (error) {
             console.warn("[RegenerateFlashcardSet] Error deleting and regenerating flashcard set", error);

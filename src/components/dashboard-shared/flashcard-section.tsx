@@ -15,8 +15,7 @@ import { RootState } from "@/store/store";
 import { ReduxFlashcardSet } from "@/types/state.type";
 import { clearLastStudied } from "@/store/slices/lastStudiedSlice";
 import { useFlashcardSet } from "@/hooks/flashcard/useFlashcardSet";
-
-// Convert ReduxFlashcardSet -> FlashcardSetOverview
+import { useFlashcardUsage } from "@/hooks/flashcard/useFlashcardUsage";
 
 interface FlashcardSectionProps{
     workspaceId: string;
@@ -130,6 +129,8 @@ export const FlashcardSection = ({
        }
     });
 
+    const { refreshUsage } = useFlashcardUsage(workspaceId);
+
     const handleGenerateFlashcardSet = async () => {
         try {
             await generateCards({
@@ -139,6 +140,7 @@ export const FlashcardSection = ({
                 cardCount: 5,
                 desiredTypes: ["question-answer", "mcq", "fill-in-the-blank"],
             });
+            await refreshUsage();
         } catch (error: any) {
             console.error("[Flashcard Section] Failed to generate flashcard set: ",error.message);
         }

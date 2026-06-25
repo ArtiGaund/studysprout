@@ -21,6 +21,9 @@ import { ActionItem } from "../dashboard-shared/action-item";
 import { useFlashcardGenerator } from "@/hooks/flashcard/useFlashcardGenerator";
 import FlashcardSetViewerSheet from "../flashcard/flashcard-set-viewer-sheet";
 import { Sheet } from "../ui/sheet";
+import { useFlashcardUsage } from "@/hooks/flashcard/useFlashcardUsage";
+import { useSelector } from "react-redux";
+import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
 
 export interface ActiveUser{
     id: string;
@@ -143,6 +146,7 @@ export const FileInsightsPanel = ({
     onDetectPrerequisites,
     onPrereqClick,
 }: FileInsightsPanelProps) => {
+    const currentWorkspace = useSelector(selectCurrentWorkspace);
     const [ showAllUsers, setShowAllUsers ] = useState(false);
     const [ conceptsExpanded, setConceptsExpanded ] = useState(false);
     const [ selectedSetId, setSelectedSetId ] = useState<string | null>(null);
@@ -165,6 +169,8 @@ export const FileInsightsPanel = ({
             setSelectedSetId(newSetId);
         }
     });
+
+    const { refreshUsage } = useFlashcardUsage(currentWorkspace?._id);
     
     const handleGenerateFlashcardSet = async () => {
         try {
@@ -175,6 +181,7 @@ export const FileInsightsPanel = ({
                 cardCount: 5,
                 desiredTypes: ["question-answer", "mcq", "fill-in-the-blank"],
             });
+            await refreshUsage();
         } catch (error: any) {
             console.error("[Flashcard Section] Failed to generate flashcard set: ",error.message);
         }

@@ -26,8 +26,8 @@ import {
   SheetContent, 
   SheetDescription, 
   SheetFooter,
-   SheetHeader,
-    SheetTitle
+  SheetHeader,
+  SheetTitle
  } from "../ui/sheet";
 import React, { useState } from "react";
 import { IconFolderOpen } from "@tabler/icons-react"
@@ -42,6 +42,8 @@ import { useFlashcardGenerationLock } from "@/hooks/flashcard/useFlashcardGenera
 import { useSocket } from "@/lib/providers/socket-provider";
 import { useUser } from "@/lib/providers/user-provider";
 import { toast } from "../ui/use-toast";
+import { useFlashcardUsage } from "@/hooks/flashcard/useFlashcardUsage";
+import { ComingSoonTooltip } from "../ui/coming-soon-tooltip";
 
 interface FlashcardTypesFormProps{
   closeFlashcardTypeSheet: () => void;
@@ -79,6 +81,9 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
     }
   });
 
+  const currentWorkspaceId = typeof workspaceId === "string" ? workspaceId : undefined;
+  const { refreshUsage } = useFlashcardUsage(currentWorkspaceId);
+
   const { socket, isConnected } = useSocket();
   const { user } = useUser();
 
@@ -106,33 +111,33 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
 
     setIsRequestingLocks(true);
     
-      const formData = new FormData(e.currentTarget);
-      const finalCardCount = Number(formData.get('cardCount'));
-      // Collecting desired card formats from checkbox group
-      const desiredTypes: (
-        'question-answer' | 
-        'fill-in-the-blank' | 
-        'mcq' |
-        'diagram' |
-        'chart' |
-        'image-labeling'
-      )[] = [];
+    const formData = new FormData(e.currentTarget);
+    const finalCardCount = Number(formData.get('cardCount'));
+    // Collecting desired card formats from checkbox group
+    const desiredTypes: (
+      'question-answer' | 
+      'fill-in-the-blank' | 
+      'mcq' |
+      'diagram' |
+      'chart' |
+      'image-labeling'
+    )[] = [];
 
-      if(formData.has('question-answer')) desiredTypes.push('question-answer');
-      if(formData.has('fill-in-the-blank')) desiredTypes.push('fill-in-the-blank');
-      if(formData.has('mcq')) desiredTypes.push('mcq');
-      if(formData.has('diagram')) desiredTypes.push('diagram');
-      if(formData.has('chart')) desiredTypes.push('chart');
-      if(formData.has('image-labeling')) desiredTypes.push('image-labeling');
+    if(formData.has('question-answer')) desiredTypes.push('question-answer');
+    if(formData.has('fill-in-the-blank')) desiredTypes.push('fill-in-the-blank');
+    if(formData.has('mcq')) desiredTypes.push('mcq');
+    if(formData.has('diagram')) desiredTypes.push('diagram');
+    if(formData.has('chart')) desiredTypes.push('chart');
+    if(formData.has('image-labeling')) desiredTypes.push('image-labeling');
 
-      // Business Logic Validation
-      if(
-        !currentContext.id ||
-        !currentContext.type ||
-        finalCardCount < MIN_CARDS || 
-        isNaN(finalCardCount) || 
-        desiredTypes.length === 0
-      ){
+    // Business Logic Validation
+    if(
+      !currentContext.id ||
+      !currentContext.type ||
+      finalCardCount < MIN_CARDS || 
+      isNaN(finalCardCount) || 
+      desiredTypes.length === 0
+    ){
         console.error("[Flashcard-types-form] Validation failed", {
           hasId: !!currentContext.id,
           hasTypes: !!currentContext.type,
@@ -173,6 +178,7 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
               setLastPayload(payload);
 
               await generateCards(payload);
+              await refreshUsage()
           } catch (error) {
             console.error("[Flashcard Types Form] Error in Generating flashcards: ",error);
           }finally{
@@ -291,33 +297,39 @@ const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
             <Checkbox id="mcq" name="mcq"/>
             <Label htmlFor="mcq">Multiple Choice (MCQ)</Label>
           </div>
-          <div className="flex flex-row gap-3">
-              <Checkbox id="diagram" name="diagram"/>
-              <Label htmlFor="diagram">
-                Concept Diagram
-                <span className="ml-2 text-xs text-gray-500">
-                  Visual flow/relationship maps
-                </span>
-              </Label>
-          </div>
-          <div className="flex flex-row gap-3">
-              <Checkbox id="chart" name="chart"/>
-              <Label htmlFor="chart">
-                Chart-based
-                <span className="ml-2 text-xs text-gray-500">
-                    Data Visiualization questions
-                </span>
-              </Label>
-          </div>
-          <div className="flex flex-row gap-3">
-              <Checkbox id="image-labeling" name="image-labeling"/>
-              <Label htmlFor="image-labeling">
-                  Image Labeling
+          <ComingSoonTooltip disabled side="top">
+            <div className="flex flex-row gap-3">
+                <Checkbox id="diagram" name="diagram" disabled/>
+                <Label htmlFor="diagram">
+                  Concept Diagram
                   <span className="ml-2 text-xs text-gray-500">
-                    Label parts of diagram or images
+                    Visual flow/relationship maps
                   </span>
-              </Label>
-          </div>
+                </Label>
+            </div>
+          </ComingSoonTooltip>
+          <ComingSoonTooltip disabled side="top">
+            <div className="flex flex-row gap-3">
+                <Checkbox id="chart" name="chart" disabled/>
+                <Label htmlFor="chart">
+                  Chart-based
+                  <span className="ml-2 text-xs text-gray-500">
+                      Data Visiualization questions
+                  </span>
+                </Label>
+            </div>
+          </ComingSoonTooltip>
+          <ComingSoonTooltip disabled side="top">
+            <div className="flex flex-row gap-3">
+                <Checkbox id="image-labeling" name="image-labeling" disabled/>
+                <Label htmlFor="image-labeling">
+                    Image Labeling
+                    <span className="ml-2 text-xs text-gray-500">
+                      Label parts of diagram or images
+                    </span>
+                </Label>
+            </div>
+          </ComingSoonTooltip>
         </div>
       
        {/* Actions */}
