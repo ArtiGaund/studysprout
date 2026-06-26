@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { useToast } from '../ui/use-toast';
 import axios from 'axios';
 import { useUser } from '@/lib/providers/user-provider';
+import { sendFeedbackService } from '@/services/feedbackServices';
 
 type CategoryId = 'bug' | 'feature' | 'complement';
 
@@ -98,22 +99,15 @@ const FeedbackForm = ({ onClose }: { onClose?: () => void }) => {
         setIsSubmitting(true);
         const feedbacks = [];
         if(checked.bug && text.bug) 
-            feedbacks.push({ type: 'Bug Report', message: text.bug });
+            feedbacks.push({ type: 'Bug Report' as const, message: text.bug });
         if(checked.feature && text.feature) 
-            feedbacks.push({ type: 'Feature Request', message: text.feature});
+            feedbacks.push({ type: 'Feature Request' as const, message: text.feature});
         if(checked.complement && text.complement) 
-            feedbacks.push({ type: 'Complement', messsage: text.complement});
+            feedbacks.push({ type: 'Complement' as const, message: text.complement});
         
         try {
             const userEmail = user?.email as string;
-            const sendFeedback = await axios.post(`/api/send-feedback`, { userEmail, feedbacks });
-            if(!sendFeedback){
-                toast({
-                    title: "Failed to send feedback",
-                    description: "Please try again",
-                    variant: "destructive"
-                })
-            }
+            const sendFeedback = await sendFeedbackService({ userEmail, feedbacks });
             setChecked({
                 bug: false,
                 feature: false,

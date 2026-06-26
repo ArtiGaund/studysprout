@@ -28,6 +28,7 @@ import { IActivityEvent, ActivityEventSchema } from "./activity-event.model";
 import { UserProgress, UserProgressSchema } from "./user-progress.model";
 import { WorkspaceInvitation, WorkspaceInvitationSchema } from "./workspace-invitation-model";
 import { Notification, NotificationSchema } from "./notification.model";
+import { Feedback, FeedbackSchema } from "./feedback.model";
 
 /**
  * @section Singleton Model Initialization
@@ -75,6 +76,9 @@ const WorkspaceInvitationModel =
 const NotificationModel = 
     (mongoose.models.Notification as mongoose.Model<Notification>) || 
     mongoose.model<Notification>("Notification", NotificationSchema);
+const FeedbackModel =
+    (mongoose.models.Feedback as mongoose.Model<Feedback>) ||
+    mongoose.model<Feedback>("Feedback", FeedbackSchema );
 
 export {
     UserModel,
@@ -90,4 +94,5 @@ export {
     UserProgressModel,
     WorkspaceInvitationModel,
     NotificationModel,
+    FeedbackModel,
 }
