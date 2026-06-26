@@ -328,3 +328,70 @@ export async function DELETE(
         )
     }
 }
+
+/**
+ * PATCH - update flashcard set title
+ */
+
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: { setId: string }}
+){
+    try {
+        await dbConnect();
+
+        const session = await getServerSession(authOptions);
+        if(!session?.user._id) return errorResponse(
+            "[Flashcard Set PATCH route] Unauthorized",
+            401,
+            401,
+        );
+
+        const { setId } = params;
+        if(!setId) return errorResponse(
+            "[Flashcard Set PATCH route] flashcard set Id is required",
+            400,
+            400,
+        );
+        
+        const { title } = await request.json();
+        if(!title || typeof title !== "string" || title.trim().length === 0){
+            return errorResponse(
+                "[Flashcard Set PATCH route] Title is required and cannot be empty",
+                400,
+                400,
+            );
+        }
+
+        // Only the creater can rename their set
+        const updated = await FlashcardSetModel.findOneAndUpdate(
+            { 
+                _id: setId,
+                createdBy: session.user._id,
+            },
+            {
+                $set: { title: title.trim() }
+            },
+        ).lean();
+
+        if(!updated) return errorResponse(
+            "[Flashcard set PATCH route] Flashcard set not found or you do not have permission to rename it",
+            404,
+            404,
+        );
+
+        return successResponse(
+            "[Flashcard set PATCH route] Flashcard set title updated",
+            { set: updated },
+            200,
+            200,
+        );
+    } catch (error: any) {
+        console.error("[Flashcard Set PATCH route] Failed: ",error);
+        return errorResponse(
+            error.message ?? "[Flashcard Set PATCH route] Internal Server error",
+            500,
+            500,
+        );
+    }
+}

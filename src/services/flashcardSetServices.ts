@@ -115,6 +115,43 @@ export async function getFlashcardSetOverviewService(
     }
 }
 
+export async function updateFlashcardSetTitleService(
+    setId: string,
+    title: string,
+): Promise<{
+    success: boolean;
+    data?: any;
+    message?: string;
+    statusCode?: number;
+}>{
+    try {
+        const relativePath = `/api/flashcard-set/${setId}`;
+        const url = `${BASE_URL}${relativePath}`
+        
+        const { data } = await axios.patch( url,
+            { title }
+         );
+        if(!data.success || !data.data) return {
+            success: false,
+            message: data.message,
+            statusCode: data.statusCode,
+        }
+        
+        return {
+            success: true,
+            data: data.data,
+            statusCode: data.statusCode,
+        }
+    } catch (error: any) {
+        console.error("[updateFlashcardSetTitleService] Failed: ",error.message);
+        return {
+            success: false,
+            message: error.message ?? "[updateFlashcardSetTitleService] Internal Server Error",
+            statusCode: error.statusCode,
+        }
+    }
+}
+
 export async function getFlashcardUsageService(workspaceId: string | undefined){
     try {
         const relativePath = `/api/workspace/${workspaceId}/usage`;
