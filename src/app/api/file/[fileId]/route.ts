@@ -22,7 +22,7 @@ import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
 import ImageModel from "@/model/image.model"
 import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion"
 import { isValidId } from "@/helpers/validateId";
-import { emitRealtimeEvent } from "@/lib/realtime-fetch";
+import { emitWorkspaceTreeUpdate } from "@/lib/realtime-emitter";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { onFileArchived, onFileUpdated } from "@/lib/activity-hooks";
 
@@ -186,8 +186,7 @@ export async function POST(
         };
 
       try {
-          setTimeout(async () => await emitRealtimeEvent(
-              'workspace-tree-update',
+          setTimeout(async () => await emitWorkspaceTreeUpdate(
               String(file.workspaceId),
               eventType,
               payload
@@ -371,8 +370,7 @@ export async function DELETE(
         }
 
        try {
-         await emitRealtimeEvent(
-             'workspace-tree-update',
+         await emitWorkspaceTreeUpdate(
              String(workspace._id),
              'file_deleted',
              payload

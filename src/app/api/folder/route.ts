@@ -16,7 +16,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
 import { isValidId } from "@/helpers/validateId";
-import { emitRealtimeEvent } from "@/lib/realtime-fetch";
+import { emitWorkspaceTreeUpdate } from "@/lib/realtime-emitter";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { onFolderCreated } from "@/lib/activity-hooks";
 
@@ -35,7 +35,6 @@ import { onFolderCreated } from "@/lib/activity-hooks";
 export async function POST(request: Request) {
     await dbConnect();
     const session = await getServerSession(authOptions);
-
     if(!session?.user._id){
         return errorResponse(
             "Unauthorized",
@@ -43,7 +42,6 @@ export async function POST(request: Request) {
             401,
         );
     }
-
     try {
         const folderData = await request.json();
         // 1. Validate incoming data for required fields
@@ -64,7 +62,6 @@ export async function POST(request: Request) {
         }
 
         const workspace = await WorkSpaceModel.findById(folderData.workspaceId);
-
         if(!workspace){
             return errorResponse(
                 "workspace not found in database",
@@ -72,11 +69,8 @@ export async function POST(request: Request) {
                 404,
             );
         }
-
-        const userId = session.user._id;
-        
+        const userId = session.user._id;        
         const hasAccess = hasWorkspaceAccess(workspace, userId);
-
         if(!hasAccess){
             return errorResponse(
                 "You do not have access to this workspace",
@@ -84,17 +78,17 @@ export async function POST(request: Request) {
                 403,
             );
         }
-         const newFolderData: MongooseFolder = {
-                data: undefined,
-                createdAt: new Date(),
-                title: 'Untitled',
-                iconId: '📁',
-                inTrash: undefined,
-                workspaceId: folderData.workspaceId,
-                bannerUrl: '',
-                isPDFWorkspace: false,
-                conceptGraph: null,
-              };
+        const newFolderData: MongooseFolder = {
+            data: undefined,
+            createdAt: new Date(),
+            title: 'Untitled',
+            iconId: '📁',
+            inTrash: undefined,
+            workspaceId: folderData.workspaceId,
+            bannerUrl: '',
+            isPDFWorkspace: false,
+            conceptGraph: null,
+        };
         // 2. Create the new folder document
         const newFolder = await FolderModel.create(newFolderData)
         if(!newFolder){
@@ -105,10 +99,8 @@ export async function POST(request: Request) {
                 500,
             );
         }
-        
-        
-         // 3. Update the parent workspace to include the new folder's reference
-         const updatedWorkspace = await WorkSpaceModel.findByIdAndUpdate(
+        // 3. Update the parent workspace to include the new folder's reference
+        const updatedWorkspace = await WorkSpaceModel.findByIdAndUpdate(
             folderData.workspaceId,
             { $push: { folders: newFolder._id } },
             { new: true }
@@ -123,22 +115,25 @@ export async function POST(request: Request) {
                 500,
             );
         }
-
+        await emitWorkspaceTreeUpdate(workspace._id.toString(), "folder_created", {
+            workspaceId: workspace._id,
+            folder: newFolder,
+            senderSocket: "",
+        });
         await onFolderCreated(
             updatedWorkspace._id.toString(),
             newFolder._id,
             userId,
             newFolder.title, 
         );
-    const payload = {
-        workspaceId: String(newFolder.workspaceId),
-        folder: newFolder,
-        actorId: String(userId),
-    }
+        const payload = {
+            workspaceId: String(newFolder.workspaceId),
+            folder: newFolder,
+            actorId: String(userId),
+        }
 
-    try {
-            await emitRealtimeEvent(
-                'workspace-tree-update',
+        try {
+            await emitWorkspaceTreeUpdate(
                 String(newFolder.workspaceId),
                 'folder_created',
                 payload,

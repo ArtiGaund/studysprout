@@ -21,7 +21,7 @@ import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion"
 import { isValidId } from "@/helpers/validateId";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options";
-import { emitRealtimeEvent } from "@/lib/realtime-fetch";
+import { emitWorkspaceTreeUpdate } from "@/lib/realtime-emitter";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { extractPublicIdFromUrl } from "@/lib/cloudinary-utils/extract-public-id";
 import { onFolderDelete } from "@/lib/activity-hooks";
@@ -150,8 +150,7 @@ export async function POST(
                         actorId: String(userId),
                     }
                    try {
-                     await emitRealtimeEvent(
-                         'workspace-tree-update',
+                     await emitWorkspaceTreeUpdate(
                          String(folder.workspaceId),
                          event_type,
                          payload,
@@ -345,8 +344,7 @@ export async function DELETE(
             actorId: String(userId),
         }
        try {
-         await emitRealtimeEvent(
-             'workspace-tree-update',
+         await emitWorkspaceTreeUpdate(
              String(folderToDelete.workspaceId),
              'folder_deleted',
              payload,

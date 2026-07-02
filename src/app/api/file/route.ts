@@ -20,7 +20,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
 import { isValidId } from "@/helpers/validateId";
-import { emitRealtimeEvent } from "@/lib/realtime-fetch";
+import { emitWorkspaceTreeUpdate } from "@/lib/realtime-emitter";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { onFileCreated } from "@/lib/activity-hooks";
 
@@ -47,7 +47,6 @@ export async function POST(request: Request) {
             401
         );
     }
-
 
     const userId = session.user._id;
     try {
@@ -76,11 +75,8 @@ export async function POST(request: Request) {
                 404
             );
         }
-
         const userId = session.user._id;
-
         const hasAccess = hasWorkspaceAccess(workspace, userId);
-
         if(!hasAccess){
             return errorResponse(
                 "Unauthorized to access the workspace",
@@ -106,17 +102,15 @@ export async function POST(request: Request) {
             contentBinary: null,
             contentLastModified: new Date(),
         }
-        const newFile = await FileModel.create(newFileData);
-        
+        const newFile = await FileModel.create(newFileData);        
         if(!newFile){
             return errorResponse(
                 "Failed to create new file, please try again later.",
                 500,
                 500,
             );
-        }
-        
-        //    update the parent folder to include the new file's reference 
+        }       
+        //update the parent folder to include the new file's reference 
         const updatedFolder = await FolderModel.findByIdAndUpdate(
             fileData.folderId,
             { 
@@ -144,8 +138,7 @@ export async function POST(request: Request) {
             actorId: String(userId),
         }
        try {
-         await emitRealtimeEvent(
-             'workspace-tree-update',
+         await emitWorkspaceTreeUpdate(
              String(newFile.workspaceId),
              'file_created',
              payload
