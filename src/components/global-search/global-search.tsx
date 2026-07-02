@@ -18,6 +18,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CypressSearchIcon from "../icons/CypressSearchIcon";
 import { Dialog, DialogContent } from "../ui/dialog";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 
 // --- Props ---
 interface GlobalSearchProps{
@@ -195,6 +196,7 @@ export function GlobalSearch({
     onNavigateToFolder,
     onNavigateToFile,
 }: GlobalSearchProps){
+    const { isRevisionSidebarOpen } = useRevisionSidebar();
     const {
         open, setOpen,
         query, setQuery,
@@ -295,19 +297,20 @@ export function GlobalSearch({
             <button
                 onClick={() => setOpen(true)}
                 className={clsx(
-                    // "group w-full flex items-center gap-2.5 px-3 py-2 rounded-md",
-                    // "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60",
-                    // "transition-colors text-sm",
                     "group/native w-full flex items-center gap-2 text-Neutrals/neutrals-7 transition-all"
                 )}
                 aria-label="Search everywhere (Cmd+k)"
             >
                 <CypressSearchIcon />
-                <span>Search</span>
-                <kbd className="ml-auto hidden sm:flex items-center gap-0.5 text-[10px] text-zinc-600
-                font-mono group-hover:text-zinc-400 transition-colors">
-                    <span>⌘</span><span>K</span>
-                </kbd>
+                {!isRevisionSidebarOpen && (
+                    <>
+                        <span>Search</span>
+                        <kbd className="ml-auto hidden sm:flex items-center gap-0.5 text-[10px]
+                         text-zinc-600 font-mono group-hover:text-zinc-400 transition-colors">
+                            <span>⌘</span><span>K</span>
+                        </kbd>
+                    </>
+                )}
             </button>
 
             {/* Dialog */}
