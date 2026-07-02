@@ -31,9 +31,9 @@ import { generateFlashcardsSetTitle } from "@/lib/ai/flashcards/generate-flashca
 import { chunkBlocks } from "@/helpers/chunkBlocks";
 import { getMockFlashcards } from "@/lib/testing/mock-flashcard-generator";
 import { File } from "@/model/file.model";
-import { emitServerEvent } from "@/lib/server-realtime";
 import { onFlashcardSetGenerated } from "@/lib/activity-hooks";
 import { checkAndIncrementUsage } from "@/lib/flashcard/flashcard-usage";
+import { emitServerRealtimeEvent, emitSetCreated, emitUsageUpdated } from "@/lib/realtime-emitter";
 
 
 export async function POST(request: NextRequest){
@@ -291,22 +291,30 @@ export async function POST(request: NextRequest){
                 // EMIT PROGRESS via an internal fetch to realtime server
                 // This triggers the 'report_progress' logic on server.ts
                 try {
-                   const socketRes = await fetch("http://localhost:4000/emit/progress-update", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            resourceId: String(resourceId),
-                            workspaceId: String(workspaceId),
-                            progress: percent,
-                            currentCount: allGeneratedCards.length,
-                            totalCards: cardCount,
-                        }),
-                    });
+                //    const socketRes = await fetch("http://localhost:4000/emit/progress-update", {
+                //         method: "POST",
+                //         headers: { "Content-Type": "application/json" },
+                //         body: JSON.stringify({
+                //             resourceId: String(resourceId),
+                //             workspaceId: String(workspaceId),
+                //             progress: percent,
+                //             currentCount: allGeneratedCards.length,
+                //             totalCards: cardCount,
+                //         }),
+                //     });
 
-                    if(!socketRes.ok){
-                        console.warn(`[Flashcard set route] Socket Server rejected update (likely
-                            no lock found).`)
-                    }
+                    await emitServerRealtimeEvent('progress-update', {
+                        resourceId: String(resourceId),
+                        workspaceId: String(workspaceId),
+                        progress: percent,
+                        currentCount: allGeneratedCards.length,
+                        totalCards: cardCount,
+                    })
+
+                    // if(!socketRes.ok){
+                    //     console.warn(`[Flashcard set route] Socket Server rejected update (likely
+                    //         no lock found).`)
+                    // }
 
                 } catch (error) {
                     console.error("[Flashcard Set route] Failed to notify socket server: ",error);
@@ -410,10 +418,10 @@ export async function POST(request: NextRequest){
         })
 
         try {
-            await emitServerEvent('set-created', {
-                workspaceId: String(workspaceId),
-                resourceId: String(resourceId),
-            });
+            await emitSetCreated(
+                workspaceId,
+                resourceId,
+            );
         } catch (error) {
             console.error("[Flashcard set route] Socket Failed for set creation: ",error);
         }
@@ -432,6 +440,8 @@ export async function POST(request: NextRequest){
             )
         }
 
+        await emitUsageUpdated(workspaceId);
+        
         await onFlashcardSetGenerated(
             workspaceId,
             userId,
