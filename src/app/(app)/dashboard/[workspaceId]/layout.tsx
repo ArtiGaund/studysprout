@@ -29,13 +29,14 @@ import { SET_WORKSPACE_LOADING } from "@/store/slices/workspaceSlice";
 import { WorkspaceSocketManager } from "@/components/socket/workspace-socket-manager";
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import { useLastStudied } from "@/hooks/useLastSudied";
+import { WorkspaceSocketProvider } from "@/lib/providers/workspace-socket-context";
+
 interface LayoutProps{
     children: React.ReactNode,
     params: any
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, params }) => {
-
     // Ref to track which workspace is currently loaded to avoid redundant fetches
     const hasLoadedWorkspaceRef = useRef<string | null>(null);
 
@@ -113,32 +114,35 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
         dispatch,
     ])
     return(
-        <main className="flex overflow-hidden h-screen w-screen">
-            <WorkspaceSocketManager />
-            <Sidebar params={params} className="hidden sm:flex" />
-            {isRevisionSidebarOpen && (
-                <div className="hidden sm:flex border-neutral-12/70 border-l-[1px] relative 
-                overflow-scroll">
-                 <RevisionSidebar params={params}/>
-            </div>)}
-           
-            <MobileSidebar
-                revisionContent={
-                    <RevisionSidebar 
-                        params={params}
-                        className="flex"
+        <WorkspaceSocketProvider>
+            <main className="flex overflow-hidden h-screen w-screen">
+                <WorkspaceSocketManager />
+                <Sidebar params={params} className="hidden sm:flex" />
+                {isRevisionSidebarOpen && (
+                    <div className="hidden sm:flex border-neutral-12/70 border-l-[1px] relative 
+                    overflow-scroll">
+                    <RevisionSidebar params={params}/>
+                </div>)}
+            
+                <MobileSidebar
+                    revisionContent={
+                        <RevisionSidebar 
+                            params={params}
+                            className="flex"
+                        />
+                    }
+                >
+                    <Sidebar 
+                    params={params}
+                    className="w-full flex h-full"
                     />
-                }
-            >
-                <Sidebar 
-                params={params}
-                className="w-full flex h-full"
-                />
-            </MobileSidebar>
-            <div className="border-neutral-12/70 border-l-[1px] w-full relative overflow-scroll">
-                {children}
-            </div>
-        </main>
+                </MobileSidebar>
+                <div className="border-neutral-12/70 border-l-[1px] w-full relative 
+                overflow-scroll">
+                    {children}
+                </div>
+            </main>
+        </WorkspaceSocketProvider>
     )
 }
 
