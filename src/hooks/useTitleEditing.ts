@@ -31,7 +31,7 @@ import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
 import { selectCurrentFolder } from "@/store/selectors/folderSelector";
 import { useUser } from "@/lib/providers/user-provider";
 import { selectUserId } from "@/store/selectors/userSelector";
-import { emitRealtimeEvent } from "@/lib/realtime-fetch";
+import { emitRealtimeEvent } from "@/lib/realtime-emitter";
 import { useSocket } from "@/lib/providers/socket-provider";
 
 
