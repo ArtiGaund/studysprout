@@ -1,6 +1,6 @@
 import { createEvent } from "@/utils/create-event";
-import mongoose from "mongoose";
 import { Types } from "mongoose";
+import { emitActivityCreated } from "./realtime-emitter";
 
 
 function toObjectId(value: string | undefined, field: string): Types.ObjectId{
@@ -18,6 +18,7 @@ function toOptionalObjectId(value: string | undefined, field: string): Types.Obj
     }
     return new Types.ObjectId(value);
 }
+
 export async function onFolderCreated(
     workspaceId: string,
     folderId: string,
@@ -34,6 +35,13 @@ export async function onFolderCreated(
             folderTitle: title,
         },
     });
+    await emitActivityCreated(workspaceId,{
+         type: 'FOLDER_CREATED',
+        description: `Created ${title} folder.`,
+        metadata: {
+            folderTitle: title,
+        },
+    }).catch(() => {});
 }
 
 export async function onFolderDelete(
@@ -52,6 +60,13 @@ export async function onFolderDelete(
             folderTitle: title,
         }
     });
+    await emitActivityCreated(workspaceId,{
+        type: "FOLDER_DELETED",
+        description: `Deleted ${title} folder.`,
+        metadata: {
+            folderTitle: title,
+        }
+    }).catch(() => {});
 }
 
 // 1. File created (in /api/file)
@@ -73,6 +88,14 @@ export async function onFileCreated(
             fileTitle: title
         },
     });
+
+    await emitActivityCreated(workspaceId,{
+        type: "FILE_CREATED",
+        description: `Created ${title} file.`,
+        metadata: {
+            fileTitle: title,
+        }
+    }).catch(() => {});
 }
 
 // 2. File saved / updated
@@ -94,6 +117,12 @@ export async function onFileUpdated(
             fileTitle: title
         },
     });
+
+    await emitActivityCreated(workspaceId,{
+        type: "FILE_UPDATED",
+        description: `Updated ${title}`,
+        metadata: { fileTitle: title },
+    }).catch(() => {});
 }
 
 // 3. FlashcardSet generated (/api/flashcard-set)
@@ -136,6 +165,15 @@ export async function onFlashcardSetGenerated(
             folderTitle: source?.folderTitle,
         }
     });
+
+    await emitActivityCreated(workspaceId,{
+        type: "FLASHCARD_SET_GENERATED",
+        description,
+        metadata: {
+            setTitle,
+            cardCount,
+        },
+    }).catch(() => {});
 }
 export async function onFlashcardSetDeleted(
     workspaceId: string,
@@ -153,6 +191,15 @@ export async function onFlashcardSetDeleted(
             cardCount,
         }
     });
+
+    await emitActivityCreated(workspaceId,{
+        type: "FLASHCARD_SET_DELETED",
+        description: `Deleted flashcard set "${setTitle}"`,
+        metadata: {
+            setTitle,
+            cardCount,
+        },
+    }).catch(() => {});
 }
 
 // 4. AI Synthesis completed ( in concept-graph-builder or synthesis worker)
@@ -178,6 +225,12 @@ export async function onSynthesisCompleted(
             fileTitle: sourceTitle,
         },
     });
+
+    await emitActivityCreated(workspaceId,{
+        type: "SYNTHESIS_COMPLETED",
+        description: `Synthesized ${nodeCount} nodes from ${sourceTitle}`,
+        metadata: { nodeCount },
+    }).catch(() => {});
 }
 
 // 5. File Archived / moved to trash (in /api/file/[fileId])
@@ -199,6 +252,12 @@ export async function onFileArchived(
             fileCount,
         },
     });
+
+    await emitActivityCreated(workspaceId,{
+        type: "FILE_ARCHIVED",
+        description: `Archived ${fileCount} reference file${fileCount > 1 ? "s" : ""}`,
+        metadata: { fileCount },
+    }).catch(() => {});
 }
 
 // 6. New Connection group created (relationship graph)
@@ -237,6 +296,15 @@ export async function onMemberJoined(
             memberEmail,
         }
     });
+
+    await emitActivityCreated(workspaceId,{
+        type: "MEMBER_JOINED",
+        description: `${memberName} joined the workspace`,
+        metadata: {
+            memberName,
+            memberEmail,
+        }
+    }).catch(() => {});
 }
 
 export async function onMemberRemoved(
@@ -257,4 +325,14 @@ export async function onMemberRemoved(
             memberEmail,
         }
     });
+
+    await emitActivityCreated(workspaceId,{
+        type: "MEMBER_REMOVED",
+        description: `${memberName} was removed from workspace`,
+        metadata: {
+            memberName,
+            memberEmail,
+        }
+    }).catch(() => {});
 }
+
