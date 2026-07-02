@@ -10,8 +10,8 @@ import {
     FlashcardProgressModel
  } from "@/model";
 import { getServerSession } from "next-auth";
-import { emitServerEvent } from "@/lib/server-realtime";
 import { onFlashcardSetDeleted } from "@/lib/activity-hooks";
+import { emitSetDeleted, emitSetUpdated } from "@/lib/realtime-emitter";
 
 /**
  * RESOURCE: Flashcard Set Detail & Sync Status
@@ -31,25 +31,21 @@ export async function GET(
     await dbConnect();
     const { setId } = params;
     //  validation of params
-        if(!setId || typeof setId !== 'string'){
-            return errorResponse(
-                "Invalid params",
-                400,
-                400
-            )
-        }
-
-        const session = await getServerSession(authOptions);
-
-        if(!session?.user._id){
-            return Response.json({
-                statusCode: 401,
-                message: "Unauthorized",
-                success: false
-            }, { status: 401 })
-        }
-
-
+    if(!setId || typeof setId !== 'string'){
+        return errorResponse(
+            "Invalid params",
+            400,
+            400
+        );
+    }
+    const session = await getServerSession(authOptions);
+    if(!session?.user._id){
+        return Response.json({
+            statusCode: 401,
+            message: "Unauthorized",
+            success: false
+        }, { status: 401 })
+    }
     const userId = session.user._id;
     try {
         // Fetch the Sets and Cards in paralled
@@ -97,7 +93,7 @@ export async function GET(
                     updatedAt: Date;
                     contentHash: string | null
                 }
-            > = {};
+        > = {};
 
         for(const file of files){
             for(const bId of file.blockOrder){
@@ -138,9 +134,6 @@ export async function GET(
             }
         }
 
-        const blockCountSnapshot = set?.sourceSnapshot?.blockCount || 0;
-        const charCountSnapshot = set?.sourceSnapshot?.totalChars || 0;
-
         // Calculate if the whole SET is outdated
         const blockThreshold = 3;
         const charThreshold = Math.max(50, Math.floor(set.sourceSnapshot?.totalChars || 0) * 0.10); //10%
@@ -153,17 +146,13 @@ export async function GET(
                 "No set found",
                 404,
                 404
-            )
+            );
         }
 
         // Calculate if individual cards are outdated
         const cardsWithStatus = flashcards.map(card => {
-
             const userProgress = progressMap.get(card._id.toString());
             const isCardOutdated = card.source.blockIds.some(id => {
-                // const latest = latestBlockState[id];
-                // const snapshot = card.source.blocksState?.[id]?.updatedAt;
-                // return latest && snapshot && new Date(latest) > new Date(snapshot);
                 const liveState = latestBlockState[id];
                 if(!liveState) return false;
 
@@ -246,13 +235,11 @@ export async function DELETE(
             "Unauthorized",
             401,
             401
-        )
+        );
     }
-
     const userId = session.user._id;
 
-   const { setId } = params;
-
+    const { setId } = params;
     try {
         // 2. validation of params
         if(!setId || typeof setId !== 'string'){
@@ -260,9 +247,8 @@ export async function DELETE(
                 "Invalid params",
                 400,
                 400
-            )
+            );
         }
-
         // 3. finding flashcard set
         const set = await FlashcardSetModel.findOne({
             _id: setId,
@@ -276,39 +262,34 @@ export async function DELETE(
                 404
             )
         }
-
         const workspaceId = set?.workspaceId;
-
         // 4. Pre-delete cleanup: Identify all cards to remove progress
-        const cardsInSet = await FlashcardModel.find({ parentSetId: setId }).select("_id").lean();
+        const cardsInSet = await FlashcardModel.find({ parentSetId: setId })
+            .select("_id")
+            .lean();
         const cardIds = cardsInSet.map(card => card._id);
-
         if(cardIds.length > 0){
             // Remove all Spaced Repetetion/Study stats associated with these cards
             await FlashcardProgressModel.deleteMany({
                 flashcardId: { $in: cardIds },
             });
         }
-
         // 6. delete all flashcards belonging to this set
         await FlashcardModel.deleteMany({ parentSetId: setId });
-
         // 7. Delete set
         await FlashcardSetModel.deleteOne({ _id: setId });
-
         await onFlashcardSetDeleted(
             String(workspaceId),
             String(userId),
             String(set?.title),
             Number(set?.totalCards)
         );
-
         try {
             const workspaceId = String(set?.workspaceId);
-            await emitServerEvent('set-deleted', {
+            await emitSetDeleted(
                 workspaceId,
-                setId: String(setId),
-            });
+                setId,
+            );
         } catch (error) {
             console.error("[Flashcard Set route] Socket Failed for delete flashcard set: ",error);
         }
@@ -339,21 +320,18 @@ export async function PATCH(
 ){
     try {
         await dbConnect();
-
         const session = await getServerSession(authOptions);
         if(!session?.user._id) return errorResponse(
             "[Flashcard Set PATCH route] Unauthorized",
             401,
             401,
         );
-
         const { setId } = params;
         if(!setId) return errorResponse(
             "[Flashcard Set PATCH route] flashcard set Id is required",
             400,
             400,
-        );
-        
+        );        
         const { title } = await request.json();
         if(!title || typeof title !== "string" || title.trim().length === 0){
             return errorResponse(
@@ -362,7 +340,6 @@ export async function PATCH(
                 400,
             );
         }
-
         // Only the creater can rename their set
         const updated = await FlashcardSetModel.findOneAndUpdate(
             { 
@@ -373,11 +350,16 @@ export async function PATCH(
                 $set: { title: title.trim() }
             },
         ).lean();
-
         if(!updated) return errorResponse(
             "[Flashcard set PATCH route] Flashcard set not found or you do not have permission to rename it",
             404,
             404,
+        );
+        const workspaceId = updated.workspaceId.toString();
+        await emitSetUpdated(
+            workspaceId,
+            setId,
+           { title: title.trim() },
         );
 
         return successResponse(
