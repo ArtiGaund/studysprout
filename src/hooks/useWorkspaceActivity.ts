@@ -4,13 +4,27 @@ import { ActivityEvent, ActivityPagination } from "@/components/workspace-view/a
 import { getActivityService, getRecentActivityService } from "@/services/workspaceServices";
 import { APPEND_ACTIVITY_EVENTS, CLEAR_ACTIVITY, MARK_ACTIVITY_FRESH, SET_ACTIVITY_ERROR, SET_ACTIVITY_EVENTS, SET_ACTIVITY_LOADING } from "@/store/slices/activitySlice";
 import { RootState } from "@/store/store";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+interface GetActivityParams{
+    page?: number;
+    limit?: number;
+    type?: string;
+    folderId?: string;
+}
+
+interface UseWorkspaceActivityOptions{
+    autoRefreshOnStale?: boolean;
+}
 export function useWorkspaceActivity(
     workspaceId: string | undefined,
     limit = 4,
+    options: UseWorkspaceActivityOptions = {},
 ){
+
+    const { autoRefreshOnStale = true } = options;
+
     const dispatch = useDispatch();
     const {
         events,
@@ -25,8 +39,12 @@ export function useWorkspaceActivity(
         (state: RootState) => state.activity.activityStale
     );
 
-   const getRecentActivity = useCallback(async(
-        limit: number = 4,
+    // Tracks the params of the last "fresh" (page 1 /replace) query, so loadMore can preserve
+    // the current type/folder filter instead of losing it on page 2+
+    const lastParamsRef = useRef<Omit<GetActivityParams, "page">>({});
+
+    const getRecentActivity = useCallback(async(
+       requestLimit: number = limit,
     ): Promise<{
         success: boolean;
         data?: {
@@ -41,7 +59,7 @@ export function useWorkspaceActivity(
         }
         dispatch(SET_ACTIVITY_LOADING(true));
         try {
-            const result = await getRecentActivityService(workspaceId, limit);
+            const result = await getRecentActivityService(workspaceId, requestLimit);
             if(!result.success || !result.data) {
                 dispatch(SET_ACTIVITY_ERROR(result.message ?? "Failed"));
                 return {
@@ -71,23 +89,29 @@ export function useWorkspaceActivity(
     },[
         workspaceId,
         dispatch,
+        limit,
     ]);
 
+    /**
+     * @effect Auto-refresh on staleness
+     * use the limit instead of hardcoded 4, and is guarded behind `autoRefreshOnStale` so
+     * consumers with a different shape of data (pagination, filters) can opt out and handle
+     * staleness themselves through the exposed `activityStale` value below.
+     */
     useEffect(() => {
+        if(!autoRefreshOnStale) return;
         if(!activityStale || !workspaceId) return;
-        getRecentActivity(4);
+        getRecentActivity(limit);
     },[
         activityStale,
         workspaceId,
+        limit,
+        autoRefreshOnStale,
+        getRecentActivity,
     ]);
 
     const getActivity = useCallback(async(
-        params: {
-            page?: number;
-            limit?: number;
-            type?: string;
-            folderId?: string
-        } = {},
+        params: GetActivityParams = {},
         replace: boolean = true,
     ): Promise<{
         success: boolean;
@@ -116,6 +140,11 @@ export function useWorkspaceActivity(
                     events: result.data.events,
                     pagination: result.data.pagination,
                 }));
+                // Remembering these params (minus pages) so loadMore can reuse them - only a 
+                // "fresh" (replace=true) query, since that's what defines the current filter/view
+                //  the user is looking at.
+                const { page: _page, ...rest } = params;
+                lastParamsRef.current = rest;
             }else{
                 dispatch(APPEND_ACTIVITY_EVENTS({
                     events: result.data.events,
@@ -141,9 +170,14 @@ export function useWorkspaceActivity(
         dispatch,
     ]);
 
+    /**
+     * @function loadMore
+     * Spreads lastParamsRef.current alongside the new page number.
+     */
     const loadMore = useCallback(() => {
         if(!pagination?.hasNextPage || loading) return;
         getActivity({
+            ...lastParamsRef.current,
             page: pagination.page + 1
         }, false);
     },[
@@ -163,6 +197,7 @@ export function useWorkspaceActivity(
         pagination,
         loading,
         error,
+        activityStale,
         getRecentActivity,
         getActivity,
         loadMore,
