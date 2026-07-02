@@ -1,7 +1,7 @@
 import { NotificationModel } from "@/model";
 import { NotificationType } from "@/model/notification.model";
 import mongoose from "mongoose";
-import { emitServerEvent } from "../server-realtime";
+import { emitServerRealtimeEvent } from "../realtime-emitter";
 
 interface CreateNotificationParams{
     recipientId: string;
@@ -40,7 +40,7 @@ export async function createNotification(params: CreateNotificationParams){
     });
 
     // 2. Emit real-time to recipient's personal room
-    await emitServerEvent("notification", {
+    await emitServerRealtimeEvent("notification", {
         recipientId,
         notification: {
             _id: notification._id.toString(),
