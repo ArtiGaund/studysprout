@@ -50,6 +50,19 @@ const activitySlice = createSlice({
             state.pagination = action.payload.pagination;
         },
         /**
+         * @reducer PREPEND_ACTIVITY_EVENT
+         * Real-time prepend when socket fires activity_created
+         */
+        PREPEND_ACTIVITY_EVENT:(
+            state,
+            action: PayloadAction<ActivityEvent>
+        ) => {
+            const exists = state.events.some(e => e._id === action.payload._id);
+            if(!exists){
+                state.events = [ action.payload, ...state.events].slice(0, 50);
+            }
+        },
+        /**
          * @reducer SET_ACTIVITY_LOADING
          */
         SET_ACTIVITY_LOADING: (
@@ -90,6 +103,7 @@ const activitySlice = createSlice({
 export const {
     SET_ACTIVITY_EVENTS,
     APPEND_ACTIVITY_EVENTS,
+    PREPEND_ACTIVITY_EVENT,
     SET_ACTIVITY_LOADING,
     SET_ACTIVITY_ERROR,
     CLEAR_ACTIVITY,
