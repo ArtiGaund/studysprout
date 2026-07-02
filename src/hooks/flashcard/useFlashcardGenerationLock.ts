@@ -59,10 +59,12 @@ export function useFlashcardGenerationLock(
      */
 
     // 1. Contextual Lock: Check if the user is currently looking at the resource being generated
-    const myProgress = (allLocks || []).find(l => String(l.resourceId) === String(currentResourceId));
+    const myProgress = (allLocks || []).find(l => 
+        String(l.resourceId) === String(currentResourceId));
 
     // 2. Peer Activity: Identifies activity on other resources to show "System Busy" indicators
-    const otherProgress = (allLocks || []).filter( l => String(l.resourceId) !== String(currentResourceId)).pop();
+    const otherProgress = (allLocks || []).filter( l => 
+        String(l.resourceId) !== String(currentResourceId)).pop();
 
 
     return {
