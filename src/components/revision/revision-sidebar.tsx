@@ -18,7 +18,7 @@ import { Button } from "../ui/button";
 import { Loader2, PlusIcon } from "lucide-react";
 import { Sheet, SheetTrigger } from "../ui/sheet";
 import FlashcardTypesForm from "../flashcard/flashcard-types-form";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import FlashcardSetViewerSheet from "../flashcard/flashcard-set-viewer-sheet";
 import RevisionFlashcardSetList from "./revision-flashcard-set-list";
 import { useFlashcardSet } from "@/hooks/flashcard/useFlashcardSet";
@@ -34,6 +34,7 @@ import { removeSet } from "@/store/slices/flashcardSetSlice";
 import { ProgressBar } from "./progress-bar";
 import { useFlashcardUsage } from "@/hooks/flashcard/useFlashcardUsage";
 import { UsageRing } from "./usage-ring";
+import { useWorkspaceSocketContext } from "@/lib/providers/workspace-socket-context";
 
 interface RevisionSidebarProps{
     params: { workspaceId: string};
@@ -98,6 +99,70 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
     const isCurrentLocationLocked = !!myProgress;
 
     // --- ACTION HANDLERS ---
+
+    /**
+     * @callback handleFlashcardSetRegeneration
+     */
+    const handleFlashcardSetRegeneration = useCallback(
+        (setId: string) => {
+            if(flashcardSetViewerId === setId){
+                // FlashcardSetViewerSheet re-fetch on mount keyed by its setId prop,
+                // to toggling the id triggers a refetch through its own internal effect.
+                setFlashcardSetViewerId(null);
+                setFlashcardSetViewerId(setId);
+
+                toast({
+                    title: "Flashcard set updated",
+                    description: "This set was just regenerated with new cards.",
+                });
+            }
+    },[
+        flashcardSetViewerId,
+    ]);
+
+    /**
+     * @callback handleCardRegeneration
+     */
+    const handleCardRegeneration = useCallback(
+        (setId: string, cardId: string) => {
+            if(flashcardSetViewerId === setId){
+                setFlashcardSetViewerId(null);
+                setFlashcardSetViewerId(setId);
+            }
+    },[
+        flashcardSetViewerId,
+    ]);
+
+    const {
+        onUsageUpdated: subscribeUsageUpdate,
+        onSetRegeneration: subscribeSetRegeneration,
+        onCardRegeneration: subscribeCardRegeneration,
+    } = useWorkspaceSocketContext();
+
+    useEffect(() => {
+        const unsubUsage = subscribeUsageUpdate(() => {
+            refreshUsage();
+        });
+        const unsubSetRegen = subscribeSetRegeneration(({ setId }) => {
+            handleFlashcardSetRegeneration(setId);
+        });
+        const unsubCardRegen = subscribeCardRegeneration(({ setId, cardId }) => {
+            handleCardRegeneration(setId, cardId );
+        });
+
+        return () => {
+            unsubUsage();
+            unsubSetRegen();
+            unsubCardRegen();
+        };
+    },[
+        subscribeUsageUpdate,
+        subscribeSetRegeneration,
+        subscribeCardRegeneration,
+        refreshUsage,
+        handleFlashcardSetRegeneration,
+        handleCardRegeneration,
+    ]);
 
     /**
      * @function deleteFlashcard
@@ -176,7 +241,7 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
     const onDenied = (data: {
         resourceId: string
     }) => {
-        if(data.resourceId === currentContext.id){
+        if(String(data.resourceId) === String(currentContext.id)){
             setIsRequesting(false);
             socket.off("lock_granted", onGranted);
             // Show toast
