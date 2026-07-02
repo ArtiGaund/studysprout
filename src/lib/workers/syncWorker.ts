@@ -10,7 +10,7 @@
  * 4. Resource Hygiene: Configures Redis cleanup policies (`removeOnComplete`) to prevent memory exhaustion.
  */
 
-import { ConnectionOptions, Worker } from "bullmq";
+import { Worker } from "bullmq";
 import { FileModel } from "@/model";
 import * as Y from "yjs";
 import { IBlock } from "@/model/file.model";
@@ -18,12 +18,12 @@ import { normalizeYjsBlock } from "@/utils/yjs-utils";
 import { estimateReadingTimeFromBlocks } from "@/utils/intelligence/reading-time";
 import { generateAutoSummary } from "@/utils/intelligence/auto-summary";
 import dbConnect from "../dbConnect";
-import { callGeminiText } from "../ai/flashcards/gemini-client";
 import { extractTermsFromBlocks } from "@/utils/intelligence/term-extractor";
 import { redisConnection } from "../bullmq/redis-connection";
 import { markTermIndexStale } from "@/lib/workers/workspace-term-index";
 import { onFileUpdated } from "../activity-hooks";
 import { deriveFilePlainText } from "@/utils/intelligence/plain-text";
+import { emitServerRealtimeEvent } from "../realtime-emitter";
 
 let worker: Worker | null = null;
 
@@ -141,6 +141,23 @@ export const initFileSyncWorker = () => {
                         userId,
                         existingFile.title || "Untitled",
                     );
+
+                    // notify clients reading time changed
+                    const readingTime = baseUpdate.readingTimeMinutes;
+                    if(readingTime){
+                        await emitServerRealtimeEvent("file-stats-updated", {
+                            workspaceId: String(existingFile.workspaceId),
+                            folderId: String(existingFile.folderId),
+                            fileId: String(fileId),
+                            readingTimeMinutes: readingTime,
+                        }).catch(() => {});
+                    }
+
+                    // mark flashcard sets outdated
+                    await emitServerRealtimeEvent("set-outdated", {
+                        workspaceId: String(existingFile.workspaceId),
+                        resourceId: String(fileId),
+                    }).catch(() => {});
                 }
             }
         
