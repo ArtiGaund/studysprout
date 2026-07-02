@@ -13,17 +13,24 @@
  * `transformFile` before they reach the Redux reducers.
  */
 
+import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
 import { ADD_FILE, DELETE_FILE, UPDATE_FILE } from "@/store/slices/fileSlice";
+import { 
+    MARK_FLASHCARD_SETS_STALE, 
+    removeSet, 
+    updateSingleSet 
+} from "@/store/slices/flashcardSetSlice";
 import { ADD_FOLDER, DELETE_FOLDER, UPDATE_FOLDER } from "@/store/slices/folderSlice";
 import { setRemoteEditing, updateRemoteTitle } from "@/store/slices/uiSlice";
 import { SET_PRESENCE } from "@/store/slices/workspacePresenceSlice";
-import { AppDispatch, RootState } from "@/store/store";
+import { AppDispatch } from "@/store/store";
 import { WorkspaceMember } from "@/types/workspace-member.type";
 import { transformFile, transformFolder } from "@/utils/data-transformers";
 
 import { Socket } from "socket.io-client";
 
 type WorkspaceEventHandlers = {
+    /** Members panel - invite/remote */
     onMembersUpdate?: (data: {
         workspaceId: string;
         userId: string;
@@ -31,23 +38,75 @@ type WorkspaceEventHandlers = {
         action: "added" | "removed";
         member?: WorkspaceMember;
     }) => void;
+
+    /** PDF upload progress bar */
     onPDFProgress?: (data: { 
         folderId: string; 
         progress: number
     }) => void;
+
+    /** Revision sidebar - refresh flashcard set list */
+    onFlashcardSetCreated?: (resourceId: string) => void;
+
+    /**Flashcard set viewer - refresh cards after full regeneration */
+    onFlashcardSetRegeneration?: (setId: string) => void;
+
+    /** Flashcard set viewer - refresh single card after card regeneration */
+    onCardRegeneration?: (setId: string, cardId: string) => void;
+    onUsageUpdated?: () => void;
+
+    /**
+     * AI generation progress bar - fired repeatedly whila a flashcard set is being generated.
+     * Emitted by the realtime server's /emit/progress-update route as 'gen_status_update',
+     * carrying { resourceId, progress, totalCards, workspaceId }
+     */
+    onGenerationProgress?:(data: {
+        resourceId: string;
+        workspaceId: string;
+        progress: number;
+        totalCards: number;
+    }) => void;
+
+    /**
+     * Fired once when a generation job finishes (server emits this directly from the socket
+     * generation handler, not through workspace:tree:update).
+     */
+    onGenerationCompleted?: (data: { resourceId: string}) => void;
+
+    /**
+     * Distinct "fully completed and ready to view" signal for a flashcard set, separate from
+     * onGenerationCompleted - kept separate since the server emits them as two distinct events
+     * for 2 different UI concerns (progress UI vs the revision sidebar's set list)
+     */
+    onFlashcardSetCompleted?: (data: { resourceId: string }) => void;
+
+    /**
+     * Workspace-wide lock map - which resources currently have an active generation lock held 
+     * by any member. Derive the "Generate" button's disabled/locked state across all connected
+     * clients.
+     */
+    onWorkspaceLocksUpdate?: (locks: Record<string, any>) => void;
 }; 
+
 export function registerWorkspaceEvents(
     socket: Socket,
      dispatch: AppDispatch,
      currentUserId: string,
      handlers?: WorkspaceEventHandlers,
-){
-  
+){ 
     // clear previous listener to avoid duplicates and stale closures
     socket.off("presence:update");
     socket.off("members:update");
     socket.off("workspace:tree:update");
     socket.off("pdf:progressing:update");
+    socket.off("flashcard_set_created");
+    socket.off("flashcard_set_deleted");
+    socket.off("gen_status_update");
+    socket.off("gen_completed");
+    socket.off("flashcard_set_completed");
+    socket.off("workspace_locks_update");
+    
+    // ---- Presence ----
 
     /** * @event presence:update
      * Updates the list of active users in the workspace header.
@@ -63,6 +122,74 @@ export function registerWorkspaceEvents(
         handlers?.onMembersUpdate?.(payload);
     });
         
+    // ---- Flashcard Set Direct Events ----
+
+    /**
+     * @event flashcard_set_created
+     * Emitted via /emit/set-created after generation complete in any API route.
+     * Tells the revision sidebar to refetch its set list
+     */
+    socket.on("flashcard_set_created", ({ resourceId }) => {
+        handlers?.onFlashcardSetCreated?.(resourceId);
+    });
+
+    /**
+     * @event flashcard_set_deleted
+     * Emitted via /emit/set-deleted after deletion in any API route.
+     * Removes the set from Redux immediately for all members.
+     */
+    socket.on("flashcard_set_deleted", ({ setId }) => {
+        dispatch(removeSet({ setId }));
+    });
+
+    // ---- Generation Progress / Locks ----
+
+    /**
+     * @event gen_status_update
+     * Emitted directly by the realtime server's /emit/progress-update route. Fires repeatedly
+     * while a flashcard set is generating, carrying live progress/card counts.
+     */
+    socket.on("gen_status_update", (state) => {
+        handlers?.onGenerationProgress?.(state);
+    });
+
+    /**
+     * @event gen_completed
+     * Fired once when a generation job finishes. Emitted directly from the socket server's
+     * generation-completion handler.
+     */
+    socket.on("gen_completed", ({ resourceId }) => {
+        handlers?.onGenerationCompleted?.({ resourceId });
+    });
+
+    /**
+     * @event flashcard_set_completed
+     * Distinct from gen_completed - signals the flashcard set viewer/sidebar specifically that
+     * the set is now fully ready to be opened.
+     */
+    socket.on("flashcard_set_completed", ({ resourceId }) => {
+        handlers?.onFlashcardSetCompleted?.({ resourceId });
+    });
+
+    /**
+     * @event workspace_locks_update
+     * Broadcasts the current map of active generation locks for the workspace, so every
+     * connected member's UI reflects which resources are mid-generation.
+     */
+    socket.on("workspace_locks_update", (locks) => {
+        handlers?.onWorkspaceLocksUpdate?.(locks);
+    });
+
+    // ---- workspace:tree:update ----
+
+    /**
+     * @event workspace:tree:update
+     * The primary collaborative sync event. Carries a `type` and `payload`.
+     * All structural changes (folder, file, PDF, flashcard, activity) come through here.
+     * 
+     * The server uses `.except(sendSocketId)` so the actor never processes their own event-
+     * Redux was already updated optimistically on their side.
+     */
     socket.on("workspace:tree:update", ({
         type,
         payload
@@ -71,18 +198,19 @@ export function registerWorkspaceEvents(
         if(socket.id === payload.senderSocketId) return;
         switch(type){
             // --- Folder Operations ---
-            case "folder_created":
-                const folderToTransform = payload.folder || payload.data?.folder;
-                if(!folderToTransform){
+            case "folder_created":{
+                const raw = payload.folder || payload.data?.folder;
+                if(!raw){
                     console.error("[Socket-events] folder-created missing folder data: ",payload);
                     break;
                 }
-                const transformed = transformFolder(folderToTransform);
+                const folder = transformFolder(raw);
                 dispatch(ADD_FOLDER({
                     workspaceId: payload.workspaceId,
-                    folder: transformed
+                    folder,
                 }));
                 break;
+            }
             case "folder_deleted":
                 dispatch(DELETE_FOLDER({
                     workspaceId: payload.workspaceId,
@@ -91,14 +219,14 @@ export function registerWorkspaceEvents(
                 break;
             case "folder_trashed":
             case "folder_restored":
-            case "folder_updated":
-                const folderData = payload.folder || payload.updates;
-                if(!folderData) break;
-                const updatedFolder = transformFolder(payload.updates);
+            case "folder_updated":{
+                const raw = payload.folder || payload.updates;
+                if(!raw) break;
+                const updates = transformFolder(payload.updates);
                 dispatch(UPDATE_FOLDER({
                     workspaceId: payload.workspaceId,
                     id: payload.folderId,
-                    updates: updatedFolder
+                    updates,
                 }));
 
                  // Release remote editing locks on successful update
@@ -107,19 +235,20 @@ export function registerWorkspaceEvents(
                     data: null
                 }));
                 break;
-
+            }
             // --- File Operations ---
-            case "file_created":
-                const fileToTransform = payload.file || payload.data?.file;
-                if(!fileToTransform) return;
-                const newFile = transformFile(fileToTransform);
-                if(newFile){
+            case "file_created":{
+                const raw = payload.file || payload.data?.file || payload.updates;
+                if(!raw) break;
+                const file = transformFile(raw);
+                if(file){
                     dispatch(ADD_FILE({
                         folderId: payload.folderId,
-                        file: newFile
+                        file,
                     }));
                 }
                 break;
+            }
             case "file_deleted":
                 dispatch(DELETE_FILE({
                     folderId: payload.folderId,
@@ -128,16 +257,16 @@ export function registerWorkspaceEvents(
                 break;
             case "file_trashed":
             case "file_restored":
-            case "file_updated":
-                const fileData = payload.file || payload.data?.file || payload.updates;
-                if(!fileData) return;
-                const updatedFile = transformFile(fileData);
+            case "file_updated":{
+                const raw = payload.file || payload.data?.file || payload.updates;
+                if(!raw) break;
+                const updates = transformFile(raw);
                 dispatch(UPDATE_FILE({
                     folderId: payload.folderId,
                     id: payload.fileId,
                     updates: {
-                        ...updatedFile,
-                        inTrash: fileData.inTrash
+                        ...updates,
+                        inTrash: raw.inTrash
                     }
                 }));
 
@@ -147,7 +276,19 @@ export function registerWorkspaceEvents(
                     data: null
                 }));
                 break;
-
+            }
+            // --- File Statistics ---
+            case "file_stats_updated":
+                // Reading time changed after another member edited a file
+                dispatch(UPDATE_FILE({
+                    folderId: payload.folderId,
+                    id: payload.fileId,
+                    updates: {
+                        readingTimeMinutes: payload.readingTimeMinutes
+                    } as any,
+                }));
+                break;
+            
             // --- Collaborative Editing (Multiplayer) ---
             case "presence:remote-editing-start":
                 // Marks an item as "being edited" by another user (disables local editing)
@@ -179,12 +320,12 @@ export function registerWorkspaceEvents(
                     progress: payload.progress,
                 });
                 break;
-            case "pdf_file_created":
-                const newPdfFile = transformFile(payload);
-                if(newPdfFile){
+            case "pdf_file_created":{
+                const file = transformFile(payload);
+                if(file){
                     dispatch(ADD_FILE({
                         folderId: payload.folderId,
-                        file: newPdfFile,
+                        file,
                     }));
 
                     // Increament the counter in the Folder Object
@@ -197,6 +338,7 @@ export function registerWorkspaceEvents(
                     }));
                 }
                 break;
+            }
             case "pdf_folder_completed":
                 // Update the folder icon/status in Redux
                 dispatch(UPDATE_FOLDER({
@@ -221,6 +363,7 @@ export function registerWorkspaceEvents(
                     }));
                 },3000)
                 break;
+
             case "pdf_folder_error": 
                 dispatch(UPDATE_FOLDER({
                     workspaceId: payload.workspaceId,
@@ -231,6 +374,7 @@ export function registerWorkspaceEvents(
                     } as any
                 }));
                 break;
+
             case "pdf_total_files_update":
                 dispatch(UPDATE_FOLDER({
                     workspaceId: payload.workspaceId,
@@ -240,6 +384,49 @@ export function registerWorkspaceEvents(
                     } as any
                 }));
                 break;
+
+            // ---- Flashcard Set Sync ----
+            case "flashcard_set_updated":
+                // Another member renamed a flashcard set - update title in Redux instantly
+                dispatch(updateSingleSet({
+                    _id: payload.setId,
+                    title: payload.updates?.title,
+                } as any));
+                break;
+
+            case "flashcard_set_outdated":
+                // File content changed - mark matching sets as outdated
+                // so the yellow "Regenerate Set" button appears for all members
+                dispatch(MARK_FLASHCARD_SETS_STALE());
+                break;
+
+            case "flashcard_set_regenerated":
+                // Full set regenerated - cards have changed, viewer must refetch
+                dispatch(MARK_FLASHCARD_SETS_STALE());
+                handlers?.onFlashcardSetRegeneration?.(payload.setId);
+                break;
+
+            case "flashcard_card_regenerated":
+                // Single card regenerated - viewer must refetch cards for this set
+                dispatch(MARK_FLASHCARD_SETS_STALE());
+                handlers?.onCardRegeneration?.(payload.setId, payload.cardId);
+                break;
+
+            // ---- Activity Feed ----
+
+            case "activity_created":
+                // a new activity was logged - mark stale so RecentActivity refetches 
+                dispatch(MARK_ACTIVITY_STALE());
+                break;
+
+            case "usage_updated":
+                handlers?.onUsageUpdated?.();
+                break;
+
+            // ---- Unknown ----
+            default: 
+                console.warn("[socket-events] unhandled workspace:tree:update type: ",type, payload);
+                break;           
             }
         });
 }
