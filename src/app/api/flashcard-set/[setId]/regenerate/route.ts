@@ -27,6 +27,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { chunkBlocks } from "@/helpers/chunkBlocks";
 import { checkAndIncrementUsage } from "@/lib/flashcard/flashcard-usage";
+import { emitSetRegenerated, emitUsageUpdated } from "@/lib/realtime-emitter";
 
 export async function POST(
     request: NextRequest,
@@ -40,9 +41,8 @@ export async function POST(
                 "Flashcard set id is missing",
                 400,
                 400
-            )
+            );
         }
-
         const existingSet = await FlashcardSetModel.findById(setId);
         if(!existingSet){
             return errorResponse(
@@ -83,9 +83,7 @@ export async function POST(
                 429,
                 429,
             );
-        }
-
-       
+        }       
         // Data aggregation (Resolve which files to process based on selected resourceType)
         let filesToProcess = [];
         if(resourceType === "Workspace"){
@@ -162,17 +160,15 @@ export async function POST(
         }
        }
 
-       const totalBlocks = uniqueBlockIds.size;
-
+        const totalBlocks = uniqueBlockIds.size;
         // chunks without losing block identity
         const chunks = chunkBlocks(globalBlocks, 12000);
-
         if(!chunks.length){
             return errorResponse(
                 "No content available to generate flashcards.",
                 400,
                 400
-            )
+            );
         }
 
         // Build AI payload with metadata
@@ -281,9 +277,7 @@ export async function POST(
         
         // 1. Identify the OLD cards that are currently attached to this set
         const oldCards = await FlashcardModel.find({ parentSetId: setId}).select("_id");
-
         const oldCardIds = oldCards.map(card => card._id);
-
         // 2. Delete all FlashcardProgress records for those old cards
         if(oldCardIds.length > 0){
             await FlashcardProgressModel.deleteMany({
@@ -300,7 +294,7 @@ export async function POST(
                  "Failed to generate flashcards",
                  500,
                  500
-            )
+            );
         }
 
         const updatedFlashcardSet = await FlashcardSetModel.findByIdAndUpdate(
@@ -326,6 +320,14 @@ export async function POST(
             )
         }
 
+        await emitSetRegenerated(
+            workspaceId,
+            setId,
+            resourceId,
+        );
+
+        await emitUsageUpdated(workspaceId);
+
         // Return the generated flashcards
         return successResponse(
             "Flashcards set regenerated successfully",
@@ -342,6 +344,6 @@ export async function POST(
             "Failed to generate flashcards",
             500,
             500
-        )
+        );
     }
 }
