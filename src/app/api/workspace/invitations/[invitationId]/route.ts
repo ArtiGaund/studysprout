@@ -4,7 +4,8 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
 import { createNotification } from "@/lib/notifications/createNotification";
-import { emitServerEvent } from "@/lib/server-realtime";
+import { emitServerRealtimeEvent } from "@/lib/realtime-emitter";
+
 import { 
     NotificationModel, 
     UserModel, 
@@ -29,7 +30,7 @@ export async function PATCH(
      * 5. If action === "accepted":
      *      -> run workspace.members.push({ userId, role, addedAt: new Date()})
      * 6. Notify owner via real-time:
-     * emitServerEvent('workspace-invitation', {
+     * emitServerRealtimeEvent('workspace-invitation', {
      *  workspaceId, invitedUserUsername, action: 'accepted' | 'rejected'
      * })
      * 7. Return successResponse
@@ -126,7 +127,7 @@ export async function PATCH(
                 .lean();
 
             // Notify all workspace clients to refresh the member list
-            await emitServerEvent("workspace-members-update", {
+            await emitServerRealtimeEvent("workspace-members-update", {
                 workspaceId: invitation.workspaceId.toString(),
                 userId: session.user._id,
                 username: acceptingUser?.username,
@@ -142,7 +143,7 @@ export async function PATCH(
                 },
             });
 
-            await emitServerEvent("workspace-joined", {
+            await emitServerRealtimeEvent("workspace-joined", {
                 recipientId: session.user._id,
                 workspace: {
                     _id: workspace._id.toString(),

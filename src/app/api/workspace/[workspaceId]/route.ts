@@ -28,6 +28,7 @@ import { errorResponse, successResponse } from "@/lib/api-response/api-responses
 import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
 import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion"
 import { isValidId } from "@/helpers/validateId";
+import { emitServerRealtimeEvent } from "@/lib/realtime-emitter";
 
 export async function GET(
     request: Request,
@@ -35,20 +36,16 @@ export async function GET(
 ) {
    
     await dbConnect();
-
-     const session = await getServerSession(authOptions);
-
-     // 1. Validate session
-        if(!session?.user?._id){
-            return errorResponse(
-                "Unauthorized",
-                401,
-                401
-            )
-        }
-   
+    const session = await getServerSession(authOptions);
+    // 1. Validate session
+    if(!session?.user?._id){
+        return errorResponse(
+            "Unauthorized",
+            401,
+            401
+        );
+    }   
     const workspaceId = params.workspaceId;
-
     if(!isValidId(workspaceId) || !workspaceId){
         return errorResponse(
             "Invalid workspaceId",
@@ -60,20 +57,16 @@ export async function GET(
     try {
         const workspace = await WorkSpaceModel.findById({
             _id: workspaceId
-        })
-        
+        });        
         if(!workspace){
             return errorResponse(
                 "No workspace from this id present",
                 404,
                 404,
-            )
+            );
         }
-
         const userId = session.user._id;
-
-       const hasAccess = hasWorkspaceAccess(workspace, userId);
-
+        const hasAccess = hasWorkspaceAccess(workspace, userId);
         if(!hasAccess){
             return errorResponse(
                 "Unauthorized",
@@ -120,49 +113,44 @@ export async function POST(
     request: Request,
     { params }: { params: { workspaceId: string }}
 ) {
-    await dbConnect()
+    await dbConnect();
     try {
-        const updatedData = await request.json();
-           
-            const { _id, ...updates } = updatedData;
-              // 1. Validate Workspace ID
-           
-            const workspaceId = params.workspaceId;
-             if(!workspaceId || !isValidId(workspaceId)){
-                return errorResponse(
-                    "Bad Request: Workspace ID is required and must be a valid ObjectId.",
-                    400,
-                    400,
-                );
-            }
-           
-            /** * 2. ATOMIC UPDATE: 
-             * Performs a findOneAndUpdate with 'runValidators' enabled to ensure 
-             * schema integrity (e.g., preventing empty titles).
-             */
-            const workspace = await WorkSpaceModel.findByIdAndUpdate(
-                workspaceId,
-                updates,
-                { new: true, runValidators: true }
-            ).lean()
-
-            if(!workspace){
-                return errorResponse(
-                    "Failed to update data in workspace",
-                    404,
-                    404,
-                );
-            }   
-            // NOTE: In a multi-user environment, consider adding an 'emitRealtimeEvent' 
-         // here to sync the title/icon change to other active tabs.
-
-            return successResponse(
-                "Updated data in workspace sucessfully. ",
-                workspace,
-                200,
-                200,
+        const updatedData = await request.json();           
+        const { _id, ...updates } = updatedData;
+        // 1. Validate Workspace ID   
+        const workspaceId = params.workspaceId;
+        if(!workspaceId || !isValidId(workspaceId)){
+            return errorResponse(
+                "Bad Request: Workspace ID is required and must be a valid ObjectId.",
+                400,
+                400,
             );
-
+        }
+           
+        /** * 2. ATOMIC UPDATE: 
+         * Performs a findOneAndUpdate with 'runValidators' enabled to ensure 
+         * schema integrity (e.g., preventing empty titles).
+         */
+        const workspace = await WorkSpaceModel.findByIdAndUpdate(
+            workspaceId,
+            updates,
+            { new: true, runValidators: true }
+        ).lean()
+        if(!workspace){
+            return errorResponse(
+                "Failed to update data in workspace",
+                404,
+                404,
+            );
+        }   
+        // NOTE: In a multi-user environment, consider adding an 'emitRealtimeEvent' 
+        // here to sync the title/icon change to other active tabs.
+        return successResponse(
+            "Updated data in workspace sucessfully. ",
+            workspace,
+            200,
+            200,
+        );
     } catch (error: any) {
        console.error("Error while updating the Workspace:", error);
 
@@ -183,7 +171,6 @@ export async function POST(
                 400,
              );
         }
-
         return errorResponse(
             `Internal Server Error: ${error.message || 'An unknown error occurred.'}`,
             500,
@@ -209,7 +196,6 @@ export async function DELETE(
 ){
     await dbConnect()
     const session = await getServerSession(authOptions);
-
     if(!session?.user._id){
         return errorResponse(
             "Unauthorized",
@@ -234,17 +220,16 @@ export async function DELETE(
         );
     }
     try {
-        // 2. find the workspace first to get its details and its folders and its files, before deleting it
+        // 2. find the workspace first to get its details and its folders and its files, 
+        // before deleting it
         const workspaceToDelete = await WorkSpaceModel.findById(workspaceId).lean();
-
         if(!workspaceToDelete){
              return errorResponse(
                 "Workspace not found in database.",
                 404,
                 404,
-             )
+             );
         }
-
         // Check ownership
         if (workspaceToDelete.workspace_owner.toString() !== session.user._id) {
             return errorResponse(
@@ -253,40 +238,33 @@ export async function DELETE(
                 403,
             );
         }
-         const workspaceOwnerId = workspaceToDelete.workspace_owner;
+        const workspaceOwnerId = workspaceToDelete.workspace_owner;
         //  --- start cascading deletion for folders, files and images
         const imagePublicIdsToDelete: (string | mongoose.Types.ObjectId)[] = [];
-
         // 3. collect images public_ids associated with workspace itself
         if(workspaceToDelete.logo){
             imagePublicIdsToDelete.push(workspaceToDelete.logo as mongoose.Types.ObjectId);
         }
-        
         //4. find all folders within the workspace and collect their images public_ids
         const foldersInWorkspace = await FolderModel.find(
             { workspaceId: workspaceId }
         ).select('_id bannerUrl').lean();
-
         const folderIdsToDelete = foldersInWorkspace.map(folder => folder._id);
-
         foldersInWorkspace.forEach(folder => {
             if(folder.bannerUrl){
                 imagePublicIdsToDelete.push(folder.bannerUrl);
             }
-        })
-
+        });
         // 5. find all files within the folders and collect their images public_ids
         const filesInFolder = await FileModel.find(
             { folderId: { $in: folderIdsToDelete } }
         ).select('_id bannerUrl').lean();
-
         const fileIdsToDelete = filesInFolder.map(file => file._id);
         filesInFolder.forEach(file => {
             if(file.bannerUrl){
                 imagePublicIdsToDelete.push(file.bannerUrl);
             }
-        })
-
+        });
         // 6. Resolve all collected imageModel _ids to actual cloudinary public_ids and delete images
         if(imagePublicIdsToDelete.length > 0){
             const imageModels = await ImageModel.find(
@@ -297,20 +275,18 @@ export async function DELETE(
             const actualCloudinaryPublicIds = imageModels.map(image => image.public_id);
             await resourceDeletion(actualCloudinaryPublicIds);
         }
-
         // 7. delete all files within the folders
         if(fileIdsToDelete.length > 0){
             const deleteFilesResult = await FileModel.deleteMany(
                 { _id: { $in: fileIdsToDelete}}
-            )
+            );
         }
         // 8. delete all folders within the workspace
         if(folderIdsToDelete.length > 0){
             const deleteFoldersResult = await FolderModel.deleteMany(
                 { _id: { $in: folderIdsToDelete}}
-            )
+            );
         }
-
         // 8.5. Cascading Flashcard Cleanup
         // Find all FlashcardSets tied to this workspace
         const flashcardSets = await FlashcardSetModel.find({ workspaceId }).select('_id');
@@ -350,6 +326,15 @@ export async function DELETE(
                 500,
             );
         }
+        const memberIds = workspaceToDelete.members?.map(m => m.userId.toString()) ?? [];
+        await Promise.allSettled(
+            memberIds.map(memberId => 
+                emitServerRealtimeEvent("workspace-left", {
+                    recipientId: memberId,
+                    workspaceId: String(workspaceId),
+                })
+            )
+        );
         // 11. Return success response
         return successResponse(
             "Workspace and all its contents (folders, files, images) deleted successfully.",
@@ -364,5 +349,4 @@ export async function DELETE(
             500,
         );
     }
-
 }
