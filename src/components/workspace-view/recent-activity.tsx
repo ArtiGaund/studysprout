@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ActivityCard } from "./activity-card";
 import { useWorkspaceActivity } from "@/hooks/useWorkspaceActivity";
 
