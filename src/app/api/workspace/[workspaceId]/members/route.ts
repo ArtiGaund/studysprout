@@ -16,9 +16,10 @@
  */
 
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { onMemberJoined, onMemberRemoved } from "@/lib/activity-hooks";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
-import { emitServerEvent } from "@/lib/server-realtime";
+import { emitServerRealtimeEvent } from "@/lib/realtime-emitter";
 import { UserModel, WorkSpaceModel } from "@/model";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
@@ -234,19 +235,15 @@ export async function POST(
         const addedUser = await UserModel.findById(userId)
         .select("username")
         .lean();
-        await fetch(`${process.env.NEXT_PUBLIC_REALTIME_URL}/emit/workspace-members-update`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                 workspaceId: workspaceId.toString(),
-                 userId,
-                 username: addedUser?.username,
-                 action: "added" 
-                }),
-        });
 
+        
+        await onMemberJoined(
+            workspaceId.toString(),
+            userId,
+            addedUser?.username ?? "",
+            "",
+        ).catch(() => {});
+       
         const payload = {
             workspaceId: workspaceId.toString(),
             userId,
@@ -254,7 +251,7 @@ export async function POST(
             action: "added" 
         }
 
-        await emitServerEvent('workspace-members-update', payload);
+        await emitServerRealtimeEvent('workspace-members-update', payload);
 
         return successResponse(
             "Member added successfully",
@@ -374,16 +371,23 @@ export async function DELETE(
          .select("username")
          .lean();
 
+        await onMemberRemoved(
+            workspaceId.toString(),
+            userId,
+            removedUser?.username ?? "",
+            ""
+,        ).catch(() => {});
+
         const payload = { 
                 workspaceId: workspaceId.toString(),
                 userId,
                 username: removedUser?.username,
                 action: "removed", 
         }
-        await emitServerEvent("workspace-members-update", payload);
+        await emitServerRealtimeEvent("workspace-members-update", payload);
 
         // Remove user's own client to drop this workspace
-        await emitServerEvent("workspace-left", {
+        await emitServerRealtimeEvent("workspace-left", {
             recipientId: userId,
             workspaceId: workspaceId.toString(),
         });
