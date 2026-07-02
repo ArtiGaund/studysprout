@@ -11,6 +11,7 @@
 
 import { useGlobalSocketEvents } from "@/hooks/socket/useGlobalSocketEvents";
 import { useWorkspaceSocket } from "@/hooks/socket/useWorkspaceSocket";
+import { useWorkspaceSocketContext } from "@/lib/providers/workspace-socket-context";
 import { selectAuthStatus } from "@/store/selectors/userSelector";
 import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
@@ -21,12 +22,22 @@ export const WorkspaceSocketManager = () => {
 
     const workspaceId = params?.workspaceId as string;
 
+    const {
+        notifyUsageUpdated,
+        notifySetRegeneration,
+        notifyCardRegeneration,
+    } = useWorkspaceSocketContext();
+
     /**
      * Conditional hook execution:
      * Prevents socket initialization if the user is unauthenticated 
      * or if no workspaceId is present in the route.
      */
-    useWorkspaceSocket(authStatus === "authenticated" ? workspaceId : null);
+    useWorkspaceSocket(authStatus === "authenticated" ? workspaceId : null, {
+        onUsageUpdated: notifyUsageUpdated,
+        onFlashcardSetRegeneration: notifySetRegeneration,
+        onCardRegeneration: notifyCardRegeneration,
+    });
 
     useGlobalSocketEvents();
 
