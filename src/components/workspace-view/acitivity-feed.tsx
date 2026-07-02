@@ -11,9 +11,21 @@
 "use client";
 
 import { useWorkspaceActivity } from "@/hooks/useWorkspaceActivity";
-import { Archive, FileQuestion, FileText, Folder, Link2, Sparkle, Target, Users, Zap } from "lucide-react";
+import { MARK_ACTIVITY_FRESH } from "@/store/slices/activitySlice";
+import { 
+    Archive, 
+    FileQuestion, 
+    FileText, 
+    Folder, 
+    Link2, 
+    Sparkle, 
+    Target, 
+    Users, 
+    Zap 
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 
 export interface ActivityEvent{
     _id: string;
@@ -195,74 +207,75 @@ function ActivityRow({ event }: { event: ActivityEvent}){
 
 export const ActivityFeed = ({ workspaceId }: ActivityFeedProps) => {
     const router = useRouter();
-    const [ events, setEvents ] = useState<ActivityEvent[]>([]);
-    const [ pagination, setPagination ] = useState<ActivityPagination | null>(null);
-    const [ loading, setLoading ] = useState(true);
-    const [ loadingMore, setLoadingMore ] = useState(false);
+    // UI-only local state
     const [ typeFilter, setTypeFilter ] = useState("");
-    const [ page, setPage ] = useState(1);
     const loadRef = useRef<HTMLDivElement>(null);
 
-    const { getActivity } = useWorkspaceActivity(workspaceId);
+    const dispatch = useDispatch();
 
-    useEffect(() => {
-        setLoading(true);
-        setEvents([]);
-        setPage(1);
+    /**
+     * autoRefreshOnStale: false - opt this page out of the hooks internal "always fetch 4 recent
+     * items on staleness" behavior, which would otherwise clobber this page's paginated/filtered
+     * list.
+     */
+    const { 
+        events,
+        pagination,
+        loading,
+        activityStale,
+        getActivity,
+        loadMore, 
+    } = useWorkspaceActivity(workspaceId);
 
-        const load = async () => {
-            try {
-                const result = await getActivity({
-                    page: 1,
-                    limit: 20,
-                    type: typeFilter || undefined,
-                });
-                if(!result.success && !result.data){
-                    console.error("[Activity Page] Failed to load ",result.error);
-                    return;
-                }
-                setEvents(result.data?.events ?? []);
-                if(result.data?.pagination){
-                    setPagination(result.data?.pagination);
-                }
-                
-            } catch (error: any) {
-                console.error("[Activity Page] Failed: ",error.message);
-            }finally{
-                setLoading(false);
-            }
+    const [ loadingMore, setLoadingMore ] = useState(false);
+    
+    const loadFirstPage = useCallback(async () => {
+        const result = await getActivity({
+            page: 1,
+            limit: 20,
+            type: typeFilter || undefined,
+        });
+        if(!result.success || !result.data){
+            console.error("[Activity Page] Failed to load first page: ",result.error);
         }
-
-        load();
+    },[
+        getActivity,
+        typeFilter,
+    ]);
+ 
+    useEffect(() => {
+        loadFirstPage();
     },[
         workspaceId,
         typeFilter,
+        loadFirstPage,
     ]);
 
-    // Infinite scroll: watch the sentinel div at the bottom
+    /**
+     * @effect Real-time refresh
+     * Whenever another number performs an activity while this page is open, activity_created
+     * flips activityStale true (through registerWorkspaceEvents). This resets to page 1 and
+     * refreshes with the current type filter, then marks the flag fresh. Chose a full reset-to-
+     * page-1 refetch over trying to splice a single event into a infinite scrolled, filtered list-
+     * simpler and matches the pattern already used for MARK_FLASHCARD_SETS_STALE.
+     */
+    useEffect(() => {
+        if(!activityStale) return;
+
+        loadFirstPage();
+        dispatch(MARK_ACTIVITY_FRESH());
+    },[
+        activityStale,
+        dispatch,
+        loadFirstPage,
+    ]);
+
     useEffect(() => {
         const observer = new IntersectionObserver(
             async (entries) => {
                 if(entries[0].isIntersecting && pagination?.hasNextPage && !loadingMore){
-                    const nextPage = page + 1;
                     setLoadingMore(true);
-                    setPage(nextPage);
-
-                    const result = await getActivity({
-                        page: nextPage,
-                        limit: 20,
-                        type: typeFilter || undefined,
-                    });
-
-                    if(!result.success || !result.data){
-                        console.error("[Activity Page] Failed to load another page: ",result.error);
-                        return;
-                    }
-                    setEvents((prev) => [
-                        ...prev,
-                        ...result.data!.events
-                    ]);
-                    setPagination(result.data.pagination);
+                    await loadMore();
                     setLoadingMore(false);
                 }
             },
@@ -273,9 +286,7 @@ export const ActivityFeed = ({ workspaceId }: ActivityFeedProps) => {
     },[
         pagination,
         loadingMore,
-        page,
-        typeFilter,
-        workspaceId,
+        loadMore,
     ]);
 
     // Group events by data label
