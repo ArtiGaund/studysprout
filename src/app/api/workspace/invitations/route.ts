@@ -2,12 +2,10 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import dbConnect from "@/lib/dbConnect";
 import { createNotification } from "@/lib/notifications/createNotification";
-import { emitServerEvent } from "@/lib/server-realtime";
 import { UserModel, WorkspaceInvitationModel, WorkSpaceModel } from "@/model";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
-
 
 export async function POST(
     request: NextRequest,
@@ -21,7 +19,7 @@ export async function POST(
         5. Create WorkspaceInvitationModel document { workspaceId, invitedBy: ownerId, 
             invitedUser: userId, status: "pending"}
         6. Emit real-time notification to invitedUser's socket room:
-        emitServerEvent('workspace-invitation', {
+        emitServerRealtimeEvent('workspace-invitation', {
             invitationId, workspaceId, workspaceName, invitedBy: ownerName, action: "received"
         });
         7. Return successResponse("Invitation sent", 200)
@@ -35,16 +33,13 @@ export async function POST(
             401,
             401,
         );
-  
         const { userId, workspaceId, role = "editor"} = await request.json();
-
         if(!userId) return errorResponse(
             "[Invitation POST route] UserId is required",
             400,
             400,
         );
-
-         if(!workspaceId || !mongoose.Types.ObjectId.isValid(workspaceId)){
+        if(!workspaceId || !mongoose.Types.ObjectId.isValid(workspaceId)){
             return errorResponse(
                 "[Invitation POST route] Invalid workspaceId",
                 400,
