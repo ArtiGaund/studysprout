@@ -22,7 +22,6 @@ export function useFileSocket({
     fileId,
     onRemoteUpdate,
 }: UseFileSocketParams){
-
     const { socket, isConnected } = useSocket();
     const currentUserId = useSelector(selectUserId);
     const authToken = useSelector(selectAuthToken);
@@ -33,7 +32,7 @@ export function useFileSocket({
      */
     useEffect(() => {
         // --- Connection Guards ---
-        if(!authToken || !currentUserId || !socket || isConnected) return;
+        if(!authToken || !currentUserId || !socket || !isConnected) return;
 
        // --- JOIN Logic ---
         // Notifies the server to add this client to a specific 'room' for the fileId
@@ -43,17 +42,19 @@ export function useFileSocket({
          * @listener file:update
          * Receives granular updates (block changes, title edits, etc.) from other users.
          */
-        socket.on("file:update", ({ update, userId }) => {
+        const handleUpdate = ({ update, userId }: { update: any; userId: string; }) => {
             // CRITICAL: Ignore updates originated by the current user
             if(userId === currentUserId) return;
 
             onRemoteUpdate(update);
-        });
+        }
+        socket.on("file:update",handleUpdate);
 
         // Error Handling for network-level failures
-        socket.on("connect_error", (err) => {
-            console.error("[file socket error]", err.message);
-        });
+        const handleError = (err: Error) => {
+             console.error("[file socket error]", err.message);
+        }
+        socket.on("connect_error",handleError);
 
         /**
          * @cleanup
@@ -62,13 +63,15 @@ export function useFileSocket({
          */
         return () => {
             socket.emit("file:leave", { fileId });
-            socket.off("file:update");
+            socket.off("file:update", handleUpdate);
+            socket.off("connect_error", handleError);
         };
     },[
         authToken,
         currentUserId,
         fileId,
         onRemoteUpdate,
-    ])
-    
+        isConnected,
+        socket,
+    ]);
 }
