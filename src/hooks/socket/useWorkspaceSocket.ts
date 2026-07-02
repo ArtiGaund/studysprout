@@ -9,7 +9,7 @@
  */
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useWorkspaceMembers } from "../workspace-members/useWorkspaceMembers";
 import { useAppDispatch } from "@/store/hooks";
 import { useToast } from "@/components/ui/use-toast";
@@ -22,14 +22,33 @@ import {
     REMOVE_WORKSPACE_MEMBER 
 } from "@/store/slices/workspaceMembersSlice";
 import { WorkspaceMember } from "@/types/workspace-member.type";
+import { UPDATE_FOLDER } from "@/store/slices/folderSlice";
 
-export function useWorkspaceSocket(workspaceId?: string | null){
+interface GenerationProgressState{
+    resourceId: string;
+    workspaceId: string;
+    progress: number;
+    totalCards: number;
+};
+
+interface UseWorkspaceSocketOptions{
+    onUsageUpdated?: () => void;
+    onFlashcardSetRegeneration?:(setId: string) => void;
+    onCardRegeneration?: (setId: string, cardId: string) => void;
+};
+export function useWorkspaceSocket(
+    workspaceId?: string | null,
+    options?: UseWorkspaceSocketOptions,
+){
     const { socket, isConnected } = useSocket();
     const currentUserId = useSelector(selectUserId);
 
     // --- State Guards ---
     const joinedRef = useRef<string | null>(null);
     const hasFetchedMemberRef = useRef(false);
+
+    const [ generationProgress, setGenerationProgress ] = 
+        useState<GenerationProgressState | null>(null);
 
     const {
         fetchMembers
@@ -54,18 +73,66 @@ export function useWorkspaceSocket(workspaceId?: string | null){
        loadMembers(workspaceId);
     },[
         workspaceId,
-    ])
+    ]);
 
+    /**
+     * @callback handleGenerationProgress
+     * Drives a workspace-wide AI generation progress bar
+     */
+    const handleGenerationProgress = useCallback((data: GenerationProgressState) => {
+        setGenerationProgress(data);
+    },[]);
+
+    /**
+     * @callback handleGenerationCompleted
+     * Clears the progress bar once the matching job finishes.
+     */
+    const handleGenerationCompleted = useCallback(({ resourceId }: { resourceId: string }) => {
+        setGenerationProgress((prev) => (prev?.resourceId === resourceId ? null : prev));
+    },[]);
+
+    /**
+     * @callback handlePDFProgress
+     * Route PDF import progress straight into the folder's Redux record, since the folder
+     * list/sidebar UI reads progress directly off the folder entity.
+     */
+    const handlePDFProgress = useCallback(
+        ({ folderId, progress }: { folderId: string, progress: number; }) => {
+        if(!workspaceId) return;
+        dispatch(UPDATE_FOLDER({
+            workspaceId,
+            id: folderId,
+            updates: { progress } as any,
+        }));
+    },[
+        dispatch,
+        workspaceId,
+    ]);
+
+    /**
+     * @callback handleUsageUpdated
+     * Workspace-wide usage/quota changed
+     */
+    const handleUsageUpdated = useCallback(() => {
+        if(!workspaceId) return;
+        options?.onUsageUpdated?.();
+    },[workspaceId, options]);
+
+    const handleFlashcardSetRegeneration = useCallback((setId: string) => {
+        options?.onFlashcardSetRegeneration?.(setId);
+    },[options]);
+
+    const handleCardRegeneration = useCallback((setId: string, cardId: string) => {
+        options?.onCardRegeneration?.(setId, cardId);
+    },[options]);
     /**
      * @section Socket Lifecycle Management
      * Handles the "Room" logic. When a user switches workspaces, this effect 
      * ensures they leave the previous room and join the new one.
      */
-    useEffect(() => {
-      
+    useEffect(() => {      
         // 1. Connection Guard: Ensure networking is ready
-        if(!socket || !isConnected || !workspaceId || !currentUserId) return;
-   
+        if(!socket || !isConnected || !workspaceId || !currentUserId) return;   
         // 2. Idempotency Guard: Prevent redundant join emissions
         if(joinedRef.current === workspaceId) return;
 
@@ -112,7 +179,16 @@ export function useWorkspaceSocket(workspaceId?: string | null){
         registerWorkspaceEvents(
             socket, 
             dispatch,
-            currentUserId, { onMembersUpdate: handleMembersUpdate, }
+            currentUserId, 
+            { 
+                onMembersUpdate: handleMembersUpdate,
+                onPDFProgress: handlePDFProgress,
+                onUsageUpdated: handleUsageUpdated,
+                onGenerationProgress: handleGenerationProgress,
+                onGenerationCompleted: handleGenerationCompleted, 
+                onFlashcardSetRegeneration: handleFlashcardSetRegeneration,
+                onCardRegeneration: handleCardRegeneration,
+            }
         );
       
         /**
@@ -161,7 +237,15 @@ export function useWorkspaceSocket(workspaceId?: string | null){
        isConnected,
        workspaceId,
        currentUserId,
-    ])
+       handlePDFProgress,
+       handleUsageUpdated,
+       handleGenerationProgress,
+       handleGenerationCompleted,
+       dispatch,
+       toast,
+    ]);
 
-   
+    return {
+        generationProgress
+    }
 }
