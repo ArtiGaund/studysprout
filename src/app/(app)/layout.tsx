@@ -21,6 +21,13 @@ export default function RootLayout({
   return (
     <div className={inter.className}>
       {children}
+      <script dangerouslySetInnerHTML={{ __html: `
+          if('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/service-worker.js');
+            });
+          }
+      `}}/>
     </div>
   );
 }
