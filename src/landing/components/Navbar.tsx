@@ -29,7 +29,14 @@ export const Navbar = () => {
         };
 
         const observer = new IntersectionObserver(observerCallback, observerOptions);
-        const sections = ["hero-section", "workspaces-section", "editor-section", "flashcard-section", "ecosystem"];
+        const sections = [
+            "hero-section", 
+            "workspaces-section", 
+            "editor-section", 
+            "flashcard-section",
+            "search-section", 
+            "ecosystem"
+        ];
         const observedSections = new Set<string>();
 
         const observeSections = () => {
@@ -67,6 +74,7 @@ export const Navbar = () => {
         { name: "Workspaces", id: "workspaces-section" },
         { name: "Editor", id: "editor-section" },
         { name: "Flashcards", id: "flashcard-section" },
+        { name: "Search", id: "search-section"},
         { name: "Ecosystem", id: "ecosystem" },
     ];
 

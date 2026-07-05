@@ -7,6 +7,7 @@ import { HeroSection } from "./components/Hero-Section";
 import { KnowledgeGraphSection } from "./components/Knowledge-Graph-Section";
 import { Navbar } from "./components/Navbar";
 import { NavbarDebugger } from "./components/NavbarDebugger";
+import { SearchSection } from "./components/Search-Section";
 import { WorkspaceShowcaseSection } from "./components/Workspace-Showcase-Section";
 import dynamic from 'next/dynamic';
 
@@ -25,6 +26,7 @@ export const LandingPage = () => {
             <WorkspaceShowcaseSection />
             <EditorSection />
             <FlashcardSection />
+            <SearchSection />
             <KnowledgeGraphSection />
             <Footer />
         </>

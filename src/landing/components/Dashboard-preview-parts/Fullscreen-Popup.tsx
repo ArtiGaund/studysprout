@@ -14,7 +14,7 @@ interface FullscreenPopupProps{
     naturalWidth?: number;
     /* Natural pixel height the content expects at scale=1. Default 740 */
     naturalHeight?: number;
-    type?: 'sandbox' | 'flashcard';
+    type?: 'sandbox' | 'flashcard' | 'search';
 }
 
 export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
@@ -43,6 +43,7 @@ export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
             // Auto-exit when screen is wide enough for the normal inline layout
             if(type === 'flashcard' && w >= 1024) onClose();
             if(type === 'sandbox' && w >= 750) onClose();
+            if(type === 'search' && w >=1024) onClose();
         }
         update();
         window.addEventListener('resize', update);
