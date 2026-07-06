@@ -12,10 +12,8 @@
 import { WorkSpace as MongooseWorkSpace, WorkSpace} from "@/model/workspace.model";
 import { hardDeleteDir } from "@/services/dirServices";
 import { 
-    addWorkspace, 
-    getActivityService, 
+    addWorkspace,  
     getCurrentWorkspace, 
-    getRecentActivityService, 
     getResearchGraphService, 
     getUserWorkspaces, 
     savingGoalService, 
@@ -37,7 +35,7 @@ import {
 import { RootState } from "@/store/store";
 import { ConceptGraph, ReduxWorkSpace } from "@/types/state.type";
 import { transformWorkspace } from "@/utils/data-transformers";
-import { useCallback, useMemo} from "react";
+import { useCallback, useEffect, useMemo, useRef} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     hasFetchedAllWorkspaceRef,
@@ -47,6 +45,7 @@ import {
 import { selectAuthStatus, selectUserId } from "@/store/selectors/userSelector";
 import { LearningPathFileNode } from "@/components/dashboard-shared/learning-path-view";
 import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
+import { getLastWorkspace } from "@/lib/local-storage-workspace";
 
 // ---GraphData type---
 export interface GraphDayData{
@@ -66,10 +65,8 @@ export interface GraphData{
 }
 
 export function useWorkspace() {
-    // const { data: session, status } = useSession();
     const currentUserId = useSelector(selectUserId);
-    const authStatus = useSelector(selectAuthStatus);
-
+    const authStatus = useSelector(selectAuthStatus);   
     const dispatch = useDispatch(); 
 
     // selector for workspace state
@@ -80,6 +77,11 @@ export function useWorkspace() {
         loading: loadingFromRedux,
         error: errorFromRedux,
     } = useSelector((state: RootState) => state.workspace);
+
+    const currentWorkspaceRef = useRef(currentWorkspace);
+    useEffect(() => {
+        currentWorkspaceRef.current = currentWorkspace;
+    },[currentWorkspace]);
     
     /**
      * @method getWorkspaces
@@ -119,19 +121,21 @@ export function useWorkspace() {
             : [response]
             ).filter(Boolean).map(workspace => transformWorkspace(workspace as MongooseWorkSpace));
             dispatch(SET_WORKSPACES(transformedWorkspace));
-            if(!currentWorkspace){
-                dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace[0]));
-            }else if(
-                !transformedWorkspace.some(workspace => workspace._id === currentWorkspace._id)
-            ){
-                dispatch(SET_CURRENT_WORKSPACE(transformedWorkspace[0]));
+
+            const liveCurrentId = currentWorkspaceRef.current?._id;
+            if(!liveCurrentId){
+                // Nothing set yet - use last visited workspace or fallback to first
+                const lastWorkspaceId = getLastWorkspace(currentUserId);
+                const target = lastWorkspaceId
+                    ? transformedWorkspace.find(w => w._id === lastWorkspaceId)
+                    : null;
+                dispatch(SET_CURRENT_WORKSPACE(target || transformedWorkspace[0]));
             }
             hasFetchedAllWorkspaceRef.add(currentUserId);
             return {
                 success: true,
                 data: transformedWorkspace
             }
-            // setWorkspaces(workspaces);
         } catch (error: any) {
             console.error('Error while fetching user workspaces in hook:', error);
             dispatch(SET_WORKSPACE_ERROR(error.message || "Failed to fetch workspaces"));
