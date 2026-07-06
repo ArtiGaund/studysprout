@@ -122,6 +122,13 @@ export const MetricsOverview = ({ workspaceId }: { workspaceId: string}) => {
                         }
                         handleAction={handleMapGraph}
                         disabled={isGenerating || folderCount < 2}
+                        disabledMessage={
+                            folderCount < 2 && !isGenerating
+                                ? "You need at least 2 folders in the workspace to generate a concept graph."
+                                : undefined
+                        }
+                        tooltipClassName="border-red-500/30 bg-zinc-900 text-red-300"
+                        tooltipSide="top"
                         iconClassName={isGenerating ? "animate-spin text-purple-400" : null}
                         isGenerating={isGenerating}
                     />}

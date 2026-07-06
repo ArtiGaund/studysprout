@@ -59,6 +59,13 @@ export const SmartAction = ({ folderId }: { folderId: string}) => {
                 }
                 handleAction={handleMapGraph}
                 disabled={isGenerating || fileCount < 2}
+                disabledMessage={
+                    fileCount < 2 && !isGenerating
+                        ? "You need at least 2 files in this folder to generate a concept graph."
+                        : undefined
+                }
+                tooltipClassName="border-amber-500/30 bg-zinc-900 text-amber-300"
+                tooltipSide="left"
                 iconClassName={isGenerating ? "animate-spin text-purple-400" : null}
                 isGenerating={isGenerating}
                 />}
