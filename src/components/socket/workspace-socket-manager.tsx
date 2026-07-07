@@ -14,6 +14,7 @@ import { useWorkspaceSocket } from "@/hooks/socket/useWorkspaceSocket";
 import { useWorkspaceSocketContext } from "@/lib/providers/workspace-socket-context";
 import { selectAuthStatus } from "@/store/selectors/userSelector";
 import { useParams } from "next/navigation";
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 export const WorkspaceSocketManager = () => {
@@ -28,16 +29,24 @@ export const WorkspaceSocketManager = () => {
         notifyCardRegeneration,
     } = useWorkspaceSocketContext();
 
+    const socketHandlers = useMemo(() => ({
+        onUsageUpdated: notifyUsageUpdated,
+        onFlashcardSetRegeneration: notifySetRegeneration,
+        onCardRegeneration: notifyCardRegeneration,
+    }),[
+        notifyCardRegeneration,
+        notifySetRegeneration,
+        notifyUsageUpdated,
+    ]);
     /**
      * Conditional hook execution:
      * Prevents socket initialization if the user is unauthenticated 
      * or if no workspaceId is present in the route.
      */
-    useWorkspaceSocket(authStatus === "authenticated" ? workspaceId : null, {
-        onUsageUpdated: notifyUsageUpdated,
-        onFlashcardSetRegeneration: notifySetRegeneration,
-        onCardRegeneration: notifyCardRegeneration,
-    });
+    useWorkspaceSocket(
+        authStatus === "authenticated" ? workspaceId : null, 
+        socketHandlers
+    );
 
     useGlobalSocketEvents();
 
