@@ -125,6 +125,29 @@ export function useWorkspaceSocket(
     const handleCardRegeneration = useCallback((setId: string, cardId: string) => {
         options?.onCardRegeneration?.(setId, cardId);
     },[options]);
+
+    const handlersRef = useRef({
+        handlePDFProgress,
+        handleUsageUpdated,
+        handleGenerationProgress,
+        handleGenerationCompleted,
+        handleFlashcardSetRegeneration,
+        handleCardRegeneration,
+        toast,
+    });
+
+    useEffect(() => {
+        handlersRef.current = {
+            handlePDFProgress,
+            handleUsageUpdated,
+            handleGenerationProgress,
+            handleGenerationCompleted,
+            handleFlashcardSetRegeneration,
+            handleCardRegeneration,
+            toast,
+        };
+    });
+    
     /**
      * @section Socket Lifecycle Management
      * Handles the "Room" logic. When a user switches workspaces, this effect 
@@ -182,12 +205,23 @@ export function useWorkspaceSocket(
             currentUserId, 
             { 
                 onMembersUpdate: handleMembersUpdate,
-                onPDFProgress: handlePDFProgress,
-                onUsageUpdated: handleUsageUpdated,
-                onGenerationProgress: handleGenerationProgress,
-                onGenerationCompleted: handleGenerationCompleted, 
-                onFlashcardSetRegeneration: handleFlashcardSetRegeneration,
-                onCardRegeneration: handleCardRegeneration,
+                onPDFProgress: (data: { folderId: string; progress: number}) => 
+                    handlersRef.current.handlePDFProgress(data),
+                onUsageUpdated: () => 
+                    handlersRef.current.handleUsageUpdated(),
+                onGenerationProgress: (data: {
+                    resourceId: string;
+                    workspaceId: string;
+                    progress: number;
+                    totalCards: number
+                }) => 
+                    handlersRef.current.handleGenerationProgress(data),
+                onGenerationCompleted: (data: { resourceId: string }) => 
+                    handlersRef.current.handleGenerationCompleted(data), 
+                onFlashcardSetRegeneration: (setId: string) => 
+                    handlersRef.current.handleFlashcardSetRegeneration(setId),
+                onCardRegeneration: (setId: string, cardId: string) => 
+                    handlersRef.current.handleCardRegeneration(setId, cardId),
             }
         );
       
@@ -237,12 +271,7 @@ export function useWorkspaceSocket(
        isConnected,
        workspaceId,
        currentUserId,
-       handlePDFProgress,
-       handleUsageUpdated,
-       handleGenerationProgress,
-       handleGenerationCompleted,
        dispatch,
-       toast,
     ]);
 
     return {
