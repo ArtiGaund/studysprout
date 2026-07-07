@@ -26,6 +26,7 @@ import { FileInsightsPanel, FlashcardSet, ParentSet } from '@/components/file-vi
 import { RootState } from '@/store/store'
 import { selectCurrentFolder } from '@/store/selectors/folderSelector'
 import * as Y from "yjs";
+import { PanelRightOpen } from 'lucide-react'
 
 // Optimized: Load editor only on the client to avoid hydration mismatches.
 const DynamicTextEditor = dynamic(
@@ -53,6 +54,10 @@ const FilePage: React.FC<{
 
     const [ loading, setLoading ] = useState(false);
     const [ prereqLoading, setPrereqLoading ] = useState(false);
+
+    // Insights panel: only relevant as an "open/closed" concept below `lg` 
+    // On `lg` + panel ignores this and is always shown
+    const [ isInsightsPanelOpen, setIsInsightsPanelOpen ] = useState(false);
 
     const onChangeHandler = ( content: string ) => {
         // console.log("Live updated content of file ",content);
@@ -347,16 +352,31 @@ const FilePage: React.FC<{
                     fileId={params.fileId}
                     dirDetails={currentFile}
                 />
-        <div className='flex flex-col md:flex-row h-screen overflow-y-auto md:overflow-hidden'>
+        <div className='flex flex-col md:flex-row h-screen overflow-y-auto
+         md:overflow-hidden relative'>
     
             {/*Center: Editor column  */}
-            <main className='flex-1 md:overflow-y-auto'>
+            <main className='flex-1 md:overflow-y-auto min-w-0'>
                 <div className='px-4 sm:px-10 pt-8 pb-24'>
 
+                    <div className='flex items-start justify-between gap-3'>
                     <FileHeader 
                         currentFile={currentFile}
                     />
 
+                    {/* Burger toggle: only shown below `lg` widths, since the panel is a
+                    fixed column on lg+ */}
+                    <button
+                        type='button'
+                        onClick={() => setIsInsightsPanelOpen(true)}
+                        aria-label='Open file insights panel'
+                        className='lg:hidden flex-shrink-0 mt-1 p-2 rounded-lg border
+                        border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300
+                        transition-colors'
+                    >
+                        <PanelRightOpen className='w-4 h-4'/>
+                    </button>
+                    </div>
                     {/* Editor content render */}
                     {/* [&_.bn-editor]:!px-0 overrides BlockNotes internal horizontal padding */}
                     <div className='mt-6 [&_.bn-editor]:!px-0 [&_.bn-block-outer]:!mx-0'>
@@ -372,9 +392,22 @@ const FilePage: React.FC<{
                 </div>
             </main>
 
+            {/* Backdrop: only rendered/interactive below `lg`, closes the drawer on click */}
+            {isInsightsPanelOpen && (
+                <div 
+                    onClick={() => setIsInsightsPanelOpen(false)}
+                    className='fixed inset-0 bg-black/60 z-40 lg:hidden'
+                    aria-hidden='true'
+                />
+            )}
+
             {/* Right: Insight panel */}
-            <aside className='w-full md:w-[320px] xl:w-[360px] flex-shrink-0 border-t md:border-t-0
-            md:border-l border-white/10 md:overflow-y-auto'>
+            <aside className={`w-full sm:w-[380px] lg:w-[320px] xl:w-[360px] flex-shrink-0
+                border-white/10 border-l fixed lg:static top-0 right-0 h-full lg:h-auto
+                z-50 lg:z-auto lg:overflow-y-auto shadow-2xl lg:shadow-none
+                transition-transform duration-300 ease-in-out
+                ${isInsightsPanelOpen ? 'translate-x-0' : 'translate-x-full'}
+                lg:translate-x-0`}>
                 <FileInsightsPanel 
                     fileId={params.fileId}
                     currentFile={currentFile}
@@ -392,6 +425,7 @@ const FilePage: React.FC<{
                     prereqLoading={prereqLoading}
                     onDetectPrerequisites={handleDetectFilePrerequisites}
                     onPrereqClick={handlePrereqClick}
+                    onClose={() => setIsInsightsPanelOpen(false)}
                 />
             </aside>
         </div>

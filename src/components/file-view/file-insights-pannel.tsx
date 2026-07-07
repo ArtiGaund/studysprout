@@ -15,6 +15,7 @@ import {
     Lock, 
     Play, 
     Sparkle, 
+    X, 
     Zap 
 } from "lucide-react";
 import { ActionItem } from "../dashboard-shared/action-item";
@@ -82,6 +83,8 @@ interface FileInsightsPanelProps{
     prereqLoading?: boolean;
     onDetectPrerequisites?: () => void;
     onPrereqClick?: (fileId: string) => void;
+    // Drawer mode (below `lg`): lets the panel close itself
+    onClose?: () => void;
 }
 
 const SectionLabel = ({ children }: { children: React.ReactNode}) => (
@@ -145,6 +148,7 @@ export const FileInsightsPanel = ({
     prereqLoading = false,
     onDetectPrerequisites,
     onPrereqClick,
+    onClose,
 }: FileInsightsPanelProps) => {
     const currentWorkspace = useSelector(selectCurrentWorkspace);
     const [ showAllUsers, setShowAllUsers ] = useState(false);
@@ -190,6 +194,24 @@ export const FileInsightsPanel = ({
     return(
         <div className="w-full bg-[#080c0c] h-full p-4 sm:p-5 flex flex-col space-y-5 overflow-y-auto
         select-none custom-insights-scrollbar border-l border-white/5">
+
+            {/* Drawer header: close button, only relevant/visible below `lg` where the
+            pannel is a slide-in drawer rather than a static column */}
+            <div className="lg:hidden flex items-start justify-between -mb-1">
+                <span className="text-[11px] font-mono font-bold tracking-widest uppercase
+                text-zinc-500">
+                    File Insights
+                </span>
+                <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Close file insights panel"
+                    className="p-1.5 rounded-lg border border-white/10 bg-white/5
+                    hover:bg-white/10 text-zinc-300 transition-colors"
+                >
+                    <X className="w-3.5 h-3.5"/>
+                </button>
+            </div>
             
             {/* 1. Active Collaborative Users */}
             {activeUsers.length > 0 && (
