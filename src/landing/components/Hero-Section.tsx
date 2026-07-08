@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { DashboardPreview } from "./Dashboard-preview";
 import { useScrambleText } from "../hooks/useScrambleText";
-import { ExpandButton } from "./Dashboard-preview-parts/Expand-Button";
 import { CollapsedPreview } from "./Dashboard-preview-parts/Collapsed-Preview";
 import { FullscreenPopup } from "./Dashboard-preview-parts/Fullscreen-Popup";
-import { Maximize2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export const HeroSection = () => {
+     const router = useRouter();
     const scrambledTitle = useScrambleText("Architected.", 500);
     const [ isExpanded, setIsExpanded ] = useState(false);
     const [ isPaused, setIsPaused ] = useState(false);
@@ -74,16 +74,22 @@ export const HeroSection = () => {
             <div className="mt-10 md:mt-12 flex flex-col items-stretch gap-4 md:gap-5 sm:flex-row 
             animate-in w-full sm:w-auto px-6 sm:px-0 
             fade-in zoom-in duration-1000 delay-500 sm:items-center">
-                <button className="group relative flex items-center gap-3 rounded-2xl
-                 bg-[#63FF9D] px-8 md:px-10 py-4 md:py-5 font-black text-black transition-all
-                  hover:scale-105 hover:shadow-[0_0_40px_rgba(99,255,157,0.4)] uppercase text-[11px]
-                   md:text-[12px] tracking-widest">
+                <button 
+                    className="group relative flex items-center gap-3 rounded-2xl 
+                    bg-[#63FF9D] px-8 md:px-10 py-4 md:py-5 font-black text-black 
+                    transition-all hover:scale-105 
+                    hover:shadow-[0_0_40px_rgba(99,255,157,0.4)] uppercase text-[11px]
+                    md:text-[12px] tracking-widest"
+                    onClick={() => router.push("/sign-up")}
+                >
                     Start Growing for free
                      <span className="transition-transform group-hover:translate-x-1">→</span>
                 </button>
-                <button className="rounded-2xl border border-white/10 bg-white/5 px-8 md:px-10 
-                py-4 md:py-5 font-black text-white text-[11px] md:text-[12px] uppercase tracking-widest transition-all
-                 hover:bg-white/10 hover:border-white/20">
+                <button 
+                    className="rounded-2xl border border-white/10 bg-white/5 px-8 md:px-10 
+                    py-4 md:py-5 font-black text-white text-[11px] md:text-[12px] uppercase tracking-widest transition-all
+                    hover:bg-white/10 hover:border-white/20"
+                >
                     View Demo
                 </button>
             </div>
