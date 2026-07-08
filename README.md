@@ -97,34 +97,34 @@ I wanted a tool that didn't just store notes but actively helped me figure out *
 ## Screenshots
 
 **Workspace Dashboard** — reading time, concepts mastered, recall rate, weekly research goals, and quick actions at a glance
-![Workspace dashboard](./docs/images/workspacedashboard.png)
+![Workspace dashboard](./docs/images/workspace-dashboard.png)
 
 **Concept Graph** — auto-generated map of related terms across a folder's files, expandable into a full "Folder Intelligence" view with a Concept Map / Learning Path toggle
-![Concept graph](./docs/images/conceptgraph.png)
+![Concept graph](./docs/images/concept-graph.png)
 
 **Folder View** — per-folder analytics (active reading, mastery, recall rate), a folder-level relationship graph, and folder-wide flashcard sets
-![Folder view](./docs/images/folderview.png)
+![Folder view](./docs/images/folder-view.png)
 
 **File Editor** — block-based writing surface with live flashcard progress, file statistics, locked prerequisites, and related concept tags in the side panel
-![File editor](./docs/images/fileeditor.png)
+![File editor](./docs/images/file-editor.png)
 
 **Real-Time Collaborative Editing** — two users in the same file at once; typed content and slash-command menus sync instantly between sessions via Yjs + Socket.io
-![Collaborative editing](./docs/images/fileedit3.png)
+![Collaborative editing](./docs/images/file-edit3.png)
 
 **Workspace Access & Roles** — invite collaborators by email, assign Owner/Editor roles, and manage who has access to a shared workspace
-![Workspace access](./docs/images/workspacemanagerview.png)
+![Workspace access](./docs/images/workspace-manager-view.png)
 
 **Customizable Flashcard Generation** — choose the source (file or whole folder), card count, and question format (Q&A, Cloze, MCQ, Concept Diagram, Chart-based, Image Labeling)
-![Customize flashcard generation](./docs/images/customizeflashcardgeneration.png)
+![Customize flashcard generation](./docs/images/customize-flashcard-generation.png)
 
 **Flashcard Review** — spaced-repetition study session with New / Due / Done tracking and a reveal-to-rate flow
-![Flashcard review](./docs/images/flashcardreview.png)
+![Flashcard review](./docs/images/flashcard-review.png)
 
 **Global Search** — search across workspace names, folders, and file content simultaneously, with matches highlighted inline
-![Global search](./docs/images/searchbar.png)
+![Global search](./docs/images/search-bar.png)
 
 **Activity Log** — a running history of every meaningful action in a workspace (files created, flashcards generated, concept graphs synthesized)
-![Activity log](./docs/images/recentactivity.png)
+![Activity log](./docs/images/recent-activity.png)
 
 ---
 
