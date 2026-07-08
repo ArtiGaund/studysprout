@@ -41,9 +41,9 @@ export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
             setDims({ w, h});
             //  if(w >= h) onClose();
             // Auto-exit when screen is wide enough for the normal inline layout
-            if(type === 'flashcard' && w >= 1024) onClose();
-            if(type === 'sandbox' && w >= 750) onClose();
-            if(type === 'search' && w >=1024) onClose();
+            if(type === 'flashcard' && w >= 768) onClose();
+            if(type === 'sandbox' && w >= 768) onClose();
+            if(type === 'search' && w >=768) onClose();
         }
         update();
         window.addEventListener('resize', update);
@@ -128,14 +128,6 @@ export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
             >
                 <X size={18}/>
             </button>
-
-            {/* AI guide status */}
-            {/* <div
-            className={`fixed top-4 left-3 text-[9px] font-black uppercase tracking-widest
-                ${isPaused ? 'text-[#63FF9D]' : 'text-gray-600'}`}
-            >
-                {isPaused ? 'Override' : 'AI Guide'}
-            </div> */}
 
             {/* Label */}
             <div className={`fixed top-4 left-3 text-[9px] font-black uppercase tracking-widest

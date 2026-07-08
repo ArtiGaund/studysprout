@@ -44,7 +44,7 @@ export const FlashcardSection = () => {
             if(containerRef.current){
                 // Below 1024 px (lg) the flex-row layout collapses and the editor becomes too
                 // cramped to interact with comfortably.
-                setShowCollapsed(containerRef.current.offsetWidth < 1024);
+                setShowCollapsed(containerRef.current.offsetWidth < 768);
             }
         };
         check();
