@@ -91,147 +91,9 @@ const SignUp = () => {
         }
     }
     return(
-        // <div className="flex  bg-black h-screen justify-center items-center ">
-        //     <div className="flex flex-row w-[60rem] h-[30.5rem] rounded-3xl bg-zinc-900">
-        //     <div className="flex flex-col items-center justify-center gap-2">
-        //         <div className="flex flex-col gap-y-4 m-[2rem]">
-        //             <h2 className="text-3xl font-bold text-neutral-200">
-        //                 Welcome to StudySprout
-        //             </h2>
-        //             <div className="flex justify-center items-center">
-        //                 <span>Already have an account?</span> &nbsp;
-        //                 <span className="text-blue-600">
-        //                     <Link href="/sign-in">Sign in</Link>
-        //                 </span>
-        //             </div>
-        //             <Form {...form}>
-        //                 <form onSubmit={form.handleSubmit(onSubmit)}>
-        //                     <FormField 
-        //                     name="username"
-        //                     control={form.control}
-        //                     render={({ field }) => (
-        //                         <FormItem>
-        //                             {/* <FormLabel>Username</FormLabel> */}
-        //                             <FormControl>
-        //                                 <Input 
-        //                                 icon={<IconUser />}
-        //                                 placeholder="username"
-        //                                 {...field}
-        //                                 onChange={(e) => {
-        //                                     field.onChange(e)
-        //                                     debounce(e.target.value)
-        //                                 }}
-        //                                 className="w-full p-2"
-        //                                 />
-        //                             </FormControl>
-        //                             {isCheckingUsername && <Loader2 className="animate-spin"/>}
-        //                             <p className={`relative text-sm ${usernameAvailable === "Username is unique" ?
-        //                                 'text-green-500' : 'text-red-500'
-        //                             } left-[12px]`}>
-        //                                 test {usernameAvailable}
-        //                             </p>
-        //                         </FormItem>
-        //                     )}
-        //                     />
-        //                     <FormField
-        //                         name="email"
-        //                         control={form.control}
-        //                         render={({ field }) => (
-        //                             <FormItem>
-        //                             <FormControl>
-        //                                 <Input 
-        //                                 icon={<IconMail />}
-        //                                 placeholder="email" 
-        //                                 {...field} 
-        //                                 className="w-full p-2"
-        //                                 />
-        //                             </FormControl>
-        //                             <FormMessage />
-        //                             </FormItem>
-        //                         )}
-        //                         />
-        //                         <FormField
-        //                         name="password"
-        //                         control={form.control}
-        //                         render={({ field }) => (
-        //                             <FormItem>
-        //                             <FormControl>
-        //                                 <Input 
-        //                                 icon={<IconLock />} 
-        //                                 type="password" 
-        //                                 placeholder="password" 
-        //                                 {...field} 
-        //                                 className="w-full p-2"
-        //                                 />
-        //                             </FormControl>
-        //                             <FormMessage />
-        //                             </FormItem>
-        //                         )}
-        //                         />
-        //                         <Button className="w-full p-2" type="submit" disabled={isSubmitting}>
-        //                             {
-        //                                 isSubmitting ? (
-        //                                     <>
-        //                                         <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Please Wait
-        //                                     </>
-        //                                 ) : ('SignUp')
-        //                             }
-        //                         </Button>
-        //                 </form>
-        //             </Form>
-                    
-        //     </div>
-        //     <div className="flex flex-row items-center mt-[-2rem]">
-        //         <div className="w-[5rem] h-[1px] bg-gray-400 mx-2"/>
-        //         <span className="text-sm px-2">OR</span>
-        //         <div className="w-[5rem] h-[1px] bg-gray-400 mx-2"/>
-        //     </div>
-        //     {/* Social handle */}
-        //     <div className="flex flex-row items-center gap-x-3">
-        //         <div className="flex w-[2rem] h-[2rem] rounded-full overflow-hidden relative">
-        //             <button
-        //                 className="cursor-pointer"
-        //                 onClick={() => signIn('google') }
-        //                 >
-        //                 <Image 
-        //                     src="/images/google.svg"
-        //                     fill
-        //                     alt="google image"
-        //                     style={{ objectFit: "cover"}}
-        //                     className="absolute inset-0"
-        //                     />
-        //             </button>
-        //         </div>
-        //         <div className="flex w-[2.5rem] h-[2.5rem] rounded-full overflow-hidden relative">
-        //             <button
-        //                 className="cursor-pointer"
-        //                 onClick={() => signIn('github')}
-        //                 >
-        //                 <Image 
-        //                     src="/images/github.svg"
-        //                     fill
-        //                     alt="google image"
-        //                     style={{ objectFit: "cover"}}
-        //                     className="absolute inset-0"
-        //                     />
-        //             </button>
-        //         </div>
-        //     </div>
-        //     </div>
-        //     <div className="flex-1 w-full h-full rounded-r-3xl overflow-hidden relative">
-        //         <Image 
-        //             src="/images/login.PNG"
-        //             fill
-        //             alt="signup"
-        //             style={{ objectFit: "cover"}}
-        //             className="absolute inset-0"
-        //         />
-        //     </div>
-        // </div>
-        // </div>
-
         <main className="relative min-h-screen bg-[#050A0A] flex flex-col items-center 
-            justify-center pt-4 sm:pt-8 lg:pt-12 px-4 sm:px-8 lg:px-12 pb-0 overflow-hidden">
+            justify-start lg:justify-center pt-24 sm:pt-28 lg:pt-12 px-4 sm:px-8 lg:px-12 
+            pb-0 overflow-y-auto lg:overflow-hidden">
                     
             {/* Brand Navigation - Top left anchor */}
             <div className="absolute top-8 left-8 sm:top-12 sm:left-12 z-[110]">
@@ -342,7 +204,7 @@ const SignUp = () => {
                                                         <p className={`relative text-sm ${usernameAvailable === "Username is unique" ?
                                                             'text-green-500' : 'text-red-500'
                                                         } left-[12px]`}>
-                                                            test {usernameAvailable}
+                                                            {usernameAvailable}
                                                         </p>
                                                     </FormItem>
                                                 )}
