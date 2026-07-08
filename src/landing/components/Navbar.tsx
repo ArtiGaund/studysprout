@@ -97,7 +97,7 @@ export const Navbar = () => {
                 </div>
 
                 {/* Desktop Links */}
-                <div className="hidden lg:flex items-center gap-8 xl:gap-12">
+                <div className="hidden md:flex items-center gap-8 xl:gap-12">
                     {navLinks.map((link) => {
                         const isActive = activeSection === link.id;
                         return (
@@ -138,7 +138,7 @@ export const Navbar = () => {
 
                 {/* Desktop Actions + Mobile Toggle*/}
                 <div className="flex items-center gap-3 sm:gap-6">
-                    <div className="hidden lg:flex items-center gap-6">
+                    <div className="hidden md:flex items-center gap-6">
                         <button
                             className="text-gray-400 hover:text-white text-[10px] font-black 
                             uppercase tracking-widest transition"
@@ -146,17 +146,20 @@ export const Navbar = () => {
                         >
                             Sign In
                         </button>
-                        <button className="bg-[#63FF9D] text-black px-4 xl:px-6 py-2
-                        md:py-2.5 rounded-xl 
-                        text-[10px] font-black uppercase tracking-widest hover:brightness-110 
-                        hover:shadow-[0_0_25px_rgba(99,255,157,0.4)] transition-all active:scale-95">
+                        <button 
+                            className="bg-[#63FF9D] text-black px-4 xl:px-6 py-2 md:py-2.5 
+                            rounded-xl text-[10px] font-black uppercase tracking-widest 
+                            hover:brightness-110 hover:shadow-[0_0_25px_rgba(99,255,157,0.4)] 
+                            transition-all active:scale-95"
+                            onClick={() => router.push("/sign-up")}
+                        >
                             Get Started
                         </button>
                     </div>
 
                     {/* Hamburger Button */}
                     <button 
-                        className="lg:hidden p-2 z-[200] relative flex items-center justify-center" 
+                        className="md:hidden p-2 z-[200] relative flex items-center justify-center" 
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                        <div className="relative w-7 h-7">
@@ -205,8 +208,9 @@ export const Navbar = () => {
 
                 <div className="mt-auto space-y-4">
                     <button
-                    className="w-full bg-[#63FF9D] text-black py-4 rounded-2xl font-black
-                    uppercase text-xs tracking-widest"
+                        className="w-full bg-[#63FF9D] text-black py-4 rounded-2xl font-black
+                        uppercase text-xs tracking-widest"
+                        onClick={() => router.push("/sign-in")}
                     >
                         Sign In
                     </button>
