@@ -30,6 +30,7 @@ import { WorkspaceSocketManager } from "@/components/socket/workspace-socket-man
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import { useLastStudied } from "@/hooks/useLastSudied";
 import { WorkspaceSocketProvider } from "@/lib/providers/workspace-socket-context";
+import { truncate } from "node:fs/promises";
 
 interface LayoutProps{
     children: React.ReactNode,
@@ -87,7 +88,7 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
          try {
                 //FETCH PHASE: Load all workspace resources in parallel for speed 
                 await Promise.all([
-                    fetchCurrentWorkspace(currentWorkspaceId),
+                    fetchCurrentWorkspace(currentWorkspaceId, true),
                     getFolders(currentWorkspaceId),
                     getWorkspaceFiles(currentWorkspaceId),
                     getWorkspaces(),

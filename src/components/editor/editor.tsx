@@ -125,7 +125,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
                     const availableType = Array.from(doc.share.keys());
                     isHydrated.current = true;
                 }
-                // isHydrated.current = true;
                 socket.emit("file:update-raw", { fileId, update: uint8Array });
             } catch (error) {
                 console.error("[Editor] Failed to hydrate Y.Doc: ",error);

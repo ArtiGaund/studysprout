@@ -88,7 +88,7 @@ export function useWorkspace() {
      * Fetches all workspaces associated with the authenticated user.
      * Implements a singleton fetch pattern via `hasFetchedAllWorkspaceRef`.
      */
-    const getWorkspaces = useCallback(async(): Promise<{
+    const getWorkspaces = useCallback(async( skipLoadingState = false): Promise<{
         success: boolean;
         data?: ReduxWorkSpace[];
         error?: string;
@@ -104,13 +104,13 @@ export function useWorkspace() {
        
         // Guards against redundant calls for this specific fetch
         if(hasFetchedAllWorkspaceRef.has(currentUserId)){
-            dispatch(SET_WORKSPACE_LOADING(false));
+            if(!skipLoadingState) dispatch(SET_WORKSPACE_LOADING(false));
             return {
                 success: true,
                 data: allWorkspaceIds.map(id => workspacesById[id]).filter(Boolean) as ReduxWorkSpace[]
             }
         }
-        dispatch(SET_WORKSPACE_LOADING(true));
+        if(!skipLoadingState) dispatch(SET_WORKSPACE_LOADING(true));
         dispatch(SET_WORKSPACE_ERROR(null));
 
         try {
@@ -144,7 +144,7 @@ export function useWorkspace() {
                  error: error.message || "Failed to fetch workspaces" 
             };
         } finally {
-            dispatch(SET_WORKSPACE_LOADING(false)); // Clear loading state in Redux
+            if(!skipLoadingState) dispatch(SET_WORKSPACE_LOADING(false)); // Clear loading state in Redux
         }
     }, [
         currentUserId,
@@ -157,7 +157,10 @@ export function useWorkspace() {
      * Logic for deep-linking and direct navigation. 
      * Prioritizes the Redux 'byId' cache before initiating a network request.
      */
-    const fetchCurrentWorkspace = useCallback(async ( workspaceId: string ): Promise<{
+    const fetchCurrentWorkspace = useCallback(async ( 
+        workspaceId: string,
+        skipLoadingState = false, 
+    ): Promise<{
         success: boolean;
         data?: ReduxWorkSpace;
         error?: string;
@@ -171,7 +174,7 @@ export function useWorkspace() {
 
         // 1. Cache Hit: Prevent unnecessary network latency
         if(workspacesById[workspaceId]){
-            dispatch(SET_WORKSPACE_LOADING(false));
+            if(!skipLoadingState) dispatch(SET_WORKSPACE_LOADING(false));
             dispatch(SET_CURRENT_WORKSPACE(workspacesById[workspaceId]));
             return { 
                 success: true, 
@@ -179,7 +182,7 @@ export function useWorkspace() {
              };
         }
         
-        dispatch(SET_WORKSPACE_LOADING(true));
+        if(!skipLoadingState) dispatch(SET_WORKSPACE_LOADING(true));
         dispatch(SET_WORKSPACE_ERROR(null));
         try {
             const workspace = await getCurrentWorkspace(workspaceId);
@@ -209,7 +212,7 @@ export function useWorkspace() {
                 error: error.message || "Failed to fetch current workspace"
             }
         } finally{
-            dispatch(SET_WORKSPACE_LOADING(false));
+            if(!skipLoadingState) dispatch(SET_WORKSPACE_LOADING(false));
         }
     }, [
          dispatch,

@@ -85,7 +85,8 @@ const FolderPage: React.FC<{
         }
     }, [
         params.folderId,
-        folders
+        folders,
+        currentFolder?._id,
     ])
 
     /** * EFFECT: Deletion/Safety Guard

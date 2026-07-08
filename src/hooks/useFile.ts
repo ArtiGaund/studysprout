@@ -14,7 +14,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { RootState } from "@/store/store";
+import store, { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { File as MongooseFile } from "@/model/file.model";
 import { 
@@ -110,7 +110,6 @@ export function useFile() {
                     folderId: newFile.folderId,
                     file: transformedFile
                 }));
-                dispatch(SET_CURRENT_FILE(transformedFile));
                 dispatch(MARK_ACTIVITY_STALE());
                 
                 // Invalidate Cache to ensure navigation lists are fresh
@@ -183,7 +182,7 @@ export function useFile() {
             dispatch(MARK_ACTIVITY_STALE());
         
             // Clear Cache for this specific item
-                hasFetchedCurrentFileRef.delete(fileId);
+            hasFetchedCurrentFileRef.delete(fileId);
             // If the file's workspace ID is available, clear the workspace files ref
             if (file.workspaceId) { // Assuming file object has workspaceId
                 hasFetchedWorkspaceFilesRef.delete(file.workspaceId.toString());
@@ -250,13 +249,13 @@ export function useFile() {
                 }));
             });
 
-            hasFetchedCurrentFileRef.add(workspaceId);
+            hasFetchedWorkspaceFilesRef.add(workspaceId);
             return {
                 success: true,
                 data: transformedFiles
             }
         } catch (error: any) {   
-             console.error('Error while fetching workspace files in hook:', error); // Updated message
+            console.error('Error while fetching workspace files in hook:', error); // Updated message
             const errorMessage = error.message || "Failed to fetch all the files of workspace"; // Updated message
             dispatch(SET_FILE_ERROR(errorMessage));
             hasFetchedWorkspaceFilesRef.delete(workspaceId);
@@ -284,10 +283,9 @@ export function useFile() {
             }
         }
         if (hasFetchedFolderFilesRef.has(folderId)) {
-            // const files = allFileIds
-            // .filter(id => filesById[id]?.folderId === folderId)
-            // .map(id => filesById[id]);
-            return { success: true, data: files as ReduxFile[] }; // Return Redux data mapped back to Mongoose-like
+            const state = store.getState();
+            const cachedFiles = selectFiles(state, folderId);
+            return { success: true, data: cachedFiles }; 
         }
         dispatch(SET_FILE_LOADING(true));
         dispatch(SET_FILE_ERROR(null));
@@ -365,8 +363,13 @@ export function useFile() {
         if(!fileId){
             return { success: false, error: "File id required" };
         }
-        const cachedFile = files.find(file => file._id === fileId);
-
+        // const cachedFile = files.find(file => file._id === fileId);
+        const state = store.getState();
+        let cachedFile: ReduxFile | undefined;
+        for(const folderId of Object.keys(state.file.filesByFolder)){
+            cachedFile = state.file.filesByFolder[folderId].byId[fileId];
+            if(cachedFile) break;
+        }
         if(cachedFile){
             // we still need to set the global currentFileId to ensure the UI is correct
             dispatch(SET_CURRENT_FILE(cachedFile));
@@ -515,19 +518,18 @@ export function useFile() {
                     blockId: newBlock.data.block.id,
                     updates: newBlock.data.block
                 }))
-                    dispatch(UPDATE_FILE({
-                        folderId: file._id,
-                        id: fileId,
-                        updates: {
-                            blocks: {
-                                ...file.blocks,
-                                [newBlock.data.block.id]: newBlock.data.block,
-                            },
-                            blockOrder: newBlock.data.blockOrder,
-                        }
-                    }))
-                // }
-
+                dispatch(UPDATE_FILE({
+                    folderId: file._id,
+                    id: fileId,
+                    updates: {
+                        blocks: {
+                            ...file.blocks,
+                            [newBlock.data.block.id]: newBlock.data.block,
+                        },
+                        blockOrder: newBlock.data.blockOrder,
+                    }
+                }))
+                
                 return {
                     success: true,
                     data: newBlock
@@ -651,16 +653,16 @@ export function useFile() {
     }, [ currentFile, files ])
      return {
          // Data drived from redux store
-         files: allFilesArray,
-         currentFile: currentFileObject,
+        files: allFilesArray,
+        currentFile: currentFileObject,
 
-          // Loading and error states
-         fileLoading,
-         fileError,
+        // Loading and error states
+        fileLoading,
+        fileError,
 
-         // Actions
-         createFile,
-         updateFile,
+        // Actions
+        createFile,
+        updateFile,
         getFiles,
         currentFileDetails,
         getWorkspaceFiles,

@@ -12,7 +12,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import clsx from "clsx";
 import EmojiPicker from "../global/emoji-picker";
@@ -428,7 +428,6 @@ const Dropdown: React.FC<DropdownProps> = ({
                             onFocus={handleInputFocus} 
                             onChange={handleTitleChange}
                             onKeyDown={handleKeyDown}
-                            // autoFocus={isCurrentlyEditingFromHook} 
                         />
                     ) : (
                         <TooltipComponent
@@ -459,7 +458,6 @@ const Dropdown: React.FC<DropdownProps> = ({
                                     )}
                                     // DISABLE clicks if locked
                                     onClick={(e) => !isLockedByRemote && handleMouseClickInterception(e)} 
-                                    // onDoubleClick={(e) => !isLockedByRemote && handleCombinedDoubleClick(e)} 
                                 >
                                     {String(displayedTitle)}
                                  </span>

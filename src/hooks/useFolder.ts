@@ -22,7 +22,7 @@ import {
     UPDATE_FOLDER 
 } from "@/store/slices/folderSlice";
 import { getAllFolders } from "@/services/workspaceServices";
-import { ConceptGraph, ReduxFolder } from "@/types/state.type";
+import { ReduxFolder } from "@/types/state.type";
 import { 
     addFolder, 
     conceptGraphService, 
@@ -179,7 +179,6 @@ export function useFolder(){
                     workspaceId,
                     folder: transformedFolder
                 }));
-                dispatch(SET_CURRENT_FOLDER(transformedFolder));
                 dispatch(MARK_ACTIVITY_STALE());
                 // Invalidate cache to maintain data integrity
                 if (workspaceId) {
@@ -279,7 +278,6 @@ export function useFolder(){
         }
     }, [
         dispatch,
-        // currentFolderId,
     ])
 
     /**

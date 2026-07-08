@@ -247,6 +247,7 @@ const FilePage: React.FC<{
         getFileDetails()
     }, [
         params.fileId, 
+        currentFile?._id,
     ])
     
     /** * DATA TRANSFORMATION: Binary Decoding
