@@ -30,7 +30,9 @@ import { WorkspaceSocketManager } from "@/components/socket/workspace-socket-man
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import { useLastStudied } from "@/hooks/useLastSudied";
 import { WorkspaceSocketProvider } from "@/lib/providers/workspace-socket-context";
-import { truncate } from "node:fs/promises";
+import { Sheet } from "@/components/ui/sheet";
+import FlashcardSetViewerSheet from "@/components/flashcard/flashcard-set-viewer-sheet";
+import FlashcardTypesForm from "@/components/flashcard/flashcard-types-form";
 
 interface LayoutProps{
     children: React.ReactNode,
@@ -59,7 +61,16 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
         getFlashcardSets
     } = useFlashcardSet(params.workspaceId);
 
-    const { isRevisionSidebarOpen } = useRevisionSidebar();
+    // Sheet-related state now lives at layout level through context, not inside 
+    // RevisionSidebar - this keep the Sheets out of MobileSidebar's DOM substree.
+    const { 
+        isRevisionSidebarOpen,
+        flashcardSetViewerId,
+        closeFlashcardSetViewerSheet, 
+        isFlashcardTypeSheetOpen,
+        closeFlashcardTypeSheet,
+    } = useRevisionSidebar();
+
     const { fetchLastStudied } = useLastStudied();
     
     /** * EFFECT: Workspace Data fetching & Cleanup
@@ -71,7 +82,7 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
 
         const currentWorkspaceId = params.workspaceId;
 
-       const performLoad = async () => {
+        const performLoad = async () => {
             dispatch(SET_WORKSPACE_LOADING(true));
             
             // CLEANUP PHASE: If we are moving to a NEW Workspace, clear the old state
@@ -84,8 +95,8 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
                 dispatch(clearFlashcards());
             }
 
-         hasLoadedWorkspaceRef.current = currentWorkspaceId;
-         try {
+            hasLoadedWorkspaceRef.current = currentWorkspaceId;
+            try {
                 //FETCH PHASE: Load all workspace resources in parallel for speed 
                 await Promise.all([
                     fetchCurrentWorkspace(currentWorkspaceId, true),
@@ -101,8 +112,7 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
                 console.error("Layout Load Error: ",error);
             }finally{
                 dispatch(SET_WORKSPACE_LOADING(false));
-            }
-         
+            }         
        }
 
         // Trigger load only if it's a new ID or first load   
@@ -113,17 +123,20 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
         params.workspaceId,
         userId,
         dispatch,
-    ])
+    ]);
+
     return(
         <WorkspaceSocketProvider>
             <main className="flex overflow-hidden h-screen w-screen">
                 <WorkspaceSocketManager />
                 <Sidebar params={params} className="hidden sm:flex" />
+
                 {isRevisionSidebarOpen && (
-                    <div className="hidden sm:flex border-neutral-12/70 border-l-[1px] relative 
-                    overflow-scroll">
-                    <RevisionSidebar params={params}/>
-                </div>)}
+                    <div className="hidden sm:flex shrink-0 border-neutral-12/70 border-l-[1px]
+                     relative overflow-scroll">
+                        <RevisionSidebar params={params}/>
+                    </div>
+                )}
             
                 <MobileSidebar
                     revisionContent={
@@ -138,11 +151,38 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
                     className="w-full flex h-full"
                     />
                 </MobileSidebar>
+                
                 <div className="border-neutral-12/70 border-l-[1px] w-full relative 
                 overflow-scroll">
                     {children}
                 </div>
             </main>
+
+            {/* 
+                Both Sheets rendered here - as siblings of MobileSidebar, not descendants of
+                it. Redix portals their overlay/content to document.body regardless, but
+                keeping the "trigger tree" outside the manually-translated <aside> means
+                 their's no longer a conflicting stacking context or competing pointer-events owner.
+            */}
+            <Sheet
+                open={!!flashcardSetViewerId}
+                onOpenChange={(open) => {
+                    if(!open) closeFlashcardSetViewerSheet();
+                }}
+            >
+                {flashcardSetViewerId && 
+                    <FlashcardSetViewerSheet setId={flashcardSetViewerId}/>
+                }
+            </Sheet>
+
+            <Sheet
+                open={isFlashcardTypeSheetOpen}
+                onOpenChange={(open) => {
+                    if(!open) closeFlashcardTypeSheet();
+                }}
+            >
+                <FlashcardTypesForm />
+            </Sheet>
         </WorkspaceSocketProvider>
     )
 }

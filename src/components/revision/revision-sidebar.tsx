@@ -16,10 +16,7 @@
 import { twMerge } from "tailwind-merge";
 import { Button } from "../ui/button";
 import { Loader2, PlusIcon } from "lucide-react";
-import { Sheet, SheetTrigger } from "../ui/sheet";
-import FlashcardTypesForm from "../flashcard/flashcard-types-form";
 import { useCallback, useEffect, useState } from "react";
-import FlashcardSetViewerSheet from "../flashcard/flashcard-set-viewer-sheet";
 import RevisionFlashcardSetList from "./revision-flashcard-set-list";
 import { useFlashcardSet } from "@/hooks/flashcard/useFlashcardSet";
 import { useParams } from "next/navigation";
@@ -35,6 +32,7 @@ import { ProgressBar } from "./progress-bar";
 import { useFlashcardUsage } from "@/hooks/flashcard/useFlashcardUsage";
 import { UsageRing } from "./usage-ring";
 import { useWorkspaceSocketContext } from "@/lib/providers/workspace-socket-context";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 
 interface RevisionSidebarProps{
     params: { workspaceId: string};
@@ -47,8 +45,6 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
     const sets = useSelector((state: RootState) => state.flashcardSet.sets);
    
     // --- LOCAL UI STATE ---
-    const [ isFlashcardTypeSheetOpen, setFlashcardTypeSheetOpen ] = useState(false);
-    const [ flashcardSetViewerId, setFlashcardSetViewerId ] = useState<string | null>(null);
     const [ isLocalActor, setIsLocalActor ] = useState(false);
     const [ showProgress, setShowProgress ] = useState(true);
     const [ isRequesting, setIsRequesting ] = useState(false);
@@ -57,6 +53,13 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
     const currentWorkspaceId = Array.isArray(workspaceId) ? workspaceId[0] : workspaceId;
 
     // --- CUSTOM HOOKS (Business Logic) ---
+    const {
+        flashcardSetViewerId,
+        openFlashcardSetViewerSheet,
+        closeFlashcardSetViewerSheet,
+        openFlashcardTypeSheet,
+    } = useRevisionSidebar();
+
     const {
         usage,
         isAtLimit,
@@ -87,15 +90,6 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
 
     const { user } = useUser();
     const dispatch  = useDispatch();
-
-    const closeFlashcardTypeSheet = () => setFlashcardTypeSheetOpen(false);
-    const openFlashcardSetViewerSheet = (setId: string) => {
-        setFlashcardSetViewerId(setId);
-    }
-    const closeFlashcardSetViewerSheet = () => {
-        setFlashcardSetViewerId(null);
-    }
-
     const isCurrentLocationLocked = !!myProgress;
 
     // --- ACTION HANDLERS ---
@@ -106,10 +100,8 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
     const handleFlashcardSetRegeneration = useCallback(
         (setId: string) => {
             if(flashcardSetViewerId === setId){
-                // FlashcardSetViewerSheet re-fetch on mount keyed by its setId prop,
-                // to toggling the id triggers a refetch through its own internal effect.
-                setFlashcardSetViewerId(null);
-                setFlashcardSetViewerId(setId);
+                closeFlashcardSetViewerSheet();
+                openFlashcardSetViewerSheet(setId);
 
                 toast({
                     title: "Flashcard set updated",
@@ -118,6 +110,8 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
             }
     },[
         flashcardSetViewerId,
+        closeFlashcardSetViewerSheet,
+        openFlashcardSetViewerSheet,
     ]);
 
     /**
@@ -126,11 +120,13 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
     const handleCardRegeneration = useCallback(
         (setId: string, cardId: string) => {
             if(flashcardSetViewerId === setId){
-                setFlashcardSetViewerId(null);
-                setFlashcardSetViewerId(setId);
+                closeFlashcardSetViewerSheet();
+                openFlashcardSetViewerSheet(setId);
             }
     },[
         flashcardSetViewerId,
+        closeFlashcardSetViewerSheet,
+        openFlashcardSetViewerSheet,
     ]);
 
     const {
@@ -319,6 +315,7 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
         flashcardSetViewerId,
         dispatch,
         isConnected,
+        closeFlashcardSetViewerSheet,
     ]);
 
     // When flashcard sheet is created by another user, re-trigger fetch fir everyone in workspace
@@ -374,14 +371,14 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
         isConnected,
         flashcardSetViewerId,
         dispatch,
+        closeFlashcardSetViewerSheet,
     ]);
 
     // --- RENDER ---
     return(
         <aside
             className={twMerge(
-                'flex flex-col shrink-0 p-2 gap-2 h-full overflow-hidden',
-                'w-[260px] md:w-[280px] lg:w-[300px] xl:w-[320px]',
+                'flex flex-col shrink-0 p-2 gap-2 h-full overflow-hidden w-[260px]',
                 className
             )}
         >
@@ -418,12 +415,13 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
 
                 {/* Usage ring */}
                 {usage && (
-                    <div className="shrink-0 w-full min-w-0">
+                    <div className="shrink-0 w-full min-w-0 flex flex-col items-center sm:items-stretch">
                         <UsageRing usage={usage} isAtLimit={isAtLimit}/>
                     </div>
                 )}
                 {/* Action Button  */}
-                <div className="flex flex-row w-full items-center justify-center gap-2 px-2 py-1">
+                <div className="flex flex-row w-full items-center justify-center gap-2 px-2 py-1
+                min-w-0">
                     <Button
                         className="flex-1 max-w-[200px] bg-purple-950 hover:bg-purple-800
                             h-12 text-md"
@@ -443,26 +441,16 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
                         )}
                     </Button>
                     {/* Custom Config sheet trigger */}
-                    <div className="flex-1">
-                        <Sheet 
-                            open={isFlashcardTypeSheetOpen}
-                            onOpenChange={setFlashcardTypeSheetOpen}
-                        >
-                            <SheetTrigger asChild>
-                                <button
-                                    className={twMerge(
-                                        "h-10 w-10 flex items-center justify-center",
-                                        " hover:bg-gray-800 rounded-md transition-colors"
-                                    )}
-                                >
-                                    <PlusIcon className="w-5 h-5"/>
-                                </button>
-                            </SheetTrigger>
-                            <FlashcardTypesForm 
-                                closeFlashcardTypeSheet={closeFlashcardTypeSheet}
-                                openFlashcardSetViewerSheet={openFlashcardSetViewerSheet}
-                            />
-                        </Sheet>
+                    <div className="flex-1 min-w-0 justify-center">
+                        <button
+                            onClick={openFlashcardTypeSheet}
+                            className={twMerge(
+                                "h-10 w-10 flex shrink-0 items-center justify-center",
+                                "hover:bg-gray-800 rounded-md transition-colors"
+                            )}
+                        >   
+                            <PlusIcon className="w-5 h-5"/>
+                        </button>
                     </div>
                 </div>    
             </div>
@@ -482,14 +470,6 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
                         />
                 )}
             </div>
-
-            {/* Viewer Sheets */}
-            <Sheet 
-                open={!!flashcardSetViewerId}
-                onOpenChange={closeFlashcardSetViewerSheet}
-            >
-                <FlashcardSetViewerSheet setId={flashcardSetViewerId!}/>
-            </Sheet>
         </aside>
     )
 }

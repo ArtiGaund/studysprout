@@ -44,18 +44,17 @@ import { useUser } from "@/lib/providers/user-provider";
 import { toast } from "../ui/use-toast";
 import { useFlashcardUsage } from "@/hooks/flashcard/useFlashcardUsage";
 import { ComingSoonTooltip } from "../ui/coming-soon-tooltip";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 
-interface FlashcardTypesFormProps{
-  closeFlashcardTypeSheet: () => void;
-  openFlashcardSetViewerSheet: (setId: string) => void; 
-}
-const FlashcardTypesForm: React.FC<FlashcardTypesFormProps> = ({
-  closeFlashcardTypeSheet,
-  openFlashcardSetViewerSheet
-}) => {
+const FlashcardTypesForm: React.FC = () => {
   // --- Context & Navigation ---
   const currentContext = useSelector((state: RootState) => state.context.currentResource);
   const { workspaceId, folderId } = useParams();
+
+  const {
+    closeFlashcardTypeSheet,
+    openFlashcardSetViewerSheet,
+  } = useRevisionSidebar();
 
   const selectedResourceType = currentContext.type || 'Resource';
   const selectedResourceName = currentContext.title || 'Loading...';

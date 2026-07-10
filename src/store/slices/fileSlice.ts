@@ -139,11 +139,28 @@ const fileSlice = createSlice({
             // add/update incoming files
             files.forEach(file => {
                 // Only add if the file's internal folderId matched the target bucket
+                // if(file.folderId === folderId){
+                //     if(!folderState.byId[file._id]){
+                //         folderState.allIds.push(file._id);
+                //     }
+                //     folderState.byId[file._id] = file;
+                // }
                 if(file.folderId === folderId){
-                    if(!folderState.byId[file._id]){
+                    const existing = folderState.byId[file._id];
+                    if(!existing){
                         folderState.allIds.push(file._id);
+                        folderState.byId[file._id] = file;
+                    }else{
+                        // Preserve richer fields already cached (from currentFileDetails)
+                        // if this incoming summary doesn't carry them.
+                        folderState.byId[file._id] = {
+                            ...existing,
+                            ...file,
+                            blocks: file.blocks !== undefined ? file.blocks : existing.blocks,
+                            blockOrder: file.blockOrder !== undefined ? file.blockOrder : existing.blockOrder,
+                            contentBinary: file.contentBinary !== undefined ? file.contentBinary : existing.contentBinary,
+                        }
                     }
-                    folderState.byId[file._id] = file;
                 }
             });
       

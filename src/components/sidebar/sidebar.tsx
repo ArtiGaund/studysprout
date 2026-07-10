@@ -106,15 +106,12 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
               <SidebarExpandButton />
 
               {/* Workspace Selector: Only visible in expanded mode for better UX */}
-              {!isRevisionSidebarOpen && (<WorkspaceDropdown
-              workspaces={workspaces}
-              defaultValue={currentWorkspace}
-              />)}
+              {!isRevisionSidebarOpen && (
+                <WorkspaceDropdown workspaces={workspaces} defaultValue={currentWorkspace}/>
+              )}
 
               {/* Main Navigation: Links to Home, Trash, and Settings */}
               <NativeNavigation myWorkspaceId={params.workspaceId}/>
-
-               {/* <div className="m-4 pt-4 border-t border-white/5" /> */}
 
               {/* Hierarchical Folder List: Wrapped in ScrollArea for deep structures */}
               <ScrollArea 
@@ -124,10 +121,9 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
                   <div className="w-full pointer-events-none absolute bottom-0 h-20 bg-gradient-to-t
                    from-[#080C0C] to-transparent z-40"/>
                    <FoldersDropdownList 
-                   workspaceFolders={folders || []}
-                   workspaceId={params.workspaceId}
-                  //  onFolderAdded={handleFolderAdded}
-                   usedWhere="sidebar"
+                      workspaceFolders={folders || []}
+                      workspaceId={params.workspaceId}
+                      usedWhere="sidebar"
                    /> 
               </ScrollArea> 
             </>
@@ -138,9 +134,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
         </div>
 
         {/* Profile & Account Settings: Fixed to the bottom of the sidebar */}
-        {/* <div className="mt-auto pt-4 border-t border-white/5"> */}
-          <UserCard />
-        {/* </div> */}
+        <UserCard />
     </aside>)
 }
 

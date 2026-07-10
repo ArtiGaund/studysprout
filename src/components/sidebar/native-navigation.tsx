@@ -78,7 +78,8 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
                 </li>
                     <Trash>
                         <li 
-                        className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2"
+                        className="flex group/native text-Neutrals/neutrals-7 transition-all 
+                        gap-2 cursor-pointer"
                         >
                             
                            {isRevisionSidebarOpen ? 

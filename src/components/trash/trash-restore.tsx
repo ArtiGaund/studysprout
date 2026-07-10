@@ -40,15 +40,19 @@ const TrashRestore = () => {
     if(!workspaceId) return null;
 
     return(
-        <section>{workspaceTrashFolder.length >0 && (
-            <>
-                <h3>Folders</h3>
+        <section className="p-4 flex flex-col gap-4">
+            {workspaceTrashFolder.length >0 && (
+            <div className="flex flex-col gap-1">
+                <h3 className="text-xs font-medium text-muted-foreground px-2">
+                    Folders
+                </h3>
                 {/* Folder Recovery List */}
                 {workspaceTrashFolder.map((folder) => (
                      <Link 
                      href={`/dashboard/${folder.workspaceId}/${folder._id}`} 
                      key={folder._id}
-                     className="hover:bg-neutral-800/50 rounded-md p-2 flex items-center justify-between group transition-colors"
+                     className="hover:bg-neutral-800/50 rounded-md p-2 flex items-center 
+                     justify-between group transition-colors"
                      >
                         <article>
                             <aside className="flex items-center gap-2">
@@ -58,18 +62,19 @@ const TrashRestore = () => {
                         </article>
                     </Link>
                 ))}
-            </>
+            </div>
         )}
 
         {/* File Recovery List */}
         {workspaceTrashFile.length>0 && (
-            <>
-                <h3>Files</h3>
+            <div className="flex flex-col gap-1">
+                <h3 className="text-xs font-medium text-muted-foreground px-2">Files</h3>
                 {workspaceTrashFile.map((file) => (
                     <Link 
                     href={`/dashboard/${file.workspaceId}/${file.folderId}/${file._id}`} 
                     key={file._id}
-                   className="hover:bg-neutral-800/50 rounded-md p-2 flex items-center justify-between group transition-colors"
+                   className="hover:bg-neutral-800/50 rounded-md p-2 flex items-center 
+                   justify-between group transition-colors"
                     >
                        <article>
                            <aside className="flex items-center gap-2">
@@ -79,7 +84,7 @@ const TrashRestore = () => {
                        </article>
                    </Link>
                 ))}
-            </>
+            </div>
         )}
 
         {/* Empty State UI */}

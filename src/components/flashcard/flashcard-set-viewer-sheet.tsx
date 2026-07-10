@@ -29,6 +29,7 @@ import { setFlashcardsForSet } from "@/store/slices/flashcardSlice";
 import { updateSingleSet } from "@/store/slices/flashcardSetSlice";
 import { useLastStudied } from "@/hooks/useLastSudied";
 import { useFlashcardGenerator } from "@/hooks/flashcard/useFlashcardGenerator";
+import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 
 interface FlashcardSetViewerSheetProps{
     setId: string;
@@ -45,6 +46,8 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
     const [ sessionStats, setSessionStats ] = useState({
         again: 0, hard: 0, good: 0, easy: 0, startTime: new Date(),
     });
+
+    const { closeFlashcardSetViewerSheet } = useRevisionSidebar();
         
     const EMPTY: any[] = [];
 
@@ -102,22 +105,8 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
             return acc;
         }, { new: 0, due: 0, completed: 0});
     },[cards]);
-        
-    const sessionCards = useMemo(() => {
-        if(sessionMode === "all") return cards;
-        const today = new Date();
-        return cards.filter(card => {
-            if(!card.progress?.dueDate) return true;
-            return new Date(card.progress.dueDate) <= today;
-        });
-    },[
-        cards,
-        sessionMode,
-    ]);
 
     const isSessionFinished = activeIndex >= cards.length && cards.length > 0;
-
-    const todoCount = stats.new + stats.due;
 
     // --- Custom Hooks for Business Logic ---
     const { loading, setLoading } = useFlashcardSetDetails(setId);
@@ -186,6 +175,9 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
             const result = await deleteFlashcardSet(setId);
             if(!result || !result.success){
                 console.warn("[RevisionSidebar] Error deleting flashcard set", result);
+            }else{
+                // Close the viewer sheet through context once the set is gone.
+                closeFlashcardSetViewerSheet();
             }
         } catch (error) {
             console.warn("[RevisionSidebar] Error deleting flashcard set", error);

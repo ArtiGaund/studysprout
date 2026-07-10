@@ -371,12 +371,16 @@ export function useFile() {
             if(cachedFile) break;
         }
         if(cachedFile){
+            const hasContent = cachedFile.contentBinary !== null ||
+                (cachedFile.blockOrder && cachedFile.blockOrder.length > 0);
             // we still need to set the global currentFileId to ensure the UI is correct
-            dispatch(SET_CURRENT_FILE(cachedFile));
-            return {
-                success: true,
-                data: cachedFile as ReduxFile,
-            };
+            if(hasContent){
+                dispatch(SET_CURRENT_FILE(cachedFile));
+                return {
+                    success: true,
+                    data: cachedFile as ReduxFile,
+                };
+            }
         }
         dispatch(SET_FILE_LOADING(true));
         dispatch(SET_FILE_ERROR(null));
