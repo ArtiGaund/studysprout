@@ -85,13 +85,6 @@ export const HeroSection = () => {
                     Start Growing for free
                      <span className="transition-transform group-hover:translate-x-1">→</span>
                 </button>
-                <button 
-                    className="rounded-2xl border border-white/10 bg-white/5 px-8 md:px-10 
-                    py-4 md:py-5 font-black text-white text-[11px] md:text-[12px] uppercase tracking-widest transition-all
-                    hover:bg-white/10 hover:border-white/20"
-                >
-                    View Demo
-                </button>
             </div>
 
             {/* Dashboard 3D Entrance */}
