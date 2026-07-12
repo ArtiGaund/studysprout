@@ -1,18 +1,17 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python3"]
-
-[variables]
-PIP_BREAK_SYSTEM_PACKAGES = "1"
+nixPkgs = ["nodejs_20", "python3", "poppler_utils"]
 
 [phases.install]
 cmds = [
   "npm install",
-  "python3 -m ensurepip --upgrade",
-  "python3 -m pip install -r python/requirements.txt"
+  "python3 -m venv /opt/venv --without-pip",
+  "curl -sSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py",
+  "/opt/venv/bin/python3 /tmp/get-pip.py",
+  "/opt/venv/bin/pip install -r python/requirements.txt"
 ]
 
 [phases.build]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npm start"
+cmd = "PATH=/opt/venv/bin:$PATH npm start"
