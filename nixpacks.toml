@@ -4,6 +4,6 @@ nixPkgs = ["nodejs_20", "python3"]
 [phases.install]
 cmds = [
   "npm install",
-  "python3 -m ensurepip --upgrade",
+  "python3 -m ensurepip --upgrade --break-system-packages",
   "python3 -m pip install --break-system-packages -r python/requirements.txt"
 ]
