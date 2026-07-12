@@ -1,532 +1,625 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-       <meta charset="UTF-8"/>
-       <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-       <title>Studysprout - Connection Lost</title>
-       <style>
-           *{
-               margin: 0;
-               padding: 0;
-               box-sizing: border-box;
-           }
-           :root{
-               --bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;
-               --purple:#7c3aed;--purple-dim:#3b1f6e;--purple-glow:#a855f7;
-               --red:#ef4444;--green:#22c55e;--amber:#f59e0b;
-               --text:#e2e8f0;--muted:#64748b;--mono:'Courier New',monospace;
-           }
-           html,body{
-               width: 100%;
-               height: 100%;
-               overflow: hidden;
-               background: var(--bg);
-               color: var(--text);
-               font-family: var(--mono);
-               overflow-x: hidden;
-           }
-
-           /* --- scan line animation (moving top to bottom) ---- */
-           #scanline{
-               position: fixed;
-               inset: 0;
-               pointer-events: none;
-               z-index: 0;
-               overflow: hidden;
-           }
-           #scanline::after{
-               content: '';
-               position: absolute;
-               left: 0;
-               right: 0;
-               height: 2px;
-               background: linear-gradient(90deg,transparent,rgba(124,58,237,.6),rgba(168,85,247,.9),rgba(124,58,237,.6),transparent);
-               box-shadow: 0 0 20px 4px rgba(168,85,247,.4);
-               animation: scan 5s linear infinite;
-           }
-           @keyframes scan{
-               0%{top: -2px}
-               100%{top: 100%}
-           }
-
-           /* --- Grid background ---- */
-           #grid{
-               position: fixed;
-               inset: 0;
-               z-index: 0;
-               background-image:
-                   linear-gradient(rgba(124,58,237,.06) 1px, transparent 1px),
-                   linear-gradient(90deg, rgba(124, 58, 237, .06) 1px, transparent 1px)
-               ;
-               background-size: 40px 40px;
-               mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
-           }
-
-          /* --- Root --- */
-          #root{
-               position: relative;
-               z-index: 1;
-               min-height: 100vh;
-               width: 100%;
-               display: flex;
-               align-items: center;
-               justify-content: center;
-               padding: clamp(16px, 4vw, 40px);
+  <head>
+      <meta charset="UTF-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>Studysprout - Connection Lost</title>
+      <style>
+          *{
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+          }
+          :root{
+              --bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;
+              --purple:#7c3aed;--purple-dim:#3b1f6e;--purple-glow:#a855f7;
+              --red:#ef4444;--green:#22c55e;--amber:#f59e0b;
+              --text:#e2e8f0;--muted:#64748b;--mono:'Courier New',monospace;
+          }
+          html,body{
+              width: 100%;
+              height: 100%;
+              overflow: hidden;
+              background: var(--bg);
+              color: var(--text);
+              font-family: var(--mono);
+              overflow-x: hidden;
           }
 
-          /* --- Card --- */
-          #card{
-               width: 100%;
-               max-width: clamp(300px, 90vw, 680px);
-               background: var(--surface);
-               border: 1px solid var(--border);
-               border-radius: clamp(10px, 2vw, 18px);
-               overflow: hidden;
-               display: flex;
-               flex-direction: column;
+          /* --- scan line animation (moving top to bottom) ---- */
+          #scanline{
+              position: fixed;
+              inset: 0;
+              pointer-events: none;
+              z-index: 0;
+              overflow: hidden;
+          }
+          #scanline::after{
+              content: '';
+              position: absolute;
+              left: 0;
+              right: 0;
+              height: 2px;
+              background: linear-gradient(90deg,transparent,rgba(124,58,237,.6),rgba(168,85,247,.9),rgba(124,58,237,.6),transparent);
+              box-shadow: 0 0 20px 4px rgba(168,85,247,.4);
+              animation: scan 5s linear infinite;
+          }
+          @keyframes scan{
+              0%{top: -2px}
+              100%{top: 100%}
           }
 
-          /* title bar */
-          .bar{
-               display: flex;
-               align-items: center;
-               gap: 6px;
-               padding: clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px);
-               font-size: clamp(9px, 1.2vw, 11px);
-               color: var(--muted);
-               letter-spacing: .05em;
-               flex-shrink: 0;
-          }
-          .dot{
-               width: 10px;
-               height: 10px;
-               border-radius: 50%;
-               flex-shrink: 0;
-          }
-          .dr{ background: #ef4444 }
-          .dy{ background: #f59e0b }
-          .dg{ background: #22c55e }
-          .bar-title{
-               margin-left: 4px;
-               white-space: nowrap;
-               overflow: hidden;
-               text-overflow: ellipsis;
+          /* --- Grid background ---- */
+          #grid{
+              position: fixed;
+              inset: 0;
+              z-index: 0;
+              background-image:
+                  linear-gradient(rgba(124,58,237,.06) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(124, 58, 237, .06) 1px, transparent 1px)
+              ;
+              background-size: 40px 40px;
+              mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
           }
 
-          /* body */
-          #body{
-               display: flex;
-               flex-direction: column;
-               align-items: center;
-               padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 36px);
-               gap: clamp(14px, 2.5px, 22px);
+         /* --- Root --- */
+         #root{
+              position: relative;
+              z-index: 1;
+              min-height: 100vh;
+              width: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: clamp(16px, 4vw, 40px);
+         }
+
+         /* --- Card --- */
+         #card{
+              width: 100%;
+              max-width: clamp(300px, 90vw, 680px);
+              background: var(--surface);
+              border: 1px solid var(--border);
+              border-radius: clamp(10px, 2vw, 18px);
+              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+         }
+
+         /* title bar */
+         .bar{
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              padding: clamp(8px, 1.5vw, 12px) clamp(10px, 2vw, 16px);
+              font-size: clamp(9px, 1.2vw, 11px);
+              color: var(--muted);
+              letter-spacing: .05em;
+              flex-shrink: 0;
+         }
+         .dot{
+              width: 10px;
+              height: 10px;
+              border-radius: 50%;
+              flex-shrink: 0;
+         }
+         .dr{ background: #ef4444 }
+         .dy{ background: #f59e0b }
+         .dg{ background: #22c55e }
+         .bar-title{
+              margin-left: 4px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+         }
+
+         /* body */
+         #body{
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              padding: clamp(20px, 4vw, 40px) clamp(16px, 4vw, 36px);
+              gap: clamp(14px, 2.5px, 22px);
+         }
+
+         /* --- Icon --- */
+         .icon-wrap{
+              width: clamp(56px, 9vw, 80px);
+              height: clamp(56px, 9vw, 80px);
+              border-radius: clamp(12px, 2vw, 18px);
+              background: rgba(124, 58, 237, .12);
+              border: 1px solid var(--purple-dim);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              position: relative;
+              animation: pulse-icon 3s ease-in-out infinite;
+              flex-shrink: 0;
+         }
+         /* glow behind icon - visible mainly on small screens */
+         .icon-glow{
+              position: absolute;
+              inset: -20px;
+              border-radius: 50%;
+              background: radial-gradient(circle, rgba(124, 58, 237, .3) 0%, transparent 65%);
+              animation: glow-breathe 2.5s ease-in-out infinite;
+         }
+         @keyframes glow-breathe{
+              0%,100%{ transform: scale(.7); opacity: .4; }
+              50%{ transform: scale(1.3); opacity: 1; }
+         }
+         @keyframes pulse-icon{
+              0%,100%{ box-shadow: 0 0 0 0 rgba(124, 58, 237, .3);}
+              50%{ box-shadow: 0 0 0 14px rgba(124, 58, 237, 0); }
+         }
+         .icon-wrap svg{
+              width: clamp(26px, 4vw, 38px);
+              height: clamp(26px, 4vw, 38px);
+              stroke: var(--purple-glow);
+              fill: none;
+              stroke-width: 1.8;
+              position: relative;
+              z-index: 1;
+         }
+
+         /* heading */
+         .heading{
+              font-size: clamp(13px, 2.8vw, 22px);
+              font-weight: 700;
+              letter-spacing: .1em;
+              text-align: center;
+              color: #fff;
+              line-height: 1.3;
+         }
+         .sub{
+              font-size: clamp(10px, 1.5vw, 13px);
+              color: var(--muted);
+              letter-spacing: .04em;
+              text-align: center;
+         }
+
+         /* Status nodes - shown on small/medium, hidden on large through grid */
+         #nodes{
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: clamp(6px, 1.5vw, 10px);
+              width: 100%;
+         }
+         /* hide node grid on large screens (diagnostic card covers it) */
+         @media(min-width: 560px){
+              #nodes{ display: none; }
+         }
+
+         .node-card{
+              background:#0d0d16;
+              border:1px solid var(--border);
+              border-radius:clamp(6px,1.5vw,10px);
+              padding:clamp(8px,1.5vw,12px);
+              display:flex;
+              flex-direction:column;
+              gap:4px;
+         }
+         .nc-top{display:flex;align-items:center;justify-content:space-between}
+          .nc-top svg{
+              width:clamp(11px,2vw,14px);
+              height:clamp(11px,2vw,14px);
+              stroke:var(--muted);
+              fill:none;
+              stroke-width:2
+          }
+          .nc-dot{
+              width:7px;
+              height:7px;
+              border-radius:50%;
+              background:var(--red);
+              animation:blink 1.2s step-end infinite
+          }
+          @keyframes blink{0%,100%{opacity:1}50%{opacity:.1}}
+          .nc-lbl{font-size:clamp(8px,1.2vw,10px);color:var(--muted);letter-spacing:.06em}
+          .nc-val{font-size:clamp(9px,1.4vw,12px);font-weight:700}
+
+          /* Diagnostic card - shown on medium+ screens */
+          #diag{
+              width:100%;
+              background:#0a0a10;
+              border:1px solid #1a1a2a;
+              border-radius:clamp(8px,1.5vw,12px);
+              overflow:hidden;
+              font-size:clamp(9px,1.3vw,11px);
+          }
+          @media(max-width:559px){#diag{display:none}}
+
+          .dh{
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              padding:clamp(6px,1vw,9px) clamp(10px,1.5vw,14px);
+              border-bottom:1px solid #1a1a2a;
+              color:var(--muted);
+              letter-spacing:.07em;
+          }
+          .badge{
+              padding:2px 8px;
+              border-radius:4px;
+              font-size:clamp(8px,1.1vw,10px);
+              font-weight:700;
+              background:rgba(245,158,11,.12);
+              color:var(--amber);
+              border:1px solid rgba(245,158,11,.25);
+              letter-spacing:.06em;
+              animation:blink-b 2s step-end infinite;
+          }
+          @keyframes blink-b{0%,100%{opacity:1}50%{opacity:.35}}
+          .dr3{
+              display:grid;
+              grid-template-columns:repeat(3,1fr);
+              padding:clamp(8px,1.2vw,12px) clamp(10px,1.5vw,14px);
+              border-bottom:1px solid #1a1a2a;
+              gap:6px;
+          }
+          .dc label{
+              display:block;
+              color:var(--muted);
+              font-size:clamp(8px,1vw,10px);
+              margin-bottom:3px;
+              letter-spacing:.05em
+          }
+          .dc .v{font-size:clamp(9px,1.2vw,11px);font-weight:700;letter-spacing:.03em}
+          .vr{color:var(--red)}.vg{color:var(--green)}.vm{color:var(--muted)}
+
+          /* terminal */
+          #term{
+              padding:clamp(8px,1.2vw,12px) clamp(10px,1.5vw,14px);
+              min-height:clamp(80px,12vw,120px);
+              font-size:clamp(9px,1.2vw,11px);line-height:1.75;color:#6ee7b7;overflow:hidden;
+          }
+          .tl::before{content:'> ';color:var(--purple-glow)}
+
+          /* -- BUTTONS -- */
+          .btns{display:flex;gap:clamp(8px,1.5vw,12px);width:100%;flex-wrap:wrap}
+          .btn{
+              flex:1;
+              min-width:120px;
+              padding:clamp(9px,1.5vw,13px) clamp(10px,2vw,16px);
+              border-radius:clamp(6px,1.2vw,10px);
+              font-family:var(--mono);
+              font-size:clamp(10px,1.3vw,13px);
+              font-weight:700;
+              letter-spacing:.06em;
+              cursor:pointer;
+              border:1px solid;
+              transition:filter .2s,border-color .2s,color .2s;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              gap:6px;
+          }
+          .bp{
+              background:linear-gradient(135deg,var(--purple),#9333ea);
+              border-color:transparent;
+              color:#fff
+          }
+          .bp:hover{filter:brightness(1.15)}
+          .bp:disabled{opacity:.6;cursor:not-allowed;filter:none}
+          .bp svg{animation:spin 2s linear infinite}
+          @keyframes spin{to{transform:rotate(360deg)}}
+          .bs{background:transparent;border-color:var(--border);color:var(--muted)}
+          .bs:hover{border-color:var(--purple-dim);color:var(--text)}
+
+          /* diag footer */
+          .df{
+              display:flex;
+              justify-content:space-between;
+              flex-wrap:wrap;
+              gap:4px;
+              padding:clamp(4px,1vw,7px) clamp(10px,1.5vw,14px);
+              color:#2a2a3a;
+              font-size:clamp(7px,1vw,9px);
+              letter-spacing:.04em;
           }
 
-          /* --- Icon --- */
-          .icon-wrap{
-               width: clamp(56px, 9vw, 80px);
-               height: clamp(56px, 9vw, 80px);
-               border-radius: clamp(12px, 2vw, 18px);
-               background: rgba(124, 58, 237, .12);
-               border: 1px solid var(--purple-dim);
-               display: flex;
-               align-items: center;
-               justify-content: center;
-               position: relative;
-               animation: pulse-icon 3s ease-in-out infinite;
-               flex-shrink: 0;
+          /* -- MOBILE LOGS - visible only on small screens -- */
+          #mob-info{width:100%;display:flex;flex-direction:column;gap:8px}
+          @media(min-width:560px){#mob-info{display:none}}
+
+          .last-c{font-size:clamp(9px,2vw,11px);color:var(--muted);text-align:center}
+          #mob-logs{
+              background:#060609;
+              border:1px solid #111120;
+              border-radius:8px;
+              padding:clamp(8px,2vw,12px);
+              font-size:clamp(8px,2vw,10px);
+              line-height:1.6;
+              color:#4a5568;
           }
-          /* glow behind icon - visible mainly on small screens */
-          .icon-glow{
-               position: absolute;
-               inset: -20px;
-               border-radius: 50%;
-               background: radial-gradient(circle, rgba(124, 58, 237, .3) 0%, transparent 65%);
-               animation: glow-breathe 2.5s ease-in-out infinite;
+          .lh{
+              display:flex;
+              justify-content:space-between;
+              color:#2a2a3a;
+              font-size:clamp(7px,1.5vw,9px);
+              margin-bottom:4px
           }
-          @keyframes glow-breathe{
-               0%,100%{ transform: scale(.7); opacity: .4; }
-               50%{ transform: scale(1.3); opacity: 1; }
-          }
-          @keyframes pulse-icon{
-               0%,100%{ box-shadow: 0 0 0 0 rgba(124, 58, 237, .3);}
-               50%{ box-shadow: 0 0 0 14px rgba(124, 58, 237, 0); }
-          }
-          .icon-wrap svg{
-               width: clamp(26px, 4vw, 38px);
-               height: clamp(26px, 4vw, 38px);
-               stroke: var(--purple-glow);
-               fill: none;
-               stroke-width: 1.8;
-               position: relative;
-               z-index: 1;
-          }
+          .ll{color:#3a5a4a}
 
-          /* heading */
-          .heading{
-               font-size: clamp(13px, 2.8vw, 22px);
-               font-weight: 700;
-               letter-spacing: .1em;
-               text-align: center;
-               color: #fff;
-               line-height: 1.3;
-          }
-          .sub{
-               font-size: clamp(10px, 1.5vw, 13px);
-               color: var(--muted);
-               letter-spacing: .04em;
-               text-align: center;
-          }
+          /* svg inline helper */
+          svg{display:block;flex-shrink:0}
+      </style>
+  </head>
+  <body>
+      <div id="scanline"></div>
+      <div id="grid"></div>
 
-          /* Status nodes - shown on small/medium, hidden on large through grid */
-          #nodes{
-               display: grid;
-               grid-template-columns: 1fr 1fr;
-               gap: clamp(6px, 1.5vw, 10px);
-               width: 100%;
-          }
-          /* hide node grid on large screens (diagnostic card covers it) */
-          @media(min-width: 560px){
-               #nodes{ display: none; }
-          }
+      <div id="root">
+          <div id="card">
+              <div class="bar">
+                  <div class="dot dr"></div>
+                  <div class="dot dy"></div>
+                  <div class="dot dg"></div>
+                  <span class="bar-title">Studysprout - Offline State</span>
+              </div>
 
-          .node-card{
-               background:#0d0d16;
-               border:1px solid var(--border);
-               border-radius:clamp(6px,1.5vw,10px);
-               padding:clamp(8px,1.5vw,12px);
-               display:flex;
-               flex-direction:column;
-               gap:4px;
-          }
-          .nc-top{display:flex;align-items:center;justify-content:space-between}
-           .nc-top svg{
-               width:clamp(11px,2vw,14px);
-               height:clamp(11px,2vw,14px);
-               stroke:var(--muted);
-               fill:none;
-               stroke-width:2
-           }
-           .nc-dot{
-               width:7px;
-               height:7px;
-               border-radius:50%;
-               background:var(--red);
-               animation:blink 1.2s step-end infinite
-           }
-           @keyframes blink{0%,100%{opacity:1}50%{opacity:.1}}
-           .nc-lbl{font-size:clamp(8px,1.2vw,10px);color:var(--muted);letter-spacing:.06em}
-           .nc-val{font-size:clamp(9px,1.4vw,12px);font-weight:700}
-
-           /* Diagnostic card - shown on medium+ screens */
-           #diag{
-               width:100%;
-               background:#0a0a10;
-               border:1px solid #1a1a2a;
-               border-radius:clamp(8px,1.5vw,12px);
-               overflow:hidden;
-               font-size:clamp(9px,1.3vw,11px);
-           }
-           @media(max-width:559px){#diag{display:none}}
-
-           .dh{
-               display:flex;
-               justify-content:space-between;
-               align-items:center;
-               padding:clamp(6px,1vw,9px) clamp(10px,1.5vw,14px);
-               border-bottom:1px solid #1a1a2a;
-               color:var(--muted);
-               letter-spacing:.07em;
-           }
-           .badge{
-               padding:2px 8px;
-               border-radius:4px;
-               font-size:clamp(8px,1.1vw,10px);
-               font-weight:700;
-               background:rgba(245,158,11,.12);
-               color:var(--amber);
-               border:1px solid rgba(245,158,11,.25);
-               letter-spacing:.06em;
-               animation:blink-b 2s step-end infinite;
-           }
-           @keyframes blink-b{0%,100%{opacity:1}50%{opacity:.35}}
-           .dr3{
-               display:grid;
-               grid-template-columns:repeat(3,1fr);
-               padding:clamp(8px,1.2vw,12px) clamp(10px,1.5vw,14px);
-               border-bottom:1px solid #1a1a2a;
-               gap:6px;
-           }
-           .dc label{
-               display:block;
-               color:var(--muted);
-               font-size:clamp(8px,1vw,10px);
-               margin-bottom:3px;
-               letter-spacing:.05em
-           }
-           .dc .v{font-size:clamp(9px,1.2vw,11px);font-weight:700;letter-spacing:.03em}
-           .vr{color:var(--red)}.vg{color:var(--green)}.vm{color:var(--muted)}
-
-           /* terminal */
-           #term{
-               padding:clamp(8px,1.2vw,12px) clamp(10px,1.5vw,14px);
-               min-height:clamp(80px,12vw,120px);
-               font-size:clamp(9px,1.2vw,11px);line-height:1.75;color:#6ee7b7;overflow:hidden;
-           }
-           .tl::before{content:'> ';color:var(--purple-glow)}
-
-           /* -- BUTTONS -- */
-           .btns{display:flex;gap:clamp(8px,1.5vw,12px);width:100%;flex-wrap:wrap}
-           .btn{
-               flex:1;
-               min-width:120px;
-               padding:clamp(9px,1.5vw,13px) clamp(10px,2vw,16px);
-               border-radius:clamp(6px,1.2vw,10px);
-               font-family:var(--mono);
-               font-size:clamp(10px,1.3vw,13px);
-               font-weight:700;
-               letter-spacing:.06em;
-               cursor:pointer;
-               border:1px solid;
-               transition:filter .2s,border-color .2s,color .2s;
-               display:flex;
-               align-items:center;
-               justify-content:center;
-               gap:6px;
-           }
-           .bp{
-               background:linear-gradient(135deg,var(--purple),#9333ea);
-               border-color:transparent;
-               color:#fff
-           }
-           .bp:hover{filter:brightness(1.15)}
-           .bp svg{animation:spin 2s linear infinite}
-           @keyframes spin{to{transform:rotate(360deg)}}
-           .bs{background:transparent;border-color:var(--border);color:var(--muted)}
-           .bs:hover{border-color:var(--purple-dim);color:var(--text)}
-
-           /* diag footer */
-           .df{
-               display:flex;
-               justify-content:space-between;
-               flex-wrap:wrap;
-               gap:4px;
-               padding:clamp(4px,1vw,7px) clamp(10px,1.5vw,14px);
-               color:#2a2a3a;
-               font-size:clamp(7px,1vw,9px);
-               letter-spacing:.04em;
-           }
-
-           /* -- MOBILE LOGS - visible only on small screens -- */
-           #mob-info{width:100%;display:flex;flex-direction:column;gap:8px}
-           @media(min-width:560px){#mob-info{display:none}}
-
-           .last-c{font-size:clamp(9px,2vw,11px);color:var(--muted);text-align:center}
-           #mob-logs{
-               background:#060609;
-               border:1px solid #111120;
-               border-radius:8px;
-               padding:clamp(8px,2vw,12px);
-               font-size:clamp(8px,2vw,10px);
-               line-height:1.6;
-               color:#4a5568;
-           }
-           .lh{
-               display:flex;
-               justify-content:space-between;
-               color:#2a2a3a;
-               font-size:clamp(7px,1.5vw,9px);
-               margin-bottom:4px
-           }
-           .ll{color:#3a5a4a}
-
-           /* svg inline helper */
-           svg{display:block;flex-shrink:0}
-       </style>
-   </head>
-   <body>
-       <div id="scanline"></div>
-       <div id="grid"></div>
-
-       <div id="root">
-           <div id="card">
-               <div class="bar">
-                   <div class="dot dr"></div>
-                   <div class="dot dy"></div>
-                   <div class="dot dg"></div>
-                   <span class="bar-title">Studysprout - Offline State</span>
-               </div>
-
-               <div id="body">
-                   <!-- Icon -->
-                    <div class="icon-wrap">
-                       <div class="icon-glow"></div>
-                       <svg viewBox="0 0 24 24">
-                           <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5
-                           12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56
-                           9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12
-                           20h.01"/>
-                       </svg>
-                    </div>
-
-                    <!-- Heading -->
-                   <div>
-                       <div class="heading">SYSTEM INITIALIZATION FAILED</div>
-                       <p class="sub" style="margin-top:6px">
-                           Connection to StudySprout cloud nodes timed out.
-                       </p>
+              <div id="body">
+                  <!-- Icon -->
+                   <div class="icon-wrap">
+                      <div class="icon-glow"></div>
+                      <svg viewBox="0 0 24 24">
+                          <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5
+                          12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56
+                          9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12
+                          20h.01"/>
+                      </svg>
                    </div>
 
-                   <!-- Node status cards - small screens only -->
-                   <div id="nodes">
-                       <div class="node-card">
-                           <div class="nc-top">
-                               <svg viewBox="0 0 24 24">
-                                   <circle cx="12" cy="12" r="3"/>
-                                   <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95
-                                   16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95
-                                   7.05l2.83-2.83"/>
-                               </svg>
-                               <div class="nc-dot"></div>
-                           </div>
-                           <div class="nc-lbl">API NODE</div>
-                           <div class="nc-val">Offline</div>
-                       </div>
-                       <div class="node-card">
-                           <div class="nc-top">
-                               <svg viewBox="0 0 24 24">
-                                   <line x1="1" y1="1" x2="23" y2="23"/>
-                                   <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5
-                                   12.55a10.94 10.94 0 0 1 5.17-2.39"/>
-                               </svg>
-                               <div class="nc-dot"></div>
-                           </div>
-                           <div class="nc-lbl">LIVE SYNC</div>
-                           <div class="nc-val">Paused</div>
-                       </div>
-                   </div>
+                   <!-- Heading -->
+                  <div>
+                      <div class="heading" id="heading-text">SYSTEM INITIALIZATION FAILED</div>
+                      <p class="sub" id="sub-text" style="margin-top:6px">
+                          Connection to StudySprout cloud nodes timed out.
+                      </p>
+                  </div>
 
-                   <!-- Diagnostic card - medium+ screens only -->
-                   <div id="diag">
-                       <div class="dh">
-                           <span>DIAGNOSTIC REPORT</span>
-                           <span class="badge">STATUS: RE-ROUTING</span>
-                       </div>
-                       <div class="dr3">
-                           <div class="dc">
-                               <label>Network</label>
-                               <div class="v vr">⬤ DISCONNECTED</div>
-                           </div>
-                           <div class="dc">
-                               <label>Local Cache</label>
-                               <div class="v vg">⬤ ACTIVE (4,280)</div>
-                           </div>
-                           <div class="dc">
-                               <label>Kernel</label>
-                               <div class="v vm">▣ V4.12.0_STABLE</div>
-                           </div>
-                       </div>
-                       <div id="term"></div>
-                       <div class="df">
-                           <span>SESSION ID: SSP-7729-ALPHA-2</span>
-                           <span>StudySprout Terminal v4.0</span>
-                       </div>
-                   </div>
+                  <!-- Node status cards - small screens only -->
+                  <div id="nodes">
+                      <div class="node-card">
+                          <div class="nc-top">
+                              <svg viewBox="0 0 24 24">
+                                  <circle cx="12" cy="12" r="3"/>
+                                  <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95
+                                  16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95
+                                  7.05l2.83-2.83"/>
+                              </svg>
+                              <div class="nc-dot"></div>
+                          </div>
+                          <div class="nc-lbl">API NODE</div>
+                          <div class="nc-val">Offline</div>
+                      </div>
+                      <div class="node-card">
+                          <div class="nc-top">
+                              <svg viewBox="0 0 24 24">
+                                  <line x1="1" y1="1" x2="23" y2="23"/>
+                                  <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5
+                                  12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+                              </svg>
+                              <div class="nc-dot"></div>
+                          </div>
+                          <div class="nc-lbl">LIVE SYNC</div>
+                          <div class="nc-val">Paused</div>
+                      </div>
+                  </div>
 
-                   <!-- Buttons -->
-                   <div class="btns">
-                       <button class="btn bp" onclick="retryConnection()">
-                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                           stroke="currentColor" stroke-width="2.5">
-                               <polyline points="1 4 1 10 7 10"/>
-                               <path d="M3.51 15a9 9 0 1 0 .49-3.5"/>
-                           </svg>
-                           Retry Connection
-                       </button>
-                       <button class="btn bs" onclick="workOffline()">
-                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                           stroke="currentColor" stroke-width="2">
-                               <path d="M18.36 6.64A9 9 0 0 1 20.77 15"/>
-                               <path d="M6.16 6.16a9 9 0 1 0 11.15 11.56"/>
-                               <line x1="1" y1="1" x2="23" y2="23"/>
-                           </svg>
-                           Work Offline
-                       </button>
-                   </div>
+                  <!-- Diagnostic card - medium+ screens only -->
+                  <div id="diag">
+                      <div class="dh">
+                          <span>DIAGNOSTIC REPORT</span>
+                          <span class="badge" id="status-badge">STATUS: RE-ROUTING</span>
+                      </div>
+                      <div class="dr3">
+                          <div class="dc">
+                              <label>Network</label>
+                              <div class="v vr" id="network-status">⬤ DISCONNECTED</div>
+                          </div>
+                          <div class="dc">
+                              <label>Local Cache</label>
+                              <div class="v vg">⬤ ACTIVE (4,280)</div>
+                          </div>
+                          <div class="dc">
+                              <label>Kernel</label>
+                              <div class="v vm">▣ V4.12.0_STABLE</div>
+                          </div>
+                      </div>
+                      <div id="term"></div>
+                      <div class="df">
+                          <span>SESSION ID: SSP-7729-ALPHA-2</span>
+                          <span>StudySprout Terminal v4.0</span>
+                      </div>
+                  </div>
 
-                   <!-- Mobile-only: last checked + logs -->
-                   <div id="mob-info">
-                       <div class="last-c">
-                           Last checked: <span id="last-time">Just now</span>
-                       </div>
-                       <div id="mob-logs">
-                           <div class="lh">
-                               <span>SYSTEM DIAGNOSTIC LOGS</span>
-                               <span>v4.2.0-stable</span>
-                           </div>
-                           <div id="mob-log-lines"></div>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </div>
+                  <!-- Buttons -->
+                  <div class="btns">
+                      <button class="btn bp" id="retry-btn" onclick="retryConnection()">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2.5">
+                              <polyline points="1 4 1 10 7 10"/>
+                              <path d="M3.51 15a9 9 0 1 0 .49-3.5"/>
+                          </svg>
+                          <span id="retry-btn-text">Retry Connection</span>
+                      </button>
+                      <button class="btn bs" onclick="workOffline()">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2">
+                              <path d="M18.36 6.64A9 9 0 0 1 20.77 15"/>
+                              <path d="M6.16 6.16a9 9 0 1 0 11.15 11.56"/>
+                              <line x1="1" y1="1" x2="23" y2="23"/>
+                          </svg>
+                          Work Offline
+                      </button>
+                  </div>
 
-       <script>
-           const LINES = [
-           "System standby. Local environment preserved.",
-           "Retrying handshake...",
-           "Connection refused by peer node.",
-           "Check router gateway settings.",
-           "Offline manifest loaded successfully.",
-           "Warning: Sync disabled until reconnection.",
-           "Polling network status... [Retry: 4/10]",
-           "Local DB indexed: 14,829 nodes preserved.",
-           "Attempting fallback DNS resolution...",
-           "Fallback failed. Entering offline mode.",
-           ];
-           const MOB_LOGS = [
-           "[SYS] LocalDB indexed: 14,829 nodes preserved",
-           "[LOG] Polling network status... [Retry: 4/10]",
-           "[ERR] Peer node refused handshake",
-           "[SYS] Offline manifest loaded",
-           "[LOG] Retry timer reset: 30s",
-           "[ERR] DNS fallback failed",
-           ];
+                  <!-- Mobile-only: last checked + logs -->
+                  <div id="mob-info">
+                      <div class="last-c">
+                          Last checked: <span id="last-time">Just now</span>
+                      </div>
+                      <div id="mob-logs">
+                          <div class="lh">
+                              <span>SYSTEM DIAGNOSTIC LOGS</span>
+                              <span>v4.2.0-stable</span>
+                          </div>
+                          <div id="mob-log-lines"></div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
 
-           // Terminal (desktop)
-           let ti = 0, tLines = [];
-           const termEl = document.getElementById('term');
-           function addTermLine() {
-           tLines.push(LINES[ti++ % LINES.length]);
-           if (tLines.length > 5) tLines.shift();
-           termEl.innerHTML = tLines.map(l => `<div class="tl">${l}</div>`).join('');
-           }
-           for (let i = 0; i < 4; i++) addTermLine();
-           setInterval(addTermLine, 1800);
+      <script>
+          const LINES = [
+          "System standby. Local environment preserved.",
+          "Retrying handshake...",
+          "Connection refused by peer node.",
+          "Check router gateway settings.",
+          "Offline manifest loaded successfully.",
+          "Warning: Sync disabled until reconnection.",
+          "Polling network status... [Retry: 4/10]",
+          "Local DB indexed: 14,829 nodes preserved.",
+          "Attempting fallback DNS resolution...",
+          "Fallback failed. Entering offline mode.",
+          ];
+          const MOB_LOGS = [
+          "[SYS] LocalDB indexed: 14,829 nodes preserved",
+          "[LOG] Polling network status... [Retry: 4/10]",
+          "[ERR] Peer node refused handshake",
+          "[SYS] Offline manifest loaded",
+          "[LOG] Retry timer reset: 30s",
+          "[ERR] DNS fallback failed",
+          ];
 
-           // Mobile logs
-           let mi = 0, mLines = [];
-           const mEl = document.getElementById('mob-log-lines');
-           function addMobLog() {
-           mLines.push(MOB_LOGS[mi++ % MOB_LOGS.length]);
-           if (mLines.length > 4) mLines.shift();
-           mEl.innerHTML = mLines.map(l => `<div class="ll">${l}</div>`).join('');
-           }
-           for (let i = 0; i < 3; i++) addMobLog();
-           setInterval(addMobLog, 2400);
+          // Terminal (desktop)
+          let ti = 0, tLines = [];
+          const termEl = document.getElementById('term');
+          function addTermLine() {
+          tLines.push(LINES[ti++ % LINES.length]);
+          if (tLines.length > 5) tLines.shift();
+          termEl.innerHTML = tLines.map(l => `<div class="tl">${l}</div>`).join('');
+          }
+          for (let i = 0; i < 4; i++) addTermLine();
+          const termIntervalHandle = setInterval(addTermLine, 1800);
 
-           // Last checked timer
-           let secs = 0;
-           setInterval(() => {
-           secs++;
-           const el = document.getElementById('last-time');
-           if (el) el.textContent = secs < 60 ? secs + 's ago' : Math.floor(secs / 60) + 'm ago';
-           }, 1000);
+          // Mobile logs
+          let mi = 0, mLines = [];
+          const mEl = document.getElementById('mob-log-lines');
+          function addMobLog() {
+          mLines.push(MOB_LOGS[mi++ % MOB_LOGS.length]);
+          if (mLines.length > 4) mLines.shift();
+          mEl.innerHTML = mLines.map(l => `<div class="ll">${l}</div>`).join('');
+          }
+          for (let i = 0; i < 3; i++) addMobLog();
+          const mobLogIntervalHandle = setInterval(addMobLog, 2400);
 
-           function retryConnection() { window.location.reload(); }
-           function workOffline() {
-           alert('Offline mode active. Your local data is available. Sync resumes when connection is restored.');
-           }
-       </script>
-   </body>
+          // Last checked timer
+          let secs = 0;
+          const lastCheckedIntervalHandle = setInterval(() => {
+          secs++;
+          const el = document.getElementById('last-time');
+          if (el) el.textContent = secs < 60 ? secs + 's ago' : Math.floor(secs / 60) + 'm ago';
+          }, 1000);
+
+          // ------------------------------------------------------------------
+          // Auto-reconnect polling
+          //
+          // This page is served by the service worker whenever a navigation
+          // request fails. Without this block, the page just displays static
+          // "offline" cosmetics forever until the user manually clicks Retry
+          // or refreshes. This adds background polling + a browser 'online'
+          // event listener so the page recovers on its own once the server
+          // (or network) comes back up.
+          // ------------------------------------------------------------------
+          let pollHandle = null;
+          let isChecking = false;
+          let secsSinceLastCheck = 0;
+
+          async function checkServerBackUp(isManual = false) {
+              if (isChecking) return;
+              isChecking = true;
+              secsSinceLastCheck = 0;
+
+              const badge = document.getElementById('status-badge');
+              const retryBtn = document.getElementById('retry-btn');
+              const retryBtnText = document.getElementById('retry-btn-text');
+
+              if (badge) badge.textContent = 'STATUS: CHECKING...';
+              if (isManual && retryBtn) {
+                  retryBtn.disabled = true;
+                  if (retryBtnText) retryBtnText.textContent = 'Checking...';
+              }
+
+              try {
+                  const res = await fetch(`${window.location.origin}/api/health`, {
+                      method: "HEAD",
+                      cache: "no-store",
+                      mode: "same-origin",
+                  });
+                  if(res.ok){
+                    handleReconnected();
+                    return;
+                  }
+              } catch (err) {
+                  // Server/network still unreachable - fall through and retry later
+              }
+
+              if (badge) badge.textContent = 'STATUS: RE-ROUTING';
+              if (isManual && retryBtn) {
+                  retryBtn.disabled = false;
+                  if (retryBtnText) retryBtnText.textContent = 'Retry Connection';
+              }
+              isChecking = false;
+          }
+
+          function handleReconnected() {
+              if (pollHandle) clearInterval(pollHandle);
+              window.removeEventListener('online', handleOnlineEvent);
+
+              const badge = document.getElementById('status-badge');
+              const networkStatus = document.getElementById('network-status');
+              const heading = document.getElementById('heading-text');
+              const sub = document.getElementById('sub-text');
+
+              if (badge) badge.textContent = 'STATUS: RECONNECTED';
+              if (networkStatus) {
+                  networkStatus.textContent = '⬤ CONNECTED';
+                  networkStatus.classList.remove('vr');
+                  networkStatus.classList.add('vg');
+              }
+              if (heading) heading.textContent = 'CONNECTION RESTORED';
+              if (sub) sub.textContent = 'Reloading StudySprout...';
+
+              // Brief pause so the user actually sees the "reconnected" state
+              // before the page reloads into the real app.
+              setTimeout(() => {
+                  window.location.reload();
+              }, 600);
+          }
+
+          function handleOnlineEvent() {
+              checkServerBackUp(false);
+          }
+
+          // Poll periodically while this page is shown
+          pollHandle = setInterval(() => checkServerBackUp(false), 4000);
+
+          // React immediately when the OS/browser reports connectivity restored
+          window.addEventListener('online', handleOnlineEvent);
+
+          // Check once right away in case the server was already back up by
+          // the time this page finished loading
+          checkServerBackUp(false);
+
+          function retryConnection() {
+              checkServerBackUp(true);
+          }
+          function workOffline() {
+              alert('Offline mode active. Your local data is available. Sync resumes when connection is restored.');
+          }
+      </script>
+  </body>
 </html>

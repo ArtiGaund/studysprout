@@ -1,4 +1,4 @@
-const CACHE_NAME = "studysprout-offline";
+const CACHE_NAME = "studysprout-offline-v2";
 const OFFLINE_URL = "/offlinePage.html";
 
 // Install: cache the offline page immediately
