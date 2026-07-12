@@ -1,14 +1,9 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "python3", "python3Packages.pip"]
+nixPkgs = ["nodejs_20", "python3"]
 
 [phases.install]
 cmds = [
   "npm install",
+  "python3 -m ensurepip --upgrade",
   "python3 -m pip install --break-system-packages -r python/requirements.txt"
 ]
-
-[phases.build]
-cmds = ["npm run build"]
-
-[start]
-cmd = "npm start"
