@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "worker:start": "tsx workers/index.ts"
   },
   "dependencies": {
     "@blocknote/code-block": "^0.31.2",

@@ -11,7 +11,9 @@ export async function register(){
      * This prevents the worker from trying to run in Edge functions or client side environments
      * where BULLMQ/Redis cannot operate.
      */
-    if(process.env.NEXT_RUNTIME === 'nodejs'){
+    if(process.env.NEXT_RUNTIME === 'nodejs' &&
+        process.env.RUN_WORKERS_IN_PROGRESS === 'true'
+    ){
 
         // DYNAMIC IMPORT: Ensures the worker code is only loaded on the server
         const { initFileSyncWorker } = await import(`@/lib/workers/syncWorker`);

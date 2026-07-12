@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "python311", "poppler_utils"]
+
+[phases.install]
+cmds = [
+  "npm install",
+  "pip install --break-system-packages -r python/requirements.txt"
+]
+
+[start]
+cmd = "npm run worker:start"
