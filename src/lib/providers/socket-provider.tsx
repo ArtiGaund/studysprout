@@ -41,6 +41,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         // Guard Clause: Prevent connection attempts for unauthenticated users
         if(!authToken || authStatus !== "authenticated" || !currentUserId ) return;
     
+        console.log("[SocketProvider] authToken:", authToken, "status:", authStatus, "userId:", currentUserId);
        const socket = getSocket(authToken, currentUserId);
 
        if(!socket){
