@@ -31,6 +31,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     
     // tracks the real-time status of the transport layer
     const [isConnected, setIsConnected ] = useState(false);
+    const [ socketInstance, setSocketInstance ] = useState<Socket | null>(null);
 
     /**
      * @effect Socket Lifecycle
@@ -48,26 +49,29 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         console.warn("[Socket-provider] Socket initialization failed");
         return;
        }
-
+    
+       socket.auth = { token: authToken, useId: currentUserId };
     
     // --- Connection Handlers ---
     const onConnect = () => setIsConnected(true);
     const onDisconnect = () => setIsConnected(false);
+    const onError = (error: any) => console.log("[Socket-Provider] connect error: ",error)
 
     socket.on("connect", () => {
         onConnect();
         socket.emit("user:rejoin");
     });
     socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onError);
 
+     setSocketInstance(socket);
     // Explicitly trigger connection if the instance is currently idle
     if(socket.connected) setIsConnected(true);
     else socket.connect();
 
-       const onError = (error: any) => console.log("[Socket-Provider] connect error: ",error);
-       socket.on("connect_error", onError);
+       
 
-
+       
        // --- Cleanup Phase ---
         // Vital for preventing "Zombie Listeners" in Single Page Applications
        return () => {
@@ -87,14 +91,15 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
      * component tree unless the connection status actually changes.
      */
     const contextValue = useMemo(() => ({
-        socket: getSocket(),  //This will return the instance created in useEffect
+        socket: socketInstance,  //This will return the instance created in useEffect
         isConnected,
     }),[
-        isConnected
+        isConnected,
+        socketInstance,
     ])
 
     return (
-        <SocketContext.Provider value={{ socket: getSocket(), isConnected }}>
+        <SocketContext.Provider value={contextValue}>
             {children}
         </SocketContext.Provider>
     );
