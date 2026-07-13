@@ -15,4 +15,8 @@ export const redisConnection: ConnectionOptions = {
     password: redisUrl.password || undefined,
     tls: redisUrl.protocol === "rediss:" ? {} : undefined, // Upstash needs this
     maxRetriesPerRequest: null,
+    keepAlive: 10000, //send keepalive every 10s
+    retryStrategy(times: number){
+        return Math.min(times * 200, 5000);
+    },
 };
