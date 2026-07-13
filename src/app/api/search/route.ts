@@ -11,6 +11,9 @@
  *          ->No Yjs binary decoding. plainText is pre-extracted and sorted.
  *          -> Content matches return a `snippet` (50 chars around the metadata)
  */
+
+export const dynamic = 'force-dynamic';
+
 import dbConnect from "@/lib/dbConnect";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";

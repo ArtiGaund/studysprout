@@ -10,6 +10,7 @@
  * small and protect sensitive data (passwords/IDs).
  * 3. Fuzzy Matching: Uses case-insensitive regex for flexible user finding.
  */
+export const dynamic = 'force-dynamic';
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options";
