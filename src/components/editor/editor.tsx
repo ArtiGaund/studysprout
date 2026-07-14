@@ -64,6 +64,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
 }) => {
     const { socket, isConnected } = useSocket();
     const isHydrated = useRef(false);
+    console.log("[Editor] mount check - fileId:", fileId, "isHydrated:", isHydrated.current, "initialContentBinary length:", initialContentBinary?.length);
     const { toast } = useToast();
     const currentWorkspace = useSelector(selectCurrentWorkspace);
     const currentFile = useSelector(selectCurrentFile);
@@ -103,7 +104,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
     // --- 2. CONTENT SYNCHRONIZATION EFFECT ---
     useEffect(() => {
         if(!socket || !isConnected) return;
-        console.log("[Editor] mount check - fileId:", fileId, "isHydrated:", isHydrated.current, "initialContentBinary length:", initialContentBinary?.length);
+        
         isHydrated.current = false;
 
         socket.emit("file:join", {fileId});
