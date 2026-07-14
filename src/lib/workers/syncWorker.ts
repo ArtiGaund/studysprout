@@ -31,7 +31,6 @@ export const initFileSyncWorker = () => {
     // Singleton pattern to avoid redundant workers in dev HMR
     if(worker) return;
     worker = new Worker("file-sync-queue", async (job) => {
-         console.log("[FileSyncWorker] Processing job for fileId:", job.data.fileId);
         const { fileId, contentBinary, userId } = job.data;
 
         await dbConnect();
@@ -127,7 +126,6 @@ export const initFileSyncWorker = () => {
             // 3. Database Persistence
             // Save the raw binary for the next editor session and mapped the blocks for flashcards
             await FileModel.findByIdAndUpdate(fileId, { $set: baseUpdate });
-            console.log("[FileSyncWorker] Saved fileId:", fileId);
             if(hasContentChanged){
                 if(existingFile?.workspaceId){
                     await markTermIndexStale(existingFile?.workspaceId);

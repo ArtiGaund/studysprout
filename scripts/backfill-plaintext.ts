@@ -25,8 +25,6 @@ async function run() {
     };
 
     const total = await FileModel.countDocuments(filter);
-    console.log(`[Backfill] ${total} files need plainText backfilled`);
-
     let processed = 0;
     let failed = 0;
 
@@ -69,12 +67,7 @@ async function run() {
             }
         }
         lastId = String(files[files.length -1]._id);
-        console.log(`[Backfill] Progress: ${processed + failed}/${total}`);
     }
-
-    console.log(
-        `[Backfill] Done. Updated: ${processed}, Failed: ${failed}, Total: ${total}`
-    );
     process.exit(failed > 0 ? 1: 0);
 }
 
