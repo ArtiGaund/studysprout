@@ -75,7 +75,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
     // --- 1. SHARED STATE INITIALIZATION ---
     // Initialize the Y.Doc as a singleton for the lifecycle of this file
-    const doc = useMemo(() => new Y.Doc(), []);
+    const doc = useMemo(() => new Y.Doc(), [fileId]);
     const awareness = useMemo(() => new Awareness(doc), [doc]);
 
     // Create the provider instance for BlockNote's collaboration engine
@@ -103,6 +103,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
     // --- 2. CONTENT SYNCHRONIZATION EFFECT ---
     useEffect(() => {
         if(!socket || !isConnected) return;
+        console.log("[Editor] mount check - fileId:", fileId, "isHydrated:", isHydrated.current, "initialContentBinary length:", initialContentBinary?.length);
+        isHydrated.current = false;
 
         socket.emit("file:join", {fileId});
 
