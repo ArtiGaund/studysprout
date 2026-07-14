@@ -136,6 +136,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
         // Emit local document changes (filtered to avoid re-emitting remote updates)
         const onDocUpdate = (update: Uint8Array, origin: any) => {
+            console.log("[Editor] local doc update, origin:", origin);
             if(origin === "remote") return;
                 socket.emit("file:update-raw", { fileId, update }); 
         };
