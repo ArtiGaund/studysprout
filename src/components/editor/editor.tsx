@@ -205,6 +205,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
         awareness,
         fileId,
         username,
+        socket,
+        isConnected,
     ])
 
     const handleUpload = async (file: globalThis.File): Promise<string | Record<string, any>> => {
