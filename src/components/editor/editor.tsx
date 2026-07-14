@@ -118,9 +118,16 @@ const TextEditor: React.FC<TextEditorProps> = ({
             try {
                 // MongoDB often return Buffers as { type: 'Buffer', data: [...]}
                 const raw = initialContentBinary as any;
+                console.log("[Editor] raw type check:", {
+                    isArray: Array.isArray(raw),
+                    isUint8Array: raw instanceof Uint8Array,
+                    hasDataProp: !!raw?.data,
+                    rawKeys: typeof raw === "object" ? Object.keys(raw).slice(0, 5) : raw,
+                    });
                 const uint8Array = raw.data 
                 ? new Uint8Array(raw.data)
                 : (raw instanceof Uint8Array ? raw : new Uint8Array(raw));
+                console.log("[Editor] converted uint8Array length:", uint8Array.length);
                 if(uint8Array.length > 0 && !isHydrated.current){
                     doc.transact(() => {
                         Y.applyUpdate(doc, uint8Array, "rehydration");
