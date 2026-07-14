@@ -162,6 +162,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
         fileId,
         initialContentBinary,
         fragment,
+        socket,
+        isConnected,
     ])
 
     // --- 3. AWARENESS (PRESENCE) EFFECT ---
