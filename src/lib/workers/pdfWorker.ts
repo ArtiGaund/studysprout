@@ -90,8 +90,13 @@ const buildCleanContent = (
 };
 // ── WORKER ────────────────────────────────────────────────────────────────────
 
+let pdfWorker: Worker | null = null;
+
 export const initPDFWorker = () => {
-    const worker = new Worker(
+
+    if(pdfWorker) return;
+
+    pdfWorker = new Worker(
         "pdf-processing",
         async (job) => {
             const {
@@ -404,6 +409,6 @@ export const initPDFWorker = () => {
         }
     );
 
-    worker.on("completed", job => console.log(`[PDF Worker] Job ${job.id} completed`));
-    worker.on("failed", (job, err) => console.error(`[PDF Worker] Job failed:`, err));
+    pdfWorker.on("completed", job => console.log(`[PDF Worker] Job ${job.id} completed`));
+    pdfWorker.on("failed", (job, err) => console.error(`[PDF Worker] Job failed:`, err));
 };

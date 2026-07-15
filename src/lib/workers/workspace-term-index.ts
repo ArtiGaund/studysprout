@@ -107,9 +107,15 @@ let termIndexWorker: Worker | null = null;
  * Call once at a server startup alongside initFileSyncWorker() / initPDFWorker().
  */
 
-export const initTermIndexWorker = () => {
+export const initTermIndexWorker = async () => {
     if(termIndexWorker) return;
 
+    // clear any stale repeatable jobs before scheduling a fresh one
+    const existing = await termIndexQueue.getRepeatableJobs();
+    for(const job of existing){
+        await termIndexQueue.removeRepeatableByKey(job.key);
+    }
+    
     // Schedule a repeating "tick" job - one job drives all stale-workspace checks
     termIndexQueue.add(
         "rebuild-stale",
