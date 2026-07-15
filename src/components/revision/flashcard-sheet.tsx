@@ -152,10 +152,11 @@ const FlashcardSheet = ({
 
             {/* Remote-editing pulse dot */}
             {isLockedByRemote && (
-                <div className="ml-1 flex-shrink-0 items-center">
+                <div className="ml-2 flex-shrink-0 items-center justify-center h-3 w-3 
+                overflow-hidden">
                     <span className="relative flex h-2 w-2">
                         <span className="animate-ping inline-flex h-full w-full rounded-full
-                        bg-emerald-400 opacity-75"/>
+                        bg-emerald-400 opacity-75 absolute"/>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"/>
                     </span>
                 </div>

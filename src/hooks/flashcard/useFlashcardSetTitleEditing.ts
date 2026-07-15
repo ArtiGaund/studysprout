@@ -66,18 +66,20 @@ export function useFlashcardSetTitleEditing({
         setIsEditing(true);
 
         // Notify others this set is now locked for editing
-        if(socket && isConnected && workspaceId){
+        if(socket && isConnected && workspaceId && user && currentUserId){
             emitRealtimeEvent(
                 'workspace-tree-update',
                 String(workspaceId),
                 'presence:remote-editing-start',
                 {
                     itemId: setId,
-                    username: user?.username,
+                    username: user.username,
                     userId: currentUserId,
                     tempTitle: originalTitle,
                 }
             );
+        }else{
+            console.warn("[useFlashcardSetTitleEditing] no socket/user, editing locally only- remote lock not broadcast");
         }
         setTimeout(() => {
             inputRef.current?.focus();
