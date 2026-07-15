@@ -11,10 +11,13 @@
 
 import { useFlashcardSetTitleEditing } from "@/hooks/flashcard/useFlashcardSetTitleEditing";
 import { useClickDifferentiator } from "@/hooks/useClickDifferentiator";
+import { selectUserId } from "@/store/selectors/userSelector";
 import { RootState } from "@/store/store";
+import clsx from "clsx";
 import { Brain, CircleCheck, Pencil, Trash, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
+import TooltipComponent from "../global/tooltip-component";
 
 // --- Types ---
 export interface FlashcardSet{
@@ -54,6 +57,20 @@ const FlashcardSheet = ({
         originalTitle: set.title,
     });
 
+    // Collaborative lock state
+    const currentUserId = useSelector(selectUserId);
+    const remoteEditing = useSelector((state: RootState) => state.ui.remoteEditing[set._id]);
+    const isLockedByRemote = !!(
+        remoteEditing &&
+        typeof remoteEditing === 'object' &&
+        remoteEditing.userId !== currentUserId
+    );
+
+    // While locked by someone else, show what they're typing instead of the stale title
+    const displayedTitle = isLockedByRemote && remoteEditing.tempTitle
+        ? remoteEditing.tempTitle
+        : set.title;
+
     const { handleMouseClickInterception } = useClickDifferentiator({
         onSingleClickAction: () => {
             if(!isEditing) onOpen(set._id);
@@ -83,8 +100,15 @@ const FlashcardSheet = ({
     
    return(
      <div
-        onClick={() => onOpen(set._id)}
-        className="group relative flex justify-between items-center py-2 cursor-pointer rounded hover:bg-white/5 overflow-visible transition-colors"
+        data-editable-container
+        onClick={() => !isLockedByRemote && !isEditing && onOpen(set._id)}
+        className={clsx(
+            "group relative flex justify-between items-center py-2 rounded",
+            "overflow-hidden transition-colors",
+            isLockedByRemote
+                ? "bg-emerald-950/40 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)] cursor-not-allowed"
+                : "cursor-pointer hover:bg-white/5"
+        )}
         aria-label={`Study ${set.title}`}
     >
         <div className="flex gap-2 items-center flex-1 min-w-0 mr-2">
@@ -105,17 +129,40 @@ const FlashcardSheet = ({
                     border-purple-500/50 rounded px-1.5 py-0.5 outline-none w-full max-w-[130px]"
                 />
             ) : (
-                <span 
-                    onClick={handleMouseClickInterception}
-                    className="text-[12px] text-gray-200 truncate max-w-[110px] cursor-pointer
-                    select-none"
+                <TooltipComponent
+                    className={isLockedByRemote
+                        ? "bg-cyan-400 text-cyan-950 font-bold border-none shadow-[0_0_20px_rgba(251,191,36,0.4)]"
+                        : ""
+                    }
+                    message={isLockedByRemote ? `${remoteEditing.username} is editing...` : ""}
                 >
-                    {set.title}
-                </span>
+                    <span 
+                        onClick={(e) => !isLockedByRemote && handleMouseClickInterception(e)}
+                        className={clsx(
+                            "text-[12px] truncate max-w-[110px] select-none",
+                            isLockedByRemote
+                                ? "text-emerald-400 font-semibold italic opacity-90 cursor-not-allowed"
+                                : "text-gray-200 cursor-pointer"
+                        )}
+                    >
+                        {displayedTitle}
+                    </span>
+                </TooltipComponent>
+            )}
+
+            {/* Remote-editing pulse dot */}
+            {isLockedByRemote && (
+                <div className="ml-1 flex-shrink-0 items-center">
+                    <span className="relative flex h-2 w-2">
+                        <span className="animate-ping inline-flex h-full w-full rounded-full
+                        bg-emerald-400 opacity-75"/>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"/>
+                    </span>
+                </div>
             )}
        
             {/* Urgency Indicators: Fire icon for due cards, Checkmark for completed */}
-            {!isEditing && (realDueCount > 0 ? (
+            {!isEditing && !isLockedByRemote && (realDueCount > 0 ? (
                 <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
                 gap-1">
                     <TrendingUp size={12} className="text-red-400"/> {realDueCount} due
@@ -128,7 +175,7 @@ const FlashcardSheet = ({
             )}
 
             {/* Hover actions: pencil + trash */}
-            {!isEditing && (
+            {!isEditing && !isLockedByRemote && (
                 <div
                     className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5
                     transition-all shrink-0"
