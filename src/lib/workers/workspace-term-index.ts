@@ -152,6 +152,8 @@ export const initTermIndexWorker = async () => {
         },
         {
             connection: redisConnection,
+            drainDelay: 30,     //stretch blocking poll from 5s default -> 30s
+            stalledInterval: 60000,   //check for stalled jobs every 60s instead of 30s
             removeOnComplete: { count: 10 },
             removeOnFail:     { count: 20 },
         }

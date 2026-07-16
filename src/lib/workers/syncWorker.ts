@@ -165,6 +165,8 @@ export const initFileSyncWorker = () => {
         }
     }, {
         connection: redisConnection,
+        drainDelay: 30,     //stretch blocking poll from 5s default -> 30s
+        stalledInterval: 60000,   //check for stalled jobs every 60s instead of 30s
         // Cleanup jobs on Redis memory doesn't grow forever
         removeOnComplete: { count: 100 },
         removeOnFail: { count: 500 },
