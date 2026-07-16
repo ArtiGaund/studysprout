@@ -25,7 +25,7 @@ import { useFlashcardSet } from "@/hooks/flashcard/useFlashcardSet";
 import { CLEAR_WORKSPACE_FOLDERS } from "@/store/slices/folderSlice";
 import { clearFlashcards } from "@/store/slices/flashcardSlice";
 import { RESET_FILES } from "@/store/slices/fileSlice";
-import { SET_WORKSPACE_LOADING } from "@/store/slices/workspaceSlice";
+import { SET_WORKSPACE_ERROR, SET_WORKSPACE_LOADING } from "@/store/slices/workspaceSlice";
 import { WorkspaceSocketManager } from "@/components/socket/workspace-socket-manager";
 import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import { useLastStudied } from "@/hooks/useLastSudied";
@@ -110,6 +110,11 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
                  setLastWorkspace(userId, currentWorkspaceId);
             } catch (error) {
                 console.error("Layout Load Error: ",error);
+                dispatch(SET_WORKSPACE_ERROR(
+                    error instanceof Error 
+                        ? error.message
+                        : "Failed to load workspace"
+                ));
             }finally{
                 dispatch(SET_WORKSPACE_LOADING(false));
             }         

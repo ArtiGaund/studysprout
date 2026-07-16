@@ -45,6 +45,7 @@ interface DropdownProps {
     children?: React.ReactNode;
     disabled?: boolean;
     parentFolderId?: string;
+    workspaceId: string;
 }
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -55,6 +56,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     children,
     disabled,
     parentFolderId,
+    workspaceId,
     ...props
 }) => {
     const dispatch = useDispatch();
@@ -66,7 +68,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     // --- Redux Selectors ---
     const currentWorkspace = useSelector(selectCurrentWorkspace);
     const folder = useSelector((state: RootState) => 
-    state.folder.foldersByWorkspace[currentWorkspace?._id || '']?.byId[id]
+    state.folder.foldersByWorkspace[workspaceId]?.byId[id]
     );
    
     const folderStatus = folder?.status || "completed";
@@ -153,7 +155,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         if(isCurrentlyEditingFromHook) { // Use the effective state from the hook
             return;
         }
-        if(!currentWorkspace?._id){
+        if(!workspaceId){
             toast({
                 title: "Workspace not found",
                 description: "Cannot navigate without a current workspace",
@@ -162,11 +164,11 @@ const Dropdown: React.FC<DropdownProps> = ({
             return;
         }
         if (type === 'folder') {
-            router.push(`/dashboard/${currentWorkspace?._id}/${accordionId}`);
+            router.push(`/dashboard/${workspaceId}/${accordionId}`);
         }
         if (type === 'file') {
             if(parentFolderId){
-                router.push(`/dashboard/${currentWorkspace._id}/${parentFolderId}/${accordionId}`);
+                router.push(`/dashboard/${workspaceId}/${parentFolderId}/${accordionId}`);
             }else{
                 toast({
                     title: 'File path incomplete',
@@ -176,7 +178,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             }
         }
     },[
-        currentWorkspace?._id,
+        workspaceId,
         files,
         isCurrentlyEditingFromHook, // Use effective state from hook
         router,
@@ -269,11 +271,11 @@ const Dropdown: React.FC<DropdownProps> = ({
     // add new file
     const addNewFile = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!currentWorkspace?._id) return;
+        if (!workspaceId) return;
 
         const payload = {
             folderId: id,
-            workspaceId: currentWorkspace._id.toString(),
+            workspaceId: workspaceId.toString(),
         }
 
         try {
@@ -376,8 +378,6 @@ const Dropdown: React.FC<DropdownProps> = ({
     const handleRetry = async (e: React.MouseEvent) => {
         e.stopPropagation();
         try {
-            const workspaceId = currentWorkspace?._id;
-            if(!workspaceId) return;
             await retryPDFToFolder(id, workspaceId);
         } catch (error) {
             console.error("[Dropdown] Failed to handle retry: ",error);
@@ -561,6 +561,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 id={file._id}
                                 iconId={file?.iconId || ''}
                                 parentFolderId={id}
+                                workspaceId={workspaceId}
                             />
                         );
                     })}

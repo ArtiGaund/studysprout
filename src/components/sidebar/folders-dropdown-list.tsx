@@ -172,12 +172,14 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                    {
                    filteredFolder.length > 0 ? (
                     filteredFolder.map((folder) => (
-                      (folder &&  <Dropdown 
+                      (folder &&  
+                      <Dropdown 
                         key={folder._id} // Ensure key is a string
                         title={folder.title}
                         listType="folder"
                         id={folder._id} // Ensure id is a string and provide a fallback
                         iconId={folder.iconId || ''} // Ensure iconId is a string and provide a fallback
+                        workspaceId={workspaceId}
                     />)
                    ))
                    ) : (

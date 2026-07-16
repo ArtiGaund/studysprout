@@ -46,8 +46,8 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
     const workspaceLoading = useSelector(selectWorkspaceLoading);
     const workspaceError = useSelector(selectWorkspaceError);
 
-    const workspaceId = currentWorkspace?._id;
-
+    const workspaceId = params.workspaceId;
+    const isWorkspaceSynced = currentWorkspace?._id === workspaceId;
     // --- FOLDER STATE ---
     // Using a memoized selector factory to handle folder retrieval for the specific active workspace
     const selectFolders = useMemo(makeSelectFolders,[]);
@@ -76,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
      * Prevents UI flickering by showing a clean skeleton/loading aside while
      * workspace metadata is being hydrated from Redux.
      */
-    if (workspaceLoading) {
+    if (workspaceLoading || !isWorkspaceSynced) {
         return (
             <aside className={twMerge('hidden sm:flex sm:flex-col shrink-0 p-4',
              'md:gap-4 !justify-between w-[240px] md:w-[260px] lg:w-[280px] xl:w-[300px]', 
