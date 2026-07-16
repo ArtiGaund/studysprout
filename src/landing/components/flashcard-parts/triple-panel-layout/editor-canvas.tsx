@@ -80,10 +80,10 @@ export const EditorCanvas = ({
                         The Transformer model relies entirely on 
                         <span className={`mx-2 px-1 rounded transition-all duration-1000 
                             ${isHighlightingSimulated 
-                            ? 'bg-[#63FF9D] text-black shadow-[0_0_15px_#63FF9D]' 
+                            ? 'bg-pink-500 text-black shadow-[0_0_15px_#63FF9D]' 
                             : 'bg-transparent'}
                             ${activeHint === 'highlight'
-                                ? 'bg-[#63FF9D]/20 text-[#63FF9D] animate-pulse cursor-pointer'
+                                ? 'bg-pink-400/20 text-pink-400 animate-pulse cursor-pointer'
                                 : ''
                             }`}>
                                     self-attention mechanisms
@@ -139,10 +139,10 @@ export const EditorCanvas = ({
                 {/* Live Selection Popup (User-Driven) */}
                 {showLivePopup && (
                     <div className="absolute left-1/2 top-1/2 -translate-x-1/2 w-64 
-                    bg-[#0D1414] border border-[#63FF9D] p-4 rounded-xl shadow-2xl 
+                    bg-[#0D1414] border border-pink-500/40 p-4 rounded-xl shadow-2xl 
                     animate-in zoom-in duration-300 z-40">
                         <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-black text-[#63FF9D] uppercase 
+                            <span className="text-[10px] font-black text-pink-400 uppercase 
                             tracking-widest">
                                 Live Flashcard Draft
                             </span>
@@ -152,12 +152,15 @@ export const EditorCanvas = ({
                                 <X size={14}/>
                             </button>
                         </div>
-                        <p className="text-[11px] text-gray-300 italic mb-4">
-                            {`"The... encoded and recalled spatial navigational map."`}
-                        </p>
-                        <div className="w-full py-1.5 rounded-lg bg-[#63FF9D] text-black 
-                        text-[10px] font-black text-center">
-                            Answer: Hippocampus
+                        <div className="flex flex-col items-center justify-center py-4 gap-2">
+                            <Sparkles size={20} className="text-pink-400/60"/>
+                            <p className="text-[11px] text-pink-300 text-center font-bold
+                            uppercase tracking-wide">
+                                Coming soon
+                            </p>
+                            <p className="text-[9px] text-gray-500 text-center leading-relaxed">
+                                Instant flashcards from text selection are on the way.
+                            </p>
                         </div>
                     </div>
                 )}

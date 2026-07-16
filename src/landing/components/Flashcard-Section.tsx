@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Maximize2 } from "lucide-react";
 import { EditorContent, EditorContentProps } from "./flashcard-parts/editor-content";
 import { FullscreenPopup } from "./Dashboard-preview-parts/Fullscreen-Popup";
 import { CollapsedPreview } from "./Dashboard-preview-parts/Collapsed-Preview";
@@ -36,6 +35,37 @@ export const FlashcardSection = () => {
     const [ showCollapsed, setShowCollapsed ] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const resetToIdleDemo = useCallback(() => {
+        setView('idle');
+        setActiveSet(null);
+        setIsFlipped(false);
+        setReviewIndex(0);
+        setShowLivePopup(false);
+        setIsHighlightingSimulated(false);
+        setShowSimulationPopup(false);
+        setHasCustomSet(false);
+        setActiveHint('none');
+        setArtiStatus('Resuming guide...');
+
+        setTimeout(() => {
+            setArtiStep(0); //restarts the automatic useEffect loop
+            setArtiStatus('Arti waiting...');
+        },1000);
+    },[]);
+
+    const scheduleIdleReset = useCallback(() => {
+        if(idleTimerRef.current) clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = setTimeout(resetToIdleDemo, 10000);
+    },[resetToIdleDemo]);
+
+    const handleAnyInteraction = useCallback(() => {
+        setArtiStep(99);
+        setActiveHint('none');
+        scheduleIdleReset();
+    },[scheduleIdleReset]);
+
     // Detect whether we should show the collapsed preview or the full inline editor.
     // Uses ResizeObserver on the container so it responds to any viewpoint width - not just
     // the predefined breakpoints
@@ -61,20 +91,31 @@ export const FlashcardSection = () => {
             return;
         }
         // Ensure selection is inside the document content
-        if (docRef.current && selection.anchorNode && docRef.current.contains(selection.anchorNode)) {
+        if (
+            docRef.current && 
+            selection.anchorNode && 
+            docRef.current.contains(selection.anchorNode)
+        ) {
             setShowLivePopup(true);
             setArtiStep(99); // Stop automation if user takes over
             setIsHighlightingSimulated(false); // Clear simulated highlight
             setArtiStatus("User selected. Manual override.");
             setActiveHint('none');
+            scheduleIdleReset();
         }
-    }, []);
+    }, [scheduleIdleReset]);
 
-  // Set up live selection observer
-  useEffect(() => {
-    document.addEventListener('selectionchange', handleTextSelection);
-    return () => document.removeEventListener('selectionchange', handleTextSelection);
-  }, [handleTextSelection]);
+    // Set up live selection observer
+    useEffect(() => {
+        document.addEventListener('selectionchange', handleTextSelection);
+        return () => document.removeEventListener('selectionchange', handleTextSelection);
+    }, [handleTextSelection]);
+
+    useEffect(() => {
+        return () => {
+            if(idleTimerRef.current) clearTimeout(idleTimerRef.current);
+        };
+    },[]);
 
     // Arti Automation Logic: Simulating the Highlight-to-Flashcard
     useEffect(() => {
@@ -85,7 +126,9 @@ export const FlashcardSection = () => {
             // 1. Highlight Cue
             setArtiStatus("Try selecting text...");
             setActiveHint('highlight');
+            setShowLivePopup(true);   //auto-show the "coming soon" popup
             await new Promise(r => setTimeout(r, 4000));
+            setShowLivePopup(false);
             if (!alive || artiStep === 99) break;
 
             // 2. Generate Cue
@@ -185,11 +228,13 @@ export const FlashcardSection = () => {
         docRef,
         setReviewIndex,
         flashcardSets,
+        artiStep,
     }
 
     return (
         <section 
         id="flashcard-section" 
+        onClick={handleAnyInteraction}
         className="scroll-mt-20 relative py-32 px-6 bg-[#050A0A] overflow-hidden">
             {/* Aesthetic Background */}
             <div className="absolute inset-0 -z-10">

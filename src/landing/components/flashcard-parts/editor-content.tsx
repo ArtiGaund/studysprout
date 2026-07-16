@@ -35,6 +35,7 @@ export interface EditorContentProps{
     setReviewIndex: (v: number) => void;
     flashcardSets: Record<'file' | 'folder' | 'custom', { title: string; data: { q: string; a: string }[] }>;
     fillHeight?: boolean;
+    artiStep: number;
 }
 
 
@@ -61,6 +62,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
     setReviewIndex,
     flashcardSets,
     fillHeight = false,
+    artiStep,
 }) => {
 
     const heightClass = fillHeight ? 'h-full' : 'h-[740px]';
@@ -125,6 +127,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
                     setIsFlipped={setIsFlipped}
                     activeSet={activeSet}
                     activeHint={activeHint}
+                    artiStep={artiStep}
                     compact={fillHeight}
                 />
                 </div>

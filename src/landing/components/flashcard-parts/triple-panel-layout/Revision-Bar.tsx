@@ -1,6 +1,6 @@
 'use client';
 
-import { Brain, FileText, Plus } from "lucide-react";
+import { Brain, FileText, Plus, TrendingUp } from "lucide-react";
 import { boolean } from "zod";
 
 interface RevisionBarProps {
@@ -27,7 +27,8 @@ export const RevisionBar = ({
         <div className="w-48 lg:w-64 border-r border-white/5 bg-white/[0.01] p-4 lg:p-6 
         flex flex-col gap-8 h-full overflow-y-auto">
             <div className="flex-none space-y-4">
-                <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                <div className="text-[10px] font-black text-gray-500 uppercase 
+                tracking-[0.2em]">
                     Revision Bar
                 </div>
                 <div className="flex items-center gap-2">
@@ -48,13 +49,13 @@ export const RevisionBar = ({
                         Generate Flashcard
                     </button>
                     <button 
-                    onClick={() => setView('customizing')} 
-                    className={`p-3 rounded-xl bg-white/5 text-white border
-                     border-white/10 hover:bg-white/10 transition-colors
-                     ${activeHint === 'plus' 
-                        ? 'ring-2 ring-blue-500 animate-pulse'
-                        : ''
-                     }`}
+                        onClick={() => setView('customizing')} 
+                        className={`p-3 rounded-xl bg-white/5 text-white border
+                        border-white/10 hover:bg-white/10 transition-colors
+                        ${activeHint === 'plus' 
+                            ? 'ring-2 ring-blue-500 animate-pulse'
+                            : ''
+                        }`}
                      >
                         <Plus size={16}/>
                     </button>
@@ -67,8 +68,8 @@ export const RevisionBar = ({
                     Flashcard Sets
                 </div>
                             
-                    {/* Existing Set (Folder) */}
-                    <div 
+                {/* Existing Set (Folder) */}
+                <div 
                     onClick={() => { 
                         setActiveSet('folder'); 
                         setView('reviewing'); 
@@ -78,80 +79,89 @@ export const RevisionBar = ({
                     ? 'bg-purple-500/10 border-purple-500/30' 
                     : 'border-transparent hover:bg-white/5'}
                     ${activeHint === 'sidebar'
-                        ? 'border-pink-500/50 bg-pink-500/10'
+                        ? 'border-[#63FF9D]/50 bg-[#63FF9D]/10'
                         : ''
-                    }`}>
-                        {/* <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center 
-                        justify-center text-pink-500"> */}
-                            <Brain size={18} className="text-pink-500"/>
-                        {/* </div> */}
-                        <div className="flex-1">
-                            <p className="text-[11px] text-white font-bold truncate">
-                                ML_Machine_Learning
+                    }`}
+                >
+                    <Brain size={18} className="text-[#63FF9D]"/>
+                    <div className="flex-1">
+                        <p className="text-[11px] text-white font-bold truncate">
+                            ML_Machine_Learning
+                        </p>
+                        <p className="text-[9px] text-orange-400 font-bold flex 
+                        items-center gap-1">
+                            <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
+                            gap-1">
+                                <TrendingUp size={12} className="text-red-400"/> due
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                {/* NEW GENERATED SET (File) */}
+                {hasNewFileSet && (
+                    <div 
+                        onClick={() => { 
+                            setActiveSet('file'); 
+                            setView('reviewing'); 
+                        }} 
+                        className={`flex items-center gap-3 p-3 rounded-xl border 
+                        cursor-pointer transition-all animate-in fade-in duration-500 
+                        ${activeSet === 'file' 
+                        ? 'bg-[#63FF9D]/10 border-[#63FF9D]/30' 
+                        : 'border-transparent hover:bg-white/5'}`}
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-[#63FF9D]/10 flex 
+                        items-center justify-center text-[#63FF9D]">
+                            <FileText size={18}/>
+                        </div>
+                        <div className="flex-1 truncate">
+                            <p className="text-[11px] text-white font-bold">
+                                Transformer_Architectures.md - Set
                             </p>
                             <p className="text-[9px] text-orange-400 font-bold flex 
                             items-center gap-1">
-                            🔥 3 due
+                                <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
+                                gap-1">
+                                    <TrendingUp size={12} className="text-red-400"/> due
+                                </span>
                             </p>
                         </div>
                     </div>
+                )}
 
-                            {/* NEW GENERATED SET (File) */}
-                        {hasNewFileSet && (
-                            <div 
-                            onClick={() => { 
-                                setActiveSet('file'); 
-                                setView('reviewing'); 
-                            }} 
-                            className={`flex items-center gap-3 p-3 rounded-xl border 
-                            cursor-pointer transition-all animate-in fade-in duration-500 
-                            ${activeSet === 'file' 
-                            ? 'bg-[#63FF9D]/10 border-[#63FF9D]/30' 
-                            : 'border-transparent hover:bg-white/5'}`}>
-                                <div className="w-8 h-8 rounded-lg bg-[#63FF9D]/10 flex 
-                                items-center justify-center text-[#63FF9D]">
-                                    <FileText size={18}/>
-                                </div>
-                                <div className="flex-1 truncate">
-                                    <p className="text-[11px] text-white font-bold">
-                                        Transformer_Architectures.md - Set
-                                    </p>
-                                    <p className="text-[9px] text-orange-400 font-bold flex 
-                                    items-center gap-1">
-                                        🔥 3 due
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Custom Set */}
-                        {hasCustomSet && (
-                            <div 
-                            onClick={() => { 
-                                setActiveSet('custom'); 
-                                setView('reviewing'); 
-                            }} 
-                            className={`flex items-center gap-3 p-3 rounded-xl border 
-                            cursor-pointer transition-all animate-in fade-in duration-500 
-                            ${activeSet === 'file' 
-                            ? 'bg-[#63FF9D]/10 border-[#63FF9D]/30' 
-                            : 'border-transparent hover:bg-white/5'}`}>
-                                <div className="w-8 h-8 rounded-lg bg-[#63FF9D]/10 flex 
-                                items-center justify-center text-[#63FF9D]">
-                                    <FileText size={18}/>
-                                </div>
-                                <div className="flex-1 truncate">
-                                    <p className="text-[11px] text-white font-bold">
-                                        Natural_Language_Processing.md - Set
-                                    </p>
-                                    <p className="text-[9px] text-orange-400 font-bold flex 
-                                    items-center gap-1">
-                                        🔥 3 due
-                                    </p>
-                                </div>
-                            </div>
-                        )}
+                {/* Custom Set */}
+                {hasCustomSet && (
+                    <div 
+                        onClick={() => { 
+                            setActiveSet('custom'); 
+                            setView('reviewing'); 
+                        }} 
+                        className={`flex items-center gap-3 p-3 rounded-xl border 
+                        cursor-pointer transition-all animate-in fade-in duration-500 
+                        ${activeSet === 'file' 
+                        ? 'bg-[#63FF9D]/10 border-[#63FF9D]/30' 
+                        : 'border-transparent hover:bg-white/5'}`}
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-[#63FF9D]/10 flex 
+                        items-center justify-center text-[#63FF9D]">
+                            <FileText size={18}/>
+                        </div>
+                        <div className="flex-1 truncate">
+                            <p className="text-[11px] text-white font-bold">
+                                Natural_Language_Processing.md - Set
+                            </p>
+                            <p className="text-[9px] text-orange-400 font-bold flex 
+                            items-center gap-1">
+                               <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
+                                gap-1">
+                                    <TrendingUp size={12} className="text-red-400"/> due
+                                </span>
+                            </p>
+                        </div>
                     </div>
-                </div>
+                )}
+            </div>
+        </div>
     )
 }

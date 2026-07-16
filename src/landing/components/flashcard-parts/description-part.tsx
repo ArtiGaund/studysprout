@@ -1,8 +1,8 @@
 'use client';
 
-import { Activity, AlertCircle, MousePointer2, Sparkles, Wand2, Plus, Zap, Brain } from "lucide-react";
+import { Activity, MousePointer2, Wand2, Plus, Zap, Brain } from "lucide-react";
 import { Flashcard } from "./triple-panel-layout/editor-canvas";
-import { act, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface FlashcardSet {
     title: string;
@@ -20,6 +20,7 @@ interface DescriptionPartProps {
     setIsFlipped: (val: boolean) => void;
     activeSet: 'file' | 'folder' | 'custom' | null;
     activeHint: 'none' | 'highlight' | 'generate' | 'plus' | 'sidebar';
+    artiStep: number;
     /** When true the component renders in compact mode with animated cycling hints */
     compact?: boolean;
 }
@@ -29,11 +30,12 @@ const HINT_CARDS = [
     {
         key: 'highlight' as const,
         icon: <MousePointer2 size={14}/>,
-        color: 'text-[#63FF9D]',
-        activeBorder: 'border-[#63FF9D] bg-[#63FF9D]/5',
+        color: 'text-pink-400',
+        activeBorder: 'border-pink-500 bg-pink-500/5',
         label: 'Try Highlighting',
-        badge: 'LOOK HERE',
-        badgeBg: 'bg-[#63FF9D]',
+        badge: 'COMING SOON',
+        badgeBg: 'bg-pink-500',
+        comingSoon: true,
         body: (
             <p className="text-[11px] text-gray-400 leading-relaxed">
                 Select text like{' '}
@@ -74,8 +76,8 @@ const HINT_CARDS = [
     {
         key: 'sidebar' as const,
         icon: <Brain size={14}/>,
-        color: 'text-pink-500',
-        activeBorder: 'border-pink-500 bg-pink-500/5',
+        color: 'text-[#63FF9D] ',
+        activeBorder: 'border-[#63FF9D] bg-[#63FF9D]/5',
         label: 'Sidebar Set',
         badge: null,
         badgeBg: '',
@@ -132,6 +134,7 @@ const CyclingHints: React.FC<{
         <div className="flex flex-col gap-2">
             {/* Dot nav */}
             <div className="flex items-center justify-center gap-1.5">
+                
                 {HINT_CARDS.map((card, i) => (
                     <button 
                     key={card.key}
@@ -147,7 +150,7 @@ const CyclingHints: React.FC<{
                     />
                 ))}
             </div>
-
+           
             {/* Card */}
             <div
             className={`p-3 rounded-xl border transition-all duration-300 
@@ -162,9 +165,9 @@ const CyclingHints: React.FC<{
                             {card.label}
                         </span>
                     </div>
-                    {card.badge && (
-                        <span className={`text-[7px] ${card.badgeBg} text-black px-1.5
-                        rounded-full animate-bounce font-black`}>
+                     {card.badge && (
+                        <span className={`text-[7px] ${card.badge} text-black px-1.5 rounded-full
+                        font-black ${card.comingSoon ? "" : "animate-bounce"}`}>
                             {card.badge}
                         </span>
                     )}
@@ -184,6 +187,7 @@ export const DescriptionPart = ({
     setIsFlipped,
     activeSet,
     activeHint,
+    artiStep,
     compact = false,
 }: DescriptionPartProps) => {
 
@@ -194,6 +198,9 @@ export const DescriptionPart = ({
         sidebar: "top-[535px]",
         none: "opacity-0",
     }
+
+    const showAutomationUI = view === 'idle' && artiStep !== 99 && activeHint !== 'none';
+
     return (
         <div className={`relative flex w-[30%] overflow-hidden rounded-3xl border
          border-white/10 bg-[#080C0C] shadow-2xl ${
@@ -201,14 +208,14 @@ export const DescriptionPart = ({
          }`}>
 
             {/* The Floating Pointer */}
-            {!compact && activeHint !== 'none' && (
+            {!compact && showAutomationUI && (
                 <div className={`absolute left-0 ${pointerPositions[activeHint]} transition-all
                 duration-1000 ease-in-out z-50`}>
                     <div className="relative">
                         <MousePointer2 
                         className="text-[#63FF9D] fill-[#63FF9D] rotate-[270deg] size-5
                         drop-shadow-[0_0_10px_#63FF9D]"
-                        style={{ transform: 'rotate(15deg)'}}
+                        style={{ transform: 'scaleX(-1) rotate(15deg)'}}
                         />
                         <div className="absolute left-6 top-0 bg-[#63FF9D] text-black text-[8px]
                         font-black px-2 py-0.5 rounded-sm whitespace-nowrap animate-pulse">
@@ -282,11 +289,22 @@ export const DescriptionPart = ({
                                                 {card.label}
                                             </span>
                                        </div>
-                                       {card.badge && activeHint === card.key && (
-                                        <span className={`text-[8px] ${card.badgeBg} text-black
-                                        px-1.5 rounded-full animate-bounce`}>
-                                            {card.badge}
+                                       {card.comingSoon ? (
+                                            <span className={`text-[8px] ${card.badge}
+                                            text-pink-400 px-1.5 rounded font-bold uppercase
+                                            animate-bounce border border-pink-500/30
+                                             bg-pink-500/20 py-0.5 tracking-wide`}>
+                                                {card.badge}
+                                            </span>
+                                       ) : (
+                                        card.badge &&
+                                        showAutomationUI &&
+                                        activeHint === card.key && (
+                                            <span className={`text-[8px] ${card.badge}
+                                            text-black px-1.5 rounded-full animate-bounce`}>
+                                                {card.badge}
                                         </span>
+                                        )
                                        )}
                                     </div>
                                     {card.body}
