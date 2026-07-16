@@ -42,10 +42,10 @@ export const SmartAction = ({ folderId }: { folderId: string}) => {
                 Smart Action
             </span>
             <div className="flex flex-col gap-y-2">
-                <ActionItem 
+                {/* <ActionItem 
                 icon={Sparkle}
                 label="AI Synthesis"
-                />
+                /> */}
                {!hasGraph && <ActionItem 
                 icon={isGenerating ? Loader2 : Network}
                 label={
