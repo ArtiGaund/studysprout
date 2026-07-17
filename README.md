@@ -1,6 +1,6 @@
 # StudySprout 🌱
 
-> A Notion-style workspace for learning — write your own notes or drop in a PDF, and get AI-generated flashcards, spaced repetition, and automatic concept mapping either way.
+> A Collaborative workspace for learning — write your own notes or drop in a PDF, and get AI-generated flashcards, spaced repetition, and automatic concept mapping either way.
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://studysprouts.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js)](https://nextjs.org/)
@@ -29,7 +29,7 @@ I wanted a tool that didn't just store notes but actively helped me figure out *
 
 ## Core Features
 
-### ✍️ Notion-Style File Creation & Editing
+### ✍️ File Creation & Editing
 - Files aren't only produced by PDF extraction — users can create a file from scratch at any point in a folder and write directly into it, exactly like a Notion page
 - Block-based editor (BlockNote): headings, bullet/numbered lists, code blocks, tables, images, math blocks, slash commands
 - These manually-created files go through the **same intelligence pipeline** as PDF-derived files: term extraction, concept graph inclusion, prerequisite detection, flashcard generation, and reading-time estimation all run on user-written content too, not just parsed PDFs
