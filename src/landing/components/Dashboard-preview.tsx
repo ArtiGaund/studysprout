@@ -1,9 +1,6 @@
 'use client';
 
-import { Briefcase, Folder, FileText, MousePointer2 } from "lucide-react";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { SidebarView } from "./Dashboard-preview-parts/Sidebar-View";
-import { MainCanvas } from "./Dashboard-preview-parts/Main-Canvas";
 import { SandboxInner } from "./Dashboard-preview-parts/Sandbox-Inner";
 
 export interface Node {
@@ -132,24 +129,27 @@ export const DashboardPreview: React.FC<DashboardPreviewProps> = ({ isExpanded }
         return () => observer.disconnect();
     },[])
 
-      const getNodeCoords = (id: string) => {
-        const element = document.getElementById(`node-${id}`);
+    const getElementCoords = (rawId: string, offsetX = 10) => {
+        const element = document.getElementById(rawId);
         const container = sandboxRef.current;
+        if (!element || !container) return null;
 
-        if(element && container){
-            const rect = element.getBoundingClientRect();
-            const contRect = container.getBoundingClientRect();
-
-            const isFile = id.startsWith("fi-");
-
-            return {
-                x: rect.left - contRect.left + (isFile ? 40 : 20),
-                y: rect.top - contRect.top + ( rect.height / 2),
-            };
+        let x = 0;
+        let y = 0;
+        let node: HTMLElement | null = element;
+        while (node && node !== container) {
+            x += node.offsetLeft;
+            y += node.offsetTop;
+            node = node.offsetParent as HTMLElement | null;
         }
-        return null;
-    }
+        return { x: x + offsetX, y: y + element.offsetHeight / 2 };
+    };
 
+    const getNodeCoords = (id: string) => {
+        const isFile = id.startsWith("fi-");
+        const coords = getElementCoords(`node-${id}`, isFile ? 40 : 20);
+        return coords;
+    };
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -209,17 +209,20 @@ export const DashboardPreview: React.FC<DashboardPreviewProps> = ({ isExpanded }
 
                     if (step.action === 'highlightPdf') {
                         if(!isVisible.current) break;
-                        setSpotlightPos({ x: step.x, y: step.y, opacity: 1, scale: 1 });
+                        const pos = getElementCoords('guide-pdf-btn', 7) ?? { x: step.x, y: step.y };
+                        setPointerPos({ x: pos.x, y: pos.y, opacity: 1 });
+                        setSpotlightPos({ x: pos.x, y: pos.y, opacity: 1, scale: 1 });
                     } 
                     
                     else if (step.action === 'addFolder') {
-                        if(!isVisible.current) break;
-                        setSpotlightPos({ x: step.x, y: step.y, opacity: 1, scale: 1 });
+                        if (!isVisible.current) break;
+                        const pos = getElementCoords('guide-plus-btn', 7) ?? { x: step.x, y: step.y };
+                        setPointerPos({ x: pos.x, y: pos.y, opacity: 1 });
+                        setSpotlightPos({ x: pos.x, y: pos.y, opacity: 1, scale: 1 });
                         await new Promise(r => setTimeout(r, 400));
                         if (!alive) return;
                         setNodes(prev => {
                             if (prev.some(n => n.id === 'f-guide')) return prev;
-                            // APPEND to bottom
                             return [...prev, { id: 'f-guide', type: 'folder', name: 'Untitled Folder', parentId: null }];
                         });
                     } 
@@ -246,25 +249,25 @@ export const DashboardPreview: React.FC<DashboardPreviewProps> = ({ isExpanded }
                         await new Promise(r => setTimeout(r, 1000));
                         setEditingId(null);
                     } 
-
+                    
                     else if (step.action === 'addFile') {
-                        if(!isVisible.current) break;
-                        const coords = getNodeCoords('f-guide');
-                        const finalY = coords ? coords.y : step.y;
+                        if (!isVisible.current) break;
+                        console.log(document.getElementById('add-file-btn-f-guide'));
+                        const iconPos = getElementCoords('add-file-btn-f-guide', 6);
+                        const fallback = getNodeCoords('f-guide');
+                        const pos = iconPos ?? { x: 230, y: fallback ? fallback.y : step.y };
 
-                        // Point to the Plus icon on the guide folder specifically
-                        setPointerPos({ x: 230, y: finalY, opacity: 1 });
-                        setSpotlightPos({ x: 210, y: finalY, opacity: 1, scale: 1 });
-                        await new Promise(r => setTimeout(r, 600)); 
+                        setPointerPos({ x: pos.x, y: pos.y, opacity: 1 });
+                        setSpotlightPos({ x: pos.x, y: pos.y, opacity: 1, scale: 1 });
+                        await new Promise(r => setTimeout(r, 600));
                         if (!alive) return;
-                        setNodes(prev => [...prev, { 
-                            id: 'fi-guide', 
-                            type: 'file', 
-                            name: 'Untitled File', 
-                            parentId: 'f-guide' 
+                        setNodes(prev => [...prev, {
+                            id: 'fi-guide',
+                            type: 'file',
+                            name: 'Untitled File',
+                            parentId: 'f-guide'
                         }]);
                         setExpandedFolders(prev => ({ ...prev, 'f-guide': true }));
-
                         await new Promise(r => setTimeout(r, 300));
                     } 
 
@@ -402,6 +405,5 @@ export const DashboardPreview: React.FC<DashboardPreviewProps> = ({ isExpanded }
             onRecordInteracion={recordInteraction}
             fillHeight={isExpanded}
             />
-        // </div>
     );
 };

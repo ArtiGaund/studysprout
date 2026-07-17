@@ -191,21 +191,24 @@ export const SidebarView = ({
                                     </span>
                                 }
                                 <div className="flex flex-row gap-2">
-                                    <Plus 
-                                        size={12}
-                                        // Change: Ensure visibility during simulation steps
-                                        className={`text-gray-400 transition-opacity
-                                             cursor-pointer hover:text-[#63FF9D] ${
-                                            editingId === folder.id || expandedFolders[folder.id] 
-                                            ? 'opacity-100' 
-                                            : 'opacity-0 group-hover:opacity-100'
+                                    <span
+                                        id={`add-file-btn-${folder.id}`}
+                                        className={`transition-opacity ${ 
+                                            editingId === folder.id || expandedFolders[folder.id]  
+                                                ? 'opacity-100'  
+                                                : 'opacity-0 group-hover:opacity-100'  
                                         }`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            addFile(folder.id);
-                                            onRecordInteraction();
-                                        }}
-                                    />
+                                    >
+                                        <Plus  
+                                            size={12}  
+                                            className="text-gray-400 cursor-pointer hover:text-[#63FF9D]"  
+                                            onClick={(e) => {  
+                                                e.stopPropagation();  
+                                                addFile(folder.id);  
+                                                onRecordInteraction();  
+                                            }}  
+                                        />  
+                                    </span>
                                     <Trash 
                                     size={12}
                                     className={`text-gray-400 transition-opacity 

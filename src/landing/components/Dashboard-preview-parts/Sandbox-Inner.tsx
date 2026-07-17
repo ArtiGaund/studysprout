@@ -156,13 +156,8 @@ export const SandboxInner: React.FC<SandboxInnerProps> = ({
     return(
         <div 
         ref={sandboxRef}
-        // className="
-        // relative rounded-2xl border border-white/10 bg-[#080C0C]/80 backdrop-blur-3xl p-1.5
-        // shadow-2xl transition-all duration-1000 [transform:rotateX(10deg)] 
-        // hover:[transform:rotateX(0deg)] overflow-hidden
-        // "
-        style={fillHeight ? { width: 1200, height: 740 } : undefined}
-        className={fillHeight ? '' : 'relative overflow-hidden w-full h-full'}
+        style={fillHeight ? { width: 1200, height: 740, position: 'relative' } : undefined}
+        className={fillHeight ? 'overflow-hidden' : 'relative overflow-hidden w-full h-full'}
         >
             {/* Spotlight */}
             <div 
