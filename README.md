@@ -2,13 +2,14 @@
 
 > A Notion-style workspace for learning — write your own notes or drop in a PDF, and get AI-generated flashcards, spaced repetition, and automatic concept mapping either way.
 
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://your-demo-url.vercel.app)
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://studysprouts.vercel.app)
 [![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0-47A248?logo=mongodb)](https://www.mongodb.com/)
 [![Redis](https://img.shields.io/badge/Redis-BullMQ-DC382D?logo=redis)](https://redis.io/)
 
-**[Live Demo](https://your-demo-url.vercel.app)** · **[Report a Bug](https://github.com/ArtiGaund/studysprout/issues)** · **[Contact](mailto:artigaund2210@gmail.com)**
+**[Live Demo](https://studysprouts.vercel.app)** · **[Report a Bug](https://github.com/ArtiGaund/studysprout/issues)** · **[Contact](mailto:artigaund2210@gmail.com)**
+**Companion repo:** [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) — the standalone Socket.io + Yjs service that powers live collaboration, presence, and generation locking. Deployed and versioned separately; see its own README for the deep socket-architecture detail.
 
 ---
 
@@ -16,7 +17,7 @@
 
 Most students and researchers end up with a folder full of PDFs and scattered notes, and no real system for retaining what's in them. StudySprout is a collaborative, Notion-style workspace — write pages directly in a block-based editor, or upload a PDF and let it get parsed into structured pages for you. Either way, every file gets pulled into the same intelligence layer: terms get indexed, concepts get mapped across the folder, prerequisite relationships get detected, and AI-generated flashcards turn the content into something you actually study from, with spaced repetition tracking whether it's sticking.
 
-It's organized as workspaces containing folders containing files — and unlike most note apps, every layer is instrumented with learning intelligence instead of just being a place to dump text.
+It's organized as **workspaces containing folders containing files** — workspaces can be public (open to invited collaborators) or private — and unlike most note apps, every layer is instrumented with learning intelligence instead of just being a place to dump text.
 
 ---
 
@@ -35,9 +36,9 @@ I wanted a tool that didn't just store notes but actively helped me figure out *
 - Because manual files and PDF-derived files share the same underlying block schema, a folder can freely mix both — e.g. a PDF-derived chapter sitting next to a page of the user's own typed notes, and the concept graph treats them identically
 
 ### 📄 PDF → Structured Content
-- Custom structural parser (Python + `pdfminer.six`/`pdftoppm`) that detects headings, lists, tables, code blocks, and math zones instead of just dumping raw text
+- Custom structural parser (Python: `pdfplumber`, `pikepdf`, `pdftoppm`/poppler, `PyMuPDF`, `pillow`) that detects headings, lists, tables, code blocks, and math zones instead of just dumping raw text
 - Decodes CID-encoded fonts and merges sentence fragments broken across PDF line breaks
-- Splits a single PDF into multiple topic-scoped files automatically, based on heading hierarchy and semantic chunking rather than arbitrary page counts
+- Splits a single PDF into multiple topic-scoped files automatically, using page-based chunking so one PDF becomes 15-20 well-scoped files rather than one unreadable document
 - Extracts embedded images and preserves them inline
 
 ### 🧠 Concept Graph
@@ -65,26 +66,27 @@ I wanted a tool that didn't just store notes but actively helped me figure out *
 - Weekly research/learning goals with progress tracking
 - Workspace-level "research velocity" and concept-mastery counts aggregated across all folders
 
-### ✍️ Real-Time Collaborative Editor
-- Block-based editor (BlockNote) with slash commands, tables, images, math blocks, code blocks
-- Real-time multi-user editing via Yjs CRDTs + Socket.io, so concurrent edits merge without conflicts
-- Presence indicators, workspace invitations via a generic notification model
-
 ### 🗃️ Workspace Organization
 - Workspace → Folder → File hierarchy
 - **Public/shared workspaces**: a workspace can be made public so multiple users can join and collaborate on the same folders, files, and flashcard sets — not just single-user notebooks
 - **Role-based access**: each workspace has an Owner (the creator) and can invite other users as Editors by email, with a dedicated "Workspace Access" panel to add, view, and remove members
 - Per-workspace monthly flashcard generation limits (e.g. "1/5 sets this month, resets on the 31st"), enforced with an atomic `findOneAndUpdate` + `$expr` check so concurrent requests can't race past the cap
-- Global search across workspace name, folders, and file content simultaneously (single search box returns matching folders and matching file excerpts with highlighted terms, scoped by result type: All / Workspace / Folder / File)
+- Global search across workspace name, folders, and file content simultaneously (single search box returns matching folders and matching file excerpts with highlighted terms, scoped by result type: All / Workspace / Folder / File), and clicking a result navigates directly to that exact file
 - Workspace settings: rename, custom logo upload, and workspace/account deletion with explicit destructive-action confirmation
 - Offline-capable shell (custom service worker + offline fallback page) — full offline editing is planned for a later release
 
 ### 👥 Real-Time Multi-User Collaboration
 - Multiple users can be in the **same file at the same time**, live-editing together with changes appearing instantly on both sides
 - Live presence shown in an "Action Now" panel (who's online, avatar, name)
-- Concurrent editing is conflict-free — powered by **Yjs CRDTs** synced over **Socket.io**, so two people typing in the same document merge automatically instead of one overwriting the other
-- Presence and content updates are pushed via dedicated socket events (e.g. `pdf_file_created`, `pdf_folder_completed`) rather than polling
+- Concurrent editing is conflict-free — powered by **Yjs CRDTs** synced over **Socket.io** (handled by the separate [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server)), so two people typing in the same document merge automatically instead of one overwriting the other
+- Presence and content updates are pushed via dedicated socket events rather than polling
 - Workspace invitations use a generic `Notification` model with pending/accepted/rejected states
+
+### 🔒 Real Concurrency Control (not just "collaboration")
+Real-time collaboration also means handling the moments where two people try to do the *same* thing at once:
+- **Title-editing lock**: if two users try to rename the same folder, file, or flashcard set simultaneously, an active-editing presence state is broadcast so only one edit is in flight, preventing clashing renames
+- **Flashcard generation lock**: if two users trigger flashcard generation for the same file or folder at the same time, the second request is denied via a live lock — including hierarchical checks (a folder-level generation blocks its child files from generating, and vice versa), with a 5-minute "ghost lock" auto-release in case a client disconnects mid-generation
+- Both mechanisms exist to prevent wasted AI calls, corrupted in-progress flashcard sets, and confusing UI states when multiple people are actively working in the same workspace
 
 ### 🎯 Customizable Flashcard Generation
 - Users can configure generation before running it: source scope (whole folder vs. a single file), number of cards, and question format
@@ -141,54 +143,67 @@ I wanted a tool that didn't just store notes but actively helped me figure out *
 **Backend**
 - Next.js API routes (Node.js runtime)
 - MongoDB + Mongoose
-- Redis + BullMQ (background job queues)
-- Socket.io — real-time events for collaborative editing and presence, run as an **independent server** (separate deployment from the Next.js app) so real-time connections aren't limited by serverless function timeouts
+- Redis + BullMQ (background job queues — three queues: `pdf-processing`, `file-sync-queue`, `term-index-rebuild`)
+- Socket.io — real-time events for collaborative editing and presence, run as an **independent server** ([`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server), separate repo and deployment) so real-time connections aren't limited by serverless function timeouts
 - Yjs — CRDT layer for conflict-free concurrent document editing
 
 **AI / Intelligence Layer**
 - Google Gemini API — flashcard generation, folder concept synthesis
-- Custom Python PDF pipeline — `pdfminer.six`, `pdftoppm`
+- Custom Python PDF pipeline — `pdfplumber`, `pikepdf`, `pdftoppm` (poppler), `PyMuPDF`, `pillow`
 - Custom term extraction (stop-word filtering, tokenization, markdown/noise stripping)
 - Custom prerequisite detection (regex-based whole-word term matching against a workspace term index — no LLM call needed)
 
 **Infrastructure**
-- Vercel (frontend + API deployment)
+- Vercel (Next.js app: frontend + API routes)
+- Railway (background workers — same repo, separate deployment; and the standalone realtime server)
+- MongoDB Atlas, single shared Redis instance across all three services
 - Cloudinary (PDF & image storage)
-- Separate Node server for Socket.io / real-time (Railway or similar)
 
 ---
 
 ## Architecture
 
+### Deployment topology — three services, two repos
+
 ```
-┌──────────────┐
-│   Browser    │
-│  (Next.js)   │
-└──────┬───────┘
-       │
-       ▼
-┌────────────────────────┐
-│      API Routes         │
-│  file sync · PDF upload │
-│  analytics · flashcards │
-└──────┬──────────────────┘
-       │
-   ┌───┼─────────────┬───────────────┬────────────┐
-   ▼   ▼             ▼               ▼            ▼
-┌────────┐   ┌──────────────┐  ┌───────────┐  ┌──────────┐
-│MongoDB │   │ Redis+BullMQ │  │  Gemini   │  │ Socket.io│
-│(data)  │   │  (job queue) │  │   (AI)    │  │(realtime)│
-└────────┘   └──────┬───────┘  └───────────┘  └──────────┘
-                     │
-                     ▼
-           ┌───────────────────────┐
-           │   Background Workers   │
-           │ - PDF processing       │
-           │ - Term index rebuild   │
-           │ - Concept graph build  │
-           │ - Prerequisite detect  │
-           └───────────────────────┘
+┌──────────────────────┐         ┌──────────────────────────────┐
+│   Vercel               │         │   Railway                       │
+│   Next.js App           │◄───────┤   studysprout-realtime-server     │
+│   (this repo)           │  HTTP  │   (separate repo)                │
+│   Pages + API routes    │───────►│   Socket.io + Yjs                │
+└──────────┬─────────────┘  emit   └───────────────┬───────────────────┘
+           │                                        │
+           │ enqueue jobs                  enqueue  │ file-sync jobs
+           ▼                                        ▼
+    ┌───────────────────────────────────────────────────┐
+    │              Shared Redis (BullMQ)                   │
+    └───────────────────────┬────────────────────────────────┘
+                             │ consumed by
+                             ▼
+              ┌─────────────────────────────────┐
+              │   Railway                          │
+              │   studysprout background workers     │
+              │   (this repo, different start          │
+              │    command via nixpacks.toml)           │
+              │   PDF processing · file sync ·           │
+              │   term index rebuilds                     │
+              └───────────────┬─────────────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │  MongoDB Atlas     │
+                    └──────────────────┘
 ```
+
+**Why three services from two repos:** the Next.js app is request/response and serverless — perfect for pages and API routes, but structurally unable to host long-running processes. Background workers (BullMQ consumers, the Python PDF subprocess pipeline) and the always-on Socket.io server both need to stay alive continuously, which serverless can't do — so those run on Railway instead. The worker service is the *same* `studysprout` codebase as the Vercel app, deployed a second time with a different entry point (`workers/index.ts`, invoked via `nixpacks.toml` instead of `next start`).
+
+**How the pieces talk to each other:**
+- Vercel API routes enqueue jobs directly into shared Redis — no direct call to the worker needed
+- The realtime server debounces live Yjs edits (2s) and pushes `persist-file` jobs to the same Redis queue
+- The worker continuously polls those queues, processes jobs, writes to MongoDB
+- After processing, the worker makes an outbound HTTP call to the realtime server's `/emit/*` endpoints so connected browsers get instant live updates
+- Vercel API routes also call those same `/emit/*` endpoints directly for things like workspace invitations
+- Nobody calls the worker directly — it has no public URL and receives all its work via the Redis queue
 
 ### PDF Processing Pipeline
 
@@ -196,7 +211,7 @@ I wanted a tool that didn't just store notes but actively helped me figure out *
 Upload PDF → Cloudinary
    → BullMQ job enqueued
    → Python structural parser (headings, tables, math, images)
-   → Topic-based chunking into multiple files
+   → Page-based chunking into multiple topic files
    → Convert each chunk to BlockNote (Yjs) document
    → Extract terms per file → mark workspace term index stale
    → Background worker rebuilds term index (debounced, every 30s)
@@ -215,9 +230,9 @@ User A types → Yjs local update → Socket.io broadcast → User B's Yjs doc m
 ```
 
 - **Yjs** handles the actual conflict resolution (CRDT) — there's no "last write wins" or locking; both users' edits are preserved and merged deterministically
-- **Socket.io** is the transport: a separate real-time server (independent from the main Next.js deployment) relays Yjs updates and presence events to everyone viewing the same file
-- Presence (who's currently viewing/editing) is tracked separately from document content, so "1 online" style indicators update instantly even if no edits are being made
-- Because presence and editing both run on the same file, the `useFilePresence` hook needed careful dependency management early on — a missing async dependency caused presence to silently stop updating without erroring, which was one of the trickier bugs to track down
+- **Socket.io** is the transport, handled by the standalone [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) — see that repo for the full socket-event breakdown, presence architecture, and generation-lock implementation
+- Presence (who's currently viewing/editing) is tracked separately from document content, so "online" indicators update instantly even if no edits are being made
+- Concurrency isn't just "edits merge" — see [Real Concurrency Control](#-real-concurrency-control-not-just-collaboration) above for the title-lock and generation-lock mechanisms that prevent two users from colliding on the same action
 
 ### Term Index & Concept Graph
 
@@ -234,15 +249,18 @@ Rebuilds are debounced: file saves just flip a `termIndexStale` boolean, and a r
 ## Notable Technical Decisions
 
 **Why chunk PDFs into multiple files instead of one long document?**
-A 100-page PDF as a single file is unstudyable. Splitting by heading hierarchy + token-count balancing produces files that are actually digestible study units, and it lets the concept graph/prerequisite system operate at a useful granularity (file-to-file, not just page-to-page).
+A 100-page PDF as a single file is unstudyable. Page-based chunking produces files that are actually digestible study units, and it lets the concept graph/prerequisite system operate at a useful granularity (file-to-file, not just page-to-page).
 
 **Why regex term-matching instead of an LLM call for prerequisites?**
 Cost and speed. Every file would need to be checked against every other file's terms — doing that with an LLM call per pair is both slow and expensive at scale. A term-index lookup is O(n) and instant, and it turned out to be "good enough" (70–80% accurate) with a manual-override system to fix the rest.
 
-**Why Yjs instead of a simpler locking model for the editor?**
-Multiple users can be editing the same file at once. Locking would mean one person blocks everyone else; CRDTs let edits merge automatically without a central authority deciding who "wins."
+**Why Yjs instead of a simpler locking model for the editor content itself?**
+Multiple users can be editing the same file at once. Locking would mean one person blocks everyone else; CRDTs let edits merge automatically without a central authority deciding who "wins." (Locking is still used, deliberately, for *discrete* actions like renaming or flashcard generation — see [Real Concurrency Control](#-real-concurrency-control-not-just-collaboration) — because those aren't mergeable the way text content is.)
 
-**Why fire-and-forget logging + `emitServerRealtimeEvent` conventions?**
+**Why deploy the realtime server as a separate repo instead of folding it into the main app?**
+Vercel (serverless) cannot host a process that holds WebSocket connections open continuously. Splitting it into its own repo/service, deployed on Railway, was the only way to get always-on real-time behavior without moving the entire app off Vercel.
+
+**Why fire-and-forget logging + a single `emitServerRealtimeEvent` convention?**
 Early on, sockets were double-emitting events from multiple code paths. Standardizing on a single emit helper and auditing every socket call site fixed a class of bugs where the UI would flicker or apply the same update twice.
 
 ---
@@ -251,27 +269,31 @@ Early on, sockets were double-emitting events from multiple code paths. Standard
 
 ```
 studysprout/
-├── app/
-│   ├── api/
-│   │   ├── folder/[folderId]/         # analyzer, flashcards, prerequisites
-│   │   ├── workspace/[workspaceId]/   # stats, folder-graph, prerequisite-graph
-│   │   └── file/                      # sync, upload, last-studied
-│   ├── dashboard/                     # main authenticated app
-│   └── (auth)/                        # sign in / sign up
-├── components/
-│   ├── editor/                        # BlockNote wrapper, presence
-│   ├── graphs/                        # D3 concept/prerequisite/relationship graphs
-│   └── ui/
-├── lib/
-│   ├── bullmq/                        # workers: PDF, term-index, folder-graph
-│   ├── graph/                         # graph builder logic
-│   ├── analytics/                     # stats calculators
-│   └── ai/                            # Gemini client
-├── model/                             # Mongoose schemas
-├── utils/
-│   ├── pdf/                           # structural parser, chunker, sanitizer
-│   └── intelligence/                  # term extractor, concept graph, prerequisites
-├── python/                            # PDF extraction scripts
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── folder/[folderId]/     # analyzer, flashcards, prerequisites
+│   │   │   ├── workspace/[workspaceId]/ # stats, folder-graph, prerequisite-graph
+│   │   │   └── file/                    # sync, upload, last-studied
+│   │   ├── dashboard/                  # main authenticated app
+│   │   └── (auth)/                     # sign in / sign up
+│   ├── components/
+│   │   ├── editor/                     # BlockNote wrapper, presence
+│   │   ├── graphs/                     # D3 concept/prerequisite/relationship graphs
+│   │   └── ui/
+│   ├── lib/
+│   │   ├── workers/                    # syncWorker, pdfWorker, workspace-term-index
+│   │   ├── bullmq/                     # queue, redis-connection
+│   │   ├── model/                      # Mongoose schemas
+│   │   └── services/                   # business logic reused by API routes + workers
+│   ├── utils/
+│   │   ├── pdf/                        # structural parser, chunker, sanitizer
+│   │   └── intelligence/               # term extractor, concept graph, prerequisites, SRS
+│   └── store/                          # Redux slices + selectors
+├── python/                             # requirements.txt: pdfplumber, pikepdf, PyMuPDF, pillow
+├── workers/
+│   └── index.ts                        # standalone entry point for Railway worker deployment
+├── nixpacks.toml                       # Railway build config (Node + Python + poppler)
 └── public/
 ```
 
@@ -300,7 +322,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 NEXTAUTH_SECRET=your_secret
 NEXTAUTH_URL=http://localhost:3000
 
-NEXT_PUBLIC_REALTIME_URL=http://localhost:3001
+NEXT_PUBLIC_REALTIME_URL=http://localhost:4000
 ```
 
 ### Setup
@@ -310,18 +332,24 @@ git clone https://github.com/ArtiGaund/studysprout.git
 cd studysprout
 
 npm install
-pip install pdfminer.six pillow
+pip install -r python/requirements.txt
 
 # Terminal 1 — Next.js app
 npm run dev
 
-# Terminal 2 — Socket.io realtime server
-npm run dev:realtime
+# Terminal 2 — background workers (PDF, term index, file sync)
+npm run worker:start
 
-# Terminal 3 — background workers (PDF, term index, graphs)
-npm run worker:pdf
-npm run worker:termindex
+# or run everything in one terminal:
+npm run dev:all
 ```
+
+You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) running locally for full functionality — live collaboration, presence, and generation locks won't work without it. See that repo's README for setup.
+
+### Deployment
+- **Next.js app** → Vercel, deployed from this repo normally
+- **Background workers** → Railway, deployed from this *same* repo with `nixpacks.toml` overriding the start command to `npm run worker:start`
+- **Realtime server** → Railway, deployed from the separate [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) repo
 
 ---
 
@@ -333,8 +361,9 @@ npm run worker:termindex
 - Automatic + manual prerequisite detection
 - Flashcards (file-level & folder-level) with SRS
 - Reading time, mastery, and recall analytics
-- Real-time collaborative editor
+- Real-time collaborative editor with title-editing and flashcard-generation locks
 - Workspace invitations & notifications
+- Full production deployment across Vercel + Railway (two repos, three services)
 
 **In Progress / Next**
 - [ ] Full offline mode (service worker + local sync)
@@ -347,20 +376,25 @@ npm run worker:termindex
 ## What I Learned Building This
 
 - Designing a background-job system (BullMQ) so that expensive operations (PDF parsing, concept graph builds, term index rebuilds) never block the request/response cycle, and fail independently of each other
-- Debugging CRDT-based collaborative editing, including a subtle bug where a missing hook dependency caused presence data to silently stop updating
+- Debugging CRDT-based collaborative editing, including an echo-back bug where the editor's hydration effect re-broadcast a client's own full document state as if it were a live incremental update — corrupting merged documents for other clients until traced back to a single redundant `socket.emit` call
+- Building real concurrency control for a multi-user product — not just "edits merge," but discrete-action locking (title edits, flashcard generation) with hierarchical checks and crash-safety timeouts
 - Enforcing usage limits (monthly flashcard generation caps) safely under concurrency — using MongoDB's atomic `findOneAndUpdate` with `$expr` comparisons instead of a read-then-write pattern that could race
-- Building a chunking algorithm that balances heading structure, token count, and semantic boundaries — pure page-count splitting produced unusable chunks
+- Splitting one codebase across two deployment platforms (Vercel + Railway) based on which parts need to run continuously versus which are request/response, and keeping Redis/Mongo/env vars consistent across three independently deployed services
 - The cost/accuracy tradeoff between LLM-based and heuristic approaches to structured-data extraction (why prerequisite detection uses plain term matching, but flashcard generation uses Gemini)
 - Auditing an entire real-time system for duplicate event emissions and parameter mismatches after they caused UI state to desync
 
 ---
 
+## Related Repositories
+
+- **This repo** — Next.js app, API routes, background workers, PDF pipeline, concept graph, flashcards
+- **[`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server)** — Socket.io + Yjs collaboration server, presence tracking, generation/title locks
 
 ## Contact
 
-**Your Name**
+**Arti Gaund**
 [LinkedIn](https://linkedin.com/in/artigaund) · [Email](mailto:artigaund2210@gmail.com) · [GitHub](https://github.com/ArtiGaund)
 
 ---
 
-Built solo, end to end — parsing pipeline, real-time backend, analytics, and UI.
+Built solo, end to end — parsing pipeline, real-time backend, deployment architecture, analytics, and UI.
