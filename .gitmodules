@@ -1,0 +1,3 @@
+[submodule "realtime-server"]
+	path = realtime-server
+	url = https://github.com/ArtiGaund/studysprout-realtime-server
