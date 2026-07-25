@@ -10,7 +10,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "worker:start": "tsx src/lib/workers/index.ts"
+    "worker:start": "tsx src/lib/workers/index.ts",
+    "build:realtime": "cd realtime-server && npm install && npm run build",
+    "start:realtime": "node realtime-server/dist/server.js",
+    "start:combined": "concurrently \"npm run worker:start\" \"npm run start:realtime\""
   },
   "dependencies": {
     "@blocknote/code-block": "^0.31.2",
@@ -92,7 +95,7 @@
     "@types/react-dom": "^18",
     "@types/remote-redux-devtools": "^0.5.8",
     "@types/uuid": "^10.0.0",
-    "concurrently": "^10.0.3",
+    "concurrently": "^10.0.4",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",
