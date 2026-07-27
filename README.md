@@ -7,9 +7,11 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0-47A248?logo=mongodb)](https://www.mongodb.com/)
 [![Redis](https://img.shields.io/badge/Redis-BullMQ-DC382D?logo=redis)](https://redis.io/)
+[![Java](https://img.shields.io/badge/Java-Rate_Limiter-ED8B00?logo=openjdk)](https://github.com/ArtiGaund/rate-limiter)
 
 **[Live Demo](https://studysprouts.vercel.app)** · **[Report a Bug](https://github.com/ArtiGaund/studysprout/issues)** · **[Contact](mailto:artigaund2210@gmail.com)**
 **Companion repo:** [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) — the standalone Socket.io + Yjs service that powers live collaboration, presence, and generation locking. Deployed and versioned separately; see its own README for the deep socket-architecture detail.
+**Rate limiter:** [`rate-limiter`](https://github.com/ArtiGaund/rate-limiter) — standalone Java service enforcing per-user request limits on Gemini API calls (flashcard generation), preventing repeated-call abuse within a short time window.
 
 ---
 
@@ -59,6 +61,10 @@ I wanted a tool that didn't just store notes but actively helped me figure out *
 - SM-2-style spaced repetition scheduling based on recall performance
 - Per-file and per-folder mastery scores, recall rate, and review history
 - Generation is on-demand — folders without a flashcard set yet show a clear "Generate Flashcards" call to action rather than an empty/broken state
+
+### 🚦 Rate-Limited AI Calls
+- Flashcard generation calls are gated by a standalone Java rate-limiting service ([`rate-limiter`](https://github.com/ArtiGaund/rate-limiter), token bucket algorithm), preventing a single user from triggering repeated Gemini API calls in a short window
+- Runs as an independent service, called by the flashcard-generation route before any Gemini request is made — a separate concern from the per-workspace monthly generation cap and the flashcard-generation lock (see below), which solve quota and concurrency respectively rather than call frequency
 
 ### 📊 Learning Analytics
 - Active reading time (auto-estimated from block/word count, with a multiplier for math-heavy content)
@@ -146,6 +152,7 @@ Real-time collaboration also means handling the moments where two people try to 
 - Redis + BullMQ (background job queues — three queues: `pdf-processing`, `file-sync-queue`, `term-index-rebuild`)
 - Socket.io — real-time events for collaborative editing and presence, run as an **independent server** ([`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server), separate repo and deployment) so real-time connections aren't limited by serverless function timeouts
 - Yjs — CRDT layer for conflict-free concurrent document editing
+- Java (Spring Boot) — standalone rate-limiting service ([`rate-limiter`](https://github.com/ArtiGaund/rate-limiter)) guarding Gemini API calls against repeated-request abuse
 
 **AI / Intelligence Layer**
 - Google Gemini API — flashcard generation, folder concept synthesis
@@ -167,35 +174,41 @@ Real-time collaboration also means handling the moments where two people try to 
 
 ```
 ┌──────────────────────┐         ┌──────────────────────────────┐
-│   Vercel               │         │   Railway                       │
-│   Next.js App           │◄───────┤   studysprout-realtime-server     │
-│   (this repo)           │  HTTP  │   (separate repo)                │
-│   Pages + API routes    │───────►│   Socket.io + Yjs                │
-└──────────┬─────────────┘  emit   └───────────────┬───────────────────┘
-           │                                        │
-           │ enqueue jobs                  enqueue  │ file-sync jobs
-           ▼                                        ▼
+│   Vercel             │         │   Render                     │
+│   Next.js App        │  ◄──────┤   studysprout-realtime-server│
+│   (this repo)        │  HTTP   │   (separate repo)            │
+│   Pages + API routes |───────► │   Socket.io + Yjs            │
+└──────────┬───────────┘  emit   └───────────────┬──────────────┘
+           │                                     │
+           │ enqueue jobs               enqueue  │ file-sync jobs
+           ▼                                     ▼
     ┌───────────────────────────────────────────────────┐
-    │              Shared Redis (BullMQ)                   │
-    └───────────────────────┬────────────────────────────────┘
-                             │ consumed by
-                             ▼
+    │              Shared Redis (BullMQ)                │
+    └───────────────────────┬───────────────────────────┘
+                            │ consumed by
+                            ▼
               ┌─────────────────────────────────┐
-              │   Railway                          │
-              │   studysprout background workers     │
-              │   (this repo, different start          │
-              │    command via nixpacks.toml)           │
-              │   PDF processing · file sync ·           │
-              │   term index rebuilds                     │
-              └───────────────┬─────────────────────────┘
+              │   Railway                       │
+              │   studysprout background workers│
+              │   (this repo, different start   │
+              │    command via nixpacks.toml)   │
+              │   PDF processing · file sync ·  │
+              │   term index rebuilds           │
+              └───────────────┬─────────────────┘
                               │
                               ▼
                     ┌──────────────────┐
-                    │  MongoDB Atlas     │
+                    │  MongoDB Atlas   │
                     └──────────────────┘
+
+                    ┌──────────────────────────────┐
+                    │ Render                       │
+                    │ rate-limiter (Java)          │◄──── checked by flashcard-generation
+                    │ (separate repo)              │ route before calling Gemini
+                    └──────────────────────────────┘
 ```
 
-**Why three services from two repos:** the Next.js app is request/response and serverless — perfect for pages and API routes, but structurally unable to host long-running processes. Background workers (BullMQ consumers, the Python PDF subprocess pipeline) and the always-on Socket.io server both need to stay alive continuously, which serverless can't do — so those run on Railway instead. The worker service is the *same* `studysprout` codebase as the Vercel app, deployed a second time with a different entry point (`workers/index.ts`, invoked via `nixpacks.toml` instead of `next start`).
+**Why four services from three repos:** the Next.js app is request/response and serverless — perfect for pages and API routes, but structurally unable to host long-running processes. Background workers (BullMQ consumers, the Python PDF subprocess pipeline) and the always-on Socket.io server both need to stay alive continuously, which serverless can't do — so those run on Render instead. The worker service is the *same* `studysprout` codebase as the Vercel app, deployed a second time with a different entry point (`workers/index.ts`, invoked via `nixpacks.toml` instead of `next start`). The rate limiter is a fully standalone Java service, also deployed on Render, called synchronously by the flashcard-generation route before any Gemini request goes out.
 
 **How the pieces talk to each other:**
 - Vercel API routes enqueue jobs directly into shared Redis — no direct call to the worker needed
@@ -203,6 +216,7 @@ Real-time collaboration also means handling the moments where two people try to 
 - The worker continuously polls those queues, processes jobs, writes to MongoDB
 - After processing, the worker makes an outbound HTTP call to the realtime server's `/emit/*` endpoints so connected browsers get instant live updates
 - Vercel API routes also call those same `/emit/*` endpoints directly for things like workspace invitations
+- Before triggering flashcard generation, the flashcard route calls the rate-limiter service to check whether the requesting user is within their allowed request rate; only proceeds to Gemini if allowed
 - Nobody calls the worker directly — it has no public URL and receives all its work via the Redis queue
 
 ### PDF Processing Pipeline
@@ -259,6 +273,9 @@ Multiple users can be editing the same file at once. Locking would mean one pers
 
 **Why deploy the realtime server as a separate repo instead of folding it into the main app?**
 Vercel (serverless) cannot host a process that holds WebSocket connections open continuously. Splitting it into its own repo/service, deployed on Railway, was the only way to get always-on real-time behavior without moving the entire app off Vercel.
+
+**Why a standalone Java service for rate limiting instead of handling it in the Node route directly?**
+Keeps abuse-prevention logic decoupled from application logic, and makes the limiter reusable across any future route or even other projects. It also meant the algorithm (token bucket) could be built and tested in isolation rather than tangled into existing route handlers.
 
 **Why fire-and-forget logging + a single `emitServerRealtimeEvent` convention?**
 Early on, sockets were double-emitting events from multiple code paths. Standardizing on a single emit helper and auditing every socket call site fixed a class of bugs where the UI would flicker or apply the same update twice.
@@ -323,6 +340,7 @@ NEXTAUTH_SECRET=your_secret
 NEXTAUTH_URL=http://localhost:3000
 
 NEXT_PUBLIC_REALTIME_URL=http://localhost:4000
+RATE_LIMITER_URL=your_rate_limiter_url
 ```
 
 ### Setup
@@ -338,7 +356,7 @@ pip install -r python/requirements.txt
 npm run dev
 
 # Terminal 2 — background workers (PDF, term index, file sync)
-npm run worker:start
+npm run start:combined
 
 # or run everything in one terminal:
 npm run dev:all
@@ -350,6 +368,7 @@ You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/st
 - **Next.js app** → Vercel, deployed from this repo normally
 - **Background workers** → Railway, deployed from this *same* repo with `nixpacks.toml` overriding the start command to `npm run worker:start`
 - **Realtime server** → Railway, deployed from the separate [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) repo
+- **Rate limiter** → Render, deployed from the separate [`rate-limiter`](https://github.com/ArtiGaund/rate-limiter) repo
 
 ---
 
@@ -363,11 +382,11 @@ You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/st
 - Reading time, mastery, and recall analytics
 - Real-time collaborative editor with title-editing and flashcard-generation locks
 - Workspace invitations & notifications
-- Full production deployment across Vercel + Railway (two repos, three services)
+- Java-based rate limiting on Gemini API calls
+- Full production deployment across Vercel + Render (three repos, four services)
 
 **In Progress / Next**
 - [ ] Full offline mode (service worker + local sync)
-- [ ] Mobile-responsive app views (currently desktop-first)
 - [ ] Anki-compatible flashcard export
 - [ ] Team/multi-user analytics
 
@@ -379,9 +398,10 @@ You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/st
 - Debugging CRDT-based collaborative editing, including an echo-back bug where the editor's hydration effect re-broadcast a client's own full document state as if it were a live incremental update — corrupting merged documents for other clients until traced back to a single redundant `socket.emit` call
 - Building real concurrency control for a multi-user product — not just "edits merge," but discrete-action locking (title edits, flashcard generation) with hierarchical checks and crash-safety timeouts
 - Enforcing usage limits (monthly flashcard generation caps) safely under concurrency — using MongoDB's atomic `findOneAndUpdate` with `$expr` comparisons instead of a read-then-write pattern that could race
-- Splitting one codebase across two deployment platforms (Vercel + Railway) based on which parts need to run continuously versus which are request/response, and keeping Redis/Mongo/env vars consistent across three independently deployed services
+- Splitting one codebase across multiple deployment platforms (Vercel + Render) based on which parts need to run continuously versus which are request/response, and keeping Redis/Mongo/env vars consistent across independently deployed services
 - The cost/accuracy tradeoff between LLM-based and heuristic approaches to structured-data extraction (why prerequisite detection uses plain term matching, but flashcard generation uses Gemini)
 - Auditing an entire real-time system for duplicate event emissions and parameter mismatches after they caused UI state to desync
+- Building a standalone rate-limiting service (Java, token bucket) and integrating it as an API-abuse guard in front of the most expensive route (Gemini flashcard generation) — separate from the existing per-workspace monthly-cap and generation-lock mechanisms, which solve quota and concurrency respectively rather than call frequency
 
 ---
 
@@ -389,6 +409,7 @@ You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/st
 
 - **This repo** — Next.js app, API routes, background workers, PDF pipeline, concept graph, flashcards
 - **[`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server)** — Socket.io + Yjs collaboration server, presence tracking, generation/title locks
+- **[`rate-limiter`](https://github.com/ArtiGaund/rate-limiter)** — standalone Java service for rate-limiting Gemini API calls
 
 ## Contact
 
