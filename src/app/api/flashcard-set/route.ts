@@ -126,9 +126,24 @@ export async function POST(request: NextRequest){
             });
             return errorResponse(
                 `[Flashcard set POST route] Monthly limit reached. This workspace has used ${usageCheck.used}/${usageCheck.limit} flashcard sets this month. Limit resets on ${resetDate}.`,
-                429,
-                429,
+                403,
+                403,
             );
+        }
+
+        try {
+            const url = `${process.env.RATE_LIMITER_URL}/check?key=${userId}&tokens=1`;
+            const rateLimitRes = await fetch(url,{ signal: AbortSignal.timeout(15000)});
+            const { allowed, remaining } = await rateLimitRes.json();
+            if(!allowed){
+                return errorResponse(
+                    `You're generating flashcards too quickly. Please wait and try again.`,
+                    429,
+                    429,
+                );
+            }
+        } catch (error) {
+            console.error("[Flashcard set POST route] Rate limiter check failed, allowing request: ",error);
         }
 
         // Data aggregation (Resolve which files to process based on selected resourceType)
@@ -291,31 +306,13 @@ export async function POST(request: NextRequest){
                 // EMIT PROGRESS via an internal fetch to realtime server
                 // This triggers the 'report_progress' logic on server.ts
                 try {
-                //    const socketRes = await fetch("http://localhost:4000/emit/progress-update", {
-                //         method: "POST",
-                //         headers: { "Content-Type": "application/json" },
-                //         body: JSON.stringify({
-                //             resourceId: String(resourceId),
-                //             workspaceId: String(workspaceId),
-                //             progress: percent,
-                //             currentCount: allGeneratedCards.length,
-                //             totalCards: cardCount,
-                //         }),
-                //     });
-
                     await emitServerRealtimeEvent('progress-update', {
                         resourceId: String(resourceId),
                         workspaceId: String(workspaceId),
                         progress: percent,
                         currentCount: allGeneratedCards.length,
                         totalCards: cardCount,
-                    })
-
-                    // if(!socketRes.ok){
-                    //     console.warn(`[Flashcard set route] Socket Server rejected update (likely
-                    //         no lock found).`)
-                    // }
-
+                    });
                 } catch (error) {
                     console.error("[Flashcard Set route] Failed to notify socket server: ",error);
                 }

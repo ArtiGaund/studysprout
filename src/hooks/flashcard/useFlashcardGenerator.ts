@@ -88,12 +88,30 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
 
                     return result
                 }
+
+                if(result.statusCode === 403){
                     toast({
-                        title: "Failed",
-                        description: "Something went wrong, result is not success",
-                    })
-                    return result;
-               
+                        title: "Monthly limit reached. Please try next month.",
+                        description: result.error,
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                if(result.statusCode === 429){
+                    toast({
+                        title: "Slow down",
+                        description: result.error,
+                        variant: "destructive",
+                    });
+                    return;
+                }
+                toast({
+                    title: "Failed",
+                    description: result.error || "Something went wrong, result is not success",
+                    variant: "destructive",
+                });
+                return result;
             }
             toast({
                 title: "Success",

@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../studysprout-realtime-server"
+		},
+		{
+			"path": "../rate-limiter"
 		}
 	],
 	"settings": {}

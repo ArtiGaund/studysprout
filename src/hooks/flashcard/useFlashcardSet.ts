@@ -83,6 +83,23 @@ export function useFlashcardSet(workspaceId: string){
         try {
             const response = await regenerateFlashcardSetService(setId);
             if(!response || !response.success){
+                if(response.statusCode === 403){
+                    toast({
+                        title: "Monthly limit reached. Please try next month.",
+                        description: response.error,
+                        variant: "destructive",
+                    });
+                    return;
+                }
+
+                if(response.statusCode === 429){
+                    toast({
+                        title: "Slow down",
+                        description: response.error,
+                        variant: "destructive",
+                    });
+                    return;
+                }
                 toast({
                     title: "Regenerating Flashcard set failed",
                     description: response.message,
@@ -91,19 +108,19 @@ export function useFlashcardSet(workspaceId: string){
                 return;
             }
             const { flashcardSet, flashcards} = response.data;
-                dispatch(updateSingleSet({
-                    ...flashcardSet,
-                    isOutdated: false,
-                }));
-                dispatch(setFlashcardsForSet({
-                   setId: flashcardSet._id,
-                   cards: flashcards,
-                }));
-                       toast({
-                           title: "Regenerate Flashcard set successful",
-                           description: "Successful"
-                       });
-                       return response;
+            dispatch(updateSingleSet({
+                ...flashcardSet,
+                isOutdated: false,
+            }));
+            dispatch(setFlashcardsForSet({
+               setId: flashcardSet._id,
+                cards: flashcards,
+            }));
+            toast({
+                title: "Regenerate Flashcard set successful",
+                description: "Successful"
+            });
+            return response;
         } catch (error) {
             console.warn("[useFlashcardSet] Error regenerating flashcard set: ",error);
         }finally{

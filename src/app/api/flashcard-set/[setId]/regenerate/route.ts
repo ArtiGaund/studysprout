@@ -80,10 +80,25 @@ export async function POST(
             });
             return errorResponse(
                 `[Flashcard set regenerate POST route] Monthly limit reached. Resets on ${resetDate}`,
-                429,
-                429,
+                403,
+                403,
             );
         }       
+
+        try {
+            const url = `${process.env.RATE_LIMITER_URL}/check?key=${userId}&tokens=1`;
+            const rateLimitRes = await fetch(url,{ signal: AbortSignal.timeout(15000)});
+            const { allowed, remaining } = await rateLimitRes.json();
+            if(!allowed){
+                return errorResponse(
+                    `You're generating flashcards too quickly. Please wait and try again.`,
+                    429,
+                    429,
+                );
+            }
+        } catch (error) {
+            console.error("[Flashcard set POST route] Rate limiter check failed, allowing request: ",error);
+        }
         // Data aggregation (Resolve which files to process based on selected resourceType)
         let filesToProcess = [];
         if(resourceType === "Workspace"){

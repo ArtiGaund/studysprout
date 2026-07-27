@@ -256,7 +256,7 @@ export async function DELETE(
         });
 
         if(!set){
-            errorResponse(
+           return errorResponse(
                 "Flashcard set not found",
                 404,
                 404
