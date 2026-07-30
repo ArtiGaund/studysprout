@@ -28,5 +28,6 @@ RUN ./venv/bin/pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 3000
 
-# Same as your start:realtime script
-CMD ["node", "realtime-server/dist/server.js"]
+# Matches your actual start command: npm run start:combined
+# (runs the BullMQ worker + realtime server together via `concurrently`)
+CMD ["npm", "run", "start:combined"]
