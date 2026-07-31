@@ -104,9 +104,9 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
     }
 
     return(
-        <>
+        <div className="sticky top-2 z-20 w-full bg-[#080C0C]">
             {/* Contextual Header: Displays Privacy status only when in Sidebar */}
-            <div className={`flex sticky z-20 top-2 w-full h-10 group/title items-center
+            <div className={`flex w-full h-10 group/title items-center
              text-Neutrals/neutrals-8 ${isRevisionSidebarOpen 
                 ? 'justify-center px-0'
                 : 'justify-between pr-4'    
@@ -129,7 +129,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                  : ''}`}
             >
                     {/* Section Label & Action Icon */}
-                <div className="flex sticky z-20 top-10 w-full h-10 group/title justify-between
+                <div className="flex top-10 w-full h-10 group/title justify-between
                 items-center pr-4 text-Neutrals/neutrals-8 pl-4 m-1">
                 
                 { usedWhere === "sidebar" && (
@@ -197,7 +197,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
             <DisabledHoverMessage />
         )}
         </HoverCard>)}
-        </>
+        </div>
     )
 }
 
