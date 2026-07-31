@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-venv \
     python3-pip \
     build-essential \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /opt/render/project/src
