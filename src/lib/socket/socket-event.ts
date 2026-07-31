@@ -348,6 +348,9 @@ export function registerWorkspaceEvents(
                         iconId: "📁",
                         progress: 100,
                         status: "completed",
+                        ...(payload.conceptGraph 
+                            ? { conceptGraph: payload.conceptGraph, conceptGraphStale: false }
+                            : {}),  
                     } as any,
                 }));
                 // Remove progress bar after 3 seconds

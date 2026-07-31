@@ -15,6 +15,7 @@ import { callGeminiText } from "../ai/flashcards/gemini-client";
 import { extractTermsFromBlocks } from "@/utils/intelligence/term-extractor";
 import { markTermIndexStale } from "@/lib/workers/workspace-term-index";
 import { deriveFilePlainText } from "@/utils/intelligence/plain-text";
+import { ConceptGraph } from "@/types/state.type";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 
@@ -345,16 +346,17 @@ export const initPDFWorker = () => {
                 }
 
                 // ── 6. Intelligence layer (non-fatal) ─────────────────────────
-
+                
+                let conceptGraph: ConceptGraph | undefined;
                 try {
-                    const graph = await buildFolderConceptGraph({
+                    conceptGraph = await buildFolderConceptGraph({
                         fileIds, 
                         workspaceId: job.data.workspaceId,
                         minFiles: 2,
                         folderId,
                         folderTitle: title,
                     });
-                    await FolderModel.findByIdAndUpdate(folderId, { $set: { conceptGraph: graph } });
+                    await FolderModel.findByIdAndUpdate(folderId, { $set: { conceptGraph } });
                 } catch (err) {
                     console.error("[PDF Worker] Concept graph failed (non-fatal):", err);
                 }
@@ -380,7 +382,11 @@ export const initPDFWorker = () => {
                     {
                         workspaceId: job.data.workspaceId,
                         type: "pdf_folder_completed",
-                        payload: { workspaceId: job.data.workspaceId, folderId },
+                        payload: { 
+                            workspaceId: job.data.workspaceId, 
+                            folderId,
+                            conceptGraph: conceptGraph ?? null, 
+                        },
                     }
                 );
             } catch (error) {
