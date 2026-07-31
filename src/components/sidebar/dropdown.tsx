@@ -486,17 +486,22 @@ const Dropdown: React.FC<DropdownProps> = ({
                     {/* Show File count progress */}
                     {(folderStatus === "processing" || isRetrying ) && (
                         <div className="ml-auto flex items-center gap-2 pr-2">
-                            {totalFiles > 0 && currentFileCount < totalFiles ? (
+                            {currentFileCount > 0 && currentFileCount < totalFiles ? (
                                 <span className="text-[10px] font-mono text-blue-400 
                                 whitespace-nowrap">
                                     {currentFileCount}/{totalFiles}
                                 </span>
                             ): (
-                                <span className="relative flex h-2 w-2" title="processing...">
-                                    <span className="animate-ping absolute inline-flex h-full
-                                    w-full rounded-full bg-blue-400 opacity-75"/>
-                                    <span className="relative inline-flex rounded-full h-2 w-2
-                                    bg-blue-500"/>
+                                <span className="flex items-center gap-1">
+                                    {totalFiles > 0 && (
+                                        <span className="text-[10px] font-mono text-blue-400/70 whitespace-nowrap">
+                                            0/{totalFiles}
+                                        </span>
+                                    )}
+                                    <span className="relative flex h-2 w-2" title="Processing...">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                                    </span>
                                 </span>
                             )}
                         </div>
@@ -561,7 +566,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             </AccordionTrigger>
             {(folderStatus === "processing" || isRetrying) && (
                 <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white/5 overflow-hidden">
-                    {totalFiles > 0 ? (
+                    {currentFileCount > 0 ? (
                         <div 
                             className="h-full bg-blue-500 transition-all duration-500"
                             style={{width: `${(currentFileCount / totalFiles) * 100}%`}}

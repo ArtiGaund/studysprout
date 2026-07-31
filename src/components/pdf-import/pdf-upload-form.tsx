@@ -77,7 +77,7 @@ export const PDFUploadForm = () => {
 
     // 3. Submit to backend
     const onSubmit = async () => {
-        if(!selectedFile || !currentWorkspace) return;
+        if(!selectedFile || !currentWorkspace || isUploading) return;
 
         if(!currentWorkspace._id) return;
         setIsUploading(true);
@@ -101,7 +101,7 @@ export const PDFUploadForm = () => {
     }
 
     return(
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 px-4 py-4">
             {/* Toggle Section */}
             <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
                 <div className="space-y-0.5">
@@ -247,7 +247,7 @@ export const PDFUploadForm = () => {
 
             <Button
             className="w-full"
-            disabled={!selectedFile || isAnalyzing || isScanned}
+            disabled={!selectedFile || isAnalyzing || isScanned || isUploading}
             onClick={onSubmit}
             >   
                 {isAnalyzing ? "Inspecting..." : isScanned ? "Unsupported File" : "Generate Folder"}
