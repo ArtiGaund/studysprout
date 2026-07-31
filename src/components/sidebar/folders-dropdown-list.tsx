@@ -104,32 +104,25 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
     }
 
     return(
-        <div className="sticky top-2 z-20 w-full bg-[#080C0C]">
-            {/* Contextual Header: Displays Privacy status only when in Sidebar */}
-            <div className={`flex w-full h-10 group/title items-center
-             text-Neutrals/neutrals-8 ${isRevisionSidebarOpen 
-                ? 'justify-center px-0'
-                : 'justify-between pr-4'    
-            }
-             `}>
-                { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
-                    <span className={`font-bold text-muted-foreground/70 tracking-widest text-[11px]`}>
-                       {currentWorkspace?.isPublic ? "PUBLIC" : "PRIVATE" }
-                    </span>
-                )}
-                
-            </div>
+        <>
+            <div className="sticky top-2 z-20 w-full bg-[#080C0C]">
+                 {/* Contextual Header: Displays Privacy status only when in Sidebar */}
+                <div className={`flex w-full h-10 group/title items-center
+                text-Neutrals/neutrals-8 ${isRevisionSidebarOpen 
+                    ? 'justify-center px-0'
+                    : 'justify-between pr-4'    
+                }
+                `}>
+                    { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
+                        <span className={`font-bold text-muted-foreground/70 tracking-widest text-[11px]`}>
+                        {currentWorkspace?.isPublic ? "PUBLIC" : "PRIVATE" }
+                        </span>
+                    )}
+                    
+                </div>
 
-            {/* Revision Mode Safeguard: Uses a HoverCard to explain disabled states */}
-           {!isRevisionSidebarOpen && ( <HoverCard>
-                <HoverCardTrigger asChild>
-            <div 
-            className={`${usedWhere === "sidebar" && isRevisionSidebarOpen 
-                ? 'bg-slate-gray cursor-not-allowed rounded-lg  w-full mt-2 overflow-hidden' 
-                 : ''}`}
-            >
-                    {/* Section Label & Action Icon */}
-                <div className="flex top-10 w-full h-10 group/title justify-between
+                {/* Section Label & Action Icon */}
+                <div className="flex sticky z-20 top-10 w-full h-10 group/title justify-between
                 items-center pr-4 text-Neutrals/neutrals-8 pl-4 m-1">
                 
                 { usedWhere === "sidebar" && (
@@ -162,6 +155,18 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                 )}
                 
                 </div>
+            </div>
+           
+
+            {/* Revision Mode Safeguard: Uses a HoverCard to explain disabled states */}
+           {!isRevisionSidebarOpen && ( <HoverCard>
+                <HoverCardTrigger asChild>
+            <div 
+            className={`${usedWhere === "sidebar" && isRevisionSidebarOpen 
+                ? 'bg-slate-gray cursor-not-allowed rounded-lg  w-full mt-2 overflow-hidden' 
+                 : ''}`}
+            >
+                    
                 {/* Rendering all the folder */}
                 <div className={`flex transition-all pl-5`}>
                 <Accordion
@@ -197,7 +202,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
             <DisabledHoverMessage />
         )}
         </HoverCard>)}
-        </div>
+        </>
     )
 }
 
