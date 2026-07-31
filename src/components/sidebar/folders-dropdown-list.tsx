@@ -129,7 +129,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                  : ''}`}
             >
                     {/* Section Label & Action Icon */}
-                <div className="flex sticky z-20 top-0 w-full h-10 group/title justify-between
+                <div className="flex sticky z-20 top-10 w-full h-10 group/title justify-between
                 items-center pr-4 text-Neutrals/neutrals-8 pl-4 m-1">
                 
                 { usedWhere === "sidebar" && (
