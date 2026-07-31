@@ -37,16 +37,12 @@ export const SmartAction = ({ folderId }: { folderId: string}) => {
 
     return(
         <>
-        <div className="flex flex-col gap-y-4 mt-4">
+       {!hasGraph && ( <div className="flex flex-col gap-y-4 mt-4">
             <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase px-1">
                 Smart Action
             </span>
             <div className="flex flex-col gap-y-2">
-                {/* <ActionItem 
-                icon={Sparkle}
-                label="AI Synthesis"
-                /> */}
-               {!hasGraph && <ActionItem 
+                <ActionItem 
                 icon={isGenerating ? Loader2 : Network}
                 label={
                     isGenerating 
@@ -68,9 +64,9 @@ export const SmartAction = ({ folderId }: { folderId: string}) => {
                 tooltipSide="left"
                 iconClassName={isGenerating ? "animate-spin text-purple-400" : null}
                 isGenerating={isGenerating}
-                />}
+                />
             </div>
-        </div>
+        </div>)}
 
         {/* Modal - only mount when open */}
         {modalOpen && (
