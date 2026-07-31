@@ -63,6 +63,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     const router = useRouter();
     const { toast } = useToast();
     const [ currentIcon, setCurrentIcon ] = useState(iconId)
+    const [ isRetrying, setisRetrying ] = useState(false);
     const { user } = useUser();
 
     // --- Redux Selectors ---
@@ -145,7 +146,12 @@ const Dropdown: React.FC<DropdownProps> = ({
         setCurrentIcon(iconId )
     }, [iconId])
 
-    
+    useEffect(() => {
+        if(folderStatus !== "error" && isRetrying){
+            setisRetrying(false);
+        }
+    },[ folderStatus, isRetrying ]);
+ 
     /**
      * @method navigatePage
      * Handles routing based on hierarchy (Workspace > Folder > File)
@@ -377,10 +383,13 @@ const Dropdown: React.FC<DropdownProps> = ({
 
     const handleRetry = async (e: React.MouseEvent) => {
         e.stopPropagation();
+        setisRetrying(true);
         try {
             await retryPDFToFolder(id, workspaceId);
         } catch (error) {
             console.error("[Dropdown] Failed to handle retry: ",error);
+        }finally{
+            setisRetrying(false);
         }
     }
     const filesInCurrentFolder = useMemo(() => {
@@ -475,11 +484,21 @@ const Dropdown: React.FC<DropdownProps> = ({
                     )}
 
                     {/* Show File count progress */}
-                    {folderStatus === "processing" && totalFiles > 0 && currentFileCount < totalFiles && (
+                    {(folderStatus === "processing" || isRetrying ) && (
                         <div className="ml-auto flex items-center gap-2 pr-2">
-                            <span className="text-[10px] font-mono text-blue-400 whitespace-nowrap">
-                                {currentFileCount}/{totalFiles}
-                            </span>
+                            {totalFiles > 0 && currentFileCount < totalFiles ? (
+                                <span className="text-[10px] font-mono text-blue-400 
+                                whitespace-nowrap">
+                                    {currentFileCount}/{totalFiles}
+                                </span>
+                            ): (
+                                <span className="relative flex h-2 w-2" title="processing...">
+                                    <span className="animate-ping absolute inline-flex h-full
+                                    w-full rounded-full bg-blue-400 opacity-75"/>
+                                    <span className="relative inline-flex rounded-full h-2 w-2
+                                    bg-blue-500"/>
+                                </span>
+                            )}
                         </div>
                     )}
                     </div>
@@ -526,7 +545,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                 </div>
 
                 {/* Retry button */}
-                {isError && (
+                {isError && !isRetrying && (
                     <div className="ml-auto flex items-center pr-2">
                         <TooltipComponent 
                         message="Processing failed. Click to Retry"
@@ -540,14 +559,17 @@ const Dropdown: React.FC<DropdownProps> = ({
                     </div>
                 )}
             </AccordionTrigger>
-            {folderStatus === "processing" && totalFiles > 0 && currentFileCount < totalFiles && 
-                (
-                    <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white/5">
+            {(folderStatus === "processing" || isRetrying) && (
+                <div className="absolute bottom-0 left-0 w-full h-[2px] bg-white/5 overflow-hidden">
+                    {totalFiles > 0 ? (
                         <div 
-                        className="h-full bg-blue-500 transition-all duration-500"
-                        style={{width: `${(currentFileCount / totalFiles) * 100}%`}}
+                            className="h-full bg-blue-500 transition-all duration-500"
+                            style={{width: `${(currentFileCount / totalFiles) * 100}%`}}
                         />
-                    </div>
+                    ) : (
+                        <div className="h-full w-1/3 bg-blue-500/70 animate-pulse"/>
+                    )}
+                </div>
             )}
 
             {/* It will show files for the folders */}
