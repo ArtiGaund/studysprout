@@ -45,14 +45,21 @@ function toTitleCase(term: string):string{
  * @param minFiles      Minimum files a term must appear in to become a node (default: 2)
  */
 
-export async function buildFolderConceptGraph(
+export async function buildFolderConceptGraph({
+    fileIds,
+    workspaceId,
+    minFiles = 2,
+    folderId,
+    userId,
+    folderTitle,
+}: {
     fileIds: string[],
     workspaceId: string,
-    minFiles = 2,
+    minFiles?: number,
     folderId?: string,
     userId?: string,
     folderTitle?: string,
-): Promise<ConceptGraph>{
+}): Promise<ConceptGraph>{
     try {
         await dbConnect();
 
@@ -97,7 +104,8 @@ export async function buildFolderConceptGraph(
                 workspaceId,
                 userId ?? "system",
                 nodes.length,
-                String(workspace?.title)
+                String(workspace?.title),
+                { folderId },
             )
         }
 

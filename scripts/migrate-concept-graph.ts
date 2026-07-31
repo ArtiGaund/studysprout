@@ -172,12 +172,12 @@ async function rebuildExistingConceptGraphs() {
             continue;
         }
  
-        const graph = await buildFolderConceptGraph(
+        const graph = await buildFolderConceptGraph({
             fileIds, 
             workspaceId,
-            2,
-            folder._id,
-        );
+            minFiles: 2,
+            folderId: folder._id,
+        });
  
         if (!DRY_RUN) {
             await FolderModel.findByIdAndUpdate(folder._id, {

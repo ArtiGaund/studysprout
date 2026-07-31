@@ -5,7 +5,7 @@ import { emitActivityCreated } from "./realtime-emitter";
 
 function toObjectId(value: string | undefined, field: string): Types.ObjectId{
     if(!value || !Types.ObjectId.isValid(value)){
-        throw new Error(`[activity-hooks] Invalid ObjectId for field "${field}: ${value}`);
+        throw new Error(`[activity-hooks] Invalid ObjectId for field "${field}": ${value}`);
     }
     return new Types.ObjectId(value);
 }
