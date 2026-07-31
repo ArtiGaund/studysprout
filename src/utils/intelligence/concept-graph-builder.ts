@@ -14,6 +14,7 @@
 import { onSynthesisCompleted } from "@/lib/activity-hooks";
 import dbConnect from "@/lib/dbConnect";
 import { FileModel, FolderModel, WorkSpaceModel } from "@/model";
+import { Types } from "mongoose";
 
 export interface ConceptNode{
     id: string;   //the term itself
@@ -99,10 +100,10 @@ export async function buildFolderConceptGraph({
         // Sort nodes by fileCount descending - most cross-cutting concept first
         nodes.sort((a, b) => b.fileCount - a.fileCount);
    
-        if(folderId && workspaceId){
+        if(folderId && workspaceId && userId && Types.ObjectId.isValid(userId)){
             await onSynthesisCompleted(
                 workspaceId,
-                userId ?? "system",
+                userId,
                 nodes.length,
                 String(workspace?.title),
                 { folderId },
