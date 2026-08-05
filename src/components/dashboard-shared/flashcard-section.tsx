@@ -52,7 +52,7 @@ export const FlashcardSection = ({
     ]);
 
     useEffect(() => {
-        if(allSets.length === 0) return;
+        if(!lastStudied) return;
 
         const lastStudiedExists = allSets.some(
             (s) => s._id === lastStudied?.setId
