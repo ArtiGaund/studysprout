@@ -47,6 +47,7 @@ export async function POST(request: NextRequest){
             resourceType,
             cardCount,
             desiredTypes: incomingDesiredTypes,
+            timeZone,
         } = payload;
 
         let desiredTypes = incomingDesiredTypes;
@@ -386,7 +387,7 @@ export async function POST(request: NextRequest){
             const file = await FileModel.findById(resourceId).select("title");
             resourceName = file?.title ?? "File";
         }
-        const flashcardSetTitle = generateFlashcardsSetTitle(resourceType, resourceName);
+        const flashcardSetTitle = generateFlashcardsSetTitle(resourceType, resourceName, timeZone);
         let actualFolderId = folderId;
         if(resourceType === "File" && !actualFolderId){
             const file = await FileModel.findById(resourceId).select("folderId").lean();

@@ -173,6 +173,7 @@ const FlashcardTypesForm: React.FC = () => {
                 resourceType: resType!,
                 cardCount: finalCardCount,
                 desiredTypes,
+                timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
               }
               setLastPayload(payload);
 

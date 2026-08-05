@@ -119,6 +119,19 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
             })
         
             const { flashcardSet: newSet, flashcards: allFlashcards } = result.data;
+
+            const normalizedCards = allFlashcards.map((card: any) => ({
+                ...card,
+                isOutdated: false,
+                progress: {
+                    interval: 0,
+                    difficulty: 2.5,
+                    repetition: 0,
+                    // slightly in the past so it's unambiguously "due", not borderline
+                    dueDate: new Date(Date.now() - 1000).toISOString(),
+                    lastReviewed: null,
+                },
+            }));
             if(newSet){
                 dispatch(addSet({
                     _id: newSet._id,
@@ -132,8 +145,8 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
 
                     totalCards: newSet.totalCards,
                     dueCount: newSet.totalCards,
-                    cards: allFlashcards,
-                    cardCount: allFlashcards.length,
+                    cards: normalizedCards,
+                    cardCount: normalizedCards.length,
                     desiredTypes: newSet.desiredTypes,
                     sourceSnapshot: newSet.sourceSnapshot,
                     isOutdated: newSet.isOutdated,
@@ -142,7 +155,7 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
 
                 dispatch(setFlashcardsForSet({
                     setId: newSet._id,
-                    cards: allFlashcards,
+                    cards: normalizedCards,
                 }));
 
                 reportProgress(100, payload.cardCount);

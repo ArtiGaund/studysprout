@@ -86,8 +86,8 @@ const FlashcardSheet = ({
      * Logic: If a card has no due date or a due date in the past, it's considered 'Due'.
      */
     const realDueCount = useMemo(() => {
-        // Fallback to the set's initial count if local card data hasn't synced yet
-        if(cards.length === 0) return set.dueCount;
+        // Treat unknown/undefined dueCount as "all due", not "none due"
+        if(cards.length === 0) return set.dueCount ?? set.totalCards;
 
         return cards.filter(card => {
             const dueDate = card.progress?.dueDate;
@@ -95,7 +95,8 @@ const FlashcardSheet = ({
         }).length;
     },[
         cards,
-        set.dueCount
+        set.dueCount,
+        set.totalCards,
     ]);
     
    return(
