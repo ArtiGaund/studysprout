@@ -270,7 +270,9 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                         <button
                             onClick={goPrev}
                             disabled={activeIndex === 0}
-                            className={`flex items-center justify-center p-2 rounded-full border border-gray-300 hover:bg-gray-100
+                            className={`flex items-center justify-center p-2 rounded-full border
+                            border-gray-600
+                            text-gray-300 hover:bg-gray-700 hover:text-white transition-colors
                             disabled:opacity-40 disabled:hover:bg-transparent h-[30px]`}
                         >
                             <ChevronLeft size={20}/>
@@ -284,7 +286,9 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                         <button
                             disabled={activeIndex === cards.length -1 }
                             onClick={goNext}
-                            className={`flex items-center justify-center p-2 rounded-full border border-gray-300 hover:bg-gray-100
+                            className={`flex items-center justify-center p-2 rounded-full border
+                            border-gray-600
+                            text-gray-300 hover:bg-gray-700 hover:text-white transition-colors
                             disabled:opacity-40 disabled:hover:bg-transparent h-[30px]`}
                         >
                             <ChevronRight size={20}/>
