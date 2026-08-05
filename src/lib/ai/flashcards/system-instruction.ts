@@ -27,6 +27,11 @@ export function buildFlashcardsSystemInstruction(
 
     const typeSpecificRules = desiredTypes.map(type => {
         switch(type){
+            case 'mcq':
+                return `- MCQ cards: The 'options' array MUST contain exactly 4 entries, each prefixed
+                    with its letter and a closing parenthesis, e.g. "A) <option text>", "B) <option text>",
+                    "C) <option text>", "D) <option text>". The 'answer' field MUST be ONLY the single
+                    capital letter of the correct option (e.g. "A"), never the option text itself.`;
             case 'diagram':
                 return `- DIAGRAM cards: Generate a Mermaid diagram (flowchart LR or graph TD syntax)
                     in the 'diagram' field. The 'question' should ask the user to interpret or complete
@@ -65,6 +70,9 @@ export function buildFlashcardsSystemInstruction(
     contain the answers in the correct order, separated by a SEMICOLON (e.g., "Answer One; Answer Two"). 
     Do not use commas as delimiters, as they may appear within the answers themselves.
     11. Universal language: Write in plain, clear language appropriate for the subject domain.
+    12. **MCQ Format:** If generating an 'mcq' card, 'options' MUST contain exactly 4 entries prefixed
+    "A) ...", "B) ...", "C) ...", "D) ...", and 'answer' MUST be ONLY the correct option's letter
+    (e.g. "A").
     ${typeSpecificRules}
     `.trim();
 }

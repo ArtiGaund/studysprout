@@ -254,86 +254,100 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                           )}
                  </CardContent>
             );
-        case "mcq":
-            const getOptionLetter = (option: string) => option?.trim().charAt(0).toUpperCase();
+       case "mcq": {
             const answerLetter = card.answer?.trim().toUpperCase();
+            // "A" -> 0, "B" -> 1, etc. Primary match: position in the options array.
+            const answerIndex = answerLetter?.length === 1
+                ? answerLetter.charCodeAt(0) - 65
+                : -1;
+
+            // Fallback for options that still carry an "A) ..." style prefix
+            const getOptionLetter = (opt: string) => opt?.trim().match(/^([A-Za-z])[).:]/)?.[1]?.toUpperCase();
+
+            const correctOption =
+                card.options?.[answerIndex] ??
+                card.options?.find(
+                    (opt: string) => opt === card.answer || getOptionLetter(opt) === answerLetter
+                );
+
             return (
                 <CardContent>
                     <span className="p-2 text-gray-600">Question: </span>
-                        <div 
-                            className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm leading-relaxed"
-                        >
-                           {card.question}
-                        </div>
-                        {card.options?.map(( option: string, key: number) =>{ 
-                            const isCorrect = getOptionLetter(option) === answerLetter;
-                            const isSelected = option === selectedOption;
-                
-                            let optionStyle = "border-gray-300";
-                
-                            if(checked){
-                                if(isSelected && isCorrect) optionStyle = "text-green-600";
-                                else if(isSelected && !isCorrect) optionStyle = "text-red-600";
-                                else if(isCorrect) optionStyle = "text-green-600";
-                            }
-                                return(
-                                        <div key={key} 
-                                        onClick={() => !checked && setSelectedOption(option)}
-                                        className={`p-3 border rounded-lg cursor-pointer text-sm transition ${optionStyle}`}
-                                        >
-                                            <input 
-                                            type="radio"
-                                            name={`option-${card._id}`}
-                                            value={option}
-                                            checked={isSelected}
-                                            onChange={() => !checked && setSelectedOption(option)}
-                                            />
-                                            <span>{option}</span>
-                                         </div>
-                        )})}
-                        <div className="flex flex-row gap-3">
-                            <button 
-                                onClick={() => setChecked(true)}
-                                disabled={!selectedOption || revealAnswer}
-                                className="
+                    <div className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm leading-relaxed">
+                        {card.question}
+                    </div>
+                    {card.options?.map((option: string, key: number) => {
+                        const isCorrect =
+                            key === answerIndex ||
+                            option === card.answer ||
+                            getOptionLetter(option) === answerLetter;
+                        const isSelected = option === selectedOption;
+
+                        let optionStyle = "border-gray-300";
+
+                        if(checked){
+                            if(isSelected && isCorrect) optionStyle = "text-green-600";
+                            else if(isSelected && !isCorrect) optionStyle = "text-red-600";
+                            else if(isCorrect) optionStyle = "text-green-600";
+                        }
+                        return(
+                            <div key={key}
+                                onClick={() => !checked && setSelectedOption(option)}
+                                className={`p-3 border rounded-lg cursor-pointer text-sm
+                                     transition ${optionStyle}`}
+                            >
+                                <input
+                                    type="radio"
+                                    name={`option-${card._id}`}
+                                    value={option}
+                                    checked={isSelected}
+                                    onChange={() => !checked && setSelectedOption(option)}
+                                />
+                                <span>{option}</span>
+                            </div>
+                        )
+                    })}
+                    <div className="flex flex-row gap-3">
+                        <button
+                            onClick={() => setChecked(true)}
+                            disabled={!selectedOption || revealAnswer}
+                            className="
                                 mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-300 transition
                                 disabled:text-gray-500 disabled:cursor-not-allowed disabled:bg-gray-300
                                 "
-                            >Check Answer</button>
-                                    
-                            {!revealAnswer && (
-                                <button 
-                                onClick={() =>{ 
-                                    const correctOption = card.options?.find(
-                                        (opt: string) => getOptionLetter(opt) === answerLetter 
-                                    );
-                                    setRevealAnswer(true);
+                        >Check Answer</button>
+
+                        {!revealAnswer && (
+                            <button
+                                onClick={() => {
                                     setSelectedOption(correctOption ?? null);
+                                    setRevealAnswer(true);
                                     setChecked(true);
-                                 }}
+                                }}
                                 className="
                                     mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
                                     disabled:text-gray-500 disabled:cursor-not-allowed
-                                    "
-                                >
-                                    Reveal Answer
-                                </button>
-                            )}
-                            {(checked || revealAnswer) && (
-                                <button
-                                    onClick={() => {
-                                        setSelectedOption(null);
-                                        setChecked(false);
-                                        setRevealAnswer(false);
-                                    }}
-                                    className="mt-3 flex items-center gap-1 px-3 py-1"
-                                >
-                                    <Undo2 size={20}/>
-                                </button>
-                            )}
-                        </div>
+                                "
+                            >
+                                Reveal Answer
+                            </button>
+                        )}
+                        {(checked || revealAnswer) && (
+                            <button
+                                onClick={() => {
+                                    setSelectedOption(null);
+                                    setChecked(false);
+                                    setRevealAnswer(false);
+                                }}
+                                className="mt-3 flex items-center gap-1 px-3 py-1"
+                            >
+                                <Undo2 size={20}/>
+                            </button>
+                        )}
+                    </div>
                 </CardContent>
             );
+        }
         case "fill-in-the-blank":
             return(
                 <CardContent className="space-y-4">
