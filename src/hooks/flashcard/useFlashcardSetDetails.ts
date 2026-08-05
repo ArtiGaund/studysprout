@@ -48,8 +48,8 @@ export function useFlashcardSetDetails(setId?: string | null){
              dispatch(setFlashcardsForSet({ setId, cards: cardResponse }));
 
              // 2. Compute Derived Stats: Determine cards due for review (SRS logic)
-            const dueCount = cardResponse.filter( (c: any) =>
-            new Date(c.progress.dueDate) <= new Date()
+            const dueCount = cardResponse.filter((c: any) =>
+                !c.progress || new Date(c.progress.dueDate) <= new Date()
             ).length;
             
             const totalCards = cardResponse.length;

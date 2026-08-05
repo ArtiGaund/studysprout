@@ -179,13 +179,7 @@ export async function GET(
                     repetition: userProgress.repetition,
                     dueDate: userProgress.dueDate.toISOString(),
                     lastReviewed: userProgress.lastReviewed?.toISOString() || null,
-                } : {
-                    interval: 0,
-                    difficulty: 2.5,
-                    repetition: 0,
-                    dueDate: new Date().toISOString(),
-                    lastReviewed: null,
-                }
+                } : null
             };
         });
 

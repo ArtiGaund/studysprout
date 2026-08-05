@@ -123,14 +123,7 @@ export function useFlashcardGenerator(options?: FlashcardGeneratorOptions){
             const normalizedCards = allFlashcards.map((card: any) => ({
                 ...card,
                 isOutdated: false,
-                progress: {
-                    interval: 0,
-                    difficulty: 2.5,
-                    repetition: 0,
-                    // slightly in the past so it's unambiguously "due", not borderline
-                    dueDate: new Date(Date.now() - 1000).toISOString(),
-                    lastReviewed: null,
-                },
+                progress: null,
             }));
             if(newSet){
                 dispatch(addSet({
