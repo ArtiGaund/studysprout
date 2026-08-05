@@ -125,7 +125,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                 <div className="flex sticky z-20 top-10 w-full h-10 group/title justify-between
                 items-center pr-4 text-Neutrals/neutrals-8 pl-4 m-1">
                 
-                { usedWhere === "sidebar" && (
+                { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
                     <span className={`font-bold text-Neutrals-8 truncate text-xs`}>
                         FOLDERS
                     </span>
@@ -135,7 +135,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                     FOLDERS
                     </span>
                 )}
-                { usedWhere === "sidebar" && (
+                { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
                     <div className="flex flex-row gap-2">
                         <TooltipComponent message="Create Folder">
                             <PlusIcon
