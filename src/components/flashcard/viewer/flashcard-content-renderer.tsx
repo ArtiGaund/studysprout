@@ -255,6 +255,8 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                  </CardContent>
             );
         case "mcq":
+            const getOptionLetter = (option: string) => option?.trim().charAt(0).toUpperCase();
+            const answerLetter = card.answer?.trim().toUpperCase();
             return (
                 <CardContent>
                     <span className="p-2 text-gray-600">Question: </span>
@@ -264,7 +266,7 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                            {card.question}
                         </div>
                         {card.options?.map(( option: string, key: number) =>{ 
-                            const isCorrect = option === card.answer;
+                            const isCorrect = getOptionLetter(option) === answerLetter;
                             const isSelected = option === selectedOption;
                 
                             let optionStyle = "border-gray-300";
@@ -302,9 +304,12 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                             {!revealAnswer && (
                                 <button 
                                 onClick={() =>{ 
-                                setRevealAnswer(true);
-                                setSelectedOption(card.answer);
-                                setChecked(true);
+                                    const correctOption = card.options?.find(
+                                        (opt: string) => getOptionLetter(opt) === answerLetter 
+                                    );
+                                    setRevealAnswer(true);
+                                    setSelectedOption(correctOption ?? null);
+                                    setChecked(true);
                                  }}
                                 className="
                                     mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
