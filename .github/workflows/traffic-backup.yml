@@ -1,0 +1,27 @@
+name: Preserve Repository Traffic
+
+on:
+  schedule:
+    # Runs daily at midnight UTC
+    - cron: '0 0 * * *'
+  # Allows manual triggers from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  track-traffic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Fetch and Save Traffic Data
+        uses: nsaunders/traffic-lite@v1
+        with:
+          path: .github/traffic.json
+          token: ${{ secrets.TRAFFIC_TOKEN }}
+
+      - name: Commit Updated Traffic Log
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: '.github/traffic.json'
+          message: '[AUTOMATED] Update repository traffic analytics'
