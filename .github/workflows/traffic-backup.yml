@@ -17,6 +17,7 @@ jobs:
       - name: Fetch and Save Traffic Data
         uses: nsaunders/traffic-lite@v1
         with:
+          repo: ${{ github.repository }}
           path: .github/traffic.json
           token: ${{ secrets.TRAFFIC_TOKEN }}
 
@@ -25,3 +26,4 @@ jobs:
         with:
           add: '.github/traffic.json'
           message: '[AUTOMATED] Update repository traffic analytics'
+          github_token: ${{ secrets.TRAFFIC_TOKEN }}
