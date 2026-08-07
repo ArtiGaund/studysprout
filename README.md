@@ -419,3 +419,8 @@ You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/st
 ---
 
 Built solo, end to end — parsing pipeline, real-time backend, deployment architecture, analytics, and UI.
+
+## License
+This project is not open source. The code is publicly viewable for portfolio 
+purposes, but all rights are reserved — please do not copy, reuse, or 
+redistribute without permission.
