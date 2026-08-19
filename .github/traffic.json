@@ -240,5 +240,27 @@
       "uniques": 6,
       "count": 6
     }
+  },
+  {
+    "views": {
+      "uniques": 0,
+      "count": 0
+    },
+    "timestamp": "2026-08-16T00:00:00Z",
+    "clones": {
+      "uniques": 12,
+      "count": 19
+    }
+  },
+  {
+    "views": {
+      "uniques": 0,
+      "count": 0
+    },
+    "timestamp": "2026-08-17T00:00:00Z",
+    "clones": {
+      "uniques": 8,
+      "count": 12
+    }
   }
 ]
