@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "dev:worker": "tsx src/lib/workers/index.ts",
     "dev:realtime": "cd ../studysprout-realtime-server && npm run dev",
     "dev:all": "concurrently -n APP,WORKER,RT -c blue,green,yellow \"npm run dev\" \"npm run dev:worker\" \"npm run dev:realtime\"",
