@@ -33,6 +33,8 @@ import { WorkspaceSocketProvider } from "@/lib/providers/workspace-socket-contex
 import { Sheet } from "@/components/ui/sheet";
 import FlashcardSetViewerSheet from "@/components/flashcard/flashcard-set-viewer-sheet";
 import FlashcardTypesForm from "@/components/flashcard/flashcard-types-form";
+import InboxSidebar from "@/components/inbox/inbox-sidebar";
+import DashboardShell from "@/components/dashboard-shared/dashboard-shell";
 
 interface LayoutProps{
     children: React.ReactNode,
@@ -63,13 +65,14 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
 
     // Sheet-related state now lives at layout level through context, not inside 
     // RevisionSidebar - this keep the Sheets out of MobileSidebar's DOM substree.
-    const { 
-        isRevisionSidebarOpen,
-        flashcardSetViewerId,
-        closeFlashcardSetViewerSheet, 
-        isFlashcardTypeSheetOpen,
-        closeFlashcardTypeSheet,
-    } = useRevisionSidebar();
+    // const { 
+    //     isRevisionSidebarOpen,
+    //     isInboxSidebarOpen,
+    //     flashcardSetViewerId,
+    //     closeFlashcardSetViewerSheet, 
+    //     isFlashcardTypeSheetOpen,
+    //     closeFlashcardTypeSheet,
+    // } = useRevisionSidebar();
 
     const { fetchLastStudied } = useLastStudied();
     
@@ -131,64 +134,12 @@ const Layout: React.FC<LayoutProps> = ({ children, params }) => {
     ]);
 
     return(
-        <WorkspaceSocketProvider>
-            <main className="flex overflow-hidden h-screen w-screen">
-                <WorkspaceSocketManager />
-                <Sidebar params={params} className="hidden sm:flex" />
-
-                {isRevisionSidebarOpen && (
-                    <div className="hidden sm:flex shrink-0 border-neutral-12/70 border-l-[1px]
-                     relative overflow-scroll">
-                        <RevisionSidebar params={params}/>
-                    </div>
-                )}
-            
-                <MobileSidebar
-                    revisionContent={
-                        <RevisionSidebar 
-                            params={params}
-                            className="flex"
-                        />
-                    }
-                >
-                    <Sidebar 
-                    params={params}
-                    className="w-full flex h-full"
-                    />
-                </MobileSidebar>
-                
-                <div className="border-neutral-12/70 border-l-[1px] w-full relative 
-                overflow-scroll">
-                    {children}
-                </div>
-            </main>
-
-            {/* 
-                Both Sheets rendered here - as siblings of MobileSidebar, not descendants of
-                it. Redix portals their overlay/content to document.body regardless, but
-                keeping the "trigger tree" outside the manually-translated <aside> means
-                 their's no longer a conflicting stacking context or competing pointer-events owner.
-            */}
-            <Sheet
-                open={!!flashcardSetViewerId}
-                onOpenChange={(open) => {
-                    if(!open) closeFlashcardSetViewerSheet();
-                }}
-            >
-                {flashcardSetViewerId && 
-                    <FlashcardSetViewerSheet setId={flashcardSetViewerId}/>
-                }
-            </Sheet>
-
-            <Sheet
-                open={isFlashcardTypeSheetOpen}
-                onOpenChange={(open) => {
-                    if(!open) closeFlashcardTypeSheet();
-                }}
-            >
-                <FlashcardTypesForm />
-            </Sheet>
-        </WorkspaceSocketProvider>
+        <DashboardShell
+            workspaceId={params.workspaceId}
+            mainSlotExtras={<WorkspaceSocketManager />}
+        >
+            {children}
+        </DashboardShell>
     )
 }
 
