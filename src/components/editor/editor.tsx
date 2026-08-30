@@ -94,7 +94,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
      const onRemoteUpdate = useCallback((update: Uint8Array) => {
             // Yjs handles the math of merging this updates safely
            try {
-             Y.applyUpdate(doc, new Uint8Array(update));
+             Y.applyUpdate(doc, new Uint8Array(update), "remote");
            } catch (error) {
                 console.error("[Editor] Remote update error: ",error);
            }
@@ -138,7 +138,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
 
         // Emit local document changes (filtered to avoid re-emitting remote updates)
         const onDocUpdate = (update: Uint8Array, origin: any) => {
-            if(origin === "remote") return;
+            if(origin === "remote" || origin === "rehydration") return;
                 socket.emit("file:update-raw", { fileId, update }); 
         };
 

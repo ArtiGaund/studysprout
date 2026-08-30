@@ -296,6 +296,7 @@ const FilePage: React.FC<{
             const doc = new Y.Doc();
             const fragment = doc.getXmlFragment("document-content");
 
+            const blockGroup = new Y.XmlElement("blockGroup");
             for(const blockId of blockOrder){
                 const block = blocks[blockId];
                 if(!block) continue;
@@ -326,11 +327,11 @@ const FilePage: React.FC<{
                         inner.insert(0, [new Y.XmlText(content)]);
                     }
                 }
-
+                
                 container.insert(0, [inner]);
-                fragment.push([container]);
+               blockGroup.insert(blockGroup.length, [ inner]);
             }
-
+            fragment.push([blockGroup]);
             const update = Y.encodeStateAsUpdate(doc);
             return update;
         } catch (error) {
