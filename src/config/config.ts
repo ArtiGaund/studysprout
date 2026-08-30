@@ -13,9 +13,4 @@ const config = {
     INTERNAL_SECRET: process.env.INTERNAL_SECRET,
 }
 
-
-if(!config.GEMINI_KEY){
-    throw new Error("GEMINI_KEY is not defined");
-}
-
 export default config

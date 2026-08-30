@@ -7,12 +7,8 @@
  */
 
 import { UnifiedFlashcardSchema } from "./flashcard-json-schema";
-import { callGeminiWithRetry, GEMINI_MODEL } from "./gemini-client";
+import { callGeminiWithRetry, getGemini, GEMINI_MODEL } from "./gemini-client";
 import { buildDiagramFlashcardPrompt, buildFlashcardsSystemInstruction, buildUserPrompt } from "./system-instruction";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// Initialize the Generative AI client as a singleton
-export const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // Define a common configuration for the model
 const MODAL_NAME = "gemini-2.5-flash";
@@ -53,7 +49,7 @@ export async function GenerateFlashcardsFromChunks(
         const finalFlashcardSchema = UnifiedFlashcardSchema(desiredTypes);
        
         // 3. Model Configuration: Configures the model with JSON output enforcement
-        const modelInstance = gemini.getGenerativeModel({
+        const modelInstance = getGemini().getGenerativeModel({
             model: MODAL_NAME,
             systemInstruction,
             generationConfig: {
@@ -129,7 +125,7 @@ export async function GenerateDiagramFlashcard(
     blockIds: string[]
 ){
     try {
-        const modelInstance = gemini.getGenerativeModel({
+        const modelInstance = getGemini().getGenerativeModel({
             model: GEMINI_MODEL,
             generationConfig: {
                 responseMimeType: "application/json",
@@ -166,4 +162,3 @@ export async function GenerateDiagramFlashcard(
         };
     }
 }
-
