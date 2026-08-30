@@ -29,6 +29,7 @@ import { UserProgress, UserProgressSchema } from "./user-progress.model";
 import { WorkspaceInvitation, WorkspaceInvitationSchema } from "./workspace-invitation-model";
 import { Notification, NotificationSchema } from "./notification.model";
 import { Feedback, FeedbackSchema } from "./feedback.model";
+import { InboxItem, InboxItemSchema } from "./inbox-item.model";
 
 /**
  * @section Singleton Model Initialization
@@ -79,6 +80,9 @@ const NotificationModel =
 const FeedbackModel =
     (mongoose.models.Feedback as mongoose.Model<Feedback>) ||
     mongoose.model<Feedback>("Feedback", FeedbackSchema );
+const InboxItemModel = 
+    (mongoose.models.InboxItem as mongoose.Model<InboxItem>) ||
+    mongoose.model<InboxItem>("InboxItem", InboxItemSchema);
 
 export {
     UserModel,
@@ -95,4 +99,5 @@ export {
     WorkspaceInvitationModel,
     NotificationModel,
     FeedbackModel,
+    InboxItemModel,
 }
