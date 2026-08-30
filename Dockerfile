@@ -22,6 +22,9 @@ COPY . .
 # Build the realtime server (same as your current build:realtime script)
 RUN npm run build:realtime
 
+# Diagnostic: prove dist/server.js actually exists before moving on
+RUN ls -la realtime-server/dist || (echo "!!! realtime-server/dist is missing or empty !!!" && exit 1)
+
 # Create the Python venv and install PDF extraction dependencies INSIDE the same image
 # that will actually run the app -- this is the fix for the build/runtime mismatch
 RUN python3 -m venv venv
