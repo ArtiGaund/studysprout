@@ -1,5 +1,6 @@
 'use client';
 
+import { ClipperSection } from "./components/Clipper-Section";
 // import { EditorSection } from "./components/Editor-Section";
 import { FlashcardSection } from "./components/Flashcard-Section";
 import { Footer } from "./components/Footer";
@@ -24,6 +25,7 @@ export const LandingPage = () => {
             {/* <NavbarDebugger /> */}
             <HeroSection />
             <WorkspaceShowcaseSection />
+            <ClipperSection />
             <EditorSection />
             <FlashcardSection />
             <SearchSection />

@@ -32,6 +32,7 @@ export const Navbar = () => {
         const sections = [
             "hero-section", 
             "workspaces-section", 
+            "clipper-section",
             "editor-section", 
             "flashcard-section",
             "search-section", 
@@ -72,6 +73,7 @@ export const Navbar = () => {
 
     const navLinks = [
         { name: "Workspaces", id: "workspaces-section" },
+        { name: "Clipper", id: "clipper-section", isNew: true},
         { name: "Editor", id: "editor-section" },
         { name: "Flashcards", id: "flashcard-section" },
         { name: "Search", id: "search-section"},
@@ -110,14 +112,23 @@ export const Navbar = () => {
 
                                 <a
                                     href={`#${link.id}`}
-                                    className={`relative text-[10px] xl:text-[11px] font-black
-                                        uppercase tracking-[0.2em] transition-all duration-500
-                                    ${isActive ? 
-                                        'text-[#63FF9D] scale-110' 
+                                    className={`relative inline-flex items-center gap-1.5 text-[10px]
+                                    xl:text-[11px] font-black uppercase tracking-[0.2em]
+                                    transition-all duration-500
+                                    ${isActive
+                                        ? 'text-[#63FF9D] scale-110'
                                         : 'text-gray-500 hover:text-white'}`
                                     }
                                 >
                                     {link.name}
+                                    {link.isNew && (
+                                        <span className="relative flex h-1.5 w-1.5">
+                                            <span className="absolute inline-flex h-full w-full
+                                            animate-ping rounded-full bg-[#63FF9D] opacity-75"/>
+                                            <span className="relative inline-flex h-1.5 w-1.5
+                                            rounded-full bg-[#63FF9D]" />
+                                        </span>
+                                    )}
                                 </a>
 
                                 {/* Pointing UP Pointer */}
@@ -165,16 +176,16 @@ export const Navbar = () => {
                        <div className="relative w-7 h-7">
                             <X 
                             size={28}
-                            className={`absolute inset-0 text-[#63FF9D] transition-all duration-300
-                                transform ${isMobileMenuOpen 
+                            className={`absolute inset-0 text-[#63FF9D] transition-all 
+                                duration-300 transform ${isMobileMenuOpen 
                                     ? 'opacity-100 scale-100 rotate-0'
                                     : 'opacity-0 scale-50 -rotate-90'
                                 }`}
                             />
                             <Menu 
                             size={28}
-                            className={`absolute inset-0 text-[#63FF9D] transition-all duration-300
-                                transform ${isMobileMenuOpen
+                            className={`absolute inset-0 text-[#63FF9D] transition-all 
+                                duration-300 transform ${isMobileMenuOpen
                                     ? 'opacity-0 scale-50 rotate-90'
                                     : 'opacity-100 scale-100 rotate-0'
                                 }`}
@@ -197,7 +208,17 @@ export const Navbar = () => {
                     className={`text-2xl font-bold flex items-center justify-between group
                         ${activeSection === link.id ? 'text-[#63FF9D]' : 'text-gray-500'}`}
                     >
-                        {link.name}
+                        <span className="flex items-center gap-2">
+                            {link.name}
+                            {link.isNew && (
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full
+                                    animate-ping rounded-full bg-[#63FF9D] opacity-75" />
+                                    <span className="relative inline-flex h-2 w-2
+                                    rounded-full bg-[#63FF9D]" />
+                                </span>
+                            )}
+                        </span>
                         <div className={`h-1 w-1 rounded-full bg-[#63FF9D] transition-all
                             duration-300 ${activeSection === link.id
                                 ? 'opacity-100 scale-150'

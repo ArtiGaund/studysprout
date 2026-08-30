@@ -341,7 +341,7 @@ export const DashboardPreview: React.FC<DashboardPreviewProps> = ({ isExpanded }
     }
 
     const handleUserNavigation = (viewId: string) => {
-        // 1. Update internal sandbox view
+        //Update internal sandbox view
         if(viewId === 'flashcard-section'){
             setCurrentView('flashcard-section');
         }
@@ -349,11 +349,15 @@ export const DashboardPreview: React.FC<DashboardPreviewProps> = ({ isExpanded }
             setCurrentView('dashboard');
         }
 
-        // 2.Want to scroll the actual webpage to Flashcard section
-        const targetSection = document.getElementById(viewId);
-        if(targetSection){
-            targetSection.scrollIntoView({ behavior: 'smooth' });
-        }
+         // Only scroll the real page if a human actually interacted recently —
+        // prevents the automated guide from hijacking scroll position.
+        const recentlyInteracted = Date.now() - lastInteraction.current < 10000;
+        if (recentlyInteracted) {
+            const targetSection = document.getElementById(viewId);
+            if(targetSection){
+                targetSection.scrollIntoView({ behavior: 'smooth' });
+            }
+  }
     }
 
     const handleAddFolder = () => {
