@@ -22,7 +22,8 @@ const UserCard = () => {
   const [ isOpen, setIsOpen] = useState(false);
   const {user} = useUser();    
   const menuRef = useRef<HTMLDivElement>(null);
-  const { isRevisionSidebarOpen } = useRevisionSidebar();
+  const { isRevisionSidebarOpen, isInboxSidebarOpen } = useRevisionSidebar();
+  const isPannelOpen = isRevisionSidebarOpen || isInboxSidebarOpen;
     
   /**
   * @effect ClickOutsideListener
@@ -48,18 +49,18 @@ const UserCard = () => {
       ref={menuRef}
       onClick={(e) => {
         // If sidebar is collapsed, clicking the card itself can toggle the menu
-        if(isRevisionSidebarOpen){
+        if(isPannelOpen){
           setIsOpen((prev) => !prev);
         }
       }}
       className={`flex items-center rounded-xl transition-all relative select-none
-        ${isRevisionSidebarOpen
+        ${isPannelOpen
           ? "w-10 h-10 justify-center bg-zinc-900 border border-white/5 hover:border-white/[0.04] cursor-pointer"
           : "w-full justify-between p-2.5 bg-[#141416]/90 border border-white/5 hover:bg-white/[0.04]"
         }`}
     >
       {/* 1. Identify Layout Cluster (Hidden when sidebar is tightly collapsed) */}
-      {!isRevisionSidebarOpen && (
+      {!isPannelOpen && (
         <aside className="flex items-center gap-x-3 min-w-0">
           <Avatar className="w-8 h-8 rounded-lg border border-white/10 shrink-0">
             <AvatarImage 
@@ -80,7 +81,7 @@ const UserCard = () => {
       )}
 
       {/* 2. Compact View Portrait Fallback */}
-      {isRevisionSidebarOpen && (
+      {isPannelOpen && (
         <Avatar className="w-7 h-7 rounded-lg border border-white/5 shrink-0 pointer-events-none">
             <AvatarImage src={user?.avatarUrl || ""} className="object-cover"/>
             <AvatarFallback className="bg-zinc-800 rounded-lg text-zinc-400 font-bold text-[10px]">
@@ -89,7 +90,7 @@ const UserCard = () => {
         </Avatar>
       )}
       {/* 3. Desk Trigger Control key*/}
-      {!isRevisionSidebarOpen && ( 
+      {!isPannelOpen && ( 
          <div className="flex items-center justify-center shrink-0">
           <button
             type="button"
@@ -111,7 +112,7 @@ const UserCard = () => {
         <div 
           className={`absolute bottom-[calc(100%+10px)] bg-[#18181b] border border-white/10
             p-1.5 rounded-xl shadow-xl z-50 flex flex-col space-y-0.5 animate-in fade-in slide-in-from-bottom-2
-            duration-150 ${isRevisionSidebarOpen ? "left-0 min-w-[140px]" : "left-0 right-0 w-full"}`}
+            duration-150 ${isPannelOpen ? "left-0 min-w-[140px]" : "left-0 right-0 w-full"}`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Profile/Account Action Row */}
