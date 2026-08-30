@@ -10,7 +10,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef } from "react";
-import { RootState } from "@/store/store";
+import store, { RootState } from "@/store/store";
 import { useDispatch, useSelector } from "react-redux";
 import { Folder as MongooseFolder } from "@/model/folder.model";
 import { 
@@ -74,7 +74,7 @@ export function useFolder(){
      * Implements a cache-first fetch logic. 
      * Prioritizes existing Redux state before hitting the network.
      */
-    const getFolders = useCallback(async( workspaceId: string): Promise<{
+    const getFolders = useCallback(async( workspaceId: string, forceFetch?: boolean): Promise<{
         success: boolean,
         data?: ReduxFolder[],
         error?: string
@@ -83,13 +83,14 @@ export function useFolder(){
             return { success: false, error: "Workspace id required" };
         }
 
+        const state = store.getState();
         // checking if data for this workspace is already in Redux
         // and if the folders array (allFolderIds) is not empty
         // This will avoid unnecessary API calls but allows refetch if state is cleared or partially loaded
-        const existingFolders = folders;
+        const existingFolders = selectFolders(state, workspaceId);
 
         // 1. Return cached data if available
-        if (hasFetchedFoldersByWorkspaceRef.has(workspaceId) && existingFolders.length > 0) {
+        if (!forceFetch && hasFetchedFoldersByWorkspaceRef.has(workspaceId) && existingFolders.length > 0) {
             // Return existing Redux data mapped back to Mongoose-like structure if needed by caller
             return { 
                 success: true, 
