@@ -306,3 +306,10 @@ export interface LastStudiedState{
     folderId?: string;
     studiedAt: string;
 }
+
+export type InboxItem = {
+    _id: string;
+    type: string;
+    content: string;
+    createdAt: string;
+}
