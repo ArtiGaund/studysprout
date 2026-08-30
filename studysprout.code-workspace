@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../rate-limiter"
+		},
+		{
+			"path": "../studysprout-clipper"
 		}
 	],
 	"settings": {}
