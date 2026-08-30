@@ -5,8 +5,10 @@ import { getServerSession } from "next-auth";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { InboxItemModel } from "@/model";
 
+const extensionId = process.env.NEXT_PUBLIC_EXTENSION_ID;
+
 const corsHeaders = {
-    "Access-Control-Allow-Origin": "chrome-extension://mbmdojiajdnjobadnbhnoilenmokomij", // Replace with your extension's ID
+    "Access-Control-Allow-Origin": `chrome-extension://${extensionId}`, // Replace with your extension's ID
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
