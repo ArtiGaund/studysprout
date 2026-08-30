@@ -14,14 +14,14 @@
 
 import DashboardSetup from "@/components/dashboard-setup/dashboard-setup"
 import { useWorkspace } from "@/hooks/useWorkspace"
-import { usePathname, useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useUser } from "@/lib/providers/user-provider"
 import { clearLastWorkspace, getLastWorkspace } from "@/lib/local-storage-workspace"
 import { useSelector } from "react-redux"
 import { selectAuthStatus, selectUserId } from "@/store/selectors/userSelector"
 
-const DashboardPage = () => {
+const DashboardContent = () => {
     const { user } = useUser();
     
     // Global State Selectors
@@ -38,6 +38,26 @@ const DashboardPage = () => {
         } = useWorkspace();
 
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        if(searchParams.get("extension") === "true"){
+                    const EXTENSION_ID = "mbmdojiajdnjobadnbhnoilenmokomij"; 
+                    if(typeof window !== "undefined" && (window as any).chrome?.runtime?.sendMessage){
+                       ( window as any).chrome.runtime.sendMessage(
+                            EXTENSION_ID,
+                            { type: "STUDYSPROUT_LOGIN_SUCCESS" },
+                            (response: any) => {
+                                if((window as any).chrome.runtime.lastError){
+                                    console.warn("Extension not reachable: ", (window as any).chrome.runtime.lastError);
+                                }else{
+                                    console.log("Extension notified: ",response);
+                                }
+                            }
+                        );
+                    }
+                }
+    },[])
    
     /** *EFFECT: Workspace Synchronization
      * Fetch the workspace list once the user is confirmed as unauthenticated.
@@ -138,10 +158,22 @@ const DashboardPage = () => {
    
 
     // 6. Redirection Bridge (Temporary fallback while router.replace executes)
-   return( <div className="flex justify-center items-center h-screen text-gray-600">
+   return( 
+   <div className="flex justify-center items-center h-screen text-gray-600">
     Redirecting to your workspace...
     </div>);
 
 }
 
-export default DashboardPage
+export default function DashboardPage(){
+    return(
+        <Suspense 
+            fallback={
+                <div className="flex justify-center items-center h-screen text-gray-600">
+                    Loading...
+                </div>
+        }>
+            <DashboardContent />
+        </Suspense>
+    )
+}
