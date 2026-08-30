@@ -5,15 +5,19 @@ import { selectAuthStatus, selectUserId } from "@/store/selectors/userSelector";
 import { useSelector } from "react-redux";
 import { useToast } from "../ui/use-toast";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import Image from "next/image";
 import EmojiPicker from "../global/emoji-picker";
 import { Loader2, Lock, Rocket } from "lucide-react";
 import WorkspaceVisibilityToggle from "../dashboard-setup/workspace-visibility-toggle";
 import { selectWorkspaceLoading } from "@/store/selectors/workspaceSelector";
-import { signOut } from "next-auth/react";
+import { ReduxWorkSpace } from "@/types/state.type";
 
-const WorkspaceCreateForm = () => {
+interface WorkspaceCreateFormProps{
+    onSuccess?: (workspace: ReduxWorkSpace) => void;
+};
+
+const WorkspaceCreateForm: React.FC<WorkspaceCreateFormProps> = ({ onSuccess }) => {
     // --- AUTH & GLOBAL STATE ---
     const userId = useSelector(selectUserId);
     const authStatus = useSelector(selectAuthStatus);
@@ -96,7 +100,11 @@ const WorkspaceCreateForm = () => {
                     title: "Workspace created successfully",
                     description: "Moving to your workspace"
                 });
-                router.push(`/dashboard/${response.data._id}`);
+                if(onSuccess) {
+                    onSuccess(response.data);
+                }else{
+                    router.push(`/dashboard/${response.data._id}`);
+                }
             } else {
                 toast({
                     title: "Failed to create workspace",
