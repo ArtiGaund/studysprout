@@ -13,9 +13,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod"
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,10 +26,11 @@ import { useSelector } from "react-redux";
 import { selectUserId } from "@/store/selectors/userSelector";
 import { Footer } from "@/landing/components/Footer";
 
-const SignIn = () => {
+const SignInContent = () => {
     const [ isSubmitting, setIsSubmitting ] = useState(false)
     const { toast } = useToast()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const form = useForm<z.infer<typeof signInSchema>>({
         resolver: zodResolver(signInSchema),
         defaultValues: {
@@ -64,8 +65,7 @@ const SignIn = () => {
             }
           
             if(result?.ok){
-                if(!userId) return;
-                    router.replace('/dashboard');
+                router.replace('/dashboard');
             }
         } catch (error) {
             console.warn("Error while login ",error)
@@ -223,14 +223,18 @@ const SignIn = () => {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <button 
-                                    onClick={() => signIn('google')}
+                                    onClick={() => signIn('google', {
+                                        callbackUrl: '/dashboard?extension=true'
+                                    })}
                                     className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 py-3 rounded-xl hover:bg-white/10 transition-colors"
                                 >
                                     <Chrome size={18} className="text-gray-400" />
                                     <span className="text-xs font-bold text-gray-300">Google</span>
                                 </button>
                                 <button 
-                                    onClick={() => signIn('github')}
+                                    onClick={() => signIn('github', {
+                                        callbackUrl: '/dashboard?extension=true'
+                                    })}
                                     className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 py-3 rounded-xl hover:bg-white/10 transition-colors"
                                 >
                                     <Github size={18} className="text-gray-400" />
@@ -254,4 +258,15 @@ const SignIn = () => {
     )
 }
 
-export default SignIn;
+export default function SignIn(){
+    return (
+    <Suspense 
+        fallback={
+        <div className="flex justify-center items-center h-screen">
+            Loading sign in...
+        </div>
+    }>
+      <SignInContent />
+    </Suspense>
+    )
+};
