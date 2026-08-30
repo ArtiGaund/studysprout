@@ -52,7 +52,7 @@ import {
      selectFileError, 
      selectFileLoading
  } from "@/store/selectors/fileSelector";
-import { selectCurrentFolder } from "@/store/selectors/folderSelector";
+import { selectCurrentFolder, selectFolders } from "@/store/selectors/folderSelector";
 import { MARK_ACTIVITY_STALE } from "@/store/slices/activitySlice";
 
 const EMPTY_ARRAY: ReduxFile[] = [];
@@ -224,7 +224,17 @@ export function useFile() {
                 }
             }
             if (hasFetchedWorkspaceFilesRef.has(workspaceId) && !forceFetch) {
-            return { success: true, data: files as ReduxFile[] }; // Return Redux data mapped back to Mongoose-like
+                const state = store.getState();
+                const workspaceFolders = selectFolders(state, workspaceId); //folders for this workspace
+                const stillHasData = workspaceFolders.some((f) => {
+                    const bucket = state.file.filesByFolder[f._id];
+                    return bucket && bucket.allIds.length > 0;
+                });
+                if(stillHasData){
+                    return { success: true, data: [], };
+                }
+                hasFetchedWorkspaceFilesRef.delete(workspaceId);
+            
         }
         try {
            
