@@ -1,8 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { buildSingleFlashcardSystemInstruction, buildSingleFlashcardUserPrompt } from "./system-instruction";
 import { UnifiedFlashcardSchema } from "./flashcard-json-schema";
 import { chunkBlocks } from "@/helpers/chunkBlocks";
-import { callGeminiWithRetry, gemini, GEMINI_MODEL } from "./gemini-client";
+import { callGeminiWithRetry, getGemini, GEMINI_MODEL } from "./gemini-client";
 
 
 export async function GenerateSingleFlashcard(
@@ -23,7 +22,7 @@ export async function GenerateSingleFlashcard(
 
          const finalFlashcardSchema = UnifiedFlashcardSchema([type]);
 
-          const modelInstance = gemini.getGenerativeModel({
+          const modelInstance = getGemini().getGenerativeModel({
                      model: GEMINI_MODEL,
                      systemInstruction,
                      generationConfig: {
