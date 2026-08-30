@@ -17,6 +17,8 @@ import { FlashcardModel, FlashcardProgressModel, FlashcardSetModel } from "@/mod
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request){
     await dbConnect();
     const session = await getServerSession(authOptions);

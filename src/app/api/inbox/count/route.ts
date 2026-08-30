@@ -4,6 +4,8 @@ import { authOptions } from "../../auth/[...nextauth]/options";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { InboxItemModel } from "@/model";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(){
     try {
         await dbConnect();
