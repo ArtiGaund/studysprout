@@ -24,6 +24,8 @@ import { UserModel, WorkSpaceModel } from "@/model";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET WORKSPACE MEMBERS (GET)
  * ---------------------------

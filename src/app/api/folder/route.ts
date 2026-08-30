@@ -31,6 +31,7 @@ import { onFolderCreated } from "@/lib/activity-hooks";
  * 5. Rollback: If Workspace updates fails, the orphan Folder is deleted.
  * 6. Socket: Emits 'folder_created' to the workspace tree.
  */
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
     await dbConnect();

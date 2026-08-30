@@ -12,6 +12,8 @@ import mongoose from "mongoose";
 import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion";
 import {  uploadToCloudinary } from "@/lib/cloudinary-utils/upload-and-delete-from-cloudinary";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
     await dbConnect()
      let uploadedNewBannerPublicId: string | null = null; // Track for rollback

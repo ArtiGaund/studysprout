@@ -21,6 +21,8 @@ import {UserModel, WorkSpaceModel} from "@/model/index";
 import { isValidId } from "@/helpers/validateId";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 
+export const dynamic = "force-dynamic";
+
 /**
  * CREATE WORKSPACE (POST)
  * -----------------------

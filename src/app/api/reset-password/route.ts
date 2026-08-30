@@ -3,6 +3,8 @@ import PasswordResetTokenModel from "@/model/password-reset-token.model";
 import {UserModel} from "@/model/index";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request:Request) {
     await dbConnect();
     try {

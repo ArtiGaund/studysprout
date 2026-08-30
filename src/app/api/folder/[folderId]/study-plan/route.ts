@@ -24,6 +24,8 @@ import { generateStudyPlan } from "@/utils/intelligence/study-planner";
 import { FolderModel, UserProgressModel } from "@/model";
 import mongoose from "mongoose";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
     request: NextRequest,
     { params }: { params: { folderId: string }}

@@ -29,6 +29,8 @@ import { chunkBlocks } from "@/helpers/chunkBlocks";
 import { checkAndIncrementUsage } from "@/lib/flashcard/flashcard-usage";
 import { emitSetRegenerated, emitUsageUpdated } from "@/lib/realtime-emitter";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
     request: NextRequest,
     { params}: { params: { setId: string }}

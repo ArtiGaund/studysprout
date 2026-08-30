@@ -5,7 +5,8 @@ import dbConnect from "@/lib/dbConnect";
 import { FileModel, InboxItemModel } from "@/model";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
-import { v4 as uuidv4 } from "uuid";
+
+export const dynamic = "force-dynamic";
 
 interface BlockNoteBlock{
     id: string;

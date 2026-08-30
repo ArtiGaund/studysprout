@@ -31,7 +31,7 @@ import { getServerSession } from "next-auth";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { FlashcardProgressModel } from "@/model";
 
-
+export const dynamic = "force-dynamic";
 
 function calculateSM2(
     quality: number,                //0-5

@@ -24,6 +24,8 @@ import { emitSetDeleted, emitSetUpdated } from "@/lib/realtime-emitter";
  * 3. Lazy Progress: Injects Spaced-Repetition (SRS) data from FlashcardProgressModel.
  */
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     request: Request,
     { params }: { params: { setId: string }}

@@ -21,6 +21,9 @@
     interface RouteParams{
         fileId: string;
     }
+
+    export const dynamic = "force-dynamic";
+    
     export async function POST(
         request: Request ,
         {params } : { params: RouteParams }

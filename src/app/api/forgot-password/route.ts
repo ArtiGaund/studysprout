@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { sendResetEmail } from "@/lib/sendResetEmail";
 import config from "@/config/config";
 
+export const dynamic = "force-dynamic";
 
 export async function POST( request: Request ){
     await dbConnect();

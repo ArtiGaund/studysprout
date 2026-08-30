@@ -15,6 +15,8 @@ import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 // Build an array of the last 7 days 
 function getLast7Days(): { date: string; label: string}[]{
     const days: { date: string; label: string }[] = [];

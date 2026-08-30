@@ -1,7 +1,7 @@
 import dbConnect from "@/lib/dbConnect";
 import {UserModel} from "@/model/index";
 
-
+export const dynamic = "force-dynamic";
 export async function GET(request: Request ) {
     await dbConnect()
     const { searchParams } = new URL(request.url)

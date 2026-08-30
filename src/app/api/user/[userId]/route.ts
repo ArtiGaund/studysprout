@@ -22,7 +22,7 @@ import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion";
 import mongoose from "mongoose";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 
-
+export const dynamic = "force-dynamic";
 
 // Check user have account
 export async function GET( request: Request ){

@@ -16,6 +16,8 @@ import { errorResponse, successResponse } from "@/lib/api-response/api-responses
 import dbConnect from "@/lib/dbConnect";
 import { FileModel, FlashcardModel } from "@/model";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request){
     await dbConnect();
 

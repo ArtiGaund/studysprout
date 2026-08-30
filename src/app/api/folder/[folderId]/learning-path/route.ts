@@ -16,6 +16,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 // Topological sort -> assigns a "level" (depth) to each files
 // Level 0 = no prerequisites (read first)

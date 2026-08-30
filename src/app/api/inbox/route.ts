@@ -6,6 +6,7 @@ import { errorResponse, successResponse } from "@/lib/api-response/api-responses
 import { InboxItemModel } from "@/model";
 
 const extensionId = process.env.NEXT_PUBLIC_EXTENSION_ID;
+export const dynamic = "force-dynamic";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": `chrome-extension://${extensionId}`, // Replace with your extension's ID

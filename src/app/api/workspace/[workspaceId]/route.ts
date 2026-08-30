@@ -30,6 +30,8 @@ import { resourceDeletion } from "@/lib/cloudinary-utils/resourceDeletion"
 import { isValidId } from "@/helpers/validateId";
 import { emitServerRealtimeEvent } from "@/lib/realtime-emitter";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     request: Request,
     { params }: { params: { workspaceId: string }}

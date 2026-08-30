@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const MIN_EASE = 1.3;
 const MAX_EASE = 3.5;

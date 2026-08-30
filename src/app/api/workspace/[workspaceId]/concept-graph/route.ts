@@ -8,6 +8,7 @@ import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(
     _req: NextRequest,

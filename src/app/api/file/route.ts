@@ -36,6 +36,8 @@ import { onFileCreated } from "@/lib/activity-hooks";
  * 6. Socket: Emits 'file_created' to the workspace tree.
  */
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
     await dbConnect();
     const session = await getServerSession(authOptions);

@@ -2,6 +2,8 @@ import dbConnect from "@/lib/dbConnect";
 import unverifiedUserModel from "@/model/unverified-user.model";
 import {UserModel} from "@/model/index";
 
+export const dynamic = "force-dynamic";
+
 export async function POST( request: Request){
     await dbConnect()
     try {

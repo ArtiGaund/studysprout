@@ -7,6 +7,8 @@ import { buildFolderConceptGraph } from "@/utils/intelligence/concept-graph-buil
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
     request: NextRequest,
     { params }: { params: { folderId: string }}

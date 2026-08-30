@@ -16,7 +16,7 @@ import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
-
+export const dynamic = "force-dynamic";
 export async function PATCH(
     request: NextRequest,
     { params }: { params: { invitationId: string }}

@@ -21,6 +21,8 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { hasWorkspaceAccess } from "@/helpers/hasWorkspaceAccess";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 
+export const dynamic = "force-dynamic";
+
 /**
  * UPDATE WORKSPACE LOGO (POST)
  * ----------------------------

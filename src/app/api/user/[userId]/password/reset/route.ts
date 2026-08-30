@@ -15,6 +15,8 @@ import {UserModel} from "@/model/index";
 import bcrypt from "bcryptjs";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request:Request) {
     await dbConnect();
     try {

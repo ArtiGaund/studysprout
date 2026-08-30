@@ -28,6 +28,7 @@ import { findDocumentBoundaries } from "@/utils/pdf/pdf-finder";
 import { detectPDFType } from "@/utils/pdf/pdf-type-detector";
 
 export const runtime = 'nodejs';
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest){
     await dbConnect();

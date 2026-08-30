@@ -22,6 +22,8 @@ interface RouteParams{
     blockId: string;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function PATCH(
     request: Request ,
      {params } : { params: RouteParams }

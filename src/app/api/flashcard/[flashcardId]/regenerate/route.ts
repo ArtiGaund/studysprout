@@ -20,6 +20,8 @@ import { emitCardRegenerated } from "@/lib/realtime-emitter";
 import { FileModel, FlashcardModel, FlashcardProgressModel, FlashcardSetModel } from "@/model";
 import { NextRequest } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(
     request: NextRequest,
     { params }: { params: { flashcardId: string }}

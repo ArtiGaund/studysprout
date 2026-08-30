@@ -6,6 +6,8 @@ import { errorResponse, successResponse } from "@/lib/api-response/api-responses
 import { NotificationModel } from "@/model";
 import mongoose from "mongoose";
 
+export const dynamic = "force-dynamic";
+
 // id: "mark-all" -> bulk read, else single notification id
 export async function PATCH(
     request: NextRequest,

@@ -14,6 +14,8 @@ import {
     uploadToCloudinary 
 } from "@/lib/cloudinary-utils/upload-and-delete-from-cloudinary";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
     await dbConnect()
 

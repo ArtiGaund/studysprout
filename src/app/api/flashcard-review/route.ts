@@ -17,6 +17,9 @@ import dbConnect from "@/lib/dbConnect";
 import { updateSRS } from "@/lib/srs/updateSRS";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
+
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request){
     await dbConnect();
     const session = await getServerSession(authOptions);

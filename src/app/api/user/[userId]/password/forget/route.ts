@@ -18,7 +18,7 @@ import { sendResetEmail } from "@/lib/sendResetEmail";
 import config from "@/config/config";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 
-
+export const dynamic = "force-dynamic";
 export async function POST( request: Request ){
     await dbConnect();
     const { email } = await request.json();

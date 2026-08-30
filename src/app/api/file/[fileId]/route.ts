@@ -26,6 +26,7 @@ import { emitWorkspaceTreeUpdate } from "@/lib/realtime-emitter";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { onFileArchived, onFileUpdated } from "@/lib/activity-hooks";
 
+export const dynamic = "force-dynamic";
 
 export async function GET(
     request: Request,

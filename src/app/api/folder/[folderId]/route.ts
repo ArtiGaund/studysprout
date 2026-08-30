@@ -26,6 +26,8 @@ import { errorResponse, successResponse } from "@/lib/api-response/api-responses
 import { extractPublicIdFromUrl } from "@/lib/cloudinary-utils/extract-public-id";
 import { onFolderDelete } from "@/lib/activity-hooks";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     request: Request,
     { params }: { params: { folderId: string }}

@@ -21,6 +21,7 @@ import { errorResponse, successResponse } from "@/lib/api-response/api-responses
 import { uploadToCloudinary } from "@/lib/cloudinary-utils/upload-and-delete-from-cloudinary";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest){
     await dbConnect();

@@ -5,6 +5,8 @@ import { FeedbackModel } from "@/model";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request:Request) {
     try {
         await dbConnect();

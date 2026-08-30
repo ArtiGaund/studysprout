@@ -7,6 +7,7 @@ import unverifiedUserModel from "@/model/unverified-user.model";
 
 // Temporary user store 
 const TEMP_USER_STORE = new Map(); 
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request){
     await dbConnect()

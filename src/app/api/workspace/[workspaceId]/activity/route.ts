@@ -17,6 +17,8 @@ import mongoose, { mongo } from "mongoose";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     request: NextRequest,
     { params }: { params: { workspaceId: string }}

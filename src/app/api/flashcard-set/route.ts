@@ -35,6 +35,7 @@ import { onFlashcardSetGenerated } from "@/lib/activity-hooks";
 import { checkAndIncrementUsage } from "@/lib/flashcard/flashcard-usage";
 import { emitServerRealtimeEvent, emitSetCreated, emitUsageUpdated } from "@/lib/realtime-emitter";
 
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest){
     await dbConnect();

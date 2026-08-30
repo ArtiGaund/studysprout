@@ -5,6 +5,8 @@ import { authOptions } from "../../auth/[...nextauth]/options";
 import { errorResponse, successResponse } from "@/lib/api-response/api-responses";
 import { UserModel } from "@/model";
 
+export const dynamic = "force-dynamic";
+
 export async function PATCH(request: NextRequest){
     await dbConnect();
     try {
