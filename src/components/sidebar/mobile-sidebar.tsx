@@ -8,15 +8,20 @@ import { usePathname } from "next/navigation"
 interface MobileSidebarProps{
     children: React.ReactNode;  //This is the main sidebar
     revisionContent: React.ReactNode; 
+    inboxContent: React.ReactNode;
 }
 
-const MobileSidebar: React.FC<MobileSidebarProps> = ({ children, revisionContent }) => {
+const MobileSidebar: React.FC<MobileSidebarProps> = ({ 
+    children, revisionContent, inboxContent 
+}) => {
     const { 
         isMobileMenuOpen,
         openMobileMenu,
         closeMobileMenu,
-        isRevisionSidebarOpen, 
-        setRevisionSidebarOpen 
+        isRevisionSidebarOpen,
+        setRevisionSidebarOpen,
+        isInboxSidebarOpen, 
+        setInboxSidebarOpen,
     } = useRevisionSidebar();
     
     const pathname = usePathname();
@@ -42,7 +47,15 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ children, revisionContent
         return() => {
             document.body.style.removeProperty('pointer-events');
         }
-    },[])
+    },[]);
+
+    const showBack = isRevisionSidebarOpen || isInboxSidebarOpen;
+
+    const handleBack = () => {
+        if(isRevisionSidebarOpen) setRevisionSidebarOpen(false);
+        if(isInboxSidebarOpen) setInboxSidebarOpen(false);
+    } 
+
     return(
         <>
             {/*1. TOP MENU BUTTON  */}
@@ -73,11 +86,11 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ children, revisionContent
                     isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
                 )}
             >
-                    {isRevisionSidebarOpen && (
+                    {showBack && (
                         <div className="flex items-center justify-between p-4 border-b
                          border-white/5">
                             <button
-                            onClick={() => setRevisionSidebarOpen(false)}
+                            onClick={handleBack}
                             className="flex items-center gap-2 text-muted-foreground hover:text-white
                             transition-colors"
                             >
@@ -96,7 +109,12 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ children, revisionContent
                         <X className="w-5 h-5 text-muted-foreground"/>
                     </button>
                     <div className="overflow-y-auto h-full">
-                        { isRevisionSidebarOpen ? revisionContent : children }
+                        { isRevisionSidebarOpen 
+                            ? revisionContent 
+                            : isInboxSidebarOpen 
+                                ? inboxContent 
+                                : children 
+                        }
                     </div>
             </aside>
         </>
