@@ -12,6 +12,7 @@
 **[Live Demo](https://studysprouts.vercel.app)** · **[Report a Bug](https://github.com/ArtiGaund/studysprout/issues)** · **[Contact](mailto:artigaund2210@gmail.com)**
 **Companion repo:** [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) — the standalone Socket.io + Yjs service that powers live collaboration, presence, and generation locking. Deployed and versioned separately; see its own README for the deep socket-architecture detail.
 **Rate limiter:** [`rate-limiter`](https://github.com/ArtiGaund/rate-limiter) — standalone Java service enforcing per-user request limits on Gemini API calls (flashcard generation), preventing repeated-call abuse within a short time window.
+**Browser extension:** [`studysprout-clipper`](https://github.com/ArtiGaund/studysprout-clipper) — Chrome (Manifest V3) extension for capturing web content into the Inbox.
 
 ---
 
@@ -42,6 +43,15 @@ I wanted a tool that didn't just store notes but actively helped me figure out *
 - Decodes CID-encoded fonts and merges sentence fragments broken across PDF line breaks
 - Splits a single PDF into multiple topic-scoped files automatically, using page-based chunking so one PDF becomes 15-20 well-scoped files rather than one unreadable document
 - Extracts embedded images and preserves them inline
+
+### 📎 Browser Clipper & Inbox
+- A companion Chrome extension ([`studysprout-clipper`](https://github.com/ArtiGaund/studysprout-clipper)) lets you capture content from **any webpage** without leaving it — select text, right-click, choose **Save to Studysprout**, pick a content type (or accept the auto-detected one), done
+- Captures land in a **private, per-user Inbox** — global across workspaces, not scoped to any single one, since capture happens outside any workspace context. Nobody else sees what you've captured until you file it
+- The Inbox surfaces as a live badge count in the sidebar, a quick-access drawer (scrollable list of pending items), and a full Inbox page with per-item **file** and **delete** actions
+- **Bulk operations**: select multiple captured items at once for bulk delete or bulk merge, with a "select all" toggle and an undo affordance on deletions
+- **Merge into a file**: filing a captured item opens a workspace/folder/file picker — merging content into an existing file inserts it as a real, properly-typed block through the **same realtime Yjs pipeline** live collaborative editing uses, so it's broadcast instantly to anyone else viewing that file and persisted by the same worker that derives reading time, term extraction, and concept-graph inclusion for any other edit
+- Because merges go through the live document rather than a direct database write, two people filing into the same file concurrently is safe — both mutations apply sequentially to the same in-memory Yjs document instead of racing independent writes
+- No separate login for the extension — a save attempt while logged out stashes the capture locally and bridges through the site's normal sign-in flow, then flushes automatically once authenticated
 
 ### 🧠 Concept Graph
 - **Folder-level graph**: surfaces terms that appear across 2+ files in a folder and visualizes them as a concept ↔ file network (D3-rendered, draggable, zoomable)
@@ -119,6 +129,12 @@ Real-time collaboration also means handling the moments where two people try to 
 **Real-Time Collaborative Editing** — two users in the same file at once; typed content and slash-command menus sync instantly between sessions via Yjs + Socket.io
 ![Collaborative editing](./docs/images/file-edit3.png)
 
+**Browser Clipper** — right-click any selection on the web, pick a content type, and save it straight into your Inbox — no tab-switching
+![Clipper capture](./docs/images/clipper/clipper-capture.png)
+
+**Inbox** — captured content waiting to be filed, with per-item merge/delete and bulk select/merge/delete actions
+![Inbox view](./docs/images/clipper/inbox-view.png)
+
 **Workspace Access & Roles** — invite collaborators by email, assign Owner/Editor roles, and manage who has access to a shared workspace
 ![Workspace access](./docs/images/workspace-manager-view.png)
 
@@ -153,6 +169,7 @@ Real-time collaboration also means handling the moments where two people try to 
 - Socket.io — real-time events for collaborative editing and presence, run as an **independent server** ([`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server), separate repo and deployment) so real-time connections aren't limited by serverless function timeouts
 - Yjs — CRDT layer for conflict-free concurrent document editing
 - Java (Spring Boot) — standalone rate-limiting service ([`rate-limiter`](https://github.com/ArtiGaund/rate-limiter)) guarding Gemini API calls against repeated-request abuse
+- Browser Extension (Manifest V3, vanilla JS) — [`studysprout-clipper`](https://github.com/ArtiGaund/studysprout-clipper), talks to the Inbox API over the same NextAuth session cookie (`credentials: "include"`), no separate token/auth system
 
 **AI / Intelligence Layer**
 - Google Gemini API — flashcard generation, folder concept synthesis
@@ -179,6 +196,14 @@ Real-time collaboration also means handling the moments where two people try to 
 │   (this repo)        │  HTTP   │   (separate repo)            │
 │   Pages + API routes |───────► │   Socket.io + Yjs            │
 └──────────┬───────────┘  emit   └───────────────┬──────────────┘
+           │          ▲                          │
+           │          │ POST /api/inbox          │
+           │          │ (credentials: include)   │
+           │   ┌──────┴───────────────┐          │
+           │   │  Chrome Extension    │          │
+           │   │  studysprout-clipper │          │
+           │   │  (separate repo)     │          │
+           │   └───────────────────────┘         │
            │                                     │
            │ enqueue jobs               enqueue  │ file-sync jobs
            ▼                                     ▼
@@ -208,7 +233,7 @@ Real-time collaboration also means handling the moments where two people try to 
                     └──────────────────────────────┘
 ```
 
-**Why four services from three repos:** the Next.js app is request/response and serverless — perfect for pages and API routes, but structurally unable to host long-running processes. Background workers (BullMQ consumers, the Python PDF subprocess pipeline) and the always-on Socket.io server both need to stay alive continuously, which serverless can't do — so those run on Render instead. The worker service is the *same* `studysprout` codebase as the Vercel app, deployed a second time with a different entry point (`workers/index.ts`, invoked via `nixpacks.toml` instead of `next start`). The rate limiter is a fully standalone Java service, also deployed on Render, called synchronously by the flashcard-generation route before any Gemini request goes out.
+**Why four services from three repos:** the Next.js app is request/response and serverless — perfect for pages and API routes, but structurally unable to host long-running processes. Background workers (BullMQ consumers, the Python PDF subprocess pipeline) and the always-on Socket.io server both need to stay alive continuously, which serverless can't do — so those run on Render instead. The worker service is the *same* `studysprout` codebase as the Vercel app, deployed a second time with a different entry point (`workers/index.ts`, invoked via `nixpacks.toml` instead of `next start`). The rate limiter is a fully standalone Java service, also deployed on Render, called synchronously by the flashcard-generation route before any Gemini request goes out. The Clipper extension is a separate, unpacked/manually-distributed browser add-on that talks to the Next.js app's API routes directly — it isn't a deployed service, it runs client-side in the user's browser.
 
 **How the pieces talk to each other:**
 - Vercel API routes enqueue jobs directly into shared Redis — no direct call to the worker needed
@@ -216,6 +241,7 @@ Real-time collaboration also means handling the moments where two people try to 
 - The worker continuously polls those queues, processes jobs, writes to MongoDB
 - After processing, the worker makes an outbound HTTP call to the realtime server's `/emit/*` endpoints so connected browsers get instant live updates
 - Vercel API routes also call those same `/emit/*` endpoints directly for things like workspace invitations
+- The Chrome extension calls `/api/inbox` directly using the browser's existing session cookie — no separate auth flow; merging an Inbox item into a file goes through the same API routes and Yjs pipeline as any other file edit, not a direct write
 - Before triggering flashcard generation, the flashcard route calls the rate-limiter service to check whether the requesting user is within their allowed request rate; only proceeds to Gemini if allowed
 - Nobody calls the worker directly — it has no public URL and receives all its work via the Redis queue
 
@@ -280,6 +306,12 @@ Keeps abuse-prevention logic decoupled from application logic, and makes the lim
 **Why fire-and-forget logging + a single `emitServerRealtimeEvent` convention?**
 Early on, sockets were double-emitting events from multiple code paths. Standardizing on a single emit helper and auditing every socket call site fixed a class of bugs where the UI would flicker or apply the same update twice.
 
+**Why a private, global Inbox instead of saving captures directly into a workspace?**
+Capture happens outside any workspace context — you're reading a random article, not sitting inside StudySprout with a workspace open. Deciding *where* something belongs (which workspace → folder → file) is a separate, more deliberate decision than the act of capturing it. Keeping the Inbox private and workspace-agnostic means capturing stays fast and frictionless, while filing stays intentional — you review and place things later instead of committing to a location in the moment.
+
+**Why does the Clipper's merge go through the realtime Yjs pipeline instead of writing straight to MongoDB?**
+An early version wrote merged content directly to the database. It either silently overwrote existing content or got clobbered by the next live autosave, because it never touched the in-memory Yjs document the realtime server treats as source of truth for that file. Routing merges through the same pipeline live edits use means a captured block is broadcast instantly to anyone viewing the file, persisted by the same worker, and safe under concurrent merges from multiple users.
+
 ---
 
 ## Project Structure
@@ -291,12 +323,14 @@ studysprout/
 │   │   ├── api/
 │   │   │   ├── folder/[folderId]/     # analyzer, flashcards, prerequisites
 │   │   │   ├── workspace/[workspaceId]/ # stats, folder-graph, prerequisite-graph
+|   |   |   ├── inbox/ # capture, list, merge, bulk delete/merge
 │   │   │   └── file/                    # sync, upload, last-studied
 │   │   ├── dashboard/                  # main authenticated app
 │   │   └── (auth)/                     # sign in / sign up
 │   ├── components/
 │   │   ├── editor/                     # BlockNote wrapper, presence
 │   │   ├── graphs/                     # D3 concept/prerequisite/relationship graphs
+|   |   ├── inbox/ # inbox drawer, inbox page, merge picker
 │   │   └── ui/
 │   ├── lib/
 │   │   ├── workers/                    # syncWorker, pdfWorker, workspace-term-index
@@ -313,6 +347,8 @@ studysprout/
 ├── nixpacks.toml                       # Railway build config (Node + Python + poppler)
 └── public/
 ```
+
+> The browser extension that feeds the Inbox (`/api/inbox`) lives in a separate repo — see [`studysprout-clipper`](https://github.com/ArtiGaund/studysprout-clipper).
 
 ---
 
@@ -364,11 +400,14 @@ npm run dev:all
 
 You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) running locally for full functionality — live collaboration, presence, and generation locks won't work without it. See that repo's README for setup.
 
+To test the Clipper extension locally, see [`studysprout-clipper`](https://github.com/ArtiGaund/studysprout-clipper)'s README — it needs this app running on `http://localhost:3000` for captures to save successfully.
+
 ### Deployment
 - **Next.js app** → Vercel, deployed from this repo normally
 - **Background workers** → Railway, deployed from this *same* repo with `nixpacks.toml` overriding the start command to `npm run worker:start`
 - **Realtime server** → Railway, deployed from the separate [`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server) repo
 - **Rate limiter** → Render, deployed from the separate [`rate-limiter`](https://github.com/ArtiGaund/rate-limiter) repo
+- **Clipper extension** → not on the Chrome Web Store yet; distributed manually as a downloadable zip with a guided "Load unpacked" install flow
 
 ---
 
@@ -383,12 +422,14 @@ You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/st
 - Real-time collaborative editor with title-editing and flashcard-generation locks
 - Workspace invitations & notifications
 - Java-based rate limiting on Gemini API calls
+- Browser Clipper extension + private Inbox with bulk actions and Yjs-backed merge
 - Full production deployment across Vercel + Render (three repos, four services)
 
 **In Progress / Next**
 - [ ] Full offline mode (service worker + local sync)
 - [ ] Anki-compatible flashcard export
 - [ ] Team/multi-user analytics
+- [ ] Clipper extension on the Chrome Web Store
 
 ---
 
@@ -402,6 +443,8 @@ You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/st
 - The cost/accuracy tradeoff between LLM-based and heuristic approaches to structured-data extraction (why prerequisite detection uses plain term matching, but flashcard generation uses Gemini)
 - Auditing an entire real-time system for duplicate event emissions and parameter mismatches after they caused UI state to desync
 - Building a standalone rate-limiting service (Java, token bucket) and integrating it as an API-abuse guard in front of the most expensive route (Gemini flashcard generation) — separate from the existing per-workspace monthly-cap and generation-lock mechanisms, which solve quota and concurrency respectively rather than call frequency
+- Designing an inbox that's deliberately *not* scoped to a workspace, because capture happens outside any workspace context — and the UI/data model implications of that decision (global per-user inbox, workspace chosen only at filing time)
+- Bridging auth between a website and a browser extension without building a second login system — a URL flag plus `chrome.runtime.sendMessage` from the web page into the extension, riding the existing NextAuth session cookie for all subsequent API calls rather than managing a separate token
 
 ---
 
@@ -410,6 +453,7 @@ You'll also want [`studysprout-realtime-server`](https://github.com/ArtiGaund/st
 - **This repo** — Next.js app, API routes, background workers, PDF pipeline, concept graph, flashcards
 - **[`studysprout-realtime-server`](https://github.com/ArtiGaund/studysprout-realtime-server)** — Socket.io + Yjs collaboration server, presence tracking, generation/title locks
 - **[`rate-limiter`](https://github.com/ArtiGaund/rate-limiter)** — standalone Java service for rate-limiting Gemini API calls
+- **[`studysprout-clipper`](https://github.com/ArtiGaund/studysprout-clipper)** — Chrome extension (Manifest V3) that captures web content into the Inbox
 
 ## Contact
 
