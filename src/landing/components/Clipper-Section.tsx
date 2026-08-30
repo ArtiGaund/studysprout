@@ -273,7 +273,7 @@ export const ClipperSection = () => {
           {/* Download CTA */}
           <div className="flex flex-col items-center gap-3 pt-4">
             <a
-              href="https://github.com/ArtiGaund/studysprout-clipper/releases/tag/v1.0.0"
+              href="https://github.com/ArtiGaund/studysprout-clipper/releases/download/v1.0.0/studysprout-clipper-v1.0.0.zip"
               target="_blank"
             rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-[#63FF9D] text-black
