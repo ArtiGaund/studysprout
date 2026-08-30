@@ -5,12 +5,18 @@ import TooltipComponent from "../global/tooltip-component";
 import CypressClockRecordIcon from "../icons/CypressClockRecordIcon";
 
 export default function RevisionButton(){
-    const { isRevisionSidebarOpen, setRevisionSidebarOpen } = useRevisionSidebar();
+    const { 
+      isRevisionSidebarOpen, 
+      setRevisionSidebarOpen,
+      isInboxSidebarOpen, 
+   } = useRevisionSidebar();
+
+   const isCollapsed = isRevisionSidebarOpen || isInboxSidebarOpen;
     return(
          <button onClick={() => setRevisionSidebarOpen(true)}>
             <div className="flex flex-row gap-2 text-Neutrals/neutrals-7 transition-all cursor-pointer">
            
-               {isRevisionSidebarOpen ?
+               {isCollapsed ?
                 ( 
                   <>
                      <TooltipComponent message="Revision">

@@ -10,6 +10,7 @@ import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 import TooltipComponent from "../global/tooltip-component";
 import { GlobalSearch } from "../global-search/global-search";
 import { useRouter } from "next/navigation";
+import InboxButton from "../inbox/inbox-button";
 
 
 interface NativeNavigationProps{
@@ -20,15 +21,16 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
     myWorkspaceId,
     className
 }) => {
-    const { isRevisionSidebarOpen } = useRevisionSidebar();
+    const { isRevisionSidebarOpen, isInboxSidebarOpen } = useRevisionSidebar();
+    const isPannelOpen = isRevisionSidebarOpen || isInboxSidebarOpen;
     const router = useRouter();
     return(
         <nav className={twMerge('my-2',className)}>
-            <ul className={`flex flex-col gap-2 ${isRevisionSidebarOpen && 'justify-center items-center gap-4'}`}>
+            <ul className={`flex flex-col gap-2 ${isPannelOpen && 'justify-center items-center gap-4'}`}>
                     <li 
                     className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2 cursor-pointer"
                     >
-                        {isRevisionSidebarOpen ? (
+                        {isPannelOpen ? (
                             <>
                                 <TooltipComponent message="Search">
                                     <GlobalSearch 
@@ -60,7 +62,7 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
                     href={`/dashboard/${myWorkspaceId}`}
                     >
                         
-                        {isRevisionSidebarOpen ?
+                        {isPannelOpen ?
                          (
                             <>
                                 <TooltipComponent message="My Workspace">
@@ -82,7 +84,7 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
                         gap-2 cursor-pointer"
                         >
                             
-                           {isRevisionSidebarOpen ? 
+                           {isPannelOpen ? 
                            ( 
                             <>
                                 <TooltipComponent message="Trash">
@@ -101,6 +103,9 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
                     </Trash>
                     <li  className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2">
                         <RevisionButton />
+                    </li>
+                    <li className="flex group/native text-Neutrals/neutrals-7 transition-all gap-2">
+                        <InboxButton />
                     </li>
             </ul>
         </nav>

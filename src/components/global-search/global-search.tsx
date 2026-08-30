@@ -196,7 +196,9 @@ export function GlobalSearch({
     onNavigateToFolder,
     onNavigateToFile,
 }: GlobalSearchProps){
-    const { isRevisionSidebarOpen } = useRevisionSidebar();
+    const { isRevisionSidebarOpen, isInboxSidebarOpen } = useRevisionSidebar();
+    const isPannelOpen = isRevisionSidebarOpen || isInboxSidebarOpen;
+
     const {
         open, setOpen,
         query, setQuery,
@@ -302,7 +304,7 @@ export function GlobalSearch({
                 aria-label="Search everywhere (Cmd+k)"
             >
                 <CypressSearchIcon />
-                {!isRevisionSidebarOpen && (
+                {!isPannelOpen && (
                     <>
                         <span>Search</span>
                         <kbd className="ml-auto hidden sm:flex items-center gap-0.5 text-[10px]

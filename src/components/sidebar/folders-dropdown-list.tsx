@@ -71,7 +71,8 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
     // --- Hooks & Context ---
     const { createFolder } = useFolder();
     const { toast } = useToast()
-    const { isRevisionSidebarOpen } = useRevisionSidebar();
+    const { isRevisionSidebarOpen, isInboxSidebarOpen } = useRevisionSidebar();
+    const isPannelOpen = isRevisionSidebarOpen || isInboxSidebarOpen;
  
     /**
      * @handler addFolderHandler
@@ -108,12 +109,12 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
             <div className="sticky top-2 z-20 w-full bg-[#080C0C]">
                  {/* Contextual Header: Displays Privacy status only when in Sidebar */}
                 <div className={`flex w-full h-10 group/title items-center
-                text-Neutrals/neutrals-8 ${isRevisionSidebarOpen 
+                text-Neutrals/neutrals-8 ${isPannelOpen 
                     ? 'justify-center px-0'
                     : 'justify-between pr-4'    
                 }
                 `}>
-                    { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
+                    { usedWhere === "sidebar" && !isPannelOpen && (
                         <span className={`font-bold text-muted-foreground/70 tracking-widest text-[11px]`}>
                         {currentWorkspace?.isPublic ? "PUBLIC" : "PRIVATE" }
                         </span>
@@ -125,7 +126,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                 <div className="flex sticky z-20 top-10 w-full h-10 group/title justify-between
                 items-center pr-4 text-Neutrals/neutrals-8 pl-4 m-1">
                 
-                { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
+                { usedWhere === "sidebar" && !isPannelOpen && (
                     <span className={`font-bold text-Neutrals-8 truncate text-xs`}>
                         FOLDERS
                     </span>
@@ -135,7 +136,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
                     FOLDERS
                     </span>
                 )}
-                { usedWhere === "sidebar" && !isRevisionSidebarOpen && (
+                { usedWhere === "sidebar" && !isPannelOpen && (
                     <div className="flex flex-row gap-2">
                         <TooltipComponent message="Create Folder">
                             <PlusIcon
@@ -159,10 +160,10 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
            
 
             {/* Revision Mode Safeguard: Uses a HoverCard to explain disabled states */}
-           {!isRevisionSidebarOpen && ( <HoverCard>
+           {!isPannelOpen && ( <HoverCard>
                 <HoverCardTrigger asChild>
             <div 
-            className={`${usedWhere === "sidebar" && isRevisionSidebarOpen 
+            className={`${usedWhere === "sidebar" && isPannelOpen 
                 ? 'bg-slate-gray cursor-not-allowed rounded-lg  w-full mt-2 overflow-hidden' 
                  : ''}`}
             >
@@ -198,7 +199,7 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
             </div>
         </div>
         </HoverCardTrigger>
-        {isRevisionSidebarOpen && usedWhere === "sidebar" && (
+        {isPannelOpen && usedWhere === "sidebar" && (
             <DisabledHoverMessage />
         )}
         </HoverCard>)}
