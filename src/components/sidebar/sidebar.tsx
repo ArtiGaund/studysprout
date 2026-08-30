@@ -60,7 +60,8 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
 
     // --- UI/UX STATE ---
     // Controls the "Collapsed" state when the user is in Revision/Study mode
-    const { isRevisionSidebarOpen } = useRevisionSidebar();
+    const { isRevisionSidebarOpen, isInboxSidebarOpen } = useRevisionSidebar();
+    const isPanelOpen = isRevisionSidebarOpen || isInboxSidebarOpen;
    
     /** * @guard Error Handling
      * Redirects the user back to the main dashboard if a workspace fails to load 
@@ -92,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
     return (<aside className={twMerge(
       `hidden sm:flex flex-col  shrink-0 p-4 md:gap-4 !justify-between transition-all
        duration-300  bg-[#080C0C] border-r border-white/5 h-full',
-       ${isRevisionSidebarOpen 
+       ${isPanelOpen 
         ? 'w-[80px]' 
         : 'w-[240px] md:w-[260px] lg:w-[280px] xl:w-[300px]'
       }
@@ -106,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
               <SidebarExpandButton />
 
               {/* Workspace Selector: Only visible in expanded mode for better UX */}
-              {!isRevisionSidebarOpen && (
+              {!isPanelOpen && (
                 <WorkspaceDropdown workspaces={workspaces} defaultValue={currentWorkspace}/>
               )}
 
