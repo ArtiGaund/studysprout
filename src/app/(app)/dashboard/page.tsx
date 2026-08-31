@@ -48,7 +48,6 @@ useEffect(() => {
     hasNotifiedExtension.current = true;
 
     const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID;
-    console.log("[Dashboard] Extension id: ",EXTENSION_ID);
     if (!EXTENSION_ID) {
         console.warn("NEXT_PUBLIC_EXTENSION_ID is missing!");
         return;

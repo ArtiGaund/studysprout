@@ -127,28 +127,23 @@ export const RevisionSidebarProvider = ({ children }: {children: ReactNode}) => 
 
         // 1. Initial count fetch on mount
         syncInboxState();
+        // 2. Throttled sync on tab focus
+            let lastFetch = Date.now();
 
-        // 2. Fetch fresh count on tab refocus without mutating inboxVersion
-        const handleFocus = () => {
-            const now = Date.now();
-            if(now - lastFetchRef.current < 3000) return;
-            lastFetchRef.current = now;
+            const handleFocus = () => {
+                const now = Date.now();
+                // Prevent refetching if focused less than 3 seconds ago
+                if (now - lastFetch < 3000) return;
+                lastFetch = now;
 
-            getInboxCount().then((result) => {
-                if(result.success && typeof result.data === "number"){
-                    setInboxCountState(result.data);
-                }
-            });
-        };
+                syncInboxState();
+            };
 
-        window.addEventListener("focus", handleFocus);
-        return () => {
-            window.removeEventListener("focus", handleFocus);
-        }
+            window.addEventListener("focus", handleFocus);
+            return () => window.removeEventListener("focus", handleFocus);
     },[
         status,
         syncInboxState,
-        getInboxCount,
     ]);
 
     const openFlashcardSetViewerSheet = useCallback((setId: string) => {
