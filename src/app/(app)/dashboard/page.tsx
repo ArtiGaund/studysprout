@@ -40,29 +40,32 @@ const DashboardContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    useEffect(() => {
-        if(searchParams.get("extension") === "true"){
-                    const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID; 
-                    
-                    if (!EXTENSION_ID) {
-                        console.warn("NEXT_PUBLIC_EXTENSION_ID is missing!");
-                        return;
-                    }
-                    if(typeof window !== "undefined" && (window as any).chrome?.runtime?.sendMessage){
-                       ( window as any).chrome.runtime.sendMessage(
-                            EXTENSION_ID,
-                            { type: "STUDYSPROUT_LOGIN_SUCCESS" },
-                            (response: any) => {
-                                if((window as any).chrome.runtime.lastError){
-                                    console.warn("Extension not reachable: ", (window as any).chrome.runtime.lastError);
-                                }else{
-                                    console.log("Extension notified: ",response);
-                                }
-                            }
-                        );
-                    }
+    const hasNotifiedExtension = useRef(false);
+
+useEffect(() => {
+    if (searchParams.get("extension") !== "true") return;
+    if (hasNotifiedExtension.current) return;
+    hasNotifiedExtension.current = true;
+
+    const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID;
+    if (!EXTENSION_ID) {
+        console.warn("NEXT_PUBLIC_EXTENSION_ID is missing!");
+        return;
+    }
+    if (typeof window !== "undefined" && (window as any).chrome?.runtime?.sendMessage) {
+        (window as any).chrome.runtime.sendMessage(
+            EXTENSION_ID,
+            { type: "STUDYSPROUT_LOGIN_SUCCESS" },
+            (response: any) => {
+                if ((window as any).chrome.runtime.lastError) {
+                    console.warn("Extension not reachable: ", (window as any).chrome.runtime.lastError);
+                } else {
+                    console.log("Extension notified: ", response);
                 }
-    },[searchParams]);
+            }
+        );
+    }
+}, [searchParams]);
    
     /** *EFFECT: Workspace Synchronization
      * Fetch the workspace list once the user is confirmed as unauthenticated.
