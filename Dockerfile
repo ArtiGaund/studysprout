@@ -19,6 +19,9 @@ RUN npm install
 # Copy the rest of the repo (includes realtime-server/, scripts/, requirements.txt)
 COPY . .
 
+# Diagnostic: confirm realtime-server/package.json actually made it into the image
+RUN ls -la realtime-server/ && cat realtime-server/package.json | head -5
+
 # Build the realtime server (same as your current build:realtime script)
 RUN npm run build:realtime
 
