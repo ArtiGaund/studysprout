@@ -43,6 +43,11 @@ const DashboardContent = () => {
     useEffect(() => {
         if(searchParams.get("extension") === "true"){
                     const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID; 
+                    
+                    if (!EXTENSION_ID) {
+                        console.warn("NEXT_PUBLIC_EXTENSION_ID is missing!");
+                        return;
+                    }
                     if(typeof window !== "undefined" && (window as any).chrome?.runtime?.sendMessage){
                        ( window as any).chrome.runtime.sendMessage(
                             EXTENSION_ID,
@@ -57,7 +62,7 @@ const DashboardContent = () => {
                         );
                     }
                 }
-    },[])
+    },[searchParams]);
    
     /** *EFFECT: Workspace Synchronization
      * Fetch the workspace list once the user is confirmed as unauthenticated.
