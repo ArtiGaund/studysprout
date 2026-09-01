@@ -428,7 +428,7 @@ To test the Clipper extension locally, see [`studysprout-clipper`](https://githu
 **In Progress / Next**
 - [ ] Full offline mode (service worker + local sync)
 - [ ] Team/multi-user analytics
-  [Done] Clipper extension on the Chrome Web Store
+- [Done]  Clipper extension on the Chrome Web Store
 - [ ] and more...
  
 ---
