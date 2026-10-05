@@ -106,7 +106,7 @@ Real-time collaboration also means handling the moments where two people try to 
 
 ### 🎯 Customizable Flashcard Generation
 - Users can configure generation before running it: source scope (whole folder vs. a single file), number of cards, and question format
-- Supported formats: Question & Answer, Fill-in-the-Blank (Cloze), Multiple Choice, Concept Diagram (visual relationship maps), Chart-based, and Image Labeling
+- Supported formats: Question & Answer, Fill-in-the-Blank (Cloze), Multiple Choice, True/False
 - Study/review mode tracks cards as **New / Due / Done** per session, with reveal-to-rate spaced-repetition flow and a running progress bar
 - Each file also surfaces its **prerequisites** directly in the side panel (locked until the prerequisite file is studied) and a **related concepts** tag list pulled from the term index
 
@@ -426,6 +426,7 @@ To test the Clipper extension locally, see [`studysprout-clipper`](https://githu
 - Full production deployment across Vercel + Render (three repos, four services)
 
 **In Progress / Next**
+- [ ] Concept Diagram (visual relationship maps), Chart-based, and Image Labeling
 - [ ] Full offline mode (service worker + local sync)
 - [ ] Team/multi-user analytics
 - [Done]  Clipper extension on the Chrome Web Store
