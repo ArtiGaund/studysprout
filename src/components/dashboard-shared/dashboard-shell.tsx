@@ -57,20 +57,20 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
 
     return (
         <WorkspaceSocketProvider>
-            <main className="flex overflow-hidden h-screen w-screen">
+            <main className="flex overflow-hidden h-screen w-screen bg-neutral-950 text-neutral-100">
                 {mainSlotExtras}
                 <Sidebar params={params} className="hidden sm:flex"/>
 
                 {isRevisionSidebarOpen && (
-                    <div className="hidden sm:flex shrink-0 border-neutral-12/70 borde-l-[1px]
-                    relative overflow-scroll">
+                    <div className="hidden sm:flex shrink-0 border-neutral-800/80 border-l-[1px]
+                    relative overflow-y-auto overflow-x-hidden">
                         <RevisionSidebar params={params}/>
                     </div>
                 )}
 
                 {isInboxSidebarOpen && (
-                    <div className="hidden sm:flex shrink-0 border-neutral-12/70 borde-l-[1px]
-                    relative overflow-scroll">
+                    <div className="hidden sm:flex shrink-0 border-neutral-800/80 border-l-[1px]
+                    relative overflow-y-auto overflow-x-hidden">
                         <InboxSidebar />
                     </div>
                 )}
@@ -83,7 +83,8 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
                     <Sidebar params={params} className="w-full flex h-full"/>
                 </MobileSidebar>
 
-                <div className="border-neutral-12/70 border-l-[1px] w-full relative overflow-scroll">
+                <div className="border-neutral-800/80 border-l-[1px] w-full relative 
+                overflow-y-auto overflow-x-hidden">
                     {children}
                 </div>
             </main>
@@ -102,7 +103,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
             <Sheet
                 open={isFlashcardTypeSheetOpen}
                 onOpenChange={(open) => {
-                    if(open) closeFlashcardTypeSheet();
+                    if(!open) closeFlashcardTypeSheet();
                 }}
             >
                 <FlashcardTypesForm />
