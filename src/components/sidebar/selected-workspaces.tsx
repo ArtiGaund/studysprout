@@ -47,7 +47,7 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
             if(onClick) 
                 onClick(workspace)
             }}
-            className="flex rounded-md hover:bg-white/5 transition-all flex-row p-2 gap-2 
+            className="flex rounded-md transition-all flex-row gap-2 
             justify-start cursor-pointer items-center my-1 group/item overflow-hidden"
             >
                 {/* --- WORKSPACE ICON SECTION --- */}
@@ -67,7 +67,7 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
                 ): (
                     /* Fallback UI: Renders the first letter of the workspace title */
                     <div className="w-[26px] h-[26px] flex-shrink-0 items-center justify-center bg-gray-200
-                     text-gray-700 rounded-full text-sm font-bold">
+                     text-gray-700 rounded-full text-sm font-mono font-medium">
                         {workspace.title?.toUpperCase() || 'W'}
                     </div>
                 )}
@@ -75,7 +75,7 @@ const SelectedWorkspaces: React.FC<SelectedWorkspacesProps> = ({ workspace, onCl
                 {/* --- WORKSPACE INFO SECTION --- */}
                 <div className="flex flex-col flex-grow min-w-0">
                     <p className="text-lg w-[170px] overflow-hidden
-                     whitespace-nowrap text-white text-ellipsis">
+                     whitespace-nowrap text-white text-ellipsis font-mono font-medium">
                         {workspace.title}
                     </p>
                 </div>

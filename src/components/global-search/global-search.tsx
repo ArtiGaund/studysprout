@@ -22,6 +22,8 @@ import { useRevisionSidebar } from "@/lib/providers/revision-sidebar-provider";
 
 // --- Props ---
 interface GlobalSearchProps{
+    isOpen?: boolean;
+    onOpenChange?: (open: boolean) => void;
     onNavigateToWorkspace: (workspaceId: string) => void;
     onNavigateToFolder: (workspaceId: string, folderId: string) => void;
     onNavigateToFile: (workspaceId: string, folderId: string, fileId: string) => void; 
@@ -192,6 +194,8 @@ function Skeleton(){
 }
 
 export function GlobalSearch({
+    isOpen,
+    onOpenChange,
     onNavigateToWorkspace,
     onNavigateToFolder,
     onNavigateToFile,
@@ -200,7 +204,8 @@ export function GlobalSearch({
     const isPannelOpen = isRevisionSidebarOpen || isInboxSidebarOpen;
 
     const {
-        open, setOpen,
+        open: hookOpen, 
+        setOpen: hookSetOpen,
         query, setQuery,
         filter, setFilter,
         results,
@@ -211,6 +216,15 @@ export function GlobalSearch({
         onSelect: hookOnSelect,
         clearRecent,
     } = useGlobalSearch();
+
+    const open = isOpen ?? hookOpen;
+    const setOpen = useCallback((val: boolean) => {
+        hookSetOpen(val);
+        onOpenChange?.(val);
+    },[
+        hookSetOpen,
+        onOpenChange,
+    ]);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const [ activeIndex, setActiveIndex ] = useState(0);
@@ -241,6 +255,7 @@ export function GlobalSearch({
     // Navigate to selected item
     const navigate = useCallback((result: SearchResult) => {
         hookOnSelect(result);
+        setOpen(false);
         if(result.type === "workspace"){
             onNavigateToWorkspace(result.workspaceId);
         }else if(result.type === "folder"){
@@ -250,6 +265,7 @@ export function GlobalSearch({
         }
     },[
         hookOnSelect,
+        setOpen,
         onNavigateToWorkspace,
         onNavigateToFolder,
         onNavigateToFile,
@@ -306,11 +322,11 @@ export function GlobalSearch({
                 <CypressSearchIcon />
                 {!isPannelOpen && (
                     <>
-                        <span>Search</span>
-                        <kbd className="ml-auto hidden sm:flex items-center gap-0.5 text-[10px]
+                        <span className="font-mono font-medium">Search</span>
+                        {/* <kbd className="ml-auto hidden sm:flex items-center gap-0.5 text-[10px]
                          text-zinc-600 font-mono group-hover:text-zinc-400 transition-colors">
                             <span>⌘</span><span>K</span>
-                        </kbd>
+                        </kbd> */}
                     </>
                 )}
             </button>

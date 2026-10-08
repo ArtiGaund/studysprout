@@ -88,12 +88,13 @@ const SmartTooltip:React.FC<SmartTooltipProps> = ({
         style={pos}
         className="z-[210] pointer-events-none transition-all duration-300"
         >   
-            <div className="relative bg-[#63FF9D] text-black text-[10px] font-black px-3
-            py-2 rounded-lg shadow-[0_0_30px_rgba(99,255,157,0.3)] whitespace-nowrap">
+            <div className="relative bg-[#C9A227] text-[#120C0E] text-[10px] font-mono font-bold 
+            px-3 py-2 rounded-lg border border-[#E5C158]
+            shadow-[0_0_20px_rgba(201,162,39,0.35)] whitespace-nowrap">
                 {text}
                 {/* Arrow painting toward the cursor */}
                 <div 
-                className={`absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-[#63FF9D] rotate-45
+                className={`absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-[#C9A227] rotate-45
                     ${arrowRight ? '-right-1' : '-left-1'}`}
                 />
             </div>
@@ -157,12 +158,14 @@ export const SandboxInner: React.FC<SandboxInnerProps> = ({
         <div 
         ref={sandboxRef}
         style={fillHeight ? { width: 1200, height: 740, position: 'relative' } : undefined}
-        className={fillHeight ? 'overflow-hidden' : 'relative overflow-hidden w-full h-full'}
+        className={fillHeight 
+            ? 'overflow-hidden bg-[#0A0608] rounded-2xl border border-[#3A282E]' 
+            : 'relative overflow-hidden w-full h-full bg-[#0A0608] rounded-2xl border border-[#3A282E]'}
         >
             {/* Spotlight */}
             <div 
-            className="absolute z-[190] pointer-events-none border border-[#63FF9D] rounded-lg
-            transition-all duration-700 ease-in-out shadow-[0_0_15px_#63FF9D]"
+            className="absolute z-[190] pointer-events-none border border-[#C9A227] rounded-lg
+            transition-all duration-700 ease-in-out shadow-[0_0_15px_#C9A227]"
             style={{
                 left: spotlightPos.x - 12,
                 top: spotlightPos.y - 12,
@@ -184,7 +187,7 @@ export const SandboxInner: React.FC<SandboxInnerProps> = ({
             }}
             >
                 <MousePointer2 
-                className="text-[#63FF9D] fill-[#63FF9D] drop-shadow-[0_0_10px_#63FF9D]"
+                className="text-[#C9A227] fill-[#C9A227] drop-shadow-[0_0_10px_#C9A227]"
                 size={20}
                 />
             </div>
@@ -211,9 +214,9 @@ export const SandboxInner: React.FC<SandboxInnerProps> = ({
                 popup
                 -Only the sidebar list and main canvas scroll internally.
             */}
-            <div className={`flex text-left overflow-hidden rounded-xl ${fillHeight 
-                ? 'h-full' : 'h-[80vh] min-h-[500px]'
-            }`}>
+            <div className={`flex text-left overflow-hidden rounded-xl border border-[#2A1E22]
+             bg-[#160F12] ${fillHeight ? 'h-full' : 'h-[80vh] min-h-[500px]'}`}
+             >
                 <SidebarView 
                      nodes={nodes}
                     expandedFolders={expandedFolders}

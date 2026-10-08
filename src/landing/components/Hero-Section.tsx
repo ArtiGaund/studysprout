@@ -7,6 +7,7 @@ import { CollapsedPreview } from "./Dashboard-preview-parts/Collapsed-Preview";
 import { FullscreenPopup } from "./Dashboard-preview-parts/Fullscreen-Popup";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
+import { formatRelativeDate } from "@/lib/landing-page/format-relative-date";
 
 interface UpdateItem {
   id: string;
@@ -18,40 +19,43 @@ interface UpdateItem {
 }
 
 const RECENT_UPDATES: UpdateItem[] = [
-  {
+ {
     id: "clipper",
     title: "Sprout Clipper",
     description: "Right-click any text on the web and save it straight to your workspace.",
-    date: "Today",
-    isNew: true,
+    date: "2026-09-01T00:00:00.000Z", 
     sectionId: "clipper-section",
   },
+  // {
+  //   id: "editor",
+  //   title: "Sprout Editor",
+  //   description: "Real-time collaborative editing with offline-first sync.",
+  //   date: "2026-07-10T00:00:00.000Z", 
+  //   sectionId: "editor-section",
+  // },
   {
-    id: "editor",
-    title: "Sprout Editor",
-    description: "Real-time collaborative editing with offline-first sync.",
-    date: "Last week",
-    sectionId: "editor-section",
-  },
-  {
-    id: "flashcards",
-    title: "Auto-generated Flashcards",
-    date: "2 weeks ago",
-    sectionId: "flashcard-section",
-  },
-  {
-    id: "search",
-    title: "Semantic Search",
-    date: "3 weeks ago",
-    sectionId: "search-section",
-  },
-  {
-    id: "knowledge-graph",
-    title: "Concept Graph",
-    date: "1 month ago",
-    sectionId: "ecosystem",
+    id: "deployed",
+    title: "StudySprout Deployed",
+    description: "StudySprout went live.",
+    date: "2026-08-01T00:00:00.000Z", 
+    sectionId: "hero-section",
   },
 ];
+
+function buildUpdates(): UpdateItem[]{
+  const sorted = [...RECENT_UPDATES].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  return sorted.map((item, index) => ({
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    date: formatRelativeDate(new Date(item.date)),
+    isNew: index === 0,
+    sectionId: item.sectionId,
+  }));
+}
 
 export const HeroSection = () => {
     const router = useRouter();
@@ -60,6 +64,11 @@ export const HeroSection = () => {
     const [ isPaused, setIsPaused ] = useState(false);
     const [ showCollapsed, setShowCollapsed ] = useState(false);
     const [showAllUpdates, setShowAllUpdates] = useState(false);
+    const [ updates, setUpdates ] = useState<UpdateItem[]>([]);
+
+    useEffect(() => {
+      setUpdates(buildUpdates());
+    },[]);
 
     // Determin if we should show collapsed preview based on container width
     const containerRef = useRef<HTMLDivElement>(null);
@@ -87,50 +96,45 @@ export const HeroSection = () => {
 
     return (
        <section 
-        id="hero-section"
-        className="relative isolate flex flex-col items-center justify-center bg-[#050A0A] 
-        px-4 sm:px-6 pt-32 md:pt-40 pb-24 text-center overflow-hidden min-h-screen">
-            {/* Animated Background Orbs */}
-            <div className="absolute top-[10%] left-[10%] -z-10 h-[30vw] w-[30vw] rounded-full
-             bg-[#63FF9D] opacity-[0.05] blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[10%] right-[10%] -z-10 h-[35vw] w-[35vw] rounded-full
-             bg-blue-500 opacity-[0.03] blur-[150px] animate-pulse [animation-delay:2s]" />
-
-      
+          id="hero-section"
+          className="relative isolate flex flex-col items-center justify-center bg-[#120C0E] 
+          px-4 sm:px-6 pt-32 md:pt-40 pb-24 text-center overflow-hidden min-h-screen"
+        >
+           
             {/* Top area: heading/CTA left, Recent Updates right */}
             <div className="w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_320px]
-            gap-12 lg:gap-16 items-start text-left">
+              gap-12 lg:gap-16 items-start text-left">
 
             {/* Left: heading, subtext, CTA */}
             <div className="flex flex-col items-start text-left">
                 <h1 className="max-w-3xl text-4xl sm:text-6xl md:text-7xl lg:text-8xl 
-                font-extrabold tracking-tighter text-white animate-in fade-in 
-                slide-in-from-bottom-8 duration-1000">
+                  font-serif tracking-tighter text-[#F5F0EB] animate-in fade-in 
+                  slide-in-from-bottom-8 duration-1000">
                     Your Knowledge, <br />
-                    <span className="bg-gradient-to-r from-[#63FF9D] via-emerald-400
-                    to-[#63FF9D] bg-clip-text text-transparent font-mono min-h-[1.2em] 
-                    inline-block">
+                    <span className="font-serif italic text-[#C9A227] min-h-[1.2em]
+                       inline-block">
                         {scrambledTitle}
                     </span>
                 </h1>
 
                 <p className="mt-6 md:mt-8 max-w-xl text-sm sm:text-base md:text-lg
-                leading-relaxed text-gray-500 animate-in
-                fade-in slide-in-from-bottom-4 duration-1000 delay-300">
+                  leading-relaxed text-[#A09388] font-serif animate-in
+                  fade-in slide-in-from-bottom-4 duration-1000 delay-300">
                   The block-based workspace that turns your notes into action.
                   Auto-generate flashcards, visualize concept graphs, and extract knowledge from
                   PDFs—all in one place.
                 </p>
 
                 <div className="mt-10 md:mt-12 flex flex-col items-stretch gap-4 md:gap-5 
-                sm:flex-row animate-in w-full sm:w-auto fade-in zoom-in duration-1000 delay-500 
-                sm:items-center">
+                  sm:flex-row animate-in w-full sm:w-auto fade-in zoom-in duration-1000 delay-500 
+                  sm:items-center">
                   <button
                     className="group relative flex items-center justify-center gap-3 rounded-2xl
-                    bg-[#63FF9D] px-8 md:px-10 py-4 md:py-5 font-black text-black
-                    transition-all hover:scale-105
-                    hover:shadow-[0_0_40px_rgba(99,255,157,0.4)] uppercase text-[11px]
-                    md:text-[12px] tracking-widest"
+                    bg-[#C9A227] px-8 md:px-10 py-4 md:py-5 font-mono font-bold text-[#120C0E]
+                    transition-all hover:bg-transparent hover:text-[#C9A227] hover:scale-105 
+                    border border-[#C9A227]
+                    hover:shadow-[0_0_25px_rgba(201,162,39,0.25)] uppercase text-[11px]
+                    md:text-[12px] tracking-[0.2em]"
                     onClick={() => router.push("/sign-up")}
                   >
                     Start Growing for free
@@ -141,10 +145,10 @@ export const HeroSection = () => {
 
             {/* Right: Recent Updates list — no card, just typography */}
             <div className="w-full lg:max-w-sm animate-in fade-in slide-in-from-right-4
-            duration-1000 delay-500">
+              duration-1000 delay-500">
               <div className="flex items-center gap-2 mb-5">
-                <RefreshCw size={11} className="text-gray-600" />
-                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
+                <RefreshCw size={11} className="text-[#8C7A6B]" />
+                <h3 className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#8C7A6B]">
                   Recent Updates
                 </h3>
               </div>
@@ -152,16 +156,14 @@ export const HeroSection = () => {
               {/* Bounded container: fixed height once expanded, scrolls internally,
                   content never overflows outside this box */}
               <div
-                className={`space-y-5 ${
-                  showAllUpdates ? "max-h-64 overflow-y-auto pr-2" : ""
-                }`}
+                className={`space-y-5 ${ showAllUpdates ? "max-h-64 overflow-y-auto pr-2" : ""}`}
                 style={
                   showAllUpdates
-                    ? { scrollbarWidth: "thin", scrollbarColor: "#63FF9D33 transparent" }
+                    ? { scrollbarWidth: "thin", scrollbarColor: "#C9A22733 transparent" }
                     : undefined
                 }
               >
-                {(showAllUpdates ? RECENT_UPDATES : RECENT_UPDATES.slice(0, 3)).map((update) => (
+                {(showAllUpdates ? updates : updates.slice(0, 3)).map((update) => (
                   <a
                     key={update.id}
                     href={`#${update.sectionId}`}
@@ -169,30 +171,31 @@ export const HeroSection = () => {
                   >
                     <div
                       className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors
-                      ${update.isNew ? "bg-[#63FF9D] animate-pulse" : "bg-gray-700"}`}
+                      ${update.isNew ? "bg-[#C9A227] animate-pulse" : "bg-[#2A1E22]"}`}
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         {update.isNew && (
-                          <span className="text-[8px] font-black uppercase tracking-widest
-                          text-[#63FF9D] bg-[#63FF9D]/10 px-1.5 py-0.5 rounded">
+                          <span className="text-[8px] font-mono uppercase tracking-widest
+                          text-[#C9A227] border border-[#C9A227]/40 bg-[#C9A227]/10 px-1.5 
+                          py-0.5 rounded">
                             New
                           </span>
                         )}
-                        <span className="text-[9px] text-gray-600 uppercase tracking-wider">
+                        <span className="text-[9px] font-mono text-[#8C7A6B] uppercase tracking-wider">
                           {update.date}
                         </span>
                       </div>
                       <p
-                        className={`text-sm font-bold transition-colors truncate
+                        className={`text-sm font-mono transition-colors truncate
                         ${update.isNew
-                          ? "text-white group-hover:text-[#63FF9D]"
-                          : "text-gray-500 group-hover:text-gray-300"}`}
+                          ? "text-[#F5F0EB] group-hover:text-[#C9A227]"
+                          : "text-[#A09388] group-hover:text-[#F5F0EB]"}`}
                       >
                         {update.title}
                       </p>
                       {update.description && (
-                        <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">
+                        <p className="text-xs text-[#8C7A6B] mt-0.5 leading-relaxed font-sans">
                           {update.description}
                         </p>
                       )}
@@ -201,11 +204,11 @@ export const HeroSection = () => {
                 ))}
               </div>
 
-              {RECENT_UPDATES.length > 3 && (
+              {updates.length > 3 && (
                 <button
                   onClick={() => setShowAllUpdates(prev => !prev)}
-                  className="mt-4 text-[10px] font-black uppercase tracking-widest
-                  text-gray-600 hover:text-[#63FF9D] transition-colors flex items-center gap-1"
+                  className="mt-4 text-[10px] font-mono uppercase tracking-widest
+                  text-[#8C7A6B] hover:text-[#C9A227] transition-colors flex items-center gap-1"
                 >
                   {showAllUpdates ? "Show less" : "See all"}
                   <span className={`transition-transform ${showAllUpdates ? "-rotate-90" : "rotate-90"}`}>
@@ -223,24 +226,23 @@ export const HeroSection = () => {
              [perspective:2000px] animate-in fade-in slide-in-from-bottom-12 duration-1000 
              delay-700"
           >
-              <div className="absolute -inset-4 md:-inset-10 bg-[#63FF9D] opacity-[0.02] 
+              <div className="absolute -inset-4 md:-inset-10 bg-[#C9A227] opacity-[0.02] 
                 blur-[80px] md:blur-[120px] rounded-full" />
 
               {/* Interactive Card: Flatterned on mobile for better touch usability */}
               <div 
-                className="relative rounded-2xl border border-white/10 bg-[#080C0C]/80 
-                backdrop-blur-3xl p-1 md:p-1.5 shadow-2xl transition-all duration-1000 ease-out
+                className="relative rounded-2xl border border-[#2A1E22] bg-[#181013]/90 
+                backdrop-blur-3xl transform-gpu will-change-transform backface-hidden
+                 p-1 md:p-1.5 shadow-2xl transition-all duration-1000 ease-out
                 md:[transform:rotateX(15deg)_translateY(20px)] 
-                md:hover:[transform:rotateX(0deg)_translateY(0px)]
-                /* Mobile: Keep it flat to prevent clipping */
-                [transform:rotateX(0deg)_translateY(0px)]"
+                md:hover:[transform:rotateX(0deg)_translateY(0px)]"
               >
 
                 {/* Hint badge - always visible */}
                 <div className="flex flex-col items-center mb-6 animate-bounce">
-                  <div className="px-4 py-2 bg-[#63FF9D]/10 border border-[#63FF9D]/20
+                  <div className="px-4 py-2 bg-[#C9A227]/10 border border-[#C9A227]/20
                     rounded-full">
-                      <p className="text-[#63FF9D] text-[10px] font-black uppercase
+                      <p className="text-[#C9A227] text-[10px] font-mono uppercase
                         tracking-widest">
                         { showCollapsed 
                           ? "Tap Expand to try it yourself"
@@ -254,19 +256,21 @@ export const HeroSection = () => {
                 {!showCollapsed && (
                   <div className="flex items-center justify-between px-2 mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-[#63FF9D] animate-pulse"/>
-                        <h3 className="text-white font-black uppercase tracking-widest text-xs">
+                      <div className="w-2 h-2 rounded-full bg-[#C9A227] animate-pulse"/>
+                        <h3 className="text-[#F5F0EB] font-mono uppercase tracking-widest 
+                          text-xs">
                           Studysprout Sandbox
-                          <span className="text-gray-500 font-medium ml-2">
+                          <span className="text-[#8C7A6B] font-mono normal-case tracking-normal
+                           ml-2">
                             — Interactive Playground
                           </span>
                         </h3>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className={`text-[10px] font-bold transition-all duration-500 
+                        <div className={`text-[10px] font-mono transition-all duration-500 
                           ${isPaused 
-                            ? 'text-[#63FF9D] opacity-100' 
-                            : 'text-orange-600 opacity-75'}`}>
+                            ? 'text-[#C9A227] opacity-100' 
+                            : 'text-[#8C7A6B] opacity-75'}`}>
                             {isPaused ? "MANUAL OVERRIDE ACTIVE" : "AI GUIDE RUNNING"}
                         </div>
                     </div>

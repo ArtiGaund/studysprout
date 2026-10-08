@@ -14,6 +14,7 @@ import { useWorkspaceActivity } from "@/hooks/useWorkspaceActivity";
 import { MARK_ACTIVITY_FRESH } from "@/store/slices/activitySlice";
 import { 
     Archive, 
+    ChevronDown, 
     FileQuestion, 
     FileText, 
     Folder, 
@@ -129,76 +130,51 @@ function ActivityRow({ event }: { event: ActivityEvent}){
     const metadata = event.metadata ?? {};
 
     return (
-        <div className="flex gap-3.5 items-start py-3 border-b border-[#1f2937]">
+        <div className="flex gap-3.5 items-start py-3 hover:bg-white/[0.02] 
+        transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-white/5 
+        last:border-none">
             <div 
-            className="w-8 h-8 bg-[#1f2937] rounded-full flex items-center 
-            justify-center text-[14px] flex-shrink-0 mt-[2px] transition-colors"
+            className="w-8 h-8 bg-purple-950/30 border border-purple-500/20 rounded-full  
+            items-center text-purple-300 flex justify-center text-[14px] flex-shrink-0  
+            transition-colors mt-[2px]"
             style={{ border: `1px solid ${color}40`}}
             >   
                 <Icon size={14} style={{ color: color }}/>
             </div>
 
             {/* Content */}
-            <div className="flex-1">
-                <div className="flex justify-between items-start">
-                    <p className="m-0 text-[14px] text-[#e2e2f0] font-medium">
+            <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start gap-x-2">
+                    <p className="m-0 text-xs text-zinc-100 leading-snug truncate font-mono">
                         {event.description}
                     </p>
-                    <span className="text-[11px] text-[#4b5563] whitespace-nowrap ml-3.5
-                    mt-[2px]">
+                    <span className="text-[10px] font-mono text-zinc-500 whitespace-nowrap 
+                    ml-3.5 mt-[2px] shrink-0">
                         {formatDateTime(event.createdAt)}
                     </span>
                 </div>
 
-                <div className="flex gap-2 mt-[6px] flex-wrap">
+                <div className="flex gap-1.5 mt-2 flex-wrap items-center">
                     {/* Type badge */}
-                    <span 
-                    className="text-[11px] py-[2px] px-[8px] rounded-[99px]"
-                    style={{
-                        background: `${color}18`,
-                        color,
-                        border: `1px solid ${color}30`,
-                    }}
-                    >
+                    <span className="text-[10px] font-mono py-0.5 px-2 rounded-md bg-white/5
+                     text-purple-300 border border-white/10">
                         {EVENTS_TYPES_LABELS[event.type] ?? event.type}
                     </span>
 
                     {/* Meta chips */}
-                    {metadata.nodeCount !== undefined && (
-                        <span className="text-[11px] text-[#6b7280]">
-                            {metadata.nodeCount} nodes
+                    {Object.entries({
+                        nodeCount: metadata.nodeCount !== undefined ? `${metadata.nodeCount} nodes` : null,
+                        cardCount: metadata.cardCount !== undefined ? `${metadata.cardCount} cards` : null,
+                        fileCount: metadata.fileCount !== undefined ? `${metadata.fileCount}` : null,
+                        memberName: metadata.memberName,
+                        setTitle: metadata.setTitle,
+                        folderTitle: metadata.folderTitle,
+                        fileTitle: metadata.fileTitle,
+                    }).map(([key, val]) => val ? (
+                        <span key={key} className="text-[10px] font-mono text-zinc-400 bg-black/40 px-2 py-0.5 rounded border border-white/5">
+                            {val}
                         </span>
-                    )}
-                    {metadata.cardCount !== undefined && (
-                        <span className="text-[11px] text-[#6b7280]">
-                            {metadata.cardCount} cards
-                        </span>
-                    )}
-                    {metadata.fileCount !== undefined && (
-                        <span className="text-[11px] text-[#6b7280]">
-                            {metadata.fileCount} files
-                        </span>
-                    )}
-                    {metadata.memberName !== undefined && (
-                        <span className="text-[11px] text-[#6b7280]">
-                            {metadata.memberName}
-                        </span>
-                    )}
-                    {metadata.setTitle !== undefined && (
-                        <span className="text-[11px] text-[#6b7280]">
-                            {metadata.setTitle}
-                        </span>
-                    )}
-                    {metadata.folderTitle !== undefined && (
-                        <span className="text-[11px] text-[#6b7280]">
-                            {metadata.folderTitle}
-                        </span>
-                    )}
-                    {metadata.fileTitle !== undefined && (
-                        <span className="text-[11px] text-[#6b7280]">
-                            {metadata.fileTitle}
-                        </span>
-                    )}
+                    ) : null)}
                 </div>
             </div>
         </div>
@@ -302,25 +278,26 @@ export const ActivityFeed = ({ workspaceId }: ActivityFeedProps) => {
     }
 
     return (
-        <div className="max-w-[760px] mx-auto py-10 px-4 sm:px-6">
+        <div className="max-w-[800px] mx-auto py-10 px-4 sm:px-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+            <div className="flex items-center justify-between mb-8 pb-4 border-b 
+            border-white/10">
                 <div className="flex items-center gap-4 mb-6">
                     <button
                         onClick={() => router.back()}
-                        className="bg-[#0f172a] border border-white/5 hover:border-white/10 
-                        text-gray-400 hover:text-white transition-all rounded-xl py-1.5
-                        px-3.5 text-xs font-medium cursor-pointer"
+                        className="bg-[#110A10] border border-white/10 hover:border-purple-500/30 
+                        text-zinc-400 hover:text-white transition-all rounded-xl py-1.5
+                        px-3.5 text-xs font-mono cursor-pointer flex items-center gap-x-1"
                     >
                         ← Back
                     </button>
-                    <h1 className="m-0 text-xl font-bold tracking-tight">
+                    <h1 className="m-0 text-xl font-bold tracking-tight text-zinc-100">
                         All Activity
                     </h1>
                 </div>
                 {pagination && (
-                    <span className="bg-[#0f172a] border border-white/5 text-xs
-                     text-gray-500 font-medium px-2.5 py-1 rounded-lg">
+                    <span className="bg-[#110A10] border border-white/10 text-xs
+                     text-zinc-400 font-mono px-2.5 py-1 rounded-lg">
                         {pagination.total} events
                     </span>
                 )}
@@ -333,18 +310,18 @@ export const ActivityFeed = ({ workspaceId }: ActivityFeedProps) => {
                 <select
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
-                    className="w-full bg-[#0f172a] border border-white/5 hover:border-white/10
-                    rounded-xl text-gray-300 hover:text-white py-2.5 pl-3.5 pr-10 text-xs font-medium
+                    className="w-full bg-[#110A10] border border-white/10 hover:border-purple-500/30
+                    rounded-xl text-zinc-400 hover:text-white py-2.5 pl-3.5 pr-10 text-xs font-mono
                     cursor-pointer appearance-none outline-none transition-all"
                 >
-                    <option value="" className="bg-[#161616]">
+                    <option value="" className="bg-[#0A0507]">
                         All event types
                     </option>
                     {Object.entries(EVENTS_TYPES_LABELS).map(([val, label]) => (
                         <option
                             key={val}
                             value={val}
-                            className="bg-[#161616]"
+                            className="bg-[#0A0507]"
                         >
                             {label}
                         </option>
@@ -352,14 +329,8 @@ export const ActivityFeed = ({ workspaceId }: ActivityFeedProps) => {
                 </select>
                 {/* Visual indicator replacement for missing default dropdown caret */}
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center
-                px-3.5 text-gray-500">
-                    <svg 
-                        className="fill-current h-3 w-3" 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        viewBox="0 0 20 20"
-                    >
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                    </svg>
+                px-3.5 text-zinc-500">
+                    <ChevronDown size={14}/>
                 </div>
             </div>
 
@@ -367,12 +338,12 @@ export const ActivityFeed = ({ workspaceId }: ActivityFeedProps) => {
             
             {/* Timeline */}
             {loading ? (
-                <div className="text-[#4b5563] text-xs py-12 text-center font-medium animate-pulse">
+                <div className="text-zinc-500 text-xs py-12 text-center font-mono animate-pulse">
                     Loading activities...
                 </div>
             ) : events.length === 0 ? (
-                <div className="bg-[#0f172a] border border-white/5 rounded-2xl py-14 px-6 text-center
-                text-gray-500 text-xs font-medium">
+                <div className="bg-[#110A10] border border-white/10 rounded-2xl py-14 px-6
+                 text-center text-zinc-500 text-xs font-mono">
                     No activity found{typeFilter 
                         ? ` for "${EVENTS_TYPES_LABELS[typeFilter]}"` 
                         : ""
@@ -385,11 +356,11 @@ export const ActivityFeed = ({ workspaceId }: ActivityFeedProps) => {
                         key={dateLabel}
                         className="flex flex-col"
                     >
-                        <p className="mb-3 text-[10px] font-bold text-gray-500
+                        <p className="mb-3 text-[10px] font-mono font-semibold text-zinc-500
                         uppercase tracking-widest">
                             {dateLabel}
                         </p>
-                        <div className="bg-[#0f172a] border border-white/5 rounded-2xl px-5
+                        <div className="bg-[#110A10] border border-white/10 rounded-2xl px-5
                         divide-y divide-white/5">
                             {dayEvents.map((event) => (
                                 <ActivityRow 
@@ -409,12 +380,11 @@ export const ActivityFeed = ({ workspaceId }: ActivityFeedProps) => {
                 className="h-14 flex items-center justify-center mt-4"
             >   
                 {loadingMore && (
-                    <span className="text-xs text-gray-500 font-medium animate-pulse">
+                    <span className="text-xs text-zinc-500 font-mono animate-pulse">
                         Loading more...
                     </span>
                 )}
             </div>
         </div>
-    )
-
+    );
 }

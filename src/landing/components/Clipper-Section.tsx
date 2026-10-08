@@ -253,19 +253,28 @@ export const ClipperSection = () => {
   return (
     <section
       id="clipper-section"
-      className="scroll-mt-32 relative py-20 px-6 bg-[#050A0A] overflow-hidden"
+      className="scroll-mt-32 relative py-20 px-6 bg-[#120C0E] overflow-hidden"
     >
+      {/* Ambient Lighting & Grid Overlay */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[40vh] max-w-[1000px] rounded-full blur-[120px] md:blur-[150px] bg-[#C9A227]/10 transition-all duration-700" />
+        <div className="absolute inset-0 opacity-[0.03] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:48px_48px]" />
+      </div>
+
       <div className="max-w-7xl mx-auto flex flex-col items-center">
 
         {/* Section Heading */}
-        <div className="text-center mb-16 space-y-4">
-          <h3 className="text-[#63FF9D] font-mono text-xs uppercase tracking-[0.4em] opacity-80">
+        <div className="text-center mb-16 space-y-4 px-4">
+          <h3 className="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                     bg-[#C9A227]/10 border border-[#C9A227]/20 text-[#C9A227] font-mono 
+                     text-[10px] uppercase tracking-[0.3em]">
             Capture Anywhere
           </h3>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-            The <span className="text-[#63FF9D]">Sprout</span> Extension.
+          <h2 className="text-4xl md:text-5xl font-serif text-[#F5F0EB] leading-tight">
+            The <span className="font-serif italic text-[#C9A227]">Sprout</span> Extension.
           </h2>
-          <p className="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto">
+          <p className="mt-4 text-sm sm:text-base md:text-lg leading-relaxed 
+                    text-[#A09388] font-serif max-w-2xl mx-auto">
             Select anything on the web, right-click, and file it straight into your
             workspace — no tab-switching, no copy-paste.
           </p>
@@ -276,9 +285,9 @@ export const ClipperSection = () => {
               href="https://github.com/ArtiGaund/studysprout-clipper/releases/download/v1.0.0/studysprout-clipper-v1.0.0.zip"
               target="_blank"
             rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#63FF9D] text-black
-               font-bold text-sm px-6 py-3 hover:bg-[#63FF9D]/90 transition-colors
-               shadow-[0_0_30px_rgba(99,255,157,0.25)]"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#C9A227] text-[#0E090B]
+               font-bold text-sm px-6 py-3 hover:bg-[#C9A227]/90 transition-colors
+               shadow-[0_0_20px_rgba(201,162,39,0.35)]"
             >
               <Download size={16} />
               Download Extension (.zip)
@@ -286,17 +295,17 @@ export const ClipperSection = () => {
 
             <button
               onClick={() => setShowInstallSteps(true)}
-              className="text-[11px] text-gray-500 hover:text-[#63FF9D] underline
-               underline-offset-2 transition-colors"
+              className="text-[11px] text-stone-500 hover:text-[#C9A227] underline
+               underline-offset-2 transition-colors font-serif"
             >
              {` Not on the Chrome Web Store yet — here's how to install it manually`}
             </button>
 
             <div className="flex items-start gap-2 max-w-md mt-2 px-4 py-2.5 rounded-lg
-             border border-orange-500/20 bg-orange-500/5 text-left">
-              <AlertTriangle size={14} className="text-orange-500 flex-shrink-0 mt-0.5" />
-              <p className="text-[10px] text-gray-400 leading-relaxed">
-                <span className="text-orange-400 font-medium">Chrome may show a warning</span>{" "}
+             border border-[#2A1E22] bg-[#160F12] text-left font-serif">
+              <AlertTriangle size={14} className="text-[#C9A227] flex-shrink-0 mt-0.5" />
+              <p className="text-[10px] text-stone-400 leading-relaxed">
+                <span className="text-[#C9A227] font-medium">Chrome may show a warning</span>{" "}
                 {`the first time you load this — that's expected for extensions installed
                 outside the Web Store, not a sign anything's wrong. It only appears because
                 we're not listed there yet.`}
@@ -309,23 +318,24 @@ export const ClipperSection = () => {
         <div ref={containerRef} className="w-full">
           {showCollapsed ? (
             <div className="flex flex-col items-center gap-4">
-              <div className="px-4 py-2 bg-[#63FF9D]/10 border border-[#63FF9D]/20
+              <div className="px-4 py-2 bg-[#C9A227]/10 border border-[#C9A227]/20
                rounded-full animate-bounce">
-                <p className="text-[#63FF9D] text-[10px] font-black uppercase tracking-widest">
+                <p className="text-[#C9A227] text-[10px] font-mono font-bold uppercase 
+                tracking-widest">
                   Tap Expand to interact with the demo
                 </p>
               </div>
 
-              <div className="w-full rounded-3xl border border-white/10 bg-[#080C0C]/80
-               backdrop-blur-3xl shadow-2xl overflow-hidden">
+              <div className="w-full rounded-3xl border border-[#2A1E22] bg-[#0E090B]
+               backdrop-blur-3xl transform-gpu will-change-transform backface-hidden shadow-2xl overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b
-                 border-white/5">
+                 border-[#2A1E22]">
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#63FF9D] animate-pulse" />
-                    <span className="text-white font-black uppercase tracking-widest
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#C9A227] animate-pulse" />
+                    <span className="text-[#F5F0EB] font-mono font-bold uppercase tracking-widest
                      text-[10px]">
                       Clipper
-                      <span className="text-gray-500 font-medium ml-2">
+                      <span className="text-stone-500 font-medium ml-2">
                         - Interactive Playground
                       </span>
                     </span>
@@ -355,45 +365,48 @@ export const ClipperSection = () => {
 
         {/* Technical Deep-Dive */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 w-full">
-          <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border
-           border-white/5 hover:border-[#63FF9D]/20 transition-colors group">
-            <div className="w-12 h-12 rounded-2xl bg-[#63FF9D]/10 flex items-center
-             justify-center text-[#63FF9D] group-hover:scale-110 transition-transform">
+          <div className="space-y-4 p-8 rounded-3xl bg-[#120C0E] border
+           border-[#2A1E22] hover:border-[#C9A227]/40 transition-colors group">
+            <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 flex items-center
+             justify-center text-[#C9A227] group-hover:scale-110 transition-transform
+             border border-[#C9A227]/20">
               <MousePointer2 size={22} />
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-white">One Right-Click Away</h4>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <h4 className="font-bold text-[#F5F0EB]">One Right-Click Away</h4>
+              <p className="text-xs text-stone-400 leading-relaxed">
                {` Select any text on any page. The browser's native context menu gets a{" "}`}
                 <strong>Save to Studysprout</strong> entry — no separate popup to open.
               </p>
             </div>
           </div>
 
-          <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border
-           border-white/5 hover:border-purple-400/20 transition-colors group">
-            <div className="w-12 h-12 rounded-2xl bg-purple-400/10 flex items-center
-             justify-center text-purple-400 group-hover:scale-110 transition-transform">
+          <div className="space-y-4 p-8 rounded-3xl bg-[#120C0E] border
+           border-[#2A1E22] hover:border-[#C9A227]/40 transition-colors group">
+            <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 flex items-center
+             justify-center text-[#C9A227] group-hover:scale-110 transition-transform
+             border border-[#C9A227]/20">
               <InboxIcon size={22} />
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-white">Everything Lands in Inbox</h4>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <h4 className="font-bold text-[#F5F0EB]">Everything Lands in Inbox</h4>
+              <p className="text-xs text-stone-400 leading-relaxed">
                 Captures queue up in your Inbox as structured blocks — headings, lists,
                 and paragraphs preserved — ready to file.
               </p>
             </div>
           </div>
 
-          <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border
-           border-white/5 hover:border-orange-500/20 transition-colors group">
-            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center
-             justify-center text-orange-500 group-hover:scale-110 transition-transform">
+          <div className="space-y-4 p-8 rounded-3xl bg-[#120C0E] border
+           border-[#2A1E22] hover:border-[#C9A227]/40 transition-colors group">
+            <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 flex items-center
+             justify-center text-[#C9A227] group-hover:scale-110 transition-transform
+             border border-[#C9A227]/20">
               <FolderInput size={22} />
             </div>
             <div className="space-y-2">
-              <h4 className="font-bold text-white">Merge, File, or Bulk-Clean</h4>
-              <p className="text-xs text-gray-500 leading-relaxed">
+              <h4 className="font-bold text-[#F5F0EB]">Merge, File, or Bulk-Clean</h4>
+              <p className="text-xs text-stone-400 leading-relaxed">
                 {`Select multiple captures and merge them into one file, or clear your
                 inbox in bulk — it's built for the messy first pass.`}
               </p>
@@ -405,23 +418,23 @@ export const ClipperSection = () => {
       {/* Install-steps modal */}
       {showInstallSteps && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4"
           onClick={closeInstallSteps}
         >
           <div
-            className="max-w-lg w-full rounded-2xl border border-white/10 bg-[#0A0F0F] p-6"
+            className="max-w-lg w-full rounded-2xl border border-[#2A1E22] bg-[#0E090B] p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-white font-bold text-sm">
+              <h4 className="text-[#F5F0EB] font-bold text-sm">
                 Install in Chrome
               </h4>
-              <span className="text-[10px] text-gray-600">
+              <span className="text-[10px] text-stone-500">
                 Step {installStep + 1} of {INSTALL_STEPS.length}
               </span>
             </div>
 
-            <div className="rounded-xl overflow-hidden border border-white/5 bg-black/40 mb-4">
+            <div className="rounded-xl overflow-hidden border border-[#2A1E22] bg-[#160F12] mb-4">
               <img
                 src={INSTALL_STEPS[installStep].image}
                 alt={INSTALL_STEPS[installStep].title}
@@ -429,10 +442,10 @@ export const ClipperSection = () => {
               />
             </div>
 
-            <p className="text-white text-sm font-semibold mb-1">
+            <p className="text-[#F5F0EB] text-sm font-semibold mb-1">
               {INSTALL_STEPS[installStep].title}
             </p>
-            <p className="text-gray-400 text-xs leading-relaxed mb-5">
+            <p className="text-stone-400 text-xs leading-relaxed mb-5">
               {INSTALL_STEPS[installStep].description}
             </p>
 
@@ -441,7 +454,7 @@ export const ClipperSection = () => {
                 <div
                   key={i}
                   className={`h-1.5 rounded-full transition-all ${
-                    i === installStep ? "w-5 bg-[#63FF9D]" : "w-1.5 bg-white/10"
+                    i === installStep ? "w-5 bg-[#C9A227]" : "w-1.5 bg-[#2A1E22]"
                   }`}
                 />
               ))}
@@ -451,8 +464,8 @@ export const ClipperSection = () => {
               {installStep > 0 && (
                 <button
                   onClick={() => setInstallStep(s => s - 1)}
-                  className="flex-1 rounded-lg border border-white/10 py-2 text-xs
-                   text-gray-400 hover:text-white hover:border-white/20 transition-colors"
+                  className="flex-1 rounded-lg border border-[#2A1E22] py-2 text-xs
+                   text-stone-400 hover:text-white hover:border-[#C9A227]/40 transition-colors"
                 >
                   Back
                 </button>
@@ -460,16 +473,16 @@ export const ClipperSection = () => {
               {installStep < INSTALL_STEPS.length - 1 ? (
                 <button
                   onClick={() => setInstallStep(s => s + 1)}
-                  className="flex-1 rounded-lg bg-[#63FF9D] text-black font-bold py-2 text-xs
-                   hover:bg-[#63FF9D]/90 transition-colors"
+                  className="flex-1 rounded-lg bg-[#C9A227] text-[#0E090B] font-bold py-2 text-xs
+                   hover:bg-[#C9A227]/90 transition-colors"
                 >
                   Next
                 </button>
               ) : (
                 <button
                   onClick={closeInstallSteps}
-                  className="flex-1 rounded-lg bg-[#63FF9D] text-black font-bold py-2 text-xs
-                   hover:bg-[#63FF9D]/90 transition-colors"
+                  className="flex-1 rounded-lg bg-[#C9A227] text-[#0E090B] font-bold py-2 text-xs
+                   hover:bg-[#C9A227]/90 transition-colors"
                 >
                   Got it
                 </button>

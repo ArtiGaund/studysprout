@@ -248,24 +248,24 @@ const Dropdown: React.FC<DropdownProps> = ({
     const listStyles = useMemo(
         () =>
           clsx('relative', {
-            'border-none text-md': isFolder,
-            'border-none ml-6 text-[16px] py-1': !isFolder,
+            'border-none text-xs font-mono': isFolder,
+            'border-none ml-6 text-xs font-mono py-1': !isFolder,
           }),
         [isFolder]
       );
 
     const groupIdentifies = clsx(
-    'dark:text-white whitespace-nowrap flex justify-between items-center relative overflow-hidden',
-    'w-[9rem] md:w-[10rem] lg:w-[11rem]',
+    'whitespace-nowrap flex justify-between items-center relative overflow-hidden w-full transition-colors rounded-md px-1.5 py-1',
+    'w-[9rem] md:w-[10rem] lg:w-[13rem] hover:bg-white/[0.04]',
     {
-      'group/folder': isFolder,
-      'group/file': !isFolder,
+      'group/folder text-[#F5F0EB]': isFolder,
+      'group/file text-zinc-400': !isFolder,
     }
   );
 
     const hoverStyles = useMemo(() =>
         clsx(
-            'h-full hidden rounded-sm right-0 items-center justify-center flex space-x-1 flex-shrink-0 bg-transparent',
+            'h-full hidden rounded-sm right-0 items-center justify-center flex space-x-1 flex-shrink-0 bg-transparent text-zinc-400',
             {
               'group-hover/file:flex': listType === 'file',
               'group-hover/folder:flex': listType === 'folder',
@@ -406,7 +406,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         >
             <AccordionTrigger
                 id={listType}
-                className="hover:no-underline p-2 text-muted-foreground text-sm"
+                className="hover:no-underline px-1 py-1.5 text-xs font-mono transition-all duration-150"
                 disabled={listType === 'file'} 
                 onMouseDownCapture={(e) => {
                     if(e.detail === 2) {   
@@ -418,8 +418,8 @@ const Dropdown: React.FC<DropdownProps> = ({
                 {/* This div now contains both the icon/input and the action buttons */}
                 {/* Ensure this container has a defined max-width or flex-basis to prevent overflow */}
                 <div  className={groupIdentifies}> {/* Added overflow-hidden */}
-                    <div className="flex gap-4 items-center justify-start min-w-0 flex-1">
-                    <div className="relative flex-shrink-0"> 
+                    <div className="flex gap-2 items-center justify-start min-w-0 flex-1">
+                    <div className="relative flex-shrink-0 text-sm"> 
                         <EmojiPicker getValue={onChangeEmoji}>{currentIcon}</EmojiPicker>
                     </div>
                     <div className="flex items-center flex-grow min-w-0 overflow-hidden w-full">
@@ -428,8 +428,9 @@ const Dropdown: React.FC<DropdownProps> = ({
                             ref={inputRef}
                             type="text"
                             value={typeof displayedTitle === 'string' ? displayedTitle : ''}
-                            className="text-sm font-bold text-white bg-zinc-900 outline-none
-                            border border-purple-500/50 rounded px-2 py-0.5 w-full"
+                            className="text-sm font-mono font-medium text-white bg-white/[0.08]
+                             outline-none
+                            border border-[#C9A227]/60 rounded px-1.5 py-0.5 w-full"
                             readOnly={false}
                             onClick={(e) => e.stopPropagation()}
                             onDoubleClick={(e) => e.stopPropagation()} 
@@ -459,7 +460,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                                 <span
                                     className={clsx(
                                         "block truncate transition-colors",
-                                        "flex-grow  min-w-0",
+                                        "flex-grow  min-w-0 text-xs font-mono font-medium text-left",
                                         // Use remoteEditing object just to trigger a class
                                         isLockedByRemote 
                                         ? "text-emerald-400 font-semibold italic opacity-90 cursor-not-allowed select-none" 
@@ -494,7 +495,8 @@ const Dropdown: React.FC<DropdownProps> = ({
                             ): (
                                 <span className="flex items-center gap-1">
                                     {totalFiles > 0 && (
-                                        <span className="text-[10px] font-mono text-blue-400/70 whitespace-nowrap">
+                                        <span className="text-[10px] font-mono text-blue-400/70
+                                         whitespace-nowrap">
                                             0/{totalFiles}
                                         </span>
                                     )}
@@ -533,7 +535,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                             <Trash 
                                 onClick={(e) => { e.stopPropagation(); moveToTrash(e); }} 
                                 size={15}
-                                className="hover:text-white text-Neutrals/neutrals-7 transition-colors"
+                                className="hover:text-red-400 transition-colors cursor-pointer"
                             />
                         </TooltipComponent>
                         {/* Show add button only for folder title  */}
@@ -541,7 +543,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                             <PlusIcon 
                                 onClick={(e) => { e.stopPropagation(); addNewFile(e); }} 
                                 size={15}
-                                className="hover:text-white transition-colors"
+                                className="hover:text-[#C9A227] transition-colors cursor-pointer"
                             />
                         </TooltipComponent>
                     )}

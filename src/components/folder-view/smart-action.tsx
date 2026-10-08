@@ -37,46 +37,49 @@ export const SmartAction = ({ folderId }: { folderId: string}) => {
 
     return(
         <>
-       {!hasGraph && ( <div className="flex flex-col gap-y-4 mt-4">
-            <span className="text-[10px] font-bold text-zinc-500 tracking-widest uppercase px-1">
-                Smart Action
-            </span>
-            <div className="flex flex-col gap-y-2">
-                <ActionItem 
-                icon={isGenerating ? Loader2 : Network}
-                label={
-                    isGenerating 
-                       ? "Generating Graph..."
-                       : hasGraph
-                            ? "View Graph"
-                            : fileCount < 2
-                                ? "Map Graph (2+ files needed)"
-                                : "Generate Map Graph"
-                }
-                handleAction={handleMapGraph}
-                disabled={isGenerating || fileCount < 2}
-                disabledMessage={
-                    fileCount < 2 && !isGenerating
-                        ? "You need at least 2 files in this folder to generate a concept graph."
-                        : undefined
-                }
-                tooltipClassName="border-amber-500/30 bg-zinc-900 text-amber-300"
-                tooltipSide="left"
-                iconClassName={isGenerating ? "animate-spin text-purple-400" : null}
-                isGenerating={isGenerating}
-                />
-            </div>
-        </div>)}
+            {!hasGraph && ( 
+                <div className="flex flex-col gap-y-4 mt-4">
+                    <span className="text-[10px] font-mono font-semibold text-zinc-500 
+                    tracking-widest uppercase px-1">
+                        Smart Action
+                    </span>
+                    <div className="flex flex-col gap-y-2">
+                        <ActionItem 
+                            icon={isGenerating ? Loader2 : Network}
+                            label={
+                                isGenerating 
+                                ? "Generating Graph..."
+                                : hasGraph
+                                        ? "View Graph"
+                                        : fileCount < 2
+                                            ? "Map Graph (2+ files needed)"
+                                            : "Generate Map Graph"
+                            }
+                            handleAction={handleMapGraph}
+                            disabled={isGenerating || fileCount < 2}
+                            disabledMessage={
+                                fileCount < 2 && !isGenerating
+                                    ? "You need at least 2 files in this folder to generate a concept graph."
+                                    : undefined
+                            }
+                            tooltipClassName="border-amber-500/30 bg-zinc-900 text-amber-300"
+                            tooltipSide="left"
+                            iconClassName={isGenerating ? "animate-spin text-purple-400" : null}
+                            isGenerating={isGenerating}
+                        />
+                    </div>
+                </div>
+            )}
 
-        {/* Modal - only mount when open */}
-        {modalOpen && (
-            <ConceptGraphModal 
-            isOpen={modalOpen}
-            onClose={() => setModalOpen(false)}
-            level="folder"
-            title={currentFolder?.title ?? ""}
-            />
-        )}
+            {/* Modal - only mount when open */}
+            {modalOpen && (
+                <ConceptGraphModal 
+                    isOpen={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    level="folder"
+                    title={currentFolder?.title ?? ""}
+                />
+            )}
         </>
-    )
+    );
 }

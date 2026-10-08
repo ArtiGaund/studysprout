@@ -28,15 +28,14 @@ export const CustomForm = ({
     return (
         <div>
             {(view === 'customizing' || view === 'reviewing') && (
-                <div className="absolute top-0 right-0 h-full w-full sm:w-[440px] border-l
-                border-white/10 bg-[#0D1414] backdrop-blur-none z-50 animate-in   {/* Remove /98 opacity, remove backdrop-blur */}
-                slide-in-from-right duration-500 shadow-[-20px_0_60px_rgba(0,0,0,0.5)] flex
-                flex-col">
-                    <div className="p-7 border-b border-white/5 flex items-center
-                     justify-between bg-white/[0.01]">
+                <div className="absolute top-0 right-0 h-full w-full sm:w-[440px] border-l 
+                border-[#2A1E22] bg-[#181013] z-50 animate-in slide-in-from-right duration-500 
+                shadow-2xl flex flex-col">
+                    <div className="p-7 border-b border-[#2A1E22] flex items-center
+                     justify-between bg-[#120C0E]">
                         <div className="flex items-center gap-2">
-                            <AlertCircle size={14} className="text-gray-600"/>
-                            <span className="text-xs font-black text-white uppercase 
+                            <AlertCircle size={14} className="text-[#C9A227]"/>
+                            <span className="text-xs font-mono font-black text-[#F5F0EB] uppercase 
                             tracking-widest">
                                 {view === 'customizing' 
                                 ? 'Expert Guide: Plus Button' 
@@ -45,25 +44,26 @@ export const CustomForm = ({
                         </div>
                         <button 
                         onClick={() => setView('idle')} 
-                        className="text-gray-500 hover:text-white transition-colors"
+                        className="text-[#8C7A6B] hover:text-[#F5F0EB] transition-colors"
                         >
                             <X size={20}/>
                         </button>
                     </div>
 
-                    <div className="flex-1 p-5 sm:p-10 overflow-y-auto space-y-6 sm:space-y-12 text-left">
+                    <div className="flex-1 p-5 sm:p-10 overflow-y-auto space-y-6 sm:space-y-12 
+                    text-left">
                         {view === 'customizing' ? (
                             <>
                                 <div className="space-y-4">
-                                    <div className="w-12 h-12 rounded-xl bg-purple-600/10 
-                                    border border-purple-500/20 flex items-center 
-                                    justify-center text-purple-400">
+                                    <div className="w-12 h-12 rounded-xl bg-[#C9A227]/10 border 
+                                    border-[#C9A227]/20 flex items-center justify-center 
+                                    text-[#C9A227]">
                                         <Plus size={24}/>
                                     </div>
-                                    <h4 className="text-white font-bold text-lg">
+                                    <h4 className="text-[#F5F0EB] font-serif font-bold text-lg">
                                         Custom Flashcard Workflow
                                         </h4>
-                                    <p className="text-xs text-gray-500 leading-relaxed">
+                                    <p className="text-xs text-[#A09388] font-serif leading-relaxed">
                                        {` By clicking the **Plus Button**, you bypass the 
                                         immediate "Generate of the current file" logic.
                                          Instead, you access advanced parameters to define scope
@@ -71,27 +71,27 @@ export const CustomForm = ({
                                     </p>
                                 </div>
                                             
-                                <div className="p-5 rounded-2xl bg-white/[0.02] border
-                                 border-white/5 space-y-6">
+                                <div className="p-5 rounded-2xl bg-[#120C0E] border border-[#2A1E22] 
+                                space-y-6">
                                     <div className="space-y-2">
-                                        <p className="text-[10px] text-gray-600 font-bold 
+                                        <p className="text-[10px] text-[#8C7A6B] font-mono font-bold 
                                         uppercase tracking-widest">
                                             Target Context
                                         </p>
-                                        <div className="p-3.5 rounded-lg bg-white/5 border
-                                         border-white/10 text-xs text-gray-300 flex 
+                                        <div className="p-3.5 rounded-lg bg-[#181013] border 
+                                        border-[#2A1E22] text-xs text-[#F5F0EB] font-mono flex 
                                          items-center gap-3">
-                                            <Folder size={16} className="text-purple-500"/> 
+                                            <Folder size={16} className="text-[#C9A227]"/> 
                                             Artificial_Intelligence / Natural_Language_Processing
                                         </div>
                                     </div>
                                     <div className="space-y-4">
-                                        <p className="text-[10px] text-gray-600 font-bold 
-                                        uppercase tracking-widest">
+                                        <p className="text-[10px] text-[#8C7A6B] font-mono 
+                                        font-bold uppercase tracking-widest">
                                             How many cards?
                                         </p>
-                                        <div className="w-full p-4 rounded-xl bg-white/5 
-                                        border border-white/10 text-white text-xs font-bold 
+                                        <div className="w-full p-4 rounded-xl bg-[#181013] border
+                                         border-[#2A1E22] text-[#F5F0EB] text-xs font-bold 
                                         font-mono">2</div>
                                     </div>
                                     <button 
@@ -101,10 +101,10 @@ export const CustomForm = ({
                                         setHasCustomSet(true);
                                         setReviewIndex(0);
                                         }} 
-                                    className="w-full py-4 rounded-2xl bg-purple-600
-                                     text-white font-black text-xs uppercase tracking-widest 
-                                     shadow-xl hover:bg-purple-700 transition-all
-                                      hover:shadow-purple-500/20">
+                                    className="w-full py-3.5 rounded-xl bg-[#C9A227]
+                                     text-[#120C0E] font-mono font-bold text-xs uppercase 
+                                     tracking-widest hover:bg-transparent hover:text-[#C9A227] 
+                                     border border-[#C9A227] transition-all">
                                             Generate Flashcards
                                     </button>
                                 </div>

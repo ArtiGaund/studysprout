@@ -14,15 +14,16 @@ export default function RevisionButton(){
    const isCollapsed = isRevisionSidebarOpen || isInboxSidebarOpen;
     return(
          <button onClick={() => setRevisionSidebarOpen(true)}>
-            <div className="flex flex-row gap-2 text-Neutrals/neutrals-7 transition-all cursor-pointer">
+            <div className="flex flex-row gap-2 text-Neutrals/neutrals-7 transition-all 
+               cursor-pointer">
            
                {isCollapsed ?
                 ( 
-                  <>
                      <TooltipComponent message="Revision">
-                        <CypressClockRecordIcon />
+                        <span className="flex items-center">
+                           <CypressClockRecordIcon />
+                        </span>
                      </TooltipComponent>
-                  </>
                  )
                : (
                   <>

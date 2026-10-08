@@ -79,10 +79,12 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
      */
     if (workspaceLoading || !isWorkspaceSynced) {
         return (
-            <aside className={twMerge('hidden sm:flex sm:flex-col shrink-0 p-4',
-             'md:gap-4 !justify-between w-[240px] md:w-[260px] lg:w-[280px] xl:w-[300px]', 
-             className)}>
-                <p>Loading workspaces...</p>
+            <aside className={twMerge(
+              'hidden sm:flex sm:flex-col shrink-0 p-4 bg-[#0A0507] border-r border-white/10 h-full',
+              'md:gap-4 !justify-between w-[240px] md:w-[260px] lg:w-[280px] xl:w-[300px]', 
+              className
+             )}>
+                <p className="text-xs font-mono text-zinc-500">Loading workspaces...</p>
             </aside>
         );
     }
@@ -92,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
     // and shared workspaces
     return (<aside className={twMerge(
       `hidden sm:flex flex-col  shrink-0 p-4 md:gap-4 !justify-between transition-all
-       duration-300  bg-[#080C0C] border-r border-white/5 h-full',
+       duration-300  bg-[#0A0507] border-r border-white/10 h-full
        ${isPanelOpen 
         ? 'w-[80px]' 
         : 'w-[240px] md:w-[260px] lg:w-[280px] xl:w-[300px]'
@@ -103,39 +105,39 @@ const Sidebar: React.FC<SidebarProps> = ({ params, className }) => {
         <div className="flex-1 flex flex-col min-h-0">
             { workspaces.length > 0 && currentWorkspace ? (
               <>
-              {/* Expansion Trigger: Allows users to toggle sidebar width */}
-              <SidebarExpandButton />
+                {/* Expansion Trigger: Allows users to toggle sidebar width */}
+                <SidebarExpandButton />
 
-              {/* Workspace Selector: Only visible in expanded mode for better UX */}
-              {!isPanelOpen && (
-                <WorkspaceDropdown workspaces={workspaces} defaultValue={currentWorkspace}/>
-              )}
+                {/* Workspace Selector: Only visible in expanded mode for better UX */}
+                {!isPanelOpen && (
+                  <WorkspaceDropdown workspaces={workspaces} defaultValue={currentWorkspace}/>
+                )}
 
-              {/* Main Navigation: Links to Home, Trash, and Settings */}
-              <NativeNavigation myWorkspaceId={params.workspaceId}/>
+                {/* Main Navigation: Links to Home, Trash, and Settings */}
+                <NativeNavigation myWorkspaceId={params.workspaceId}/>
 
-              {/* Hierarchical Folder List: Wrapped in ScrollArea for deep structures */}
-              <ScrollArea 
-              // className="overflow-scroll relative h-[450px]"
-              className="flex-1 overflow-y-auto mt-4 pr-2 custom-scrollable"
-              >
-                  <div className="w-full pointer-events-none absolute bottom-0 h-20 bg-gradient-to-t
-                   from-[#080C0C] to-transparent z-40"/>
-                   <FoldersDropdownList 
-                      workspaceFolders={folders || []}
-                      workspaceId={params.workspaceId}
-                      usedWhere="sidebar"
-                   /> 
-              </ScrollArea> 
-            </>
-              
-          ) : (
-            <p>Loading workspaces...</p>
+                {/* Hierarchical Folder List: Wrapped in ScrollArea for deep structures */}
+                <ScrollArea 
+                // className="overflow-scroll relative h-[450px]"
+                className="flex-1 overflow-y-auto mt-4 pr-2 custom-scrollable"
+                >
+                    {/* <div className="w-full pointer-events-none absolute bottom-0 h-20 bg-gradient-to-t
+                    from-[#050707] to-transparent z-40"/> */}
+                    <FoldersDropdownList 
+                        workspaceFolders={folders || []}
+                        workspaceId={params.workspaceId}
+                        usedWhere="sidebar"
+                    /> 
+                </ScrollArea> 
+              </>
+            ) : (
+              <p className="text-xs font-mono text-zinc-500">Loading workspaces...</p>
           )} 
         </div>
 
         {/* Profile & Account Settings: Fixed to the bottom of the sidebar */}
         <UserCard />
+
     </aside>)
 }
 

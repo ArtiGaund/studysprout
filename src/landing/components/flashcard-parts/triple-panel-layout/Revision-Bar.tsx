@@ -24,11 +24,10 @@ export const RevisionBar = ({
     activeHint,
 }: RevisionBarProps) => {
     return (
-        <div className="w-48 lg:w-64 border-r border-white/5 bg-white/[0.01] p-4 lg:p-6 
-        flex flex-col gap-8 h-full overflow-y-auto">
+        <div className="w-48 lg:w-64 border-r border-[#2A1E22] bg-[#120C0E]/50 p-4 lg:p-6 
+        flex flex-col gap-8 h-full overflow-y-auto flex-shrink-0">
             <div className="flex-none space-y-4">
-                <div className="text-[10px] font-black text-gray-500 uppercase 
-                tracking-[0.2em]">
+                <div className="text-[10px] font-mono text-[#8C7A6B] uppercase tracking-[0.2em]">
                     Revision Bar
                 </div>
                 <div className="flex items-center gap-2">
@@ -38,11 +37,11 @@ export const RevisionBar = ({
                             setActiveSet('file'); 
                             setView('reviewing'); 
                         }}
-                        className={`flex-1 p-3 rounded-xl bg-purple-600 text-white 
-                        font-bold text-[10px] hover:bg-purple-700 transition-all 
-                        shadow-[0_0_20px_rgba(168,85,247,0.3)]
+                        className={`flex-1 p-3 rounded-xl bg-[#C9A227] text-[#120C0E] font-mono font-bold 
+                        text-[10px] hover:bg-transparent hover:text-[#C9A227] 
+                        border border-[#C9A227] transition-all shadow-md
                         ${activeHint ==='generate' 
-                            ? 'ring-2 ring-purple-500 animate-pulse scale-105'
+                            ? 'ring-2 ring-[#C9A227] animate-pulse scale-105'
                             : ''
                         }`}
                     >
@@ -50,10 +49,10 @@ export const RevisionBar = ({
                     </button>
                     <button 
                         onClick={() => setView('customizing')} 
-                        className={`p-3 rounded-xl bg-white/5 text-white border
-                        border-white/10 hover:bg-white/10 transition-colors
+                        className={`p-3 rounded-xl bg-[#2A1E22]/50 text-[#F5F0EB] border 
+                        border-[#2A1E22] hover:border-[#C9A227]/40 transition-colors
                         ${activeHint === 'plus' 
-                            ? 'ring-2 ring-blue-500 animate-pulse'
+                            ? 'ring-2 ring-[#C9A227] animate-pulse'
                             : ''
                         }`}
                      >
@@ -63,7 +62,7 @@ export const RevisionBar = ({
             </div>
 
             <div className="space-y-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                <div className="text-[10px] font-black text-gray-600 uppercase 
+                <div className="text-[10px] font-mono text-[#8C7A6B] uppercase 
                 tracking-widest">
                     Flashcard Sets
                 </div>
@@ -76,23 +75,22 @@ export const RevisionBar = ({
                     }} 
                     className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer 
                     transition-all ${activeSet === 'folder' 
-                    ? 'bg-purple-500/10 border-purple-500/30' 
-                    : 'border-transparent hover:bg-white/5'}
+                    ? 'bg-[#C9A227]/10 border-[#C9A227]/30 text-[#F5F0EB]' 
+                    : 'border-transparent text-[#A09388] hover:bg-white/[0.02] hover:text-[#F5F0EB]'}
                     ${activeHint === 'sidebar'
-                        ? 'border-[#63FF9D]/50 bg-[#63FF9D]/10'
+                        ? 'border-[#C9A227]/50 bg-[#C9A227]/10'
                         : ''
                     }`}
                 >
-                    <Brain size={18} className="text-[#63FF9D]"/>
-                    <div className="flex-1">
-                        <p className="text-[11px] text-white font-bold truncate">
+                    <Brain size={18} className="text-[#C9A227]"/>
+                    <div className="flex-1 truncate">
+                        <p className="text-[11px] font-mono font-bold truncate">
                             ML_Machine_Learning
                         </p>
-                        <p className="text-[9px] text-orange-400 font-bold flex 
-                        items-center gap-1">
-                            <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
-                            gap-1">
-                                <TrendingUp size={12} className="text-red-400"/> due
+                        <p className="text-[9px] font-mono text-[#C9A227] flex items-center 
+                        gap-1 mt-0.5">
+                            <span className="shrink-0 flex items-center gap-1">
+                                <TrendingUp size={11}/> due
                             </span>
                         </p>
                     </div>
@@ -108,22 +106,21 @@ export const RevisionBar = ({
                         className={`flex items-center gap-3 p-3 rounded-xl border 
                         cursor-pointer transition-all animate-in fade-in duration-500 
                         ${activeSet === 'file' 
-                        ? 'bg-[#63FF9D]/10 border-[#63FF9D]/30' 
-                        : 'border-transparent hover:bg-white/5'}`}
+                        ? 'bg-[#C9A227]/10 border-[#C9A227]/30 text-[#F5F0EB]' 
+                        : 'border-transparent text-[#A09388] hover:bg-white/[0.02] hover:text-[#F5F0EB]'}`}
                     >
-                        <div className="w-8 h-8 rounded-lg bg-[#63FF9D]/10 flex 
-                        items-center justify-center text-[#63FF9D]">
+                        <div className="w-8 h-8 rounded-lg bg-[#C9A227]/10 flex 
+                        items-center justify-center text-[#C9A227]">
                             <FileText size={18}/>
                         </div>
                         <div className="flex-1 truncate">
-                            <p className="text-[11px] text-white font-bold">
+                            <p className="text-[11px] font-mono font-bold truncate">
                                 Transformer_Architectures.md - Set
                             </p>
-                            <p className="text-[9px] text-orange-400 font-bold flex 
-                            items-center gap-1">
-                                <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
-                                gap-1">
-                                    <TrendingUp size={12} className="text-red-400"/> due
+                            <p className="text-[9px] font-mono text-[#C9A227] flex items-center 
+                            gap-1 mt-0.5">
+                                <span className="shrink-0 flex items-center gap-1">
+                                    <TrendingUp size={11}/> due
                                 </span>
                             </p>
                         </div>
@@ -140,22 +137,21 @@ export const RevisionBar = ({
                         className={`flex items-center gap-3 p-3 rounded-xl border 
                         cursor-pointer transition-all animate-in fade-in duration-500 
                         ${activeSet === 'file' 
-                        ? 'bg-[#63FF9D]/10 border-[#63FF9D]/30' 
-                        : 'border-transparent hover:bg-white/5'}`}
+                        ? 'bg-[#C9A227]/10 border-[#C9A227]/30 text-[#F5F0EB]' 
+                        : 'border-transparent text-[#A09388] hover:bg-white/[0.02] hover:text-[#F5F0EB]'}`}
                     >
-                        <div className="w-8 h-8 rounded-lg bg-[#63FF9D]/10 flex 
-                        items-center justify-center text-[#63FF9D]">
+                        <div className="w-8 h-8 rounded-lg bg-[#C9A227]/10 flex 
+                        items-center justify-center text-[#C9A227]">
                             <FileText size={18}/>
                         </div>
                         <div className="flex-1 truncate">
-                            <p className="text-[11px] text-white font-bold">
+                            <p className="text-[11px] font-mono font-bold truncate">
                                 Natural_Language_Processing.md - Set
                             </p>
-                            <p className="text-[9px] text-orange-400 font-bold flex 
+                            <p className="text-[9px] font-mono text-[#C9A227] flex mt-0.5
                             items-center gap-1">
-                               <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
-                                gap-1">
-                                    <TrendingUp size={12} className="text-red-400"/> due
+                               <span className="shrink-0 flex items-center gap-1">
+                                    <TrendingUp size={11}/> due
                                 </span>
                             </p>
                         </div>

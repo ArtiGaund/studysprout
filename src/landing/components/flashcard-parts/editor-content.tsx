@@ -67,20 +67,15 @@ export const EditorContent: React.FC<EditorContentProps> = ({
 
     const heightClass = fillHeight ? 'h-full' : 'h-[740px]';
     return(
-        <div className={`flex flex-row gap-4 w-full
-        ${fillHeight ? 'h-full' : ''}
-        `}
-        
-        >
-                {/* LEFT PART: Triple-Panel Layout */}
+        <div className={`flex flex-row gap-4 w-full ${fillHeight ? 'h-full' : ''}`}>
+            {/* LEFT PART: Triple-Panel Layout */}
             <div className={`flex ${heightClass} w-[70%] overflow-hidden rounded-3xl 
-            border border-white/10 bg-[#080C0C] shadow-2xl relative`}>
+            border border-[#2A1E22] bg-[#120C0E] shadow-2xl relative`}>
                     
-                    {/* PANEL 1: Global Collapsed Navigation (Mimics Screenshot 1) */}
-                    
+                {/* PANEL 1: Global Collapsed Navigation (Mimics Screenshot 1) */}    
                 <CollapsedNavigation />
 
-                    {/* PANEL 2: Revision Bar (Screenshot 1) */}
+                {/* PANEL 2: Revision Bar (Screenshot 1) */}
                 <RevisionBar 
                     setHasNewFileSet={setHasNewFileSet}
                     setActiveSet={setActiveSet}
@@ -92,7 +87,7 @@ export const EditorContent: React.FC<EditorContentProps> = ({
                     activeHint={activeHint}
                 />
 
-                    {/* PANEL 3: Content Canvas & Editor Simulation (Screenshot 1) */}
+                {/* PANEL 3: Content Canvas & Editor Simulation (Screenshot 1) */}
                 <EditorCanvas 
                    artiStatus={artiStatus}
                    isHighlightingSimulated={isHighlightingSimulated}

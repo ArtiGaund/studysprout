@@ -29,7 +29,7 @@ function useIsMobile(breakpoint = 768){
 /* --- Relative timestamp --- */
 function TimeAgo({ date }: { date: string }){
     return(
-        <span className="text-[10px] text-zinc-500 shrink-0">
+        <span className="text-[10px] font-mono text-zinc-500 shrink-0">
             {formatDistanceToNow(new Date(date), { addSuffix: true })}
         </span>
     );
@@ -46,19 +46,19 @@ function InvitationCard({
     responding: boolean;
 }){
     return(
-        <div className="px-4 py-3 space-y-2 hover:bg-zinc-800/40 transition-colors">
+        <div className="px-4 py-3 space-y-2 hover:bg-purple-950/20 transition-colors">
             <div className="flex items-start justify-between gap-3">
                 <div className="space-y-0.5 flex-1 min-w-0">
-                    <p className="text-sm text-foreground leading-snug">
-                        <span className="font-semibold">
+                    <p className="text-xs text-zinc-200 leading-snug">
+                        <span className="font-semibold text-purple-200">
                             {notification.senderUsername}
                         </span>
                         {" invited you to join "}
-                        <span className="font-semibold">
+                        <span className="font-semibold text-zinc-100 font-mono">
                             {notification.workspaceTitle}
                         </span>
                     </p>
-                    <p className="text-xs text-zinc-400 capitalize">
+                    <p className="text-[11px] font-mono text-zinc-400 capitalize">
                         Role: {notification.role}
                     </p>
                 </div>
@@ -66,15 +66,16 @@ function InvitationCard({
             </div>
 
             {responding ? (
-               <div className="flex items-center gap-2 text-xs text-zinc-500">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin"/>
+               <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400"/>
                     <span>Saving...</span>
                </div>
             ) : (
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-1">
                     <Button
                         size="sm"
-                        className="h-8 px-3 text-xs flex-1 min-w-0"
+                        className="h-8 px-3 text-xs font-mono bg-purple-600
+                         hover:bg-purple-500 text-white flex-1 min-w-0 shadow-sm"
                         onClick={() => onRespond(notification.invitationId!, "accepted")}
                     >   
                         <UserCheck className="w-3 h-3 mr-1 shrink-0"/>
@@ -83,8 +84,8 @@ function InvitationCard({
                     <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-3 text-xs flex-1 text-red-400 hover:text-red-400
-                        hover:bg-red-500/10"
+                        className="h-7 px-3 text-xs font-mono flex-1 text-red-400
+                         hover:text-red-300 hover:bg-red-950/30 border border-red-500/20"
                         onClick={() => onRespond(notification.invitationId!, "rejected")}
                     >
                         <UserX className="w-3 h-3 mr-1 shrink-0"/>
@@ -109,19 +110,21 @@ function ActivityRow({
     return (
         <div
             className={clsx(
-                "px-4 py-3 flex items-start gap-3 hover:bg-zinc-800/40 transition-colors",
-                !notification.read && "bg-zinc-800/20"
+                "px-4 py-3 flex items-start gap-3 hover:bg-purple-950/20 transition-colors",
+                !notification.read && "bg-purple-950/10"
             )}
         >
             {/* Icon */}
             <div
                 className={clsx(
-                    "mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0",
-                    isAccepted ? "bg-green-500/15" : "bg-red-500/15"
+                    "mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0 border",
+                    isAccepted 
+                        ? "bg-emerald-500/10 border-emerald-500/30" 
+                        : "bg-red-500/10 border-red-500/30"
                 )}
             >
                 {isAccepted ? (
-                    <UserCheck className="w-3.5 h-3.5 text-green-400"/>
+                    <UserCheck className="w-3.5 h-3.5 text-emerald-400"/>
                 ) : (
                     <UserX className="w-3.5 h-3.5 text-red-400"/>
                 )}
@@ -129,13 +132,17 @@ function ActivityRow({
 
             {/* Text */}
             <div className="flex-1 space-y-0.5">
-                <p className="text-sm text-foreground leading-snug">
-                    <span className="font-semibold">{notification.senderUsername}</span>
+                <p className="text-sm text-zinc-300 leading-snug">
+                    <span className="font-semibold text-purple-200">
+                        {notification.senderUsername}
+                    </span>
                     {isAccepted
                         ? " accepted your invitation to "
                         : " declined your invitation to "
                     }
-                    <span className="font-semibold">{notification.workspaceTitle}</span>
+                    <span className="font-semibold text-zinc-100 font-mono">
+                        {notification.workspaceTitle}
+                    </span>
                 </p>
                 <TimeAgo date={notification.createdAt}/>
             </div>
@@ -144,8 +151,8 @@ function ActivityRow({
             {!notification.read && onRead && (
                 <button
                     onClick={() => onRead(notification._id)}
-                    className="mt-0.5 p-1 rounded hover:bg-zinc-700 text-zinc-500 
-                    hover:text-zinc-300 transition-colors shrink-0"
+                    className="mt-0.5 p-1 rounded hover:bg-purple-900/40 text-zinc-500 
+                    hover:text-purple-300 transition-colors shrink-0"
                     title="Mark as read"
                 >   
                     <Check className="w-3.5 h-3.5"/>
@@ -164,12 +171,14 @@ function SectionHeader({
     count?: number;
 }){
     return(
-        <div className="px-4 py-2 flex items-center justify-between">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+        <div className="px-4 py-2 flex items-center justify-between bg-[#110A10]/50">
+            <p className="text-[10px] font-mono font-bold text-purple-400/80 uppercase 
+            tracking-wider">
                 {label}
             </p>    
             {count !== undefined && count > 0 && (
-                <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                <Badge variant="secondary" className="text-[10px] font-mono h-4 px-1.5
+                 bg-purple-500/20 text-purple-300 border border-purple-500/30">
                     {count}
                 </Badge>
             )}
@@ -211,14 +220,14 @@ function NotificationBody({
     return (
         <>
             {/* Header */}
-            <div className="px-4 py-3 flex items-center justify-between shrink-0">
-                <p className="text-sm font-semibold text-foreground">Notifications</p>
+            <div className="px-4 py-3 flex items-center justify-between shrink-0 bg-[#0A0507]">
+                <p className="text-sm font-semibold font-mono text-zinc-200">Notifications</p>
                 <div className="flex items-center gap-2">
                     {unread.length > 0 && (
                         <button
                             onClick={onMarkAllRead}
-                            className="flex items-center gap-1 text-xs text-zinc-400
-                            hover:text-zinc-200 transition-colors"
+                            className="flex items-center gap-1 text-xs font-mono text-purple-400
+                            hover:text-purple-300 transition-colors"
                         >
                             <CheckCheck className="w-3.5 h-3.5"/>
                             <span className="hidden sm:inline">Mark all read</span>
@@ -227,28 +236,30 @@ function NotificationBody({
                     {onClose && (
                         <button
                             onClick={onClose}
-                            className="p-1 rounded hover:bg-zinc-700 text-zinc-500 
-                            hover:text-zinc-300 transition-colors"
+                            className="p-1 rounded hover:bg-white/10 text-zinc-400 
+                            hover:text-zinc-200 transition-colors"
                         >
                             <X className="w-4 h-4"/>
                         </button>
                     )}
                 </div>
             </div>
-            <Separator className="bg-zinc-800"/>
+            <Separator className="bg-white/[0.08]"/>
 
             {/* Scrollable body */}
-            <div className="overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-zinc-700">
+            <div className="overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-purple-900/40">
                 {loading && (
                     <div className="flex items-center justify-center py-12">
-                        <Loader2 className="w-5 h-5 animate-spin text-zinc-500"/>
+                        <Loader2 className="w-5 h-5 animate-spin text-purple-500"/>
                     </div>
                 )}
 
                 {!loading && isEmpty && (
                     <div className="px-4 py-12 text-center space-y-2">
-                        <Bell className="w-8 h-8 text-zinc-600 mx-auto"/>
-                        <p className="text-xs text-zinc-500">{`You're all caught up`}</p>
+                        <Bell className="w-8 h-8 text-zinc-700 mx-auto"/>
+                        <p className="text-xs font-mono text-zinc-500">
+                            {`You're all caught up`}
+                        </p>
                     </div>
                 )}
 
@@ -264,12 +275,12 @@ function NotificationBody({
                                     onRespond={onRespond}
                                 />
                                 {i < invitations.length - 1 && (
-                                    <Separator className="bg-zinc-800"/>
+                                    <Separator className="bg-white/[0.06]"/>
                                 )}
                             </div>
                         ))}
                         {(unread.length > 0 || recentRead.length > 0) && (
-                            <Separator className="bg-zinc-800 mt-1"/>
+                            <Separator className="bg-white/[0.08] mt-1"/>
                         )}
                     </>
                 )}
@@ -286,7 +297,7 @@ function NotificationBody({
                             />
                         ))}
                         {recentRead.length > 0 && (
-                            <Separator className="bg-zinc-800 mt-1"/>
+                            <Separator className="bg-white/[0.08] mt-1"/>
                         )}
                     </>
                 )}
@@ -297,9 +308,9 @@ function NotificationBody({
                         <button
                             onClick={() => setShowRead((p) => !p)}
                             className="w-full px-4 py-2 flex items-center justify-between
-                            hover:bg-zinc-800/40 transition-colors"
+                            hover:bg-purple-950/20 transition-colors bg-[#110A10]/30"
                         >
-                            <p className="text-xs font-semibold text-zinc-500 uppercase
+                            <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase
                             tracking-wider">
                                 Recent
                             </p>
@@ -364,15 +375,15 @@ export function NotificationCenter(){
 
     const TriggerButton = (
         <button
-            className="relative p-1.5 rounded-md hover:bg-zinc-800/60 transition-colors"
+            className="relative p-1.5 rounded-md hover:bg-white/5 transition-colors"
             aria-label={`Notification (${totalUnread} unread)`}
             onClick={() => setOpen(true)}
         >
-            <Bell className="w-5 h-5 text-muted-foreground"/>
+            <Bell className="w-5 h-5 text-zinc-400 hover:text-zinc-200 transition-colors"/>
             {totalUnread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white
-                text-[9px] font-bold min-w-[16px] rounded-full flex items-center justify-center 
-                px-0.5">
+                <span className="absolute -top-0.5 -right-0.5 bg-purple-600 text-white
+                text-[9px] font-mono font-bold min-w-[16px] rounded-full flex items-center 
+                justify-center px-0.5 border border-[#0A0507]">
                     {totalUnread > 9 ? "9+" : totalUnread}
                 </span>
             )}
@@ -398,14 +409,14 @@ export function NotificationCenter(){
             <>
                 {TriggerButton}
                 <Drawer open={open} onOpenChange={setOpen}>
-                    <DrawerContent className="bg-zinc-900 border-zinc-700 max-h-[85svh]
-                    flex flex-col">
+                    <DrawerContent className="bg-[#0A0507] border-white/10 max-h-[85svh]
+                        flex flex-col">
                         <DrawerHeader className="sr-only">
                             <DrawerTitle>Notification</DrawerTitle>
                         </DrawerHeader>
                         {/* Drag handle */}
-                        <div className="w-10 h-1 bg-zinc-700 rounded-full mx-auto mt-3 mb-1
-                        shrink-0"/>
+                        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1
+                            shrink-0"/>
                         <NotificationBody 
                             {...bodyProps}
                             onClose={() => setOpen(false)}
@@ -421,7 +432,7 @@ export function NotificationCenter(){
             <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
             <PopoverContent
                 className={clsx(
-                    "p-0 bg-zinc-900 border-zinc-700 shadow-xl flex flex-col",
+                    "p-0 bg-[#0A0507] border-white/10 shadow-2xl flex flex-col rounded-xl overflow-hidden backdrop-blur-md",
                     "w-[min(320px,calc(100vw-2rem))]", // never overflows viewport
                     "md:w-[360px]", 
                     "max-h-[min(480px, calc(100svh-6rem))]" // never taller than viewport

@@ -119,7 +119,7 @@ export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
             <button
             onClick={onClose}
             className="fixed bottom-0 right-0 flex items-center justify-center w-9 h-9 rounded-lg
-            border border-white/20 bg-black/90 text-gray-300 hover:text-white
+            border border-[#2A1E22] bg-[#120C0E] text-zinc-300 hover:text-white
              hover:border-white/40 transition-all"
              style={{
                 zIndex: 2147483647,
@@ -154,7 +154,7 @@ export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
                 transform: `rotate(90deg) translateY(-${rotH}px)`,
                 overflow: 'hidden',
                 // WebkitOverflowScrolling: 'touch',
-                backgroundColor: '#050A0A',
+                backgroundColor: '#120C0E',
                 zIndex: 2147483646,
                 display: 'flex',
                 alignItems: 'center',
@@ -184,17 +184,17 @@ export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
          * Header bar + sandbox filling remaining height
          */
         <div
-        className="fixed inset-0 bg-black flex flex-col"
+        className="fixed inset-0 bg-[#120C0E] flex flex-col"
         style={{ zIndex: 2147483646}}
         >
             {/* Header */}
             <div
-            className="flex items-center justify-between px-4 border-b border-white/10 gap-2
-            shrink-0 bg-[#080C0C]"
+            className="flex items-center justify-between px-4 border-b border-[#2A1E22] gap-2
+            shrink-0 bg-[#0E0A0B]"
             style={{ height: HEADER_H }}
             >
-                <div className="flex items-center gap-2 min-w-0">
-                    <div className={`w-2 h-2 rounded-full bg-[#63FF9D] animate-pulse shrink-0
+                {/* <div className="flex items-center gap-2 min-w-0">
+                    <div className={`w-2 h-2 rounded-full bg-[#C9A227] animate-pulse shrink-0 />
                         ${type === 'flashcard' 
                         ? 'bg-purple-400' 
                         : 'bg-[#63FF9D]'}`
@@ -206,18 +206,28 @@ export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
                             - Interactive Playground
                         </span>
                     </span>
+                </div> */}
+                <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-2 h-2 rounded-full bg-[#C9A227] animate-pulse shrink-0"/>
+                    <span className="text-[#F5F0EB] font-mono uppercase tracking-widest text-[10px]
+                    sm:text-xs truncate">
+                       {type === 'flashcard' ? 'Flashcard Editor' : ' Studysprout Sandbox'}
+                        <span className="hidden sm:inline text-[#8C7A6B] font-mono tracking-normal ml-2">
+                            - Interactive Playground
+                        </span>
+                    </span>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                     {isPaused !== undefined &&(<span className={`text-[9px] sm:text-[10px] 
                     font-bold transition-all duration-500 ${isPaused 
-                        ? 'text-[#63FF9D] opacity-100' 
-                        : 'text-gray-600 opacity-50'}`}>
+                        ? 'text-[#C9A227] opacity-100' 
+                        : 'text-[#8C7A6B] opacity-50'}`}>
                             {isPaused ? 'OVERRIDE ACTIVE' : 'AI GUIDE RUNNING'}
                     </span>)}
                     <button
                     onClick={onClose}
                     className="flex items-center justify-center w-8 h-8 rounded-lg border
-                     border-white/10 text-gray-400 hover:text-white hover:border-white/30
+                     border-[#2A1E22] text-zinc-400 hover:text-white hover:border-white/30
                      transition-all shrink-0"
                     >
                         <X size={16}/>
@@ -227,7 +237,7 @@ export const FullscreenPopup: React.FC<FullscreenPopupProps> = ({
 
             {/* Sandbox content */}
             <div
-            className="flex-1 overflow-clip bg-[#050A0A] flex items-stretch justify-center p-3"
+            className="flex-1 overflow-clip bg-[#120C0E] flex items-stretch justify-center p-3"
             style={{ height: `calc(100vh - ${HEADER_H}px)` }}
             >
                 {/* 

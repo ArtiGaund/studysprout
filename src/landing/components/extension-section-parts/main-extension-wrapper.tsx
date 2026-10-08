@@ -63,7 +63,7 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
 
   const highlightClass = (idx: number) =>
     isHighlightPhase && activeIndex === idx
-      ? "bg-[#63FF9D]/20 text-white rounded px-0.5 transition-colors duration-300"
+      ? "bg-[#C9A227]/20 text-[#F5F0EB] rounded px-0.5 transition-colors duration-300"
       : "transition-colors duration-300";
 
   const menuPos = {
@@ -73,33 +73,33 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
 
   return (
     <div className="flex flex-col lg:flex-row w-full overflow-hidden rounded-2xl border
-     border-white/5 bg-[#080C0C] shadow-2xl">
+     border-[#2A1E22] bg-[#0E090B] shadow-2xl">
 
       {/* LEFT PANEL — fake browser, exactly half width on desktop */}
       <div className="w-full lg:w-1/2 flex flex-col min-h-[420px] lg:min-h-[640px]
-       border-b lg:border-b-0 lg:border-r border-white/5 relative">
+       border-b lg:border-b-0 lg:border-r border-[#2A1E22] relative">
 
         {/* Fake browser chrome */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-[#0A0F0F]">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-[#2A1E22] bg-[#120C0E]">
           <div className="flex gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
             <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
           </div>
-          <div className="flex-1 mx-3 px-3 py-1 rounded-md bg-white/5 text-[10px]
-           text-gray-500 font-mono truncate">
+          <div className="flex-1 mx-3 px-3 py-1 rounded-md border-b border-[#2A1E22] bg-[#120C0E] 
+          text-[10px] text-stone-400 font-mono truncate">
             geeksforgeeks.org/deep-learning/neural-networks-a-beginners-guide
           </div>
         </div>
 
         {/* Fake article body */}
-        <div className="relative flex-1 p-6 overflow-hidden text-gray-300">
+        <div className="relative flex-1 p-6 overflow-hidden text-stone-300">
 
           <h1 className={`text-lg font-bold mb-4 inline ${highlightClass(0)}`}>
             Introduction To Neural Networks
           </h1>
 
-          <p className="text-xs leading-relaxed text-gray-400 mb-4 mt-3">
+          <p className="text-xs leading-relaxed text-stone-400 mb-4 mt-3">
             <span className={highlightClass(1)}>
               Neural networks are machine learning models that mimic the complex
               functions of the human brain. These models consist of interconnected
@@ -124,7 +124,7 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
             className="absolute pointer-events-none transition-all duration-500 ease-out z-30"
             style={{ top: activeItem.anchor.top, left: activeItem.anchor.left }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#63FF9D">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#C9A227">
               <path d="M4 2l14 6-6 2-2 6-6-14z" />
             </svg>
           </div>
@@ -132,7 +132,7 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
           {/* Fake context menu */}
           {menuOpen && (
             <div
-              className="absolute z-40 w-44 rounded-lg border border-white/10 bg-[#111716]
+              className="absolute z-40 w-44 rounded-lg border border-[#2A1E22] bg-[#160F12]
                shadow-2xl py-1.5 text-[10px] transition-opacity duration-200"
               style={{ top: menuPos.top, left: menuPos.left }}
             >
@@ -145,16 +145,16 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
 
               <div className="relative">
                 <div className={`flex items-center justify-between gap-2 px-3 py-1.5
-                 cursor-default ${submenuOpen ? "bg-[#63FF9D]/10" : ""}`}>
-                  <span className="flex items-center gap-2 text-[#63FF9D] font-medium">
+                 cursor-default ${submenuOpen ? "bg-[#C9A227]/15" : ""}`}>
+                  <span className="flex items-center gap-2 text-[#C9A227] font-medium">
                     <Sparkles size={11} /> Save to Studysprout
                   </span>
-                  <ChevronRight size={11} className="text-[#63FF9D]" />
+                  <ChevronRight size={11} className="text-[#C9A227]" />
                 </div>
 
                 {submenuOpen && (
                   <div className="absolute left-full top-0 ml-1 w-36 rounded-lg border
-                   border-white/10 bg-[#111716] shadow-2xl py-1.5">
+                   border-[#2A1E22] bg-[#160F12] shadow-2xl py-1.5">
                     <SubmenuRow icon={<Heading1 size={11} />} label="Heading 1"
                       active={activeItem.menuLabel === "Heading 1"} />
                     <SubmenuRow icon={<Heading2 size={11} />} label="Heading 2"
@@ -177,13 +177,13 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
           {/* Save toast */}
           {toastVisible && phase === "saved-toast" && (
             <div className="absolute bottom-4 right-4 z-50 max-w-[210px] rounded-lg
-             bg-[#111716] border border-[#63FF9D]/20 px-3 py-2 shadow-2xl">
-              <p className="text-[10px] text-[#63FF9D] font-bold">
+             bg-[#160F12] border border-[#C9A227]/40 px-3 py-2 shadow-2xl">
+              <p className="text-[10px] text-[#C9A227] font-bold">
                 Saved to Studysprout
               </p>
-              <p className="text-[9px] text-gray-500">
+              <p className="text-[9px] text-stone-400">
                 from {activeItem.source} ·{" "}
-                <span className="text-[#63FF9D] underline">View in Inbox</span>
+                <span className="text-[#C9A227] underline">View in Inbox</span>
               </p>
             </div>
           )}
@@ -191,21 +191,21 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
       </div>
 
       {/* RIGHT PANEL — fake StudySprout app, exactly half width on desktop */}
-      <div className="w-full lg:w-1/2 flex bg-[#0B0F0F] min-h-[420px] lg:min-h-[640px] relative">
+      <div className="w-full lg:w-1/2 flex bg-[#0B0709] min-h-[420px] lg:min-h-[640px] relative">
 
         {/* Sub-panel 1: collapsed icon rail */}
         <div className="w-11 flex-shrink-0 flex flex-col items-center gap-5 py-4
-         border-r border-white/5 bg-[#0A0E0E]">
-          <Menu size={14} className="text-gray-600" />
-          <Search size={14} className="text-gray-600" />
-          <Home size={14} className="text-gray-600" />
-          <Trash2 size={14} className="text-gray-600" />
-          <Clock size={14} className="text-gray-600" />
+         border-r border[#2A1E22] bg-[#120C0E]">
+          <Menu size={14} className="text-stone-600" />
+          <Search size={14} className="text-stone-600" />
+          <Home size={14} className="text-stone-600" />
+          <Trash2 size={14} className="text-stone-600" />
+          <Clock size={14} className="text-stone-600" />
           <div className="relative">
-            <InboxIcon size={14} className="text-[#63FF9D]" />
+            <InboxIcon size={14} className="text-[#C9A227]" />
             {badgeCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full
-               bg-purple-500 text-white text-[8px] font-bold flex items-center
+               bg-[#C9A227] text-[#0E090B] text-[8px] font-bold flex items-center
                justify-center">
                 {badgeCount}
               </span>
@@ -214,21 +214,21 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
         </div>
 
         {/* Sub-panel 2: inbox drawer list */}
-        <div className="w-32 sm:w-36 flex-shrink-0 border-r border-white/5 flex flex-col">
-          <div className="px-3 py-3 border-b border-white/5">
-            <p className="text-[11px] font-bold text-white">Inbox</p>
-            <p className="text-[9px] text-gray-600">{inboxItems.length} to file</p>
+        <div className="w-32 sm:w-36 flex-shrink-0 border-r border-[#2A1E22] flex flex-col">
+          <div className="px-3 py-3 border-b border-[#2A1E22]">
+            <p className="text-[11px] font-bold text-[#F5F0EB]">Inbox</p>
+            <p className="text-[9px] text-stone-500">{inboxItems.length} to file</p>
           </div>
           <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
             {inboxItems.length === 0 ? (
-              <p className="text-[8px] text-gray-700 px-1 pt-2 leading-relaxed">
+              <p className="text-[8px] text-stone-600 px-1 pt-2 leading-relaxed">
                 Nothing captured yet.
               </p>
             ) : (
               inboxItems.map(item => (
                 <div
                   key={item.id}
-                  className={`rounded-md border border-white/5 bg-white/[0.02] p-1.5
+                  className={`rounded-md border border-[#2A1E22] bg-[#160F12] p-1.5
                    transition-all duration-500
                    ${item.justAdded ? "animate-in fade-in slide-in-from-top-1" : ""}`}
                 >
@@ -246,9 +246,9 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
 
         {/* Sub-panel 3: main inbox page */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="px-4 pt-4 pb-3 border-b border-white/5">
-            <h2 className="text-sm font-bold text-white">Inbox</h2>
-            <p className="text-[9px] text-gray-600 mt-0.5">
+          <div className="px-4 pt-4 pb-3 border-b border-[#2A1E22]">
+            <h2 className="text-sm font-bold text-[#F5F0EB]">Inbox</h2>
+            <p className="text-[9px] text-stone-500 mt-0.5">
               Content captured from the browser extension, waiting to be filed.
             </p>
           </div>
@@ -257,21 +257,21 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/5">
             {phase === "bulk-select" || phase === "merging" ? (
               <>
-                <span className="flex items-center gap-1.5 text-[10px] text-white">
-                  <CheckSquare size={12} className="text-[#63FF9D]" />
+                <span className="flex items-center gap-1.5 text-[10px] text-[#F5F0EB]">
+                  <CheckSquare size={12} className="text-[#C9A227]" />
                   {selectedForMerge.length} selected
                 </span>
                 <div className="flex items-center gap-3">
                   <FolderInput
                     size={13}
-                    className={`transition-colors ${phase === "merging" ? "text-[#63FF9D]" : "text-gray-500"}`}
+                    className={`transition-colors ${phase === "merging" ? "text-[#C9A227]" : "text-stone-500"}`}
                   />
-                  <Trash size={13} className="text-gray-600" />
+                  <Trash size={13} className="text-stone-600" />
                 </div>
               </>
             ) : (
-              <span className="flex items-center gap-1.5 text-[10px] text-gray-500">
-                <Square size={12} className="text-gray-700" />
+              <span className="flex items-center gap-1.5 text-[10px] text-stone-500">
+                <Square size={12} className="text-stone-700" />
                 Select all
               </span>
             )}
@@ -279,9 +279,9 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
 
           <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
             {inboxItems.length === 0 ? (
-              <p className="text-[10px] text-gray-600 text-center mt-10 px-4 leading-relaxed">
+              <p className="text-[10px] text-stone-500 text-center mt-10 px-4 leading-relaxed">
                 Nothing captured yet. Right-click any text on the web and choose{" "}
-                <span className="text-[#63FF9D]">Save to Studysprout</span>.
+                <span className="text-[#C9A227]">Save to Studysprout</span>.
               </p>
             ) : (
               inboxItems.map((item) => {
@@ -290,31 +290,31 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
                 return (
                   <div
                     key={item.id}
-                    className={`rounded-lg border border-white/5 bg-white/[0.02] p-3
+                    className={`rounded-lg border border-[#2A1E22] bg-[#160F12] p-3
                      transition-all duration-500
                      ${item.justAdded ? "animate-in fade-in slide-in-from-top-2" : ""}
-                     ${isSelected ? "border-[#63FF9D]/40 bg-[#63FF9D]/5" : ""}
+                     ${isSelected ? "border-[#C9A227]/50 bg-[#C9A227]/10" : ""}
                      ${isMerging ? "scale-95 opacity-50" : ""}`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className={`flex items-center gap-1.5 text-[8px] font-black
+                      <span className={`flex items-center gap-1.5 text-[8px] font-mono font-bold
                        uppercase tracking-widest ${TYPE_COLOR[item.type]}`}>
                         {isSelected ? (
-                          <CheckSquare size={11} className="text-[#63FF9D]" />
+                          <CheckSquare size={11} className="text-[#C9A227]" />
                         ) : (
-                          <Square size={11} className="text-gray-700" />
+                          <Square size={11} className="text-stone-700" />
                         )}
                         {item.type.replace("_", " ")}
                       </span>
-                      <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center gap-2 text-stone-500">
                         <FolderInput size={12} />
                         <Trash size={12} />
                       </div>
                     </div>
-                    <p className="text-[10px] text-gray-300 font-medium leading-snug line-clamp-2">
+                    <p className="text-[10px] text-stone-300 font-medium leading-snug line-clamp-2">
                       {item.title}
                     </p>
-                    <p className="text-[9px] text-gray-600 mt-1">just now</p>
+                    <p className="text-[9px] text-stone-500 mt-1">just now</p>
                   </div>
                 );
               })
@@ -327,8 +327,8 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
           <button
             onClick={onReplay}
             className="absolute bottom-3 right-3 z-50 flex items-center justify-center gap-1.5
-             rounded-lg border border-[#63FF9D]/20 bg-[#111716] hover:bg-[#63FF9D]/10
-             px-2.5 py-1.5 text-[9px] font-bold text-[#63FF9D] uppercase
+             rounded-lg border border-[#C9A227]/30 bg-[#160F12] hover:bg-[#C9A227]/20
+             px-2.5 py-1.5 text-[9px] font-mono font-bold text-[#C9A227] uppercase
              tracking-widest transition-colors animate-in fade-in shadow-2xl"
           >
             <RefreshCw size={11} />
@@ -339,9 +339,9 @@ export const MainExtensionWrapper: React.FC<MainExtensionWrapperProps> = ({
         {/* Merged toast */}
         {toastVisible && phase === "merged-toast" && (
           <div className="absolute bottom-3 right-3 z-50 rounded-lg
-           bg-[#111716] border border-[#63FF9D]/20 px-3 py-2 shadow-2xl">
-            <p className="text-[10px] text-[#63FF9D] font-bold">Merged</p>
-            <p className="text-[9px] text-gray-500">Selected items merged successfully</p>
+           bg-[#160F12] border border-[#C9A227]/40 px-3 py-2 shadow-2xl">
+            <p className="text-[10px] text-[#C9A227] font-bold">Merged</p>
+            <p className="text-[9px] text-stone-500">Selected items merged successfully</p>
           </div>
         )}
       </div>
@@ -358,12 +358,12 @@ const MenuRow = ({
   label: string;
   shortcut?: string;
 }) => (
-  <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-gray-400">
+  <div className="flex items-center justify-between gap-2 px-3 py-1.5 text-stone-400">
     <span className="flex items-center gap-2">
       {icon}
       {label}
     </span>
-    {shortcut && <span className="text-gray-600 text-[9px]">{shortcut}</span>}
+    {shortcut && <span className="text-stone-500 text-[9px]">{shortcut}</span>}
   </div>
 );
 
@@ -378,7 +378,7 @@ const SubmenuRow = ({
 }) => (
   <div
     className={`flex items-center gap-2 px-3 py-1.5 transition-colors
-      ${active ? "bg-[#63FF9D]/10 text-[#63FF9D]" : "text-gray-400"}`}
+      ${active ? "bg-[#C9A227]/15 text-[#C9A227]" : "text-stone-400"}`}
   >
     {icon}
     {label}

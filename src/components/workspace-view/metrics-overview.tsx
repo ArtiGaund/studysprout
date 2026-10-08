@@ -97,46 +97,47 @@ export const MetricsOverview = ({ workspaceId }: { workspaceId: string}) => {
 
           
             {/* Right: Quick Actions Sidebar */}
-            <div className="lg:col-span-1 flex flex-col gap-y-6 lg:sticky lg:max-h-[calc(100vh-2rem)]
-            lg:top-4 lg:overflow-y-auto">
-                <div 
-                className="bg-purple-900/10 border border-purple-500/20 rounded-2xl p-5 flex flex-col
-                gap-y-4"
-                >
-                    <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            <div className="lg:col-span-1 flex flex-col gap-y-6 lg:sticky 
+            lg:max-h-[calc(100vh-2rem)] lg:top-4 lg:overflow-y-auto">
+                <div className="bg-purple-900/10 border border-purple-500/20 rounded-2xl p-5
+                 flex flex-col gap-y-4">
+                    <h3 className="text-[10px] font-bold text-zinc-400 uppercase 
+                    tracking-widest">
                         Quick Action
                     </h3>
                    
                     <FlashcardSection workspaceId={workspaceId} />
 
-                    {!hasGraph && <ActionItem 
-                        icon={isGenerating ? Loader2 : Network}
-                        label={
-                        isGenerating 
-                            ? "Generating Graph..."
-                            : hasGraph
-                                ? "View Graph"
-                                : folderCount < 2
-                                    ? "Map Graph (2+ folder needed)"
-                                    : "Generate Map Graph"
-                        }
-                        handleAction={handleMapGraph}
-                        disabled={isGenerating || folderCount < 2}
-                        disabledMessage={
-                            folderCount < 2 && !isGenerating
-                                ? "You need at least 2 folders in the workspace to generate a concept graph."
-                                : undefined
-                        }
-                        tooltipClassName="border-red-500/30 bg-zinc-900 text-red-300"
-                        tooltipSide="top"
-                        iconClassName={isGenerating ? "animate-spin text-purple-400" : null}
-                        isGenerating={isGenerating}
-                    />}
+                    {!hasGraph && 
+                        <ActionItem 
+                            icon={isGenerating ? Loader2 : Network}
+                            label={
+                            isGenerating 
+                                ? "Generating Graph..."
+                                : hasGraph
+                                    ? "View Graph"
+                                    : folderCount < 2
+                                        ? "Map Graph (2+ folder needed)"
+                                        : "Generate Map Graph"
+                            }
+                            handleAction={handleMapGraph}
+                            disabled={isGenerating || folderCount < 2}
+                            disabledMessage={
+                                folderCount < 2 && !isGenerating
+                                    ? "You need at least 2 folders in the workspace to generate a concept graph."
+                                    : undefined
+                            }
+                            tooltipClassName="border-red-500/30 bg-zinc-900 text-red-300"
+                            tooltipSide="top"
+                            iconClassName={isGenerating ? "animate-spin text-purple-400" : null}
+                            isGenerating={isGenerating}
+                        />
+                    }
                 </div>
                 <div className="flex-1 min-h-0">
                     <RelationshipGraph level="workspace"/>
                 </div>  
             </div>
         </div>
-    )
+    );
 }

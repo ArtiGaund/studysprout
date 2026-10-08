@@ -30,8 +30,6 @@ import { makeSelectFolders, selectCurrentFolder } from "@/store/selectors/folder
 import { selectCurrentWorkspace } from "@/store/selectors/workspaceSelector";
 import { UploadPDFModal } from "../pdf-import/upload-pdf-modal";
   
-
-
 interface FoldersDropdownListProps{
     workspaceFolders: ReduxFolder[] | [];
     workspaceId: string; 
@@ -79,131 +77,126 @@ const FoldersDropdownList:React.FC<FoldersDropdownListProps> = ({
      * Triggers the folder creation workflow with immediate feedback via Toasts.
      */
     const addFolderHandler = async () => {
-             try {
-                 const folder = await createFolder(workspaceId);
-                if(!folder.success){
-                    toast({
-                        title: "Failed to create folder",
-                        description: "Please try again later",
-                        variant: "destructive"
-                    })
-                }
-                else {
+        try {
+            const folder = await createFolder(workspaceId);
+            if(!folder.success){
+                toast({
+                    title: "Failed to create folder",
+                    description: "Please try again later",
+                    variant: "destructive"
+                });
+            }else {
                 toast({
                     title: "Successfully created folder",
                     description: "You can now add files to this folder",
                 });
             }
-             } catch (error) {
-                console.warn("Error while creating a folder in workspace ",error)
-                toast({
-                    title: "Failed to create folder",
-                    description: "Please try again later",
-                    variant: "destructive"
-                })
-             }  
+        } catch (error) {
+            console.warn("Error while creating a folder in workspace ",error)
+            toast({
+                title: "Failed to create folder",
+                description: "Please try again later",
+                variant: "destructive"
+            });
+        }  
     }
 
     return(
         <>
-            <div className="sticky top-2 z-20 w-full bg-[#080C0C]">
+            <div className="sticky top-2 z-20 w-full bg-[#0A0507]/95 backdrop-blur-sm pt-2">
                  {/* Contextual Header: Displays Privacy status only when in Sidebar */}
                 <div className={`flex w-full h-10 group/title items-center
-                text-Neutrals/neutrals-8 ${isPannelOpen 
-                    ? 'justify-center px-0'
-                    : 'justify-between pr-4'    
-                }
-                `}>
+                    ${isPannelOpen ? 'justify-center px-0' : 'justify-between pr-4'}`}>
                     { usedWhere === "sidebar" && !isPannelOpen && (
-                        <span className={`font-bold text-muted-foreground/70 tracking-widest text-[11px]`}>
-                        {currentWorkspace?.isPublic ? "PUBLIC" : "PRIVATE" }
+                        <span className={`font-mono font-bold text-[10px] tracking-[0.2em] 
+                        uppercase text-[#8C7A6B]`}>
+                            {currentWorkspace?.isPublic ? "PUBLIC" : "PRIVATE" }
                         </span>
-                    )}
-                    
+                    )}                    
                 </div>
 
                 {/* Section Label & Action Icon */}
                 <div className="flex sticky z-20 top-10 w-full h-10 group/title justify-between
-                items-center pr-4 text-Neutrals/neutrals-8 pl-4 m-1">
+                items-center pr-4 pl-4 m-1">
                 
-                { usedWhere === "sidebar" && !isPannelOpen && (
-                    <span className={`font-bold text-Neutrals-8 truncate text-xs`}>
-                        FOLDERS
-                    </span>
-                )}
-                { usedWhere === "workspacePage" && (
-                    <span className="font-bold text-Neutrals-8 text-lg">
-                    FOLDERS
-                    </span>
-                )}
-                { usedWhere === "sidebar" && !isPannelOpen && (
-                    <div className="flex flex-row gap-2">
-                        <TooltipComponent message="Create Folder">
-                            <PlusIcon
-                            onClick={addFolderHandler}
-                            size={16}
-                            className="group-hover/title:inline-block hidden cursor-pointer hover:text-white"/>
-                        </TooltipComponent>
-                        <TooltipComponent message="Upload PDF">
-                            <UploadPDFModal>
-                                <FileInput
-                                    size={16}
-                                    className="group-hover/title:inline-block hidden cursor-pointer hover:text-white"
-                                />
-                            </UploadPDFModal>
-                        </TooltipComponent>
-                    </div>
-                )}
-                
+                    {usedWhere === "sidebar" && !isPannelOpen && (
+                        <span className={`font-mono font-bold text-[10px] tracking-[0.2em] 
+                            uppercase text-zinc-400`}>
+                            FOLDERS
+                        </span>
+                    )}
+                    {usedWhere === "workspacePage" && (
+                        <span className="font-mono font-bold text-zinc-400 text-lg uppercase">
+                            FOLDERS
+                        </span>
+                    )}
+                    {usedWhere === "sidebar" && !isPannelOpen && (
+                        <div className="flex flex-row gap-2">
+                            <TooltipComponent message="Create Folder">
+                                <PlusIcon
+                                onClick={addFolderHandler}
+                                size={16}
+                                className="group-hover/title:inline-block hidden cursor-pointer
+                                text-zinc-400 hover:text-[#C9A227] transition-colors"/>
+                            </TooltipComponent>
+                            <TooltipComponent message="Upload PDF">
+                                <UploadPDFModal>
+                                    <FileInput
+                                        size={16}
+                                        className="group-hover/title:inline-block hidden 
+                                        cursor-pointer text-zinc-400 hover:text-[#C9A227] 
+                                        transition-colors"
+                                    />
+                                </UploadPDFModal>
+                            </TooltipComponent>
+                        </div>
+                    )}                
                 </div>
-            </div>
-           
+            </div>           
 
             {/* Revision Mode Safeguard: Uses a HoverCard to explain disabled states */}
-           {!isPannelOpen && ( <HoverCard>
-                <HoverCardTrigger asChild>
-            <div 
-            className={`${usedWhere === "sidebar" && isPannelOpen 
-                ? 'bg-slate-gray cursor-not-allowed rounded-lg  w-full mt-2 overflow-hidden' 
-                 : ''}`}
-            >
+           {!isPannelOpen && ( 
+                <HoverCard>
+                    <HoverCardTrigger asChild>
+                        <div 
+                        className={`${usedWhere === "sidebar" && isPannelOpen 
+                            ? 'bg-slate-gray cursor-not-allowed rounded-lg  w-full mt-2 overflow-hidden' 
+                            : ''}`}
+                        >
                     
-                {/* Rendering all the folder */}
-                <div className={`flex transition-all pl-5`}>
-                <Accordion
-                type="multiple"
-                defaultValue={[ currentFolder?.toString() || '']}
-                className="pb-20"
-                >
-                   {
-                   filteredFolder.length > 0 ? (
-                    filteredFolder.map((folder) => (
-                      (folder &&  
-                      <Dropdown 
-                        key={folder._id} // Ensure key is a string
-                        title={folder.title}
-                        listType="folder"
-                        id={folder._id} // Ensure id is a string and provide a fallback
-                        iconId={folder.iconId || ''} // Ensure iconId is a string and provide a fallback
-                        workspaceId={workspaceId}
-                    />)
-                   ))
-                   ) : (
-                    <div className="text-Neutrals/neutrals-7 text-sm py-2">
-                        No folders found.
-                    </div>
-                   )
-                   
-                   }
-                </Accordion>
-            </div>
-        </div>
-        </HoverCardTrigger>
-        {isPannelOpen && usedWhere === "sidebar" && (
-            <DisabledHoverMessage />
-        )}
-        </HoverCard>)}
-        </>
+                            {/* Rendering all the folder */}
+                            <div className={`flex transition-all pl-5`}>
+                                <Accordion
+                                type="multiple"
+                                defaultValue={[ currentFolder?.toString() || '']}
+                                className="pb-20"
+                                >
+                                    {filteredFolder.length > 0 ? (
+                                        filteredFolder.map((folder) => (
+                                        (folder &&  
+                                        <Dropdown 
+                                            key={folder._id} // Ensure key is a string
+                                            title={folder.title}
+                                            listType="folder"
+                                            id={folder._id} // Ensure id is a string and provide a fallback
+                                            iconId={folder.iconId || ''} // Ensure iconId is a string and provide a fallback
+                                            workspaceId={workspaceId}
+                                        />)
+                                    ))
+                                    ) : (
+                                        <div className="text-Neutrals/neutrals-7 text-sm py-2 font-mono">
+                                            No folders found.
+                                        </div>
+                                    )}
+                                </Accordion>
+                            </div>
+                        </div>
+                    </HoverCardTrigger>
+                    {isPannelOpen && usedWhere === "sidebar" && (
+                        <DisabledHoverMessage />
+                    )}
+                </HoverCard>)}
+            </>
     )
 }
 

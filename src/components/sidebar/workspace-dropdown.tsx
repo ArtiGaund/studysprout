@@ -13,7 +13,6 @@
 import React, { useEffect, useRef, useState } from "react"
 import SelectedWorkspaces from "./selected-workspaces";
 import CustomDialogTrigger from "../global/custom-dialog";
-import DashboardSetup from "../dashboard-setup/dashboard-setup";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
 import { ReduxWorkSpace } from "@/types/state.type";
@@ -25,7 +24,6 @@ interface WorkspaceDropdownProps{
     workspaces: ReduxWorkSpace[] | [];
     defaultValue: ReduxWorkSpace | undefined
 }
-
 
 // this component will allow the user to select between the different workspaces
 const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defaultValue }) => {
@@ -76,61 +74,6 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
     },[]);
 
     return(
-    // <div 
-    //     ref={dropdownRef}
-    //     className="relative inline-block text-left w-full select-none"
-    // >
-    //     {/* Active Workspace Trigger */}
-    //     <div>
-    //         <span onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
-    //             { currentWorkspace ?
-    //              <SelectedWorkspaces workspace={currentWorkspace} /> 
-    //              : 
-    //              ( 'Select  a workspace' )
-    //             }
-    //         </span>
-    //     </div>
-
-    //     {/* Dropdown Menu Overlay */}
-    //     { isOpen && (
-    //         <div className="origin-top-right absolute w-full rounded-md shadow-md z-50 bg-black/10
-    //          backdrop-blur-lg group overflow-scroll border-[1px] border-muted p-2">
-    //             <div className="rounded-md flex flex-col">
-    //                 <div className="!p-2">
-    //                     {allWorkspaces.length > 0 && (
-                            
-    //                         <>
-    //                             <p className="text-muted-foreground text-sm mb-1">All Workspace</p>
-    //                             <hr className="border-x-muted-foreground/20 mb-2"></hr>
-    //                             {allWorkspaces.map((option,index) => (
-    //                                 <SelectedWorkspaces 
-    //                                 // key={option._id}
-    //                                 key={index}
-    //                                 workspace={option}
-    //                                 onClick={() => handleSelect(option)}
-    //                                 />
-    //                             ))}
-    //                         </>
-    //                     )}
-    //                 </div>
-
-    //                 {/* Workspace Creation Action */}
-    //                 <CustomDialogTrigger
-    //                  content={ <WorkspaceCreateForm />}
-    //                   >
-    //                     <div className="flex transition-all hover:bg-muted justify-center items-center
-    //                      gap-2 p-2 w-full rounded-lg">
-    //                         <article className="text-slate-500 rounded-full bg-slate-800 w-4 h-4 flex
-    //                          items-center justify-center">
-    //                             +
-    //                         </article>
-    //                         Create Workspace
-    //                      </div>
-    //                   </CustomDialogTrigger>
-    //             </div>
-    //         </div>
-    //     )}
-    // </div>
         <div
             ref={dropdownRef}
             className="relative inline-block text-left w-full select-none"
@@ -138,8 +81,8 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
             {/* Dropdown Action Trigger */}
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between w-full bg-[#141416]/40 border
-                border-white/[0.04] hover:bg-white/[0.02] p-2 rounded-xl cursor-pointer
+                className="flex items-center justify-between w-full bg-white/[0.03] border
+                border-white/[0.06] hover:bg-white/[0.04] p-2 rounded-xl cursor-pointer
                 transition-all duration-200"
             >
                 <div className="min-w-0 flex-1">
@@ -160,30 +103,33 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
 
             {/* Dropdown Menu Overlay Panel */}
             {isOpen && (
-                <div className="absolute left-0 mt-2 w-full rounded-xl bg-[#141416] border
+                <div className="absolute left-0 mt-2 w-full rounded-xl bg-[#0A0507] border
                 border-white/10 shadow-2xl z-50 p-1 animate-in fade-in zoom-in-95 duration-150
                 max-h-[280px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
                     <div className="flex flex-col w-full">
                         {allWorkspaces.length > 0 && (
                             <div className="px-1 py-1">
-                                <p className="text-zinc-500 font-mono font-bold text-[10px]
+                                <p className="text-zinc-500 font-mono font-medium text-[10px]
                                 tracking-wider uppercase px-2 py-1 select-none">
                                     All Workspaces
                                 </p>
                                 <div className="space-y-0.5 mt-1">
-                                    {allWorkspaces.map((option, index) => (
-                                        <div
-                                            key={index}
-                                            onClick={() => handleSelect(option)}
-                                            className={`w-full rounded-lg transition-colors p-1
-                                            cursor-pointer hover:bg-white/[0.04]
-                                            ${currentWorkspace?._id === option._id
-                                                ? "bg-white/[0.02] pointer-events-none" : ""
-                                            }`}
-                                        >
-                                            <SelectedWorkspaces workspace={option}/>
-                                        </div>
-                                    ))}
+                                    {allWorkspaces.map((option) =>{
+                                        const isActive = currentWorkspace?._id === option._id;
+                                        return  (
+                                            <div
+                                                key={option._id}
+                                                onClick={() => handleSelect(option)}
+                                                className={`w-full rounded-lg transition-colors 
+                                                px-2 py-1.5 cursor-pointer ${isActive
+                                                    ? "bg-white/[0.08] text-[#C9A227]"
+                                                    : "text-zinc-300 hover:bg-white/[0.04] hover:text-white"
+                                                }`}
+                                            >
+                                                <SelectedWorkspaces workspace={option}/>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -192,11 +138,12 @@ const WorkspaceDropdown: React.FC<WorkspaceDropdownProps> = ({ workspaces, defau
 
                         {/* Workspace Creation Action Module */}
                         <CustomDialogTrigger content={<WorkspaceCreateForm />}>
-                            <div className="flex transition-colors hover:bg-purple-600/10
-                            text-zinc-300 hover:text-purple-400 justify-start items-center
-                            gap-x-2.5 px-3 py-2 w-full rounded-lg text-xs font-semibold
+                            <div className="flex transition-colors hover:bg-white/[0.04]
+                            text-[#F5F0EB] hover:text-[#C9A227] justify-start items-center
+                            gap-x-2.5 px-3 py-2 w-full rounded-lg text-xs font-mono font-medium
                             cursor-pointer mb-0.5">
-                                <div className="w-4 h-4 rounded-md bg-zinc-800 border border-white/5
+                                <div className="w-4 h-4 rounded-md bg-white/[0.06] border
+                                 border-white/5
                                 flex items-center justify-center text-zinc-400">
                                     <Plus size={10} strokeWidth={3}/>
                                 </div>

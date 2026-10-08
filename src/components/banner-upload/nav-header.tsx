@@ -134,7 +134,8 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
     // --- RENDER LOGIC ---
     if (isLoading || !effectiveDetails) {
         return (
-            <div className="flex justify-center items-center h-full">
+            <div className="flex justify-center items-center h-14 px-6 border-b 
+            border-white/[0.06] bg-[#0A0507] text-xs text-zinc-500 font-mono">
                 Loading {dirType} details...
             </div>
         );
@@ -142,19 +143,21 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
     const data = effectiveDetails as (ReduxWorkSpace & ReduxFolder & ReduxFile);
 
     return (
-        <div className="w-full border-b border-white/5 bg-[#0b0b0c] select-none">
+        <div className="w-full border-b border-white/[0.06] bg-[#0A0507]/90 select-none 
+            backdrop-blur-md sticky top-0 z-40">
             {data?.inTrash && (
-                <article className="w-full py-2 px-3 bg-[#EB5757] flex flex-col sm:flex-row  
+                <article className="w-full py-2 px-3 bg-red-950/40 border-b border-red-500/20 
+                flex flex-col sm:flex-row  
                 justify-center items-center gap-2 sm:gap-4 text-center">
-                    <span className="text-white text-xs sm:text-sm font-medium">
+                    <span className="text-white text-xs sm:text-sm font-mono font-medium">
                         This {dirType} is in Trash.
                     </span>
                     <div className="flex items-center gap-2">
                     <Button 
                         size={"sm"} 
                         variant={"outline"}
-                        className="bg-transparent border-white text-white h-7 px-2.5
-                        hover:bg-white hover:text-[#EB5757] text-xs font-medium"
+                        className="bg-red-500/10 border-red-500/30 text-red-200 h-6 px-2.5
+                         hover:bg-red-500/20 text-xs font-mono"
                         onClick={handleRestore}
                         disabled={isLoading || !data}
                     >
@@ -163,8 +166,8 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
                     <Button
                         size={"sm"} 
                         variant={"outline"}
-                        className="bg-transparent border-white text-white h-7 px-2.5
-                        hover:bg-white hover:text-[#EB5757] text-xs font-medium"
+                        className="bg-transparent border-red-500/20 text-red-400 h-6 px-2.5
+                         hover:bg-red-900/40 hover:text-red-200 text-xs font-mono"
                         onClick={() => {
                             handleDelete();
                         }}
@@ -173,24 +176,28 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
                         Delete
                     </Button>
                 </div>
-                <span className="text-sm text-white">
+                <span className="text-red-400/70 text-[11px] font-mono">
                     {data.inTrash}
                 </span>
             </article>
         )}
 
         {/* Sub-Header: Path & Sync Status */}
-        <div className="w-full h-14 pl-14 sm:pl-14 pr-3 sm:pr-4 flex items-center justify-between
+        <div className="w-full h-14 pl-20 pr-3 sm:px-4 flex items-center justify-between
          gap-3 sm:gap-4">
             <div className="flex-1 min-w-0 flex items-center gap-x-1.5 text-xs sm:text-sm 
-            font-medium text-[#e2e2f0] pr-1">
+            font-medium text-zinc-400">
                 {breadCrumbsData  && (
-                    <>
+                    <div className="flex items-center gap-x-1 min-w-0 overflow-hidden">
                         {/* Workspace Node */}
-                        <div className="flex items-center gap-x-1 min-w-0 shrink-0 max-w-[80px]
-                        sm:max-w-[120px]">
-                            <span>{breadCrumbsData.workspace.icon}</span>
-                            <span className="truncate">
+                        <div className="flex items-center gap-x-1 shrink max-w-[80px]
+                        sm:max-w-[150px] text-zinc-300">
+                            {breadCrumbsData.workspace.icon && (
+                                <span className="text-sm shrink-0">
+                                    {breadCrumbsData.workspace.icon}
+                                </span>
+                            )}
+                            <span className="truncate font-mono font-semibold text-zinc-200">
                                 {breadCrumbsData.workspace.title}
                             </span>
                         </div>
@@ -198,11 +205,16 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
                         {/* Folder Node */}
                         {breadCrumbsData.folder && (
                             <>
-                                <span className="text-gray-600 shrink-0">/</span>
-                                <div className="flex items-center gap-x-1 min-w-0 max-w-[70px]
-                                sm:max-w-[120px]">
-                                    <span>{breadCrumbsData.folder.icon}</span>
-                                    <span className="truncate text-gray-400">
+                                <span className="text-gray-600 shrink-0 hidden sm:inline">/</span>
+                                <div className="hidden sm:flex items-center gap-x-1 min-w-0 
+                                max-w-[40px] sm:max-w-[140px]">
+                                    {breadCrumbsData.folder.icon && (
+                                            <span className="text-sm shrink-0">
+                                                {breadCrumbsData.folder.icon}
+                                            </span>
+                                    )}
+                                    <span className="truncate font-mono font-semibold
+                                     text-gray-400 hover:text-zinc-200 transition-colors">
                                         {breadCrumbsData.folder.title}
                                     </span>
                                 </div>
@@ -213,31 +225,39 @@ export const NavHeader: React.FC<NavHeaderProps> = ({
                         {breadCrumbsData.file && (
                             <>
                                 <span className="text-gray-600 shrink-0">/</span>
-                                <div className="flex items-center gap-x-1 min-w-0 max-w-[90px]
-                                sm:max-w-[160px]">
-                                    <span>{breadCrumbsData.file.icon}</span>
-                                    <span className="truncate text-white font-semibold">
+                                <div className="flex items-center gap-x-1 min-w-0 max-w-[50px]
+                                sm:max-w-[180px] flex-1">
+                                    {breadCrumbsData.file.icon && (
+                                            <span className="text-sm shrink-0">
+                                                {breadCrumbsData.file.icon}
+                                            </span>
+                                        )}
+                                    <span className="truncate text-purple-200 font-medium 
+                                    font-mono">
                                         {breadCrumbsData.file.title}
                                     </span>
                                 </div>
                             </>
                         )}
-                    </>
+                    </div>
                 )}
             </div>
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <Feedback editable={isEditable}/> 
                 <Badge
                     variant="secondary"
-                    className={`hidden xs:inline-flex h-5 px-1.5 text-[10px] font-medium 
-                    border-none text-white transition-colors shrink-0
-                    ${isSaving ? "bg-orange-600" : "bg-emerald-600"}`}
+                    className={`hidden xs:inline-flex h-5 px-1.5 text-[10px] font-mono 
+                    tracking-wider uppercase border-none transition-colors shrink-0
+                    ${isSaving 
+                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" 
+                        : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                    }`}
                 >
                     {isSaving ? "Saving..." : "Saved"}
                 </Badge>
                             
                 {/* Divider */}
-                <span className="w-px h-6 bg-gray-600 shrink-0" aria-hidden="true" />
+                <span className="w-px h-6 bg-white/10 shrink-0" aria-hidden="true" />
                 <NotificationCenter />
                 <div className="shrink-0 flex items-center">
                     <WorkspaceAccessControl

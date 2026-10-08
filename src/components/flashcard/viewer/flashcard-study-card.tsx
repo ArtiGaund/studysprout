@@ -17,7 +17,7 @@ import { useFlashcardGenerator } from "@/hooks/flashcard/useFlashcardGenerator";
 import { useFlashcardSRS } from "@/hooks/flashcard/useFlashcardSRS";
 import { resetSingleFlashcard, updateFlashcard } from "@/store/slices/flashcardSlice";
 import { format } from "date-fns";
-import { Loader2, RotateCcw } from "lucide-react";
+import { Check, Flame, Loader2, RotateCcw } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { FlashcardContentRenderer } from "./flashcard-content-renderer";
@@ -142,27 +142,28 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
    
     return (
         <Card className="
-        p-4 rounded-xl shadow-md border border-gray-400 flex flex-col gap-4 max-h-[80svh] 
-        sm:max-h-[70vh] overflow-y-auto
+        p-5 rounded-2xl shadow-xl bg-neutral-900 border border-neutral-800 flex flex-col gap-4 max-h-[80svh] sm:max-h-[70vh] overflow-y-auto w-full
         ">
             <CardTitle
-            className="text-center text-sm font-semibold text-purple-700"
+            className="text-center text-xs font-mono tracking-wider text-violet-400 uppercase"
             >
                 Card {index+1}/{total} • {card.type.toUpperCase()}
             </CardTitle>
 
             {/* Outdated Content Notification */}
             {card.isOutdated && (
-                <div className="mx-4 px-3 py-2 rounded-lg bg-yellow-900 text-yellow-300 text-sm flex
+                <div className="mx-2 px-3 py-2 rounded-xl bg-amber-950/40 border
+                 border-amber-800 text-amber-300 text-xs flex gap-2
                  justify-between items-center">
                     <span>
                         ⚠️ This flashcard may be outdated. Notes were updated after this card was created.
                     </span>
                     {regenerateSingleFlashcard 
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    ? <Loader2 className="w-4 h-4 animate-spin text-amber-300 shrink-0" />
                     : <button
                     onClick={generateFlashcard}
-                    className="ml-3 px-3 py-1 text-xs bg-yellow-700 hover:bg-yellow-600 rounded"
+                    className="px-3 py-1 text-xs font-mono font-semibold bg-amber-700 
+                    hover:bg-amber-600 text-white rounded-lg transition-colors shrink-0"
                     >
                         Regenerate
                     </button>
@@ -172,28 +173,28 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
 
             {/* SRS Status Indicators */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-6 items-start sm:items-center
-             justify-between">
+             justify-between px-2 text-xs font-mono">
                 <div>
                       {isReviewed ? (
-                            <div className="flex items-center gap-2 text-green-500 text-sm font-medium pl-6">
-                                <span className="text-lg">✓</span>
-                                Reviewed -
-                                <span className="text-lg">⏳</span>
-                                <span className="text-blue-800">
+                            <div className="flex items-center gap-2 text-emerald-400">
+                               <Check size={14}/>
+                                <span>Reviewed - </span>
+                                <span className="text-neutral-500">⏳</span>
+                                <span className="text-neutral-400">
                                     Next due on {format(new Date(card.progress?.dueDate || new Date()), "dd MMM")}
                                 </span>
                             </div>
                         ): (
-                            <div className="flex items-center gap-2 text-orange-600 text-sm font-medium pl-6">
-                                <span className="text-lg">🔥</span>
-                                Due Today
+                            <div className="flex items-center gap-2 text-amber-400">
+                               <Flame size={14}/>
+                                <span>Due Today</span>
                             </div>
                         )}
                 </div>
                 <div>
                     {isReviewed && (
                         <button
-                        className="mr-6 p-1 rounded hover:bg-gray-700"
+                        className="p-1 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
                         onClick={async () => {
                             const result = await  resetCard(card._id);
                             if(result?.data){
@@ -205,8 +206,8 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                         }}
                         >
                            { reset ? 
-                                <Loader2 className="w-4 h-4 text-gray-300 cursor-not-allowed"/> :
-                                <RotateCcw className="w-4 h-4 text-gray-300"/>
+                                <Loader2 className="w-4 h-4 text-neutral-400 cursor-not-allowed animate-spin"/> :
+                                <RotateCcw className="w-4 h-4 "/>
                             }
                         </button>
                     )}
@@ -300,46 +301,48 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
             }
 
             {/* SRS Rating Footer: Only visible once the answer is known */}
-            <CardFooter className="flex justify-between items-center gap-2 mt-4">
+            <CardFooter className="pt-2">
                 {(revealAnswer || checked) ?(
                     <div className="flex flex-col w-full gap-2">
                         {isReviewed && (
-                            <div className="text-[10px] text-center text-green-500 font-semibold uppercase" >
+                            <div className="text-[10px] text-center text-emerald-400 
+                            font-mono uppercase tracking-wider" >
                                 Re-reviewing (Already completed for tody)
                             </div>
                         )}
-                    <div className="flex items-center w-full">
-                    <button
-                onClick={() => handleRating("again")}
-                className="flex-1 py-2 text-red-700 font-bold text-sm transition"
-                >
-                    Again
-                </button>
-                <span className="text-gray-700 font-bold px-1">|</span>
-                <button
-                onClick={() => handleRating("hard")}
-                className="flex-1 py-2 text-orange-700 font-bold text-sm transition"
-                >
-                    Hard
-                </button>
-                <span className="flex-1 ml-12 text-gray-700 font-bold">|</span>
-                <button
-                onClick={() => handleRating("good")}
-                className="flex-1 py-2 text-green-700 font-bold text-sm transition"
-                >
-                    Good
-                </button>
-                <span className="flex-1 ml-12 text-gray-700 font-bold">|</span>
-                <button
-                onClick={() => handleRating("easy")}
-                className="flex-1 py-2 text-blue-700 font-bold text-sm transition"
-                >
-                    Easy
-                </button>
-                </div>
-                </div>
+                        <div className="grid grid-cols-4 gap-2 w-full pt-2 border-t
+                         border-neutral-800 font-mono text-xs">
+                            <button
+                            onClick={() => handleRating("again")}
+                            className="py-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/50 font-semibold transition-all text-center"
+                            >
+                                Again
+                            </button>
+                            
+                            <button
+                            onClick={() => handleRating("hard")}
+                            className="py-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-900/50 font-semibold transition-all text-center"
+                            >
+                                Hard
+                            </button>
+                            
+                            <button
+                            onClick={() => handleRating("good")}
+                            className="py-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-900/50 font-semibold transition-all text-center"
+                            >
+                                Good
+                            </button>
+                            
+                            <button
+                            onClick={() => handleRating("easy")}
+                            className="py-2.5 rounded-xl bg-violet-950/40 hover:bg-violet-900/60 text-violet-300 border border-violet-900/50 font-semibold transition-all text-center"
+                            >
+                                Easy
+                            </button>
+                        </div>
+                     </div>
                 ) : (
-                    <div className="text-xs text-gray-400 text-center w-full italic">
+                    <div className="text-xs font-mono text-neutral-500 text-center w-full">
                         Reveal the answer to rate your memory
                     </div>
                 )

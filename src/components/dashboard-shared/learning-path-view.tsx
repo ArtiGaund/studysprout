@@ -68,45 +68,47 @@ export const LearningPathView = ({ level, id }: Props) => {
         id,
         level,
         hasFetched,
-    ])
+    ]);
 
     if(loading){
         return(
-            <div className="flex items-center justify-center h-64 gap-x-2 text-zinc-500">
-                <Loader2 className="w-4 h-4 animate-spin"/>
-                <span className="text-sm">
+            <div className="flex items-center justify-center h-64 gap-x-2 text-zinc-500 
+            font-mono text-xs">
+                <Loader2 className="w-4 h-4 animate-spin text-purple-500"/>
+                <span>
                     Building learning path...
                 </span>
             </div>
-        )
-    }
+        );
+    };
 
     if(error){
         return(
-            <div className="flex items-center justify-center h-64">
-                <p className="text-sm text-red-400">
+            <div className="flex items-center justify-center h-64 font-mono">
+                <p className="text-xs text-red-400">
                     {error}
                 </p>
             </div>
-        )
-    }
+        );
+    };
 
     if(!nodes.length){
         return(
-            <div className="flex flex-col items-center justify-center h-64 text-zinc-600">
+            <div className="flex flex-col items-center justify-center h-64 text-zinc-500 
+            font-mono">
                 <GitBranch className="w-8 h-8 mb-2 opacity-30"/>
-                <p className="text-sm">
+                <p className="text-xs font-semibold text-zinc-400">
                     No prerequisite relationships found
                 </p>
-                <p className="text-[11px] text-zinc-700 mt-1">
+                <p className="text-[11px] text-zinc-500 mt-1">
                    {level === "folder"
                         ? "Files appear to be independent - any reading order works"
                         : "Folders appear to be independent - any study order works"
                    }
                 </p>
             </div>
-        )
-    }
+        );
+    };
 
     const maxLevel = Math.max(...nodes.map(n => n.level));
     const levels: LearningPathFileNode[][] = Array.from(
@@ -134,73 +136,82 @@ export const LearningPathView = ({ level, id }: Props) => {
             ? node.prerequisites.includes(hoveredId)
             : false;
 
-        return (
-            <div
-                key={node.id}
-                onMouseEnter={() => setHoveredId(node.id)}
-                onMouseLeave={() => setHoveredId(null)}
-                className="relative px-4 py-2.5 rounded-xl border transition-all duration-200 
-                cursor-default"
-                style={{
-                    opacity: isDimmed ? 0.2 : 1,
-                    backgroundColor: isHovered ? "#16162a" : "#0d0d0d",
-                    borderColor: isHovered 
-                        ? "#7c3aed" 
-                        : isPreq 
-                            ? "#059669" 
-                            : isDependant 
-                                ? "#6d28d9"
-                                : "rgba(255,255,255,0.06)",
-                    boxShadow: isHovered ? "0 0 0 1px #7c3aed30" : "none",
+    return (
+        <div
+            key={node.id}
+            onMouseEnter={() => setHoveredId(node.id)}
+            onMouseLeave={() => setHoveredId(null)}
+            className="relative px-4 py-2.5 rounded-xl border transition-all duration-200 
+            cursor-default font-mono"
+            style={{
+                opacity: isDimmed ? 0.2 : 1,
+                backgroundColor: isHovered ? "#1A0F18" : "#0A0507",
+                borderColor: isHovered 
+                    ? "#0A0507" 
+                    : isPreq 
+                        ? "#0A0507" 
+                        : isDependant 
+                            ? "#9333EA"
+                            : "rgba(255,255,255,0.08)",
                 }}
-            >
-                {isPreq && <span className="absolute -top-2 left-2 text-[8px] bg-emerald-900
-                 text-emerald-400 px-1.5 py-0.5 rounded font-bold tracking-wide">
+        >
+            {isPreq && (
+                <span className="absolute -top-2 left-2 text-[8px] bg-emerald-950 border
+                 border-emerald-500/30
+                 text-emerald-400 px-1.5 py-0.5 rounded font-bold tracking-wide uppercase">
                     READ FIRST    
-                </span>}
-                {isDependant && <span className="absolute -top-2 left-2 text-[8px] bg-purple-900 
-                text-purple-400 px-1.5 py-0.5 rounded font-bold tracking-wide">
+                </span>
+            )}
+            {isDependant && (
+                <span className="absolute -top-2 left-2 text-[8px] bg-purple-900 
+                border border-purple-500/30 uppercase
+                text-purple-300 px-1.5 py-0.5 rounded font-bold tracking-wide">
                     THEN READ
-                </span>}
-                <p className="text-xs font-medium text-zinc-300 leading-tight truncate">
-                    {node.title}
+                </span>
+            )}
+            <p className="text-xs font-semibold text-zinc-200 leading-tight truncate">
+                {node.title}
+            </p>
+            {node.prerequisites.length > 0 && (
+                <p className="text-[10px] text-zinc-500 mt-1 text-center">
+                    {node.prerequisites.length} prerequisites{node.prerequisites.length !== 1 
+                        ? "s" : ""
+                    }
                 </p>
-                {node.prerequisites.length > 0 && (
-                    <p className="text-[9px] text-zinc-600 mt-1 text-center">
-                        {node.prerequisites.length} prerequisites{node.prerequisites.length !== 1 ? "s" : ""}
-                    </p>
-                )}
-            </div>
-        )
-    }
+            )}
+        </div>
+    )}
 
     return (
        <div
-       className="px-6 py-5 overflow-auto"
-       style={{ maxHeight: 500}}
+            className="px-6 py-5 overflow-auto bg-[#0A0507] font-mono"
+            style={{ maxHeight: 500}}
        >
             <div className="flex items-center gap-x-2 mb-5">
-                <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-bold">
+                <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
                     Study order
                 </span>
-                <div className="flex-1 h-px bg-white/5"/>
-                <span className="text-[10px] text-zinc-600">
+                <div className="flex-1 h-px bg-white/10"/>
+                <span className="text-[10px] text-zinc-500">
                     {nodes.length} {nodeLabel} · {maxLevel + 1} level{maxLevel !== 0 ? "s" : ""}
                 </span>
             </div>
 
            {useVertical ? (
             <div 
-            className="flex flex-col gap-y-4 overflow-auto"
-            style={{ maxHeight: 420 }}
+                className="flex flex-col gap-y-4 overflow-auto pr-1"
+                style={{ maxHeight: 420 }}
             >
-               {levels.length > 0 && ( <div className="flex items-center gap-x-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/>
-                    <span className="text-[12px] text-zinc-600 uppercase tracking-widest font-bold">
-                        Start here
-                    </span>
-                    <div className="flex-1 h-px bg-white/5"/>
-                </div>)}
+               {levels.length > 0 && ( 
+                    <div className="flex items-center gap-x-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/>
+                        <span className="text-[12px] text-zinc-400 uppercase tracking-widest 
+                            font-bold">
+                            Start here
+                        </span>
+                        <div className="flex-1 h-px bg-white/10"/>
+                    </div>
+                )}
                 {levels.map((levelNode, levelIdx) => (
                     <div
                         key={levelIdx}
@@ -209,15 +220,15 @@ export const LearningPathView = ({ level, id }: Props) => {
                         {/* Level Header */}
                         <div className="flex items-center gap-x-2">
                             <div className={`w-1.5 h-1.5 rounded-full 
-                                ${
-                                     levelIdx === displayMaxLevel 
-                                        ? "bg-purple-500" : "bg-blue-500"
+                                ${levelIdx === displayMaxLevel 
+                                    ? "bg-purple-500" 
+                                    : "bg-blue-500"
                                 }`}
                             />
-                            <span className="text-[9px] text-zinc-600 uppercase tracking-widest
+                            <span className="text-[9px] text-zinc-500 uppercase tracking-widest
                             font-bold">
                                 {
-                                     levelIdx === displayMaxLevel && displayMaxLevel > 0 
+                                    levelIdx === displayMaxLevel && displayMaxLevel > 0 
                                         ? "Advanced"
                                         : `Step ${levelIdx + 1}`
                                 }
@@ -254,92 +265,92 @@ export const LearningPathView = ({ level, id }: Props) => {
            ) : (
              <div className="relative flex flex-col items-stretch gap-x-0 gap-y-5 w-full">
                 <div className="flex">
-                 {levels.length > 0 && ( <div className="flex items-center gap-x-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/>
-                    <span className="text-[12px] text-zinc-600 uppercase tracking-widest font-bold">
-                        Start here
-                    </span>
-                    <div className="flex-1 h-px bg-white/5"/>
-                </div>)}
-                </div>
-                <div className="flex">
-                {levels.map((levelNode, levelIdx) => (
-                    <React.Fragment key={levelIdx}>
-                    <div
-                    
-                    className="flex flex-col gap-y-3 flex-1 min-w-0"
-                    >
-                        {/* Level header */}
-                        <div className="flex items-center gap-x-1.5 mb-1">
-                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 
-                            ${ levelIdx === displayMaxLevel && displayMaxLevel > 0 
-                                    ? "bg-purple-500" : "bg-blue-500"
-                            }`}/>
-                            <span className="text-[9px] text-zinc-600 uppercase tracking-widest
-                            font-bold">
-                                {levelIdx === displayMaxLevel && displayMaxLevel > 0
-                                        ? "Advanced"
-                                        : `Step ${levelIdx + 1}`
-                                }
+                    {levels.length > 0 && ( 
+                        <div className="flex items-center gap-x-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"/>
+                            <span className="text-[12px] text-zinc-400 uppercase 
+                            tracking-widest font-bold">
+                                Start here
                             </span>
+                            <div className="flex-1 h-px bg-white/10"/>
                         </div>
-
-                        {levelNode.map(node => renderCard(node, true))}
-                    </div>
-                    
-                    {/* Arrows between levels */}
-                     {levelIdx < displayMaxLevel && (
-                        <div
-                            className="flex flex-col flex-shrink-0 w-8 pt-7"
-                            style={{ paddingTop: "1.5rem"}}
-                        >
-                            {/* One arrow per card in this level to align with cards */}
-                            {levelNode.map((_, i) => (
-                                <div
-                                    key={i}
-                                    className="flex items-center justify-center text-zinc-600"
-                                    style={{ height: "52px"}}
-                                >
-                                    <svg
-                                        width="20"
-                                        height="12"
-                                        viewBox="0 0 20 12"
-                                        fill="none"
-                                    >
-                                        <path 
-                                            d="M0 6H18M18 6L13 1M18 6L13 11"
-                                            stroke="#52525b" 
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round" 
-                                            strokeLinejoin="round"
-                                        />
-                                    </svg>
+                    )}
+                </div>
+                <div className="flex gap-x-3 overflow-x-auto pb-2">
+                    {levels.map((levelNode, levelIdx) => (
+                        <React.Fragment key={levelIdx}>
+                            <div className="flex flex-col gap-y-3 flex-1 min-w-0">
+                                {/* Level header */}
+                                <div className="flex items-center gap-x-1.5 mb-1">
+                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 
+                                        ${ levelIdx === displayMaxLevel && displayMaxLevel > 0 
+                                            ? "bg-purple-500" : "bg-blue-500"
+                                    }`}/>
+                                    <span className="text-[9px] text-zinc-500 uppercase 
+                                    tracking-widest font-bold">
+                                        {levelIdx === displayMaxLevel && displayMaxLevel > 0
+                                            ? "Advanced"
+                                            : `Step ${levelIdx + 1}`
+                                        }
+                                    </span>
                                 </div>
-                            ))}
-                        </div>
-                     )}
-                    </React.Fragment>
-                ))}
 
-                 </div>
+                                {levelNode.map(node => renderCard(node, true))}
+                            </div>
+                    
+                            {/* Arrows between levels */}
+                            {levelIdx < displayMaxLevel && (
+                                <div
+                                    className="flex flex-col flex-shrink-0 w-8 pt-7"
+                                    style={{ paddingTop: "1.5rem"}}
+                                >
+                                {/* One arrow per card in this level to align with cards */}
+                                    {levelNode.map((_, i) => (
+                                        <div
+                                            key={i}
+                                            className="flex items-center justify-center
+                                             text-zinc-600"
+                                            style={{ height: "52px"}}
+                                        >
+                                            <svg
+                                                width="20"
+                                                height="12"
+                                                viewBox="0 0 20 12"
+                                                fill="none"
+                                            >
+                                                <path 
+                                                    d="M0 6H18M18 6L13 1M18 6L13 11"
+                                                    stroke="#52525b" 
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round" 
+                                                    strokeLinejoin="round"
+                                                />
+                                            </svg>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </div>
             </div>
-           )}
+        )}
           
-            {/* Legend */}
-            <div className="flex items-center gap-x-5 mt-6 pt-4 border-t border-white/5">
-                <div className="flex items-center gap-x-1.5">
-                    <div className="w-2 h-px bg-emerald-500"/>
-                    <span className="text-[10px] text-zinc-500">
-                        Prerequisite (hover to see)
-                    </span>
-                </div>
-                <div className="flex items-center gap-x-1.5">
-                    <div className="w-2 h-px bg-purple-500"/>
-                    <span className="text-[10px] text-zinc-500">
-                       {legendDependsLabel}
-                    </span>
-                </div>
+        {/* Legend */}
+        <div className="flex items-center gap-x-5 mt-6 pt-4 border-t border-white/10 
+            text-[10px]">
+            <div className="flex items-center gap-x-1.5">
+                <div className="w-2 h-px bg-emerald-500 rounded-full"/>
+                <span className="text-zinc-400">
+                    Prerequisite (hover to see)
+                </span>
             </div>
-       </div>
-    );
-}
+            <div className="flex items-center gap-x-1.5">
+                <div className="w-2 h-px bg-purple-500 rounded-full"/>
+                <span className="text-zinc-400">
+                    {legendDependsLabel}
+                </span>
+            </div>
+        </div>
+    </div>
+)};

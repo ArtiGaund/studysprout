@@ -124,22 +124,22 @@ const WorkspaceCreateForm: React.FC<WorkspaceCreateFormProps> = ({ onSuccess }) 
         }
     }
     return(
-        <div className="w-full max-w-md mx-auto bg-[#131316] border border-white/[0.05]
-         rounded-xl p-5 sm:p-7 shadow-2xl text-left relative">
+        <div className="w-full max-w-md mx-auto bg-[#0A0507] border border-white/10
+         rounded-xl p-5 sm:p-7 shadow-2xl text-left relative font-sans">
             <div>
-                <h3 className="text-white text-lg font-bold tracking-tight">
+                <h3 className="text-[#F5F0EB] text-lg font-bold tracking-tight">
                     Create Workspace
                 </h3>
-                <p className="text-zinc-500 text-xs mt-1 font-medium">
+                <p className="text-zinc-500 text-xs mt-1 font-mono">
                     Initialize your research environment variables.
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 mt-6">
                 <div className="space-y-2">
                     <label
                         htmlFor="workspaceName"
-                        className="text-[10px] font-mono font-bold tracking-wider text-zinc-500 
+                        className="text-[10px] font-mono font-bold tracking-wider text-zinc-400 
                         uppercase block"
                     >   
                         Workspace Name
@@ -151,23 +151,23 @@ const WorkspaceCreateForm: React.FC<WorkspaceCreateFormProps> = ({ onSuccess }) 
                         onChange={(e) => setWorkspaceTitle(e.target.value)}
                         placeholder="e.g., Quantum Physics Research"
                         disabled={isLoadingWorkspace || isSubmitting}
-                        className="w-full bg-[#18181c] border border-white/5
-                        rounded-lg px-4 py-3 text-sm text-white outline-none
-                      focus:border-purple-500/50 placeholder:text-zinc-700
-                        font-medium transition-all"
+                        className="w-full bg-white/[0.03] border border-white/10
+                        rounded-lg px-4 py-3 text-sm text-[#F5F0EB] outline-none
+                      focus:border-[#C9A227]/60 placeholder:text-zinc-600
+                        font-mono transition-all"
                     />
                 </div>
 
                 <div className="space-y-2">
                     <label className="text-[10px] font-mono font-bold tracking-wider
-                    text-zinc-500 uppercase block">
+                    text-zinc-400 uppercase block">
                         Workspace Brand
                     </label>
-                    <div className="flex items-center gap-x-3 w-full bg-[#18181c]
-                        border border-white/5 rounded-lg p-3">
+                    <div className="flex items-center gap-x-3 w-full bg-white/[0.03]
+                        border border-white/10 rounded-lg p-3">
                         {/* Dynamic Thumnail Preview Avatar Block */}
-                        <div className="w-12 h-12 rounded-lg bg-zinc-800 border
-                        border-white/5 flex items-center justify-center shrink-0
+                        <div className="w-12 h-12 rounded-lg bg-white/[0.05] border
+                        border-white/10 flex items-center justify-center shrink-0
                         overflow-hidden text-xl select-none relative group/emoji">
                             {imagePreviewUrl ? (
                                 <Image 
@@ -199,15 +199,15 @@ const WorkspaceCreateForm: React.FC<WorkspaceCreateFormProps> = ({ onSuccess }) 
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="bg-zinc-800 hover:bg-zinc-700
-                                    border border-white/5 text-[10px] font-mono
+                                    className="bg-white/[0.06] hover:bg-white/[0.1]
+                                    border border-white/10 text-[10px] font-mono
                                     font-bold tracking-tight px-3 py-2 rounded-md
                                     text-zinc-300 transition-colors cursor-pointer
                                     shrink-0"
                                 >
                                     CHOOSE LOGO
                                 </button>
-                                <span className="text-[11px] font-mono text-zinc-600
+                                <span className="text-[11px] font-mono text-zinc-500
                                 truncate flex-1">
                                     {selectedImage 
                                         ? selectedImage.name
@@ -219,16 +219,17 @@ const WorkspaceCreateForm: React.FC<WorkspaceCreateFormProps> = ({ onSuccess }) 
                     </div>
                 </div>
 
-                <div className="bg-[#18181c] border border-white/5 rounded-xl p-4 flex 
+                <div className="bg-white/[0.03] border border-white/10 rounded-xl p-4 flex 
                 items-center justify-between gap-x-4">
                     <div className="flex items-start gap-x-2 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-zinc-800/60 border
-                        border-white/5 flex items-center justify-center shrink-0
+                        <div className="w-8 h-8 rounded-lg bg-white/[0.05] border
+                        border-white/10 flex items-center justify-center shrink-0
                         text-zinc-400 mt-0.5">
                             <Lock size={14}/>
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className="text-white text-xs font-bold tracking-tight">
+                            <span className="text-[#F5F0EB] text-xs font-medium font-mono
+                             tracking-tight">
                                 {isPublic ? "Public" : " Private"} Workspace
                             </span>
                             <span className="text-[10px] font-mono text-zinc-500 mt-0.5 truncate">
@@ -239,7 +240,13 @@ const WorkspaceCreateForm: React.FC<WorkspaceCreateFormProps> = ({ onSuccess }) 
                             </span>
                         </div>
                     </div>
-                    <div onClick={(e) => e.stopPropagation()}>
+                    <div 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
                         <WorkspaceVisibilityToggle value={isPublic} onChange={setIsPublic}/>
                     </div>
                 </div>
@@ -247,14 +254,13 @@ const WorkspaceCreateForm: React.FC<WorkspaceCreateFormProps> = ({ onSuccess }) 
                 <button
                     type="submit"
                     disabled={isLoadingWorkspace || isSubmitting}
-                    className="w-full bg-[#0066cc] hover:bg-[#0052a3] text-white
-                    disabled:bg-zinc-800 font-semibold text-sm py-3.5 px-4
-                    rounded-xl flex items-center justify-center gap-x-2
-                    transition-all cursor-pointer shadow-lg shadow-blue-600/10
-                    active:scale-[0.99]"
+                    className="w-full bg-[#C9A227] hover:bg-[#b59121] text-black
+                    disabled:bg-zinc-800 disabled:text-zinc-500 font-mono font-semibold text-xs py-3 px-4
+                    rounded-lg flex items-center justify-center gap-x-2
+                    transition-all cursor-pointer shadow-md active:scale-[0.99]"
                 >
                     {isSubmitting || isLoadingWorkspace ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-zinc-400"/>
+                        <Loader2 className="h-4 w-4 animate-spin text-black"/>
                     ) : (
                         <>
                             <Rocket size={14} strokeWidth={2.5}/>

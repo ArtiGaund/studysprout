@@ -70,13 +70,11 @@ const FolderPage: React.FC<{
         files,
     ]);
 
-    
-
     /** * EFFECT: Folder Data Synchronization
      * Ensures Redux state reflects the folder being viewed in the URL
      */
     useEffect(() => {
-      const folder = folders.find(
+        const folder = folders.find(
             f => f._id === params.folderId
         );
 
@@ -87,7 +85,7 @@ const FolderPage: React.FC<{
         params.folderId,
         folders,
         currentFolder?._id,
-    ])
+    ]);
 
     /** * EFFECT: Deletion/Safety Guard
      * If the folder is deleted or not found, redirect to the parent workspace.
@@ -105,26 +103,28 @@ const FolderPage: React.FC<{
         params.folderId,
         params.workspaceId,
         router
-    ])
+    ]);
 
     //  --- RENDER STATES ---
     if(folderLoading || !isCorrectFolder){
         return(
-            <div className='flex justify-center items-center h-full'>
-                Loading folder...
+            <div className='flex justify-center items-center h-full text-xs font-mono
+             text-zinc-500 animate-pulse'>
+                Loading folder context...
             </div>
-        )
+        );
     }
 
     if(!currentFolder || currentFolder._id !== params.folderId){
         return (
-            <div className='flex justify-center items-center h-full'>
-                Syncing folder data...
+            <div className='flex justify-center items-center h-full text-xs font-mono
+             text-zinc-500 animate-pulse'>
+                Syncing folder state...
             </div>
-        )
+        );
     }
     return (
-        <div className='flex flex-col gap-y-8 pb-10 overflow-x-hidden'>
+        <div className='flex flex-col gap-y-8 pb-10 overflow-x-hidden bg-[#0A0507]'>
             {currentFolder && (
                 <NavHeader 
                 dirType="folder"
@@ -132,7 +132,8 @@ const FolderPage: React.FC<{
                 dirDetails={currentFolder}
                 />
             )}
-            <div className='px-4 sm:px-6 lg:px-10 flex flex-col gap-y-10 max-w-[1600px] mx-auto w-full'>
+            <div className='px-4 sm:px-6 lg:px-10 flex flex-col gap-y-10 max-w-[1600px] mx-auto
+             w-full'>
                 <div className='grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch'>
                     {/*Left Column */}
                     <div className='lg:col-span-3 flex flex-col gap-y-6'>
@@ -165,7 +166,7 @@ const FolderPage: React.FC<{
 
                         {/* Folder Flashcards Header */}
                         <div 
-                         className="bg-purple-900/10 border border-purple-500/20 rounded-2xl
+                         className="bg-[#110A10] border border-white/10 rounded-2xl
                           p-5 flex flex-col gap-y-4"
                         >
                             <div className='flex items-center justify-center gap-x-2'>
@@ -174,7 +175,7 @@ const FolderPage: React.FC<{
                                     Folder Flashcards
                                 </span>
                                 <span className='bg-purple-600 text-[10px] px-2 py-0.5 rounded
-                                font-bold text-zinc-300'>
+                                font-mono text-purple-300'>
                                     CORE
                                 </span>
                             </div>
@@ -188,7 +189,7 @@ const FolderPage: React.FC<{
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
 export default FolderPage

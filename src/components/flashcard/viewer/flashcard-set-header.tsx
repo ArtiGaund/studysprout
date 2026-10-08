@@ -69,13 +69,12 @@ const FlashcardSetHeader: React.FC<FlashcardSetHeaderProps> = ({
                     onBlur={handleBlur}
                     onClick={(e) => e.stopPropagation()}
                     disabled={isSaving}
-                    className="text-[20px] font-medium text-white bg-zinc-900 border
-                    border-purple-500/50 rounded px-1.5 py-0.5 outline-none w-full"
+                    className="text-[lg font-semibold text-white bg-neutral-950 border border-violet-500 rounded-lg px-2 py-0.5 outline-none w-full"
                 />
             ) : (
                <TooltipComponent
                     className={isLockedByRemote
-                        ? "bg-cyan-400 text-cyan-950 font-bold border-none shadow-[0_0_20px_rgba(251,191,36,0.4)]"
+                        ? "bg-cyan-950 text-cyan-200 font-mono border border-cyan-800 text-xs"
                         : ""
                     }
                     message={isLockedByRemote ? `${remoteEditing.username} is editing...` : ''}
@@ -83,10 +82,10 @@ const FlashcardSetHeader: React.FC<FlashcardSetHeaderProps> = ({
                      <span 
                         onClick={(e) => !isLockedByRemote && handleMouseClickInterception(e)}
                         className={clsx(
-                            "text-[20px] select-none",
+                            "text-lg font-semibold tracking-tight select-none truncate",
                             isLockedByRemote
-                                ? "text-emerald-400 font-semibold italic opacity-90 cursor-not-allowed"
-                                : "text-gray-200 cursor-pointer"
+                                ? "text-emerald-400 italic opacity-90 cursor-not-allowed"
+                                : "text-neutral-100 cursor-pointer hover:text-white"
                         )}
                     >
                         {displayedTitle}
@@ -114,20 +113,20 @@ const FlashcardSetHeader: React.FC<FlashcardSetHeaderProps> = ({
                             e.stopPropagation();
                             startEditing();
                         }}
-                        className="p-1 rounded hover:bg-white/10 transition-colors"
+                        className="p-1 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
                         title="Rename set"
                     >
-                        <Pencil size={12} className="text-gray-400 hover:text-white"/>
+                        <Pencil size={12}/>
                     </button>
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             onDelete(set._id);
                         }}
-                        className="p-1 rounded hover:bg-red-500/20 transition-colors"
+                        className="p-1 rounded-md text-neutral-400 hover:text-rose-400 hover:bg-rose-950/30 transition-colors"
                         title="Delete set"
                     >
-                        <Trash size={13} className="text-gray-400 group-hover:text-red-400"/>
+                        <Trash size={13}/>
                     </button>
                 </div>
             )}

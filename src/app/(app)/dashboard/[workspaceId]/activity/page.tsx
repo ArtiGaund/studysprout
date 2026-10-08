@@ -5,7 +5,7 @@ interface ActivityPageProps{
 }
 export default function ActivityPage({ params }: ActivityPageProps){
     return (
-        <main className="min-h-[100vh] bg-[#0b0b0c] text-[#e2e2f0]">
+        <main className="min-h-[100vh] bg-[#0A0507] text-zinc-100">
             <ActivityFeed workspaceId={params.workspaceId}/>
         </main>
     )

@@ -235,27 +235,32 @@ export const FlashcardSection = () => {
         <section 
         id="flashcard-section" 
         onClick={handleAnyInteraction}
-        className="scroll-mt-20 relative py-32 px-6 bg-[#050A0A] overflow-hidden">
+        className="relative isolate flex flex-col items-center justify-center bg-[#120C0E] 
+            px-4 sm:px-6 py-24 md:py-32 text-center overflow-hidden min-h-screen">
             {/* Aesthetic Background */}
             <div className="absolute inset-0 -z-10">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                w-[1000px] h-[600px] rounded-full blur-[140px] bg-purple-600/10" />
+                <div className="absolute top-[20%] left-[10%] -z-10 h-[30vw] w-[30vw] 
+                rounded-full bg-[#C9A227] opacity-[0.04] blur-[120px]" />
+                <div className="absolute bottom-[10%] right-[10%] -z-10 h-[35vw] w-[35vw] 
+                rounded-full bg-[#C9A227] opacity-[0.03] blur-[150px]" />
             </div>
 
-            <div className="max-w-7xl mx-auto flex flex-col items-center">
+            <div className="max-w-7xl mx-auto flex flex-col items-center w-full">
                 
                 {/* Branding Heading */}
-                <div className="text-center mb-16 space-y-4">
-                    <h3 className="text-[#63FF9D] font-mono text-xs uppercase tracking-[0.4em]
-                     opacity-80">
+                <div className="text-center mb-16 space-y-4 max-w-3xl">
+                    <h3 className="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                     bg-[#C9A227]/10 border border-[#C9A227]/20 text-[#C9A227] font-mono 
+                     text-[10px] uppercase tracking-[0.3em]">
                         Active Recall Engine
                     </h3>
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-                        Precision <span className="text-purple-400">
+                    <h2 className="text-4xl md:text-5xl font-serif text-[#F5F0EB] leading-tight">
+                        Precision <span className="font-serif italic text-[#C9A227]">
                             Flashcard Generation
                             </span>
                     </h2>
-                    <p className="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto">
+                    <p className="mt-4 text-sm sm:text-base md:text-lg leading-relaxed 
+                    text-[#A09388] font-serif max-w-2xl mx-auto">
                         Transform specific workspaces, folders, or files into targeted study sets.
                         You control the scope, format, and depth for each session.
                     </p>
@@ -267,33 +272,35 @@ export const FlashcardSection = () => {
                     - >= 1024 px: full inline layout, no expand button.
                     - < 1024 px: collapsed preview + expand button
                 */}
-                <div ref={containerRef} className="w-full">
+                <div ref={containerRef} className="w-full max-w-6xl mx-auto">
                     
                     {showCollapsed ? (
                         /*--- Small screen: hint badge + collapsed preview --- */
                         <div className="flex flex-col items-center gap-4">
                             {/* Hint badge */}
-                            <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/20
+                            <div className="px-4 py-2 bg-[#C9A227]/10 border border-[#C9A227]/20
                             rounded-full animate-bounce">
-                                <p className="text-purple-400 text-[10px] font-black uppercase
+                                <p className="text-[#C9A227] text-[10px] font-mono uppercase
                                 tracking-widest">
                                     Tap Expand to interact with the flashcard editor
                                 </p>
                             </div>
 
                             {/* Card wrapper - same visual chrome as the large-screen card */}
-                            <div className="w-full rounded-3xl border border-white/10 
-                            bg-[#080C0C]/80 backdrop-blur-3xl shadow-2xl overflow-hidden">
+                            <div className="w-full rounded-3xl border border-[#2A1E22] 
+                            bg-[#181013]/90 backdrop-blur-3xl transform-gpu will-change-transform backface-hidden 
+                            shadow-2xl overflow-hidden">
                                 {/* Inner top bar */}
                                 <div className="flex items-center justify-between px-4 py-3
-                                border-b border-white/5">
+                                border-b border-[#2A1E22]">
                                     <div className="flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-purple-400
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#C9A227]
                                         animate-pulse"/>
-                                        <span className="text-white font-black uppercase
+                                        <span className="text-[#F5F0EB] font-mono font-bold uppercase
                                         tracking-widest text-[10px]">
                                             Flashcard Editor
-                                            <span className="text-gray-500 font-medium ml-2">
+                                            <span className="text-[#8C7A6B] font-mono font-normal
+                                             ml-2">
                                                 - Interactive Playground
                                             </span>
                                         </span>
@@ -312,8 +319,11 @@ export const FlashcardSection = () => {
                             </div>
                         </div>
                     ) : (
-                        /* --- Large screen: full inline editor --- */
-                        <EditorContent {...editorProps}/>
+                        <div className="rounded-2xl border border-[#2A1E22] bg-[#181013]/90 backdrop-blur-3xl
+                        transform-gpu will-change-transform backface-hidden
+                        p-1 md:p-1.5 shadow-2xl overflow-hidden text-left">
+                            <EditorContent {...editorProps}/>
+                        </div>
                     )}
                 </div>
             </div>
@@ -330,8 +340,8 @@ export const FlashcardSection = () => {
 
             {/*  */}
 
-            <style jsx global>{`
-                ::selection { background: #63FF9D; color: #000; }
+            <style>{`
+                ::selection { background: #C9A227; color: #120C0E; }
                 .bn-container, .bn-editor { background-color: transparent !important; }
             `}</style>
         </section>

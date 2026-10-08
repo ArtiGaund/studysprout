@@ -65,28 +65,30 @@ const FlashcardProgressList: React.FC<FlashcardProgressListProps> = ({
         total
     ])
     return (
-        <div className="flex flex-col gap-3 py-3">
-            <Progress value={progress} className="w-full"/>
+        <div className="flex flex-col gap-3 py-3 px-1">
+            <Progress value={progress} className="w-full bg-neutral-800 h-1.5"/>
             
-            <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center justify-between text-xs font-mono">
                 {/* TODO POPOVER  */}
                 {/* Giving the modal to popover because scrollable area was not scrollable if added with the popover */}
                 <Popover modal>
                     <PopoverTrigger
-                    className="text-sm font-medium text-purple-300 hover:text-purple-100"
+                    className="font-semibold text-amber-400 hover:text-amber-300 transition-colors tracking-wide"
                     >
                         TODO ({todo.length})
                     </PopoverTrigger>
                     <PopoverContent
-                    className="w-[250px] bg-[#1c1c1c] border-gray-700 p-2 rounded-lg"
+                    className="w-[260px] bg-neutral-900 border-neutral-800 p-2 rounded-xl shadow-xl"
                     >
                         {todo.length === 0 && (
-                            <p className="text-xs text-gray-400">No cards remaining.</p>
+                            <p className="text-xs text-neutral-500 font-mono p-2">
+                                No cards remaining.
+                            </p>
                         )}
                         <ScrollArea 
-                        className="h-[150px] w-full rounded-md"
+                        className="h-[160px] w-full rounded-md"
                         >
-                            <div className="p-2">
+                            <div className="p-1 space-y-1.5">
                                 {todo.map((card) => {
                                     const isNew = !card.progress?.dueDate;
                                     return (
@@ -94,13 +96,13 @@ const FlashcardProgressList: React.FC<FlashcardProgressListProps> = ({
                                     key={card._id}
                                     onClick={() => onSelect(card._id)}
                                     className={`
-                                        p-2 mb-1 rounded cursor-pointer text-[12px] border-l-4 transition
+                                        p-2 rounded-lg cursor-pointer text-xs border-l-2 transition-all
                                         ${isNew 
-                                            ? `bg-blue-900/20 border-blue-500 hover:bg-blue-900/40` 
-                                            : `bg-orange-900/20 border-orange-500 hover:bg-blue-900/40`}
+                                            ? `bg-violet-950/30 border-violet-500 hover:bg-violet-900/40 text-neutral-200` 
+                                            : `bg-amber-950/20 border-amber-500 hover:bg-amber-900/30 text-neutral-200`}
                                         `}
                                     >
-                                       <span className="text-gray-300"> 
+                                       <span className="line-clamp-2"> 
                                         {card.question.slice(0,50)}...
                                        </span>
                                     </div>
@@ -114,27 +116,29 @@ const FlashcardProgressList: React.FC<FlashcardProgressListProps> = ({
                 {/* Giving the modal to popover because scrollable area was not scrollable if added with the popover */}
                 <Popover modal>
                     <PopoverTrigger
-                    className="text-sm font-medium text-purple-300 hover:text-purple-100"
+                    className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors tracking-wide"
                     >
                         COMPLETED ({completed.length})
                     </PopoverTrigger>
                     <PopoverContent
-                    className="w-[250px] bg-[#1c1c1c] border-gray-700 p-2 rounded-lg"
+                    className="w-[260px] bg-neutral-900 border-neutral-800 p-2 rounded-xl shadow-xl"
                     >
                         {completed.length === 0 && (
-                            <p className="text-xs text-gray-400">No cards completed.</p>
+                            <p className="text-xs text-neutral-500 font-mono p-2">
+                                No cards completed.
+                            </p>
                         )}
                         <ScrollArea 
-                        className="h-[150px] w-full rounded-md"
+                        className="h-[160px] w-full rounded-md"
                         >
                             <div className="p-2">
                                 {completed.map((card) => (
                                     <div
                                     key={card._id}
                                     onClick={() => onSelect(card._id)}
-                                    className="p-2 mb-1 bg-gray-900/10 border-l-4 border-green-600 hover:bg-green-900/20 rounded cursor-pointer text-[12px]"
+                                    className="p-2 bg-neutral-950/50 border-l-2 border-emerald-500 hover:bg-emerald-950/20 rounded-lg cursor-pointer text-xs transition-all"
                                     >
-                                        <span className="text-gray-400 line-through">
+                                        <span className="text-eutral-500 line-through line-clamp-2">
                                         {card.question.slice(0,50)}...
                                         </span>
                                     </div>

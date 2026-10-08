@@ -17,7 +17,6 @@
 import { MailIcon, SendIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '../ui/use-toast';
-import axios from 'axios';
 import { useUser } from '@/lib/providers/user-provider';
 import { sendFeedbackService } from '@/services/feedbackServices';
 
@@ -138,16 +137,18 @@ const FeedbackForm = ({ onClose }: { onClose?: () => void }) => {
    
     return (
        <div className='px-6 pb-6 overflow-y-auto max-h-[75vh] md:max-h-[65vh] scrollbar-thin
-       scrollbar-thumb-zinc-800/60'>
+       scrollbar-thumb-purple-900/30'>
             {/* Email Row */}
-            <div className='flex items-center gap-x-3 bg-[#141416] border border-white/5 rounded-lg
-            px-4 py-3 mb-6'>
-                <MailIcon size={14} className='text-zinc-500 shrink-0'/>
-                <span className='text-[10px] font-mono font-bold tracking-wider text-zinc-500
+            <div className='flex items-center gap-x-3 bg-[#110A10] border border-white/10 
+            rounded-lg px-4 py-3 mb-6'>
+                <MailIcon size={14} className='text-purple-400 shrink-0'/>
+                <span className='text-[10px] font-mono font-bold tracking-wider text-purple-400/70
                 uppercase shrink-0'>
                     Email
                 </span>
-                <span className='text-sm text-zinc-300 truncate'>{user?.email || "--"}</span>
+                <span className='text-sm font-mono text-zinc-300 truncate'>
+                    {user?.email || "--"}
+                </span>
             </div>
 
             <form onSubmit={submitFeedback} className='space-y-3'>
@@ -156,23 +157,24 @@ const FeedbackForm = ({ onClose }: { onClose?: () => void }) => {
                     return (
                         <div
                             key={id}
-                            className={`rounded-xl border transition-colors duration-200 overflow-hidden
-                                ${checked[id]
-                                    ? "border-purple-500/30 bg-purple-500/[0.03]"
-                                    : "border-white/5 bg-[#141416]"
+                            className={`rounded-xl border transition-colors duration-200 
+                                overflow-hidden ${checked[id]
+                                    ? "border-purple-500/40 bg-purple-950/20 shadow-sm shadow-purple-950/50"
+                                    : "border-white/[0.08] bg-[#110A10] hover:border-white/20"
                                 }`}
                         >   
                             {/* Checkbox header */}
                             <div 
-                            className='flex items-center gap-x-3 px-4 py-3 cursor-pointer select-none'
-                            onClick={() => toggle(id)}
+                                className='flex items-center gap-x-3 px-4 py-3 cursor-pointer 
+                                select-none'
+                                onClick={() => toggle(id)}
                             >
                                 {/* Custom checkbox */}
                                 <div className={`w-4 h-4 rounded border flex items-center
                                     justify-center shrink-0 transition-colors
                                     ${checked[id]
                                         ? "bg-purple-600 border-purple-600"
-                                        : "border-white/20 bg-zinc-800"
+                                        : "border-white/20 bg-black/40"
                                     }`}>
                                         {checked[id] && (
                                              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
@@ -182,11 +184,13 @@ const FeedbackForm = ({ onClose }: { onClose?: () => void }) => {
                                             </svg>
                                         )}
                                 </div>
-                                <span className='text-sm font-semibold text-zinc-200'>
+                                <span className='text-xs sm:text-sm font-semibold font-mono 
+                                text-zinc-200'>
                                     {label}
                                 </span>
                                 {hint && (
-                                    <span className='text-[10px] font-mono text-zinc-600 ml-auto'>
+                                    <span className='text-[10px] font-mono text-zinc-500 
+                                        ml-auto uppercase tracking-wider'>
                                         {hint}
                                     </span>
                                 )}
@@ -205,10 +209,13 @@ const FeedbackForm = ({ onClose }: { onClose?: () => void }) => {
                                         value={text[id]}
                                         onChange={(e) => setText((prev) => ({ ...prev, [id]: e.target.value}))}
                                         placeholder={placeholder}
-                                        className='w-full bg-[#0c0c0e] border border-white/5 rounded-lg px-4
-                                        py-2.5 text-sm text-white outline-none focus-within:border-purple-500/30
-                                        placeholder:text-zinc-700 font-medium transition-all resize-none
-                                        scrollbar-thin scrollbar-thumb-zinc-800'
+                                        className='w-full bg-[#0A0507] border border-white/10
+                                            rounded-lg px-3 py-2 text-xs font-mono
+                                             text-zinc-100 outline-none
+                                              focus:border-purple-500/50
+                                               placeholder:text-zinc-600 transition-all 
+                                               resize-none scrollbar-thin 
+                                               scrollbar-thumb-purple-900/40'
                                     />
                                 </div>
                             </div>
@@ -221,10 +228,12 @@ const FeedbackForm = ({ onClose }: { onClose?: () => void }) => {
                     <button
                         type='submit'
                         disabled={!isFormValid || isSubmitting}
-                        className='w-full bg-purple-600 hover:bg-purple-700 disabled:bg-zinc-800
-                        disabled:text-zinc-600 text-white text-sm font-semibold py-3 px-4
-                        rounded-xl flex items-center justify-center gap-x-2 transition-all
-                        cursor-pointer disabled:cursor-not-allowed shadow-sm'
+                        className='w-full bg-purple-600 hover:bg-purple-500
+                         disabled:bg-zinc-900/80 disabled:border disabled:border-white/5
+                          disabled:text-zinc-600 text-white text-xs font-mono font-semibold 
+                          tracking-wider uppercase py-3 px-4 rounded-xl flex items-center 
+                          justify-center gap-x-2 transition-all cursor-pointer 
+                          disabled:cursor-not-allowed shadow-md shadow-purple-950/50'
                     >
                         <SendIcon size={14} strokeWidth={2.5}/>
                         <span>{isSubmitting ? 'Sending...' : 'Send Feedback'}</span>

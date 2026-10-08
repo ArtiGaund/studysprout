@@ -20,14 +20,14 @@ import {
 import { NavHeader } from '@/components/banner-upload/nav-header'
 import { SystemOverviewHeader } from '@/components/workspace-view/system-overview-header';
 import { MetricsOverview } from '@/components/workspace-view/metrics-overview';
+import { Loader2 } from 'lucide-react';
 
 const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }) => {
     const dispatch = useDispatch();
 
     // Selectors fro Redux Store
     const currentWorkspace = useSelector(selectCurrentWorkspace);
-    const workspaceLoading = useSelector(selectWorkspaceLoading);
-    const globalEditingItems = useSelector((state: RootState) => state.ui.editingItem);
+    const workspaceLoading = useSelector(selectWorkspaceLoading)
 
     // Guard: Verify if the Redux data actually belongs to the workspace in the URL
      const isDataReady = currentWorkspace?._id === params.workspaceId;
@@ -36,32 +36,28 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
       * Update the global breadcrumbs/sidebar context so the UI knows we are currently viewing this
       * specific Workspace resouce.
       */
-    useEffect(() => {
-       
-            if(isDataReady){
-                dispatch(SET_CURRENT_RESOURCE({
-                    id: currentWorkspace._id,
-                    title: currentWorkspace.title,
-                    type: 'Workspace'
-                }));
-            }
-    }, [
-        params.workspaceId,
-        isDataReady
-    ]);
-
+    useEffect(() => {       
+        if(isDataReady){
+            dispatch(SET_CURRENT_RESOURCE({
+                id: currentWorkspace._id,
+                title: currentWorkspace.title,
+                type: 'Workspace'
+            }));
+        }
+    }, [ params.workspaceId, isDataReady ]);
    
     // --- CONDITIONAL RENDERING ---    
-    if (
-       workspaceLoading ||
-       !isDataReady
-    ) {
+    if ( workspaceLoading || !isDataReady ) {
         return (
-            <div className='flex justify-center items-center h-full'>
-                Loading workspace details ...
+            <div className='flex flex-col justify-center items-center h-full min-h-[60vh] gap-3'>
+                <Loader2 className="w-8 h-8 animate-spin text-purple-400"/>
+                <p className="text-xs font-mono text-zinc-400">
+                    Loading workspace details ...
+                </p>                
             </div>
         );
     }
+
     return (
         <div className='flex flex-col gap-y-8 pb-10'>
             {currentWorkspace && (
@@ -71,7 +67,8 @@ const WorkspacePage: React.FC<{ params : { workspaceId: string }}> = ({ params }
                     dirDetails={currentWorkspace}
                 />
             )}
-            <div className='px-4 sm:px-6 lg:px-10 flex flex-col gap-y-10 max-w-[1600px] mx-auto w-full'>
+            <div className='px-4 sm:px-6 lg:px-10 flex flex-col gap-y-10 max-w-[1600px] mx-auto
+             w-full'>
                 <SystemOverviewHeader workspaceId={params.workspaceId}/>
                 <MetricsOverview workspaceId={params.workspaceId}/>
             </div>

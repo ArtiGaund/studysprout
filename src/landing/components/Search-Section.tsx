@@ -33,20 +33,28 @@ export const SearchSection = () => {
     },[]);
 
     return (
-        <section id="search-section" className="scroll-mt-32 relative py-20 px-6 bg-[#050A0A]
-        overflow-hidden">
+        <section id="search-section" className="scroll-mt-32 relative py-20 px-6 bg-[#120C0E]
+        overflow-hidden text-[#A09388]">
+            {/* Ambient gold background glow mirroring Hero */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 
+            h-[35vw] w-[35vw] rounded-full bg-[#C9A227] opacity-[0.03] blur-[150px] 
+            pointer-events-none" />
+
             <div className="max-w-7xl mx-auto flex flex-col items-center">
 
                 {/* Section Heading */}
                 <div className="text-center mb-16 space-y-4">
-                    <h3 className="text-violet-400 font-mono text-xs uppercase tracking-[0.4em]
-                    opacity-80">
+                    <h3 className="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                     bg-[#C9A227]/10 border border-[#C9A227]/20 text-[#C9A227] font-mono 
+                     text-[10px] uppercase tracking-[0.3em]">
                         Intelligent Indexing
                     </h3>
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-                        The <span className="text-violet-400">Global</span> Command.
+                    <h2 className="text-4xl md:text-5xl font-serif text-[#F5F0EB] leading-tight">
+                        The <span className="font-serif italic text-[#C9A227">
+                            Global</span> Command.
                     </h2>
-                    <p className="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto">
+                    <p className="mt-4 text-sm sm:text-base md:text-lg leading-relaxed 
+                    text-[#A09388] font-serif max-w-2xl mx-auto">
                         Access your entire academic universe in 200ms. A lightning-fast commmand
                         palette designed for the neural speed of researchers.
                     </p>
@@ -55,58 +63,60 @@ export const SearchSection = () => {
                 {/* Left column: capability cards + telemetry */}
                 <div className="flex flex-col-reverse lg:flex-row w-full gap-6">
                     <div className="flex flex-col gap-4 w-full lg:w-72 shrink-0">
-                        <div className="p-6 rounded-2xl border border-white/5 bg-[#080C0C] 
-                        space-y-3">
-                            <div className="w-9 h-9 rounded-xl bg-violet-400/10 flex 
-                            items-center justify-center text-violet-400">
+                        <div className="p-6 rounded-2xl border border-[#2A1E22] bg-[#181013]/90 
+                        space-y-3 backdrop-blur-3xl transform-gpu will-change-transform backface-hidden 
+                        transition-colors hover:border-[#C9A227]/40">
+                            <div className="w-9 h-9 rounded-xl bg-[#C9A227]/10 border border-[#C9A227]/20 
+                            flex items-center justify-center text-[#C9A227]">
                                 <Zap size={16}/>
                             </div>
-                            <h4 className="text-sm font-bold text-white">
+                            <h4 className="text-sm font-mono text-[#F5F0EB] tracking-wide">
                                 Neural Retrieval
                             </h4>
-                            <p className="text-xs text-gray-500 leading-relaxed">
+                            <p className="text-xs text-[#8C7A6B] font-sans leading-relaxed">
                                 Search goes beyond filename. ResearchOS indexes document content,
                                 PDF annotations, and headers.
                             </p>
                         </div>
 
-                        <div className={`p-6 rounded-2xl border bg-[#080C0C] space-y-3 
-                        transition-colors
-                            ${crossWorkspaceActive ? "border-sky-400/40" : "border-white/5"}`}>
-                            <div className={`w-9 h-9 rounded-xl bg-sky-400/10 flex items-center 
-                            justify-center text-sky-400 transition-transform
+                        <div className={`p-6 rounded-2xl border bg-[#181013]/90 backdrop-blur-3xl
+                        transform-gpu will-change-transform backface-hidden
+                         space-y-3 transition-all duration-300
+                            ${crossWorkspaceActive 
+                                ? "border-[#C9A227] shadow-[0_0_20px_rgba(201,162,39,0.15)]" 
+                                : "border-[#2A1E22] hover:border-[#C9A227]/40"}`}>
+                            <div className={`w-9 h-9 rounded-xl bg-[#C9A227]/10 border 
+                            border-[#C9A227]/20 flex items-center duration-300
+                            justify-center text-[#C9A227] transition-transform
                             ${crossWorkspaceActive ? "scale-110" : ""}`}>
                                 <Globe2 size={16}/>
                             </div>
-                            <h4 className="text-sm font-bold text-white">
+                            <h4 className="text-sm font-mono text-[#F5F0EB]">
                             Cross-Workspace Search
                             </h4>
-                            <p className="text-xs text-gray-500 leading-relaxed">
+                            <p className="text-xs text-[#8C7A6B] font-sans leading-relaxed">
                                 {`Search reaches text and content inside every workspace you have 
                                 access to - not just filenames, and not just the one you're in.`}
                             </p>
                         </div>
 
-                        <div className="p-6 rounded-2xl border border-white/5 bg-[#080C0C] 
-                        space-y-4">
-                            <div className="flex items-center justify-between text-[10px] font-mono
-                            uppercase tracking-widest">
-                                <span className="text-gray-600">Latency</span>
-                                <span className="text-white">{latency}ms</span>
+                        <div className="p-6 rounded-2xl border border-[#2A1E22] bg-[#181013]/90
+                         backdrop-blur-3xl transform-gpu will-change-transform backface-hidden space-y-4">
+                            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
+                                <span className="text-[#8C7A6B]">Latency</span>
+                                <span className="text-[#F5F0EB] font-medium">{latency}ms</span>
                             </div>
-                            <div className="flex items-center justify-between text-[10px] font-mono
-                            uppercase tracking-widest">
-                                <span className="text-gray-600">Indexed</span>
-                                <span className="text-white">{indexed.toLocaleString()}</span>
+                            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
+                                <span className="text-[#8C7A6B]">Indexed</span>
+                                <span className="text-[#F5F0EB] font-medium">{indexed.toLocaleString()}</span>
                             </div>
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between text-[10px] font-mono
-                                uppercase tracking-widest">
-                                    <span className="text-gray-600">System Load</span>
-                                    <span className="text-[#63FF9D]">Optimal</span>
+                                <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest">
+                                    <span className="text-[#8C7A6B]">System Load</span>
+                                    <span className="text-[#C9A227] font-medium">Optimal</span>
                                 </div>
-                                <div className="w-full h-1 rounded-full bg-white/5 overflow-hidden">
-                                    <div className="h-full w-[22%] rounded-full bg-[#63FF9D]"/>
+                                <div className="w-full h-1 rounded-full bg-[#2A1E22] overflow-hidden">
+                                    <div className="h-full w-[22%] rounded-full bg-[#C9A227] shadow-[0_0_8px_#C9A227]"/>
                                 </div>
                             </div>
                         </div>
@@ -117,25 +127,25 @@ export const SearchSection = () => {
                         {showCollapsed ? (
                             /* --- Small screen: hint badge + collapsed preview */
                             <div className="flex flex-col items-center gap-4">
-                                <div className="px-4 py-2 bg-violet-400/10 border
-                                 border-violet-400/20 rounded-full animate-bounce">
-                                    <p className="text-violet-400 text-[10px] font-black uppercase
-                                    tracking-widest">
+                                <div className="px-4 py-2 bg-[#C9A227]/10 border border-[#C9A227]/20 rounded-full animate-bounce">
+                                    <p className="text-[#C9A227] text-[10px] font-mono uppercase
+                                    tracking-widest font-bold">
                                         Tap Expand to try the command palette
                                     </p>
                                 </div>
 
-                                <div className="w-full rounded-3xl border border-white/10
-                                bg-[#080C0C]/80 backdrop-blur-3xl shadow-2xl overflow-hidden">
+                                <div className="w-full rounded-3xl border border-[#2A1E22] 
+                                bg-[#181013]/90 backdrop-blur-3xl transform-gpu will-change-transform backface-hidden
+                                 shadow-2xl overflow-hidden">
                                     <div className="flex items-center justify-between px-4 py-3
-                                    border-b border-white/5">
+                                    border-b border-[#2A1E22]">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-violet-400
+                                            <div className="w-1.5 h-1.5 rounded-full bg-[#C9A227]
                                             animate-pulse"/>
-                                            <span className="text-white font-black uppercase
+                                            <span className="text-[#F5F0EB] font-mono uppercase
                                             tracking-widest text-[10px]">
                                                 Global Command
-                                                <span className="text-gray-500 font-medium ml-2">
+                                                <span className="text-[#8C7A6B] font-mono tracking-normal ml-2">
                                                     - Interactive Playground
                                                 </span>
                                             </span>
@@ -168,45 +178,54 @@ export const SearchSection = () => {
 
                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 w-full">
 
-                    <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border border-white/5
-                    hover:border-violet-400/20 transition-colors group">
-                        <div className="w-12 h-12 rounded-2xl bg-violet-400/10 flex items-center
-                        justify-center text-violet-400 group-hover:scale-110 transition-transform">
+                    <div className="space-y-4 p-8 rounded-3xl bg-[#181013]/50 border border-[#2A1E22] 
+                    hover:border-[#C9A227]/40 transition-all duration-300 group">
+                        <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 border border-[#C9A227]/20 
+                        flex items-center duration-300
+                        justify-center text-[#C9A227] group-hover:scale-110 transition-transform">
                             <Share2 size={22}/>
                         </div>
                         <div className="space-y-2">
-                            <h4 className="font-bold text-white">Semantic link</h4>
-                            <p className="text-xs text-gray-500 leading-relaxed">
+                            <h4 className="font-mono text-sm text-[#F5F0EB] tracking-wide">
+                                Semantic link
+                            </h4>
+                            <p className="text-xs text-[#8C7A6B] leading-relaxed font-sans">
                                 Connect disperate research ideas through automated semantic 
                                 matching in your private vault.
                             </p>
                         </div>
                     </div>
 
-                    <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border border-white/5
-                    hover:border-orange-500/20 transition-colors group">
-                        <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center
-                        justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                    <div className="space-y-4 p-8 rounded-3xl bg-[#181013]/50 border border-[#2A1E22] 
+                    hover:border-[#C9A227]/40 transitionall duration-300 group">
+                        <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 border border-[#C9A227]/20 
+                        flex items-center justify-center text-[#C9A227] group-hover:scale-110 
+                        transition-transform duration-300">
                             <HardDriveDownload size={22}/>
                         </div>
                         <div className="space-y-2">
-                            <h4 className="font-bold text-white">Local-First Privacy</h4>
-                            <p className="text-xs text-gray-500 leading-relaxed">
+                            <h4 className="font-mono text-sm text-[#F5F0EB] tracking-wide">
+                                Local-First Privacy
+                            </h4>
+                            <p className="text-xs text-[#8C7A6B] font-sans leading-relaxed">
                                 Search happens locally on your machine. Your data never leaves
                                 your vault for index generation.
                             </p>
                         </div>
                     </div>
 
-                    <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border border-white/5
-                    hover:border-[#63FF9D]/20 transition-colors group">
-                        <div className="w-12 h-12 rounded-2xl bg-[#63FF9D]/10 flex items-center
-                        justify-center text-[#63FF9D] group-hover:scale-110 transition-transform">
+                    <div className="space-y-4 p-8 rounded-3xl bg-[#181013]/50 border 
+                    border-[#2A1E22] hover:border-[#C9A227]/40 transition-all duration-300 group">
+                        <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 border 
+                        border-[#C9A227]/20 flex items-center duration-300 justify-center 
+                        text-[#C9A227] group-hover:scale-110 transition-transform">
                             <History size={22}/>
                         </div>
                         <div className="space-y-2">
-                            <h4 className="font-bold text-white">Session Restore</h4>
-                            <p className="text-xs text-gray-500 leading-relaxed">
+                            <h4 className="font-mono text-sm text-[#F5F0EB] tracking-wide">
+                                Session Restore
+                            </h4>
+                            <p className="text-xs text-[#8C7A6B] font-sans leading-relaxed">
                                 Jump back into deep work with universal session history and 
                                 command logging.
                             </p>

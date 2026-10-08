@@ -20,13 +20,14 @@ export const CollapsedPreview: React.FC<CollapsedPreviewProps> = ({
 }) => {
     return (
         <div 
-        className="relative w-full overflow-hidden rounded-2xl border border-white/10"
+        className="relative w-full overflow-hidden rounded-2xl border border-[#2A1E22]"
         style={{
             aspectRatio: '16/9'
         }}
         >
             {/* Background blur of the sandbox content */}
-            <div className="absolute inset-0 bg-[#080C0C]/90 backdrop-blur-sm"/>
+            <div className="absolute inset-0 bg-[#120C0E]/90 backdrop-blur-sm transform-gpu
+             will-change-transform backface-hidden"/>
 
             {/* Faded sandbox preview */}
             <div className="absolute inset-0 opacity-25 pointer-events-none overflow-hidden
@@ -37,24 +38,24 @@ export const CollapsedPreview: React.FC<CollapsedPreviewProps> = ({
             }}
             >
                 {/* Placeholder sidebar stripes */}
-                <div className="absolute left-0 top-0 w-32 h-full bg-[#080C0C] border-r
-                 border-white/5">
+                <div className="absolute left-0 top-0 w-32 h-full bg-[#120C0E] border-r
+                 border-[#2A1E22]">
                     {[...Array(6)].map((_, i) => (
                         <div 
                         key={i}
-                        className="mx-3 my-2 h-4 rounded bg-white/5"
+                        className="mx-3 my-2 h-4 rounded bg-[#2A1E22]"
                         style={{
                             width: `${60 + Math.random() * 40}%`
                         }}
                         />
                     ))}
                 </div>
-                <div className="absolute left-32 top-0 right-0 h-full bg-[#050A0A]">
+                <div className="absolute left-32 top-0 right-0 h-full bg-[#0E0A0B]">
                     {[...Array(4)].map((_, i) => (
                         <div 
                         key={i}
-                        className="mx-6 my-4 h-12 rounded-xl border border-white/5
-                        bg-white/[0.02]"
+                        className="mx-6 my-4 h-12 rounded-xl border border-[#2A1E22]
+                        bg-[#181013]"
                         />
                     ))}
                 </div>
@@ -62,16 +63,16 @@ export const CollapsedPreview: React.FC<CollapsedPreviewProps> = ({
 
             {/* Overlay CTA */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4
-            bg-[#050A0A]/60 backdrop-blur-[2px]">
+            bg-[#120C0E]/60 backdrop-blur-[2px] transform-gpu will-change-transform backface-hidden">
                 <div className="text-center">
                     <p className={`text-xs font-medium uppercase tracking-widest
                     mb-1 ${type === 'flashcard' 
-                    ? 'text-purple-400' 
-                    : 'text-white/60'
+                    ? 'text-[#C9A227]' 
+                    : 'text-[#A09388]'
                     }`}>
                         {heading}
                     </p>
-                    <p className="text-white/40 text-[10px]">
+                    <p className="text-[#8C7A6B] text-[10px]">
                         {subHeading}
                     </p>
                 </div>
@@ -80,10 +81,10 @@ export const CollapsedPreview: React.FC<CollapsedPreviewProps> = ({
                 type={type}
                 />
                 {type === 'sandbox' && (<div
-                className={`text-[10px] font-bold transition-all duration-500
+                className={`text-[10px] font-mono transition-all duration-500
                     ${isPaused 
-                        ? 'text-[#63FF9D] opacity-100' 
-                        : 'text-gray-600 opacity-50'}
+                        ? 'text-[#C9A227] opacity-100' 
+                        : 'text-[#8C7A6B] opacity-50'}
                     `}
                 >
                     {isPaused 

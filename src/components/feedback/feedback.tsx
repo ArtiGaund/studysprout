@@ -20,6 +20,7 @@ const Feedback = ({ editable }: { editable?: boolean}) => {
                 content={<FeedbackForm onClose={() => setOpen(false)}/>}
                 open={open}
                 onOpenChange={setOpen}
+                
                 >
                     <TooltipComponent message="Feedback">
                         <MessageCircleQuestionIcon className="text-blue-500 hover:text-purple-700" />

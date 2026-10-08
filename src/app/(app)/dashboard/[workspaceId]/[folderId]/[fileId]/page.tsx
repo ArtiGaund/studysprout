@@ -345,92 +345,93 @@ const FilePage: React.FC<{
     ]);
 
     if(!currentFile || currentFile._id !== fileId || loading){
-        return <div>Loading file content...</div>
-    }
+        return (
+            <div className='flex justify-center items-center h-full text-xs font-mono
+             text-zinc-500 animate-pulse'>
+                Loading file content...
+            </div>
+    )}
+
     return (
         <>
-            <NavHeader 
-                    dirType='file'
-                    fileId={params.fileId}
-                    dirDetails={currentFile}
-                />
-        <div className='flex flex-col md:flex-row h-screen overflow-y-auto
-         md:overflow-hidden relative'>
+            <NavHeader dirType='file' fileId={params.fileId} dirDetails={currentFile}/>
+            <div className='flex flex-col md:flex-row h-screen overflow-y-auto
+            md:overflow-hidden relative bg-[#0A0507] text-white font-mono'>
     
-            {/*Center: Editor column  */}
-            <main className='flex-1 md:overflow-y-auto min-w-0'>
-                <div className='px-4 sm:px-10 pt-8 pb-24'>
+                {/*Center: Editor column  */}
+                <main className='flex-1 md:overflow-y-auto min-w-0 bg-[#0A0507]'>
+                    <div className='px-4 sm:px-10 pt-8 pb-24 max-w-5xl mx-auto'>
 
-                    <div className='flex items-start justify-between gap-3'>
-                    <FileHeader 
-                        currentFile={currentFile}
+                        <div className='flex items-start justify-between gap-3 mb-6'>
+                            <FileHeader currentFile={currentFile}/>
+
+                            {/* Burger toggle: only shown below `lg` widths, since the panel is a
+                            fixed column on lg+ */}
+                            <button
+                                type='button'
+                                onClick={() => setIsInsightsPanelOpen(true)}
+                                aria-label='Open file insights panel'
+                                className='lg:hidden flex-shrink-0 mt-1 p-2 rounded-lg border
+                                border-white/10 bg-[#110A10] hover:bg-white/10 text-zinc-300
+                                transition-colors'
+                            >
+                                <PanelRightOpen className='w-4 h-4'/>
+                            </button>
+                        </div>
+
+                        {/* Editor content render */}
+                        {/* [&_.bn-editor]:!px-0 overrides BlockNotes internal horizontal padding */}
+                        <div className='bg-transparent p-6 sm:p-8 shadow-2xl 
+                        mt-6 [&_.bn-editor]:!px-0 [&_.bn-block-outer]:!mx-0'>
+                            <DynamicTextEditor
+                                key={`${params.fileId}-${!!binaryData}`} 
+                                fileId={params.fileId}
+                                initialContentBinary={binaryData}
+                                username={user?.username || ''}
+                                // onChange= {onChangeHandler}
+                                editable={!currentFile.inTrash}
+                            />
+                        </div>
+                    </div>
+                </main>
+
+                {/* Backdrop: only rendered/interactive below `lg`, closes the drawer on click */}
+                {isInsightsPanelOpen && (
+                    <div 
+                        onClick={() => setIsInsightsPanelOpen(false)}
+                        className='fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden'
+                        aria-hidden='true'
                     />
+                )}
 
-                    {/* Burger toggle: only shown below `lg` widths, since the panel is a
-                    fixed column on lg+ */}
-                    <button
-                        type='button'
-                        onClick={() => setIsInsightsPanelOpen(true)}
-                        aria-label='Open file insights panel'
-                        className='lg:hidden flex-shrink-0 mt-1 p-2 rounded-lg border
-                        border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300
-                        transition-colors'
-                    >
-                        <PanelRightOpen className='w-4 h-4'/>
-                    </button>
-                    </div>
-                    {/* Editor content render */}
-                    {/* [&_.bn-editor]:!px-0 overrides BlockNotes internal horizontal padding */}
-                    <div className='mt-6 [&_.bn-editor]:!px-0 [&_.bn-block-outer]:!mx-0'>
-                        <DynamicTextEditor
-                            key={`${params.fileId}-${!!binaryData}`} 
-                            fileId={params.fileId}
-                            initialContentBinary={binaryData}
-                            username={user?.username || ''}
-                            // onChange= {onChangeHandler}
-                            editable={!currentFile.inTrash}
-                        />
-                    </div>
-                </div>
-            </main>
-
-            {/* Backdrop: only rendered/interactive below `lg`, closes the drawer on click */}
-            {isInsightsPanelOpen && (
-                <div 
-                    onClick={() => setIsInsightsPanelOpen(false)}
-                    className='fixed inset-0 bg-black/60 z-40 lg:hidden'
-                    aria-hidden='true'
-                />
-            )}
-
-            {/* Right: Insight panel */}
-            <aside className={`w-full sm:w-[380px] lg:w-[320px] xl:w-[360px] flex-shrink-0
-                border-white/10 border-l fixed lg:static top-0 right-0 h-full lg:h-auto
-                z-50 lg:z-auto lg:overflow-y-auto shadow-2xl lg:shadow-none
-                transition-transform duration-300 ease-in-out
-                ${isInsightsPanelOpen ? 'translate-x-0' : 'translate-x-full'}
-                lg:translate-x-0`}>
-                <FileInsightsPanel 
-                    fileId={params.fileId}
-                    currentFile={currentFile}
-                    activeUsers={activeFileUsers}
-                    flashcardSet={fileFlashcardSet}
-                    parentSets={parentSets}
-                    readingTimeMin={readingTimeMin}
-                    complexity={complexity}
-                    mentions={mentions}
-                    connectedConcepts={connectedConcepts}
-                    documentMasteryPct={documentMasteryPct}
-                    relatedConcepts={currentFile.terms ?? []}
-                    prereqItems={prereqItems}
-                    prereqNeverRun={prereqNeverRun}
-                    prereqLoading={prereqLoading}
-                    onDetectPrerequisites={handleDetectFilePrerequisites}
-                    onPrereqClick={handlePrereqClick}
-                    onClose={() => setIsInsightsPanelOpen(false)}
-                />
-            </aside>
-        </div>
+                {/* Right: Insight panel */}
+                <aside className={`w-full sm:w-[380px] lg:w-[320px] xl:w-[360px] flex-shrink-0
+                    border-white/10 border-l fixed lg:static top-0 right-0 h-full lg:h-auto
+                    z-50 lg:z-auto lg:overflow-y-auto shadow-2xl lg:shadow-none bg-[#0A0507]
+                    transition-transform duration-300 ease-in-out
+                    ${isInsightsPanelOpen ? 'translate-x-0' : 'translate-x-full'}
+                    lg:translate-x-0`}>
+                    <FileInsightsPanel 
+                        fileId={params.fileId}
+                        currentFile={currentFile}
+                        activeUsers={activeFileUsers}
+                        flashcardSet={fileFlashcardSet}
+                        parentSets={parentSets}
+                        readingTimeMin={readingTimeMin}
+                        complexity={complexity}
+                        mentions={mentions}
+                        connectedConcepts={connectedConcepts}
+                        documentMasteryPct={documentMasteryPct}
+                        relatedConcepts={currentFile.terms ?? []}
+                        prereqItems={prereqItems}
+                        prereqNeverRun={prereqNeverRun}
+                        prereqLoading={prereqLoading}
+                        onDetectPrerequisites={handleDetectFilePrerequisites}
+                        onPrereqClick={handlePrereqClick}
+                        onClose={() => setIsInsightsPanelOpen(false)}
+                    />
+                </aside>
+            </div>
         </>
     )
 }

@@ -24,15 +24,15 @@ export const RecentActivity = ({
     },[workspaceId]);
 
     return (
-        <div className="text-[#e2e2f0]">
-            <div className="flex justify-between items-center mb-[16px]">
-                <h2 className="m-0 text-base font-semibold">
+        <div className="flex flex-col text-zinc-100 w-full">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="m-0 text-sm font-mono text-zinc-100">
                     Recent Activity
                 </h2>
                 {events.length !== 0 && <button
                     onClick={() => router.push(`/dashboard/${workspaceId}/activity`)}
-                    className={`bg-transparent border-none text-[#7c3aed] cursor-pointer 
-                    text-[13px] font-[500px] p-0`}
+                    className={`bg-transparent border-none text-purple-400 hover:text-purple-300 
+                    cursor-pointer transition-colors text-xs font-mono p-0`}
                 >
                     View All Activity
                 </button>}
@@ -40,16 +40,17 @@ export const RecentActivity = ({
 
             {/* Cards row */}
             {loading ? (
-                <div className="text-[#4b5563] text-[13px]">
-                    Loading...
+                <div className="text-zinc-500 text-xs font-mono py-4">
+                    Loading activity...
                 </div>
             ) : events.length === 0 ? (
-                <div className="bg-[#0f172a] rounded-[10px] py-8 px-6 text-center text-gray-600
-                text-[13px]">
+                <div className="bg-[#110A10] border border-white/10 rounded-xl py-8 px-6 
+                text-center text-zinc-500 text-xs font-mono">
                     No activity yet. Start editing files or reviewing flashcards!
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 w-full items-stretch">
+                <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4 w-full 
+                items-stretch">
                     {events.map((event) => (
                         <div key={event._id} className="flex min-w-0 h-full">
                             <ActivityCard event={event}/>
@@ -58,6 +59,6 @@ export const RecentActivity = ({
                 </div>
             )}
         </div>
-    )
+    );
 }
 

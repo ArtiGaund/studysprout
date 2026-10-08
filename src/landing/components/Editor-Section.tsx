@@ -194,18 +194,29 @@ export const EditorSection = () => {
   }
 
   return (
-    <section id="editor-section" className="scroll-mt-32 relative py-20 px-6 bg-[#050A0A] overflow-hidden">
+    <section id="editor-section" 
+    className="scroll-mt-32 relative py-20 px-6 bg-[#120C0E] overflow-hidden">
+
+      {/* Ambient Lighting & Grid Overlay matching Clipper and Hero */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[40vh] max-w-[1000px] rounded-full blur-[120px] md:blur-[150px] bg-[#C9A227]/10 transition-all duration-700" />
+        <div className="absolute inset-0 opacity-[0.03] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:48px_48px]" />
+      </div>
+
       <div className="max-w-7xl mx-auto flex flex-col items-center">
 
         {/* Section Heading */}
         <div className="text-center mb-16 space-y-4">
-            <h3 className="text-[#63FF9D] font-mono text-xs uppercase tracking-[0.4em] opacity-80">
+            <h3 className="inline-flex items-center gap-2 px-3 py-1 rounded-full
+                     bg-[#C9A227]/10 border border-[#C9A227]/20 text-[#C9A227] font-mono 
+                     text-[10px] uppercase tracking-[0.3em]">
                 Performance Core
             </h3>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white leading-tight">
-                The <span className="text-[#63FF9D]">Sprout</span> Editor.
+            <h2 className="text-4xl md:text-5xl font-serif text-[#F5F0EB] leading-tight">
+                The <span className="font-serif italic text-[#C9A227]">Sprout</span> Editor.
             </h2>
-            <p className="text-gray-400 text-lg leading-relaxed max-w-2xl mx-auto">
+            <p className="mt-4 text-sm sm:text-base md:text-lg leading-relaxed 
+                    text-[#A09388] font-serif max-w-2xl mx-auto">
                 A high-performance, local-first environment built for deep work. 
                 Experience seamless collaboration with zero latency.
             </p>
@@ -220,25 +231,27 @@ export const EditorSection = () => {
              /*--- Small screen: hint badge + collapsed preview --- */
             <div className="flex flex-col items-center gap-4">
               {/* Hint badge */}
-              <div className="px-4 py-2 bg-[#63FF9D]/10 border border-[#63FF9D]/20
+              <div className="px-4 py-2 bg-[#C9A227]/10 border border-[#C9A227]/20
                 rounded-full animate-bounce">
-                  <p className="text-[#63FF9D] text-[10px] font-black uppercase tracking-widest">
+                  <p className="text-[#C9A227] text-[10px] font-mono font-bold uppercase 
+                  tracking-widest">
                       Tap Expand to interact with the editor
                   </p>
               </div>
             
               {/* Card wrapper - same visual chrome as the large-screen card */}
-              <div className="w-full rounded-3xl border border-white/10 bg-[#080C0C]/80 
-              backdrop-blur-3xl shadow-2xl overflow-hidden">
+              <div className="w-full rounded-3xl border border-[#2A1E22] bg-[#0E090B] 
+              backdrop-blur-3xl transform-gpu will-change-transform backface-hidden shadow-2xl 
+              overflow-hidden">
                 {/* Inner top bar */}
                   <div className="flex items-center justify-between px-4 py-3 border-b 
-                  border-white/5">
+                  border-[#2A1E22]">
                     <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#63FF9D] animate-pulse"/>
-                        <span className="text-white font-black uppercase tracking-widest 
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#C9A227] animate-pulse"/>
+                        <span className="[#F5F0EB] font-mono font-bold uppercase tracking-widest 
                         text-[10px]">
                             Editor
-                          <span className="text-gray-500 font-medium ml-2">
+                          <span className="text-stone-500 font-medium ml-2">
                             - Interactive Playground
                           </span>
                         </span>
@@ -269,15 +282,16 @@ export const EditorSection = () => {
 
         {/* Technical Deep-Dive: Proving the Engineering */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 w-full">
-            <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border
-             border-white/5 hover:border-[#63FF9D]/20 transition-colors group">
-                <div className="w-12 h-12 rounded-2xl bg-[#63FF9D]/10 flex items-center 
-                justify-center text-[#63FF9D] group-hover:scale-110 transition-transform">
+            <div className="space-y-4 p-8 rounded-3xl bg-[#120C0E] border border-[#2A1E22]
+             hover:border-[#C9A227]/40 transition-colors group">
+                <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 flex items-center 
+                justify-center text-[#C9A227] group-hover:scale-110 transition-transform
+                border border-[#C9A227]/20">
                     <Activity size={22} />
                 </div>
                 <div className="space-y-2">
-                    <h4 className="font-bold text-white">Conflict-Free Sync</h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <h4 className="font-bold text-[#F5F0EB]">Conflict-Free Sync</h4>
+                    <p className="text-xs text-stone-500 leading-relaxed">
                         {`Powered by **Yjs CRDTs**. Multiple users can edit the same document 
                         simultaneously 
                         without ever seeing a "merge conflict" or losing a single keystroke.`}
@@ -285,30 +299,32 @@ export const EditorSection = () => {
                 </div>
             </div>
 
-            <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border
-             border-white/5 hover:border-purple-400/20 transition-colors group">
-                <div className="w-12 h-12 rounded-2xl bg-purple-400/10 flex items-center
-                 justify-center text-purple-400 group-hover:scale-110 transition-transform">
+            <div className="space-y-4 p-8 rounded-3xl bg-[#120C0E] border border-[#2A1E22] 
+            hover:border-[#C9A227]/40 transition-colors group">
+                <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 flex items-center
+                 justify-center text-[#C9A227] group-hover:scale-110 transition-transform
+                 border border-[#C9A227]/20">
                     <Users size={22} />
                 </div>
                 <div className="space-y-2">
-                    <h4 className="font-bold text-white">Real-Time Awareness</h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <h4 className="font-bold text-[#F5F0EB]">Real-Time Awareness</h4>
+                    <p className="text-xs text-stone-400 leading-relaxed">
                         Utilizes **Socket.io** for ultra-low latency cursor tracking and presence. 
                         See exactly where your collaborators are working in real-time.
                     </p>
                 </div>
             </div>
 
-            <div className="space-y-4 p-8 rounded-3xl bg-white/[0.02] border
-             border-white/5 hover:border-orange-500/20 transition-colors group">
-                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center 
-                justify-center text-orange-500 group-hover:scale-110 transition-transform">
+            <div className="space-y-4 p-8 rounded-3xl bg-[#120C0E] border
+             border-[#2A1E22] hover:border-[#C9A227]/40 transition-colors group">
+                <div className="w-12 h-12 rounded-2xl bg-[#C9A227]/10 flex items-center 
+                justify-center text-[#C9A227] group-hover:scale-110 transition-transform
+                border border-[#C9A227]/20">
                     <Shield size={22} />
                 </div>
                 <div className="space-y-2">
-                    <h4 className="font-bold text-white">Local-First Privacy</h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <h4 className="font-bold text-[#F5F0EB]">Local-First Privacy</h4>
+                    <p className="text-xs text-stone-400 leading-relaxed">
                         {`Your data is stored in a **Local Vault** before hitting the cloud. 
                         If your network fails, editing continues instantly—syncing only when
                         you're back online.`}
@@ -318,14 +334,15 @@ export const EditorSection = () => {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .bn-editor { 
-            caret-color: #63FF9D !important; 
+            caret-color: #C9A227 !important; 
             min-height: 400px; 
             background: transparent !important; 
+            color: #F5F0EB !important;
         }
         .bn-container { background: transparent !important; }
-        .bn-editor ::selection { background: rgba(99, 255, 157, 0.1); }
+        .bn-editor ::selection { background: rgba(201, 162, 39, 0.2); }
       `}</style>
     </section>
   );

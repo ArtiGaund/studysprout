@@ -1,22 +1,8 @@
 'use client';
 
-import { Archive, Brain, FileText, Folder, Link2, Sparkle, Target, Zap } from "lucide-react";
+import { Archive, FileText, Folder, Link2, Sparkle, Target, Zap } from "lucide-react";
 import { ActivityEvent } from "./acitivity-feed";
 import React from "react";
-
-interface ActivityCardProps{
-    title: string;
-    lastActive: string;
-    description: string;
-    activeDocuments: number;
-    flashcards: number;
-    thumbnailUrl?: string;
-    collaborators?: {
-        name: string;
-        image?: string;
-        color?: string;
-    }[];
-}
 
 function relativeTime(dateStr: string): string{
     const now = Date.now();
@@ -36,38 +22,25 @@ function relativeTime(dateStr: string): string{
 
 // Icon map - return an SVG string for every event type
 function EventIcon({ type }: { type: string }){
-    const iconStyle = {
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexShrink: 0,
-    } as React.CSSProperties;
-
-    const icons: Record<string, { bg: string; icon: React.ComponentType<any> }> = {
-        SYNTHESIS_COMPLETED: { bg: "#1e1b4b", icon: Sparkle },
-        FLASHCARDS_GENERATED: { bg: "#1e3a2e", icon: Zap },
-        FILE_UPDATED: { bg: "#1e293b", icon: FileText },
-        FILE_CREATED: { bg: "#1e293b", icon: FileText },
-        FILE_ARCHIVED: { bg: "#1f2937", icon: Archive },
-        CONNECTION_CREATED: { bg: "#1e2e1b", icon: Link2 },
-        FOLDER_CREATED: { bg: "#1e2938", icon: Folder },
-        GOAL_UPDATED: { bg: "#2e1b2e", icon: Target },
+    const icons: Record<string, { bg: string; icon: React.ComponentType<any>; color: string; }> = {
+        SYNTHESIS_COMPLETED: { bg: "#purple-950/60", color: "text-purple-300", icon: Sparkle },
+        FLASHCARDS_GENERATED: { bg: "bg-emerald-950/60", color: "text-emerald-300", icon: Zap },
+        FILE_UPDATED: { bg: "bg-white/[0.04]", color: "text-zinc-300", icon: FileText },
+        FILE_CREATED: { bg: "bg-white/[0.04]", color: "text-zinc-300", icon: FileText },
+        FILE_ARCHIVED: { bg: "bg-zinc-900", color: "text-zinc-400", icon: Archive },
+        CONNECTION_CREATED: { bg: "bg-blue-950/60", color: "text-blue-300", icon: Link2 },
+        FOLDER_CREATED: { bg: "bg-purple-950/40", color: "text-purple-300", icon: Folder },
+        GOAL_UPDATED: { bg: "bg-amber-950/60", color: "text-amber-300", icon: Target },
     };
 
-    const cfg = icons[type] ?? { bg: "#1f2937", icon: FileText };
+    const cfg = icons[type] ?? { bg: "bg-white/[0.04]", color: "text-zinc-300", icon: FileText };
     const Icon = cfg.icon;
     return (
-        <div style={{ 
-            ...iconStyle,
-            background: cfg.bg,
-            fontSize: 18,
-        }}>
-            <Icon size={14} className="text-gray-300"/>
+        <div className={`w-8 h-8 rounded-lg ${cfg.bg} border border-white/10 flex items-center 
+        justify-center shrink-0`}>
+            <Icon size={14} className={cfg.color}/>
         </div>
-    )
+    );
 }
 
 export const ActivityCard = ({event}: {event: ActivityEvent }) => {
@@ -80,24 +53,24 @@ export const ActivityCard = ({event}: {event: ActivityEvent }) => {
         m.fileId !== undefined;
 
     return (
-        <div className="bg-[#0f172a] border border-[#1e2d45] rounded-2xl p-4 flex flex-col
-        justify-between gap-3 w-full min-w-0 transition-all duration-150 hover:border-white/10">
+        <div className="bg-[#110A10] border border-white/10 rounded-2xl p-4 flex flex-col
+        justify-between gap-3 w-full min-w-0 transition-all duration-150 hover:border-purple-500/20">
             {/* Top Row: Info and Timestamp */}
             <div className="flex justify-between items-start gap-x-2 w-full">
                 <EventIcon type={event.type}/>
-                <span className="text-[11px] text-[#4b5563] shrink-0 mt-0.5">
+                <span className="text-[11px] font-mono text-zinc-500 shrink-0 mt-0.5">
                     {relativeTime(event.createdAt)}
                 </span>
             </div>
            
             {/* Description */}
-            <p className="m-0 text-[13px] font-medium text-[#e2e2f0] leading-relaxed flex-1 mt-1">
+            <p className="m-0 text-xs font-mono text-zinc-200 leading-snug flex-1 mt-1">
                 {event.description}
             </p>
 
             {/* Stats row */}
             {hasStatesMetadata && (
-                <div className="flex items-center gap-x-3 text-[12px] text-gray-500
+                <div className="flex items-center gap-x-3 text-[12px] font-mono text-zinc-500
                 border-t border-white/5 pt-2.5 mt-1">
                     {m.fileCount !== undefined && (
                         <span className="flex items-center gap-x-1">
@@ -123,5 +96,5 @@ export const ActivityCard = ({event}: {event: ActivityEvent }) => {
                 </div>
             )}
         </div>
-    )
+    );
 } 

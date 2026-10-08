@@ -4,7 +4,10 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { RootState } from "@/store/store";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Bar, CartesianGrid, Cell, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { 
+    Bar, CartesianGrid, Cell, ComposedChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, 
+    YAxis 
+} from "recharts";
 
 interface DayData{
     date: string;
@@ -35,15 +38,15 @@ function CustomTooltip({
     const d: DayData = payload[0]?.payload;
 
     return (
-        <div className="bg-[#1a1a2e] border border-[#3a3a5c] rounded-[8px] py-2.5 px-2.5
-        text-[13px] text-gray-300"
+        <div className="bg-[#110A10] border border-white/10 rounded-lg p-2.5
+        text-xs font-mono text-zinc-200 shadow-xl space-y-1"
         >
-            <p className="font-[600px] mb-0">
+            <p className="font-semibold text-purple-300 border-b border-white/5 pb-1 mb-1">
                 {label}
             </p>
-            <p className="text-[#a78bfa]">Score: {d.score}</p>
-            <p className="text-[#6ee7b7]">Cards reviewed: {d.cardsReviewed}</p>
-            <p className="text-[#93c5fd]">Files touched: {d.filesTouched}</p>
+            <p className="text-purple-400">Score: {d.score}</p>
+            <p className="text-emerald-400">Cards reviewed: {d.cardsReviewed}</p>
+            <p className="text-blue-400">Files touched: {d.filesTouched}</p>
         </div>
     );
 }
@@ -79,22 +82,23 @@ function ManageGoalsModal({
 
     return (
         <div 
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center 
+            justify-center z-50 p-4"
             onClick={onClose}
         >
             <div
-                className="bg-[#1a1a2e] border border-[#3a3a5c] rounded-[12px] p-7 w-[340px]
-                text-[#e2e2f0]"
+                className="bg-[#110A10] border border-white/10 rounded-[12px] p-7 w-[340px]
+                text-zinc-100 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h3 className="mb-4 text-4 font-[600px]">
+                <h3 className="text-base font-semibold text-purple-200 mb-2">
                     Manage Daily Goal
                 </h3>
-                <p className="text-[13px] text-[#9ca3af] mb-4">
+                <p className="text-xs font-mono text-zinc-400 mb-4 leading-relaxed">
                     Daily activity = cards reviewed + files touched. The goal line on the graph
                     will update immediately.
                 </p>
-                <label className="text-[13px] text-[#a78bfa] block mb-1.5">
+                <label className="text-xs font-mono text-purple-300 block mb-1.5">
                     Daily activity target
                 </label>
                 <input 
@@ -103,22 +107,22 @@ function ManageGoalsModal({
                     max={200}
                     value={value}
                     onChange={(e) => setValue(Number(e.target.value))}
-                    className="w-full bg-[#0f0f1a] border border-[#3a3a5c] rounded-[6px]
-                    text-[#e2e2f0] py-2 px-3 text-[15px] box-border"
+                    className="w-full bg-[#0A0507] border border-white/10 rounded-lg
+                    text-zinc-100 py-2 px-3 text-xs box-border focus:outline-none
+                     focus:border-purple-500/50 mb-5"
                 />
                 <div className="flex gap-2.5 mt-5">
                     <button
                     onClick={onClose}
-                    className="flex-1 py-2 rounded-[6px] border border-[#3a3a5c] bg-transparent
-                    text-[#9ca3af] cursor-pointer text-[14px]"
+                    className="flex-1 py-2 rounded-lg border border-white/10 bg-transparent
+                    text-zinc-400 hover:text-zinc-200 text-xs font-mono transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className={`flex-1 py-2 rounded-[6px] border-none bg-[#7c3aed] text-white
-                        text-[14px] ${saving 
+                        className={`flex-1 py-2 rounded-[6px] border-none bg-purple-600 hover:bg-purple-500 text-white text-xs font-mono transition-colors disabled:opacity-50 ${saving 
                             ? "cursor-not-allowed opacity-[0.7]" : "cursor-pointer opacity-[1]"}`}
                     >
                         {saving ? "Saving..." : "Save" }
@@ -172,21 +176,21 @@ export const WeeklyResearchGoals = ({
     const today = new Date().toISOString().split("T")[0];
 
     return (
-        <div className="bg-[#111827] border border-[#1f2937] rounded-[12px] py-5 px-6 
-        text-[#e2e2f0] flex flex-1 flex-col justify-between">
+        <div className="bg-[#110A10] border border-white/10 rounded-xl py-5 px-6 
+        text-zinc-100 flex flex-1 flex-col justify-between">
             {/* Header */}
             <div className="flex flex-wrap justify-between items-start sm:items-center mb-5 
             shrink-0 gap-y-2">
                 <div>
-                    <h2 className="m-0 text-[16px] font-[600px]">
+                    <h2 className="text-sm font-semibold text-zinc-100">
                         Weekly Research Goals
                     </h2>
                     {data && (
-                        <p className="mt-1 text-[13px] text-[#6b7280]">
+                        <p className="mt-0.5 text-xs font-mono text-zinc-40">
                             {data.weeklyTotal} / {data.weeklyTargetTotal} this week ·{" "}
                             <span className={`${data.percentComplete >=100 
-                                ? "text-[#6ee7b7]"
-                                : "text-[#a78bfa]"
+                                ? "text-emerald-400 font-bold"
+                                : "text-purple-400 font-bold"
                             }`}
                             >
                                 {data.percentComplete}%
@@ -196,82 +200,83 @@ export const WeeklyResearchGoals = ({
                 </div>
                 <button
                     onClick={() => setShowModal(true)}
-                    className="bg-transparent border-none text-[#7c3aed] cursor-pointer text-[13px]
-                    font-[500px] p-0"
+                    className="bg-transparent border border-purple-500/20 hover:border-purple-500/40 text-purple-300 hover:text-purple-200 px-2.5 py-1 rounded-md text-xs font-mono transition-colors"
                 >
                     Manage Goal
                 </button>
             </div>
             
             <div className="flex-1 w-full min-h-[180px] sm:min-h-[220px]">
-            {/* Chart */}
-            {loading ? ( 
-                <div className="h-[100px] flex items-center justify-center text-[#4b5563] text-[13px]"
-                >
-                    Loading...
-                </div>
-            ) : data ? (
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart
-                        data={data.days}
-                        margin={{
-                            top: 4,
-                            right: 4,
-                            left: -20,
-                            bottom: 0
-                        }}
-                    >
-                        <CartesianGrid 
-                            strokeDasharray="3 3"
-                            stroke="#1f2937"
-                        />
-                        <XAxis 
-                            dataKey="label"
-                            tick={{ fill: "#6b7280", fontSize: 12}}
-                            axisLine={false}
-                            tickLine={false}
-                        />
-                        <YAxis 
-                            tick={{ fill: "#6b7280", fontSize: 12 }}
-                            axisLine={false}
-                            tickLine={false}
-                        />
-                        <Tooltip 
-                            content={<CustomTooltip />}
-                            cursor={{ fill: "#1f2937" }}
-                        />
-                        <Bar
-                            dataKey="score"
-                            radius={[4, 4, 0, 0]}
-                            maxBarSize={36}
-                        >
-                            {data.days.map((d) => (
-                                <Cell 
-                                    key={d.date}
-                                    fill={d.date === today ? "#7c3aed" : "#2d2d4e"}
-                                />
-                            ))}
-                        </Bar>
-
-                        {/* Goal line */}
-                        <ReferenceLine 
-                            y={data.dailyTarget}
-                            stroke="#a78bfa"
-                            strokeDasharray="5 3"
-                            label={{
-                                value: `Goal: ${data.dailyTarget}`,
-                                position: "right",
-                                fill: "#a78bfa",
-                                fontSize: 11,
+                {/* Chart */}
+                {loading ? ( 
+                    <div className="h-[180px] flex items-center justify-center text-zinc-500 
+                    text-xs font-mono">
+                        Loading activity chart...
+                    </div>
+                ) : data ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart
+                            data={data.days}
+                            margin={{
+                                top: 4,
+                                right: 4,
+                                left: -20,
+                                bottom: 0
                             }}
-                        />
-                    </ComposedChart>
-                </ResponsiveContainer>
-            ) : (
-                <div className="h-[180px] text-[#4b5563] text-[13px] fllllllex items-center justify-center">
-                    No data yet. Start reviewing cards or editing files.
-                </div>
-            )}
+                        >
+                            <CartesianGrid 
+                                strokeDasharray="3 3"
+                                stroke="#ffffff0d"
+                            />
+                            <XAxis 
+                                dataKey="label"
+                                tick={{ fill: "#71717a", fontSize: 12, fontFamily: "monospace"}}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <YAxis 
+                                tick={{ fill: "#71717a", fontSize: 12, fontFamily: "monospace"}}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <Tooltip 
+                                content={<CustomTooltip />}
+                                cursor={{ fill: "#ffffff05" }}
+                            />
+                            <Bar
+                                dataKey="score"
+                                radius={[4, 4, 0, 0]}
+                                maxBarSize={36}
+                            >
+                                {data.days.map((d) => (
+                                    <Cell 
+                                        key={d.date}
+                                        fill={d.date === today ? "#9333ea" : "#3b0764"}
+                                    />
+                                ))}
+                            </Bar>
+
+                            {/* Goal line */}
+                            <ReferenceLine 
+                                y={data.dailyTarget}
+                                stroke="#c084fc"
+                                strokeDasharray="5 3"
+                                label={{
+                                    value: `Goal: ${data.dailyTarget}`,
+                                    position: "right",
+                                    fill: "#c084fc",
+                                    fontSize: 11,
+                                    fontFamily: "monospace",
+                                }}
+                            />
+                        </ComposedChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <div className="h-[180px] text-zinc-500 text-xs font-mono flex items-center 
+                    justify-center">
+                        No data yet. Start reviewing cards or editing files.
+                    </div>
+                )}
             </div>
             {/* Modal */}
             {showModal && data && (
@@ -296,5 +301,5 @@ export const WeeklyResearchGoals = ({
                 />
             )}
         </div>
-    )
+    );
 }

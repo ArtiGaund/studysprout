@@ -34,19 +34,19 @@ export const MainCanvas = ({
     const rootFiles = nodes.filter(n => n.type === 'file' && !n.parentId);
 
     return (
-        <div className="flex-1 flex flex-col bg-[#050A0A] h-full overflow-hidden">
-            <div className="flex-shrink-0 bg-[#050A0A]">
+        <div className="flex-1 flex flex-col bg-[#0A0608] h-full overflow-hidden">
+            <div className="flex-shrink-0 bg-[#0A0608]">
                 <BannerSection />
             </div>
             <div className="flex-1 p-10 overflow-y-auto min-h-0 custom-scrollbar">
                 {/* Header */}
-                <div className="flex items-center gap-4 border-b border-white/5 pb-6 mb-8">
-                    <div className="w-12 h-12 rounded-xl bg-[#63FF9D]/10 flex items-center 
-                    justify-center border border-[#63FF9D]/20">
-                        <Briefcase className="text-[#63FF9D]" size={24} />
+                <div className="flex items-center gap-4 border-b border-[#2A1E22] pb-6 mb-8">
+                    <div className="w-12 h-12 rounded-xl bg-[#C9A227]/10 flex items-center 
+                    justify-center border border-[#C9A227]/20">
+                        <Briefcase className="text-[#C9A227]" size={24} />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-white tracking-tight">
+                        <h2 className="text-xl font-serif font-bold text-[#F5F0EB] tracking-tight">
                             Collaboration
                         </h2>
                     </div>
@@ -63,19 +63,19 @@ export const MainCanvas = ({
                                     onRecordInteraction();
                                 }}
                                 className="flex items-center justify-between p-4 rounded-xl 
-                                border border-white/5 bg-white/[0.02]
-                                 hover:bg-white/[0.04] transition-all cursor-pointer group"
+                                border border-[#2A1E22] bg-[#120C0E]
+                                 hover:bg-[#191013] transition-all cursor-pointer group"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="text-gray-600">
+                                    <div className="text-stone-500">
                                         {expanded[folder.id] || nodes.some(n => 
                                         n.parentId === folder.id) 
                                             ? <ChevronDown size={14}/> 
                                             : <ChevronRight size={14}/>
                                         }
                                     </div>
-                                    <Folder size={18} className="text-[#63FF9D]" />
-                                    <span className="text-sm font-bold text-gray-300">
+                                    <Folder size={18} className="text-[#C9A227]" />
+                                    <span className="text-sm font-semibold text-[#E6DFD5]">
                                         {folder.name}
                                     </span>
                                 </div>
@@ -84,8 +84,8 @@ export const MainCanvas = ({
                                 <div className="flex items-center gap-3 opacity-0 
                                 group-hover:opacity-100 transition-opacity">
                                     <button 
-                                    className="p-1.5 rounded-md hover:bg-white/10
-                                     text-gray-400 hover:text-[#63FF9D] transition-colors"
+                                    className="p-1.5 rounded-md hover:bg-[#C9A227]/20
+                                     text-stone-400 hover:text-[#C9A227] transition-colors"
                                      onClick={(e) => {
                                         e.stopPropagation();
                                         addFile(folder.id);
@@ -114,12 +114,12 @@ export const MainCanvas = ({
                                 duration-300">
                                     {nodes.filter(n => n.parentId === folder.id).map(file => (
                                         <div key={file.id} className="flex items-center 
-                                        justify-between p-3 rounded-xl border border-white/5
-                                         bg-white/[0.01] hover:bg-white/[0.03] group">
+                                        justify-between p-3 rounded-xl border border-[#2A1E22]/60
+                                         bg-[#120C0E]/50 hover:bg-[#191013] group">
                                             <div className="flex items-center gap-4">
-                                                <FileText size={16} className="text-blue-400" />
+                                                <FileText size={16} className="text-[#C9A227]/80" />
                                                 <span className="text-sm font-medium
-                                                 text-gray-400">{file.name}</span>
+                                                 text-stone-400">{file.name}</span>
                                             </div>
                                             
                                             {/* File Action */}
@@ -144,11 +144,10 @@ export const MainCanvas = ({
                     {/* ROOT FILES */}
                     {rootFiles.map(file => (
                         <div key={file.id} className="flex items-center justify-between p-4 
-                        rounded-xl border border-white/5 bg-white/[0.02]
-                         hover:bg-white/[0.04] group">
+                        rounded-xl border border-[#2A1E22] bg-[#120C0E] hover:bg-[#191013] group">
                             <div className="flex items-center gap-4">
-                                <FileText size={18} className="text-blue-400" />
-                                <span className="text-sm font-bold text-gray-300">
+                                <FileText size={18} className="text-[#C9A227]/80" />
+                                <span className="text-sm font-semibold text-[#E6DFD5]">
                                     {file.name}
                                 </span>
                             </div>

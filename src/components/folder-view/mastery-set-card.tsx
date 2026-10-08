@@ -16,17 +16,17 @@ export const MasterySetCard = ({
     const dueCount = currentFlashcardSet.dueCount ?? 0;
     const resourceType = currentFlashcardSet.resourceType ?? "Folder";
     return(
-        <div className="bg-[#161616] border border-white/5 rounded-xl px-3 py-2.5 flex flex-col 
-        gap-y-2 group hover:border-purple-500/30 transition-all cursor-pointer">
+        <div className="bg-[#110A10] border border-white/10 rounded-xl px-3 py-2.5 flex flex-col 
+        gap-y-2 group hover:border-purple-500/30 transition-all cursor-pointer shadow-sm">
             <div className="flex justify-between items-center gap-x-2">
-                <h3 className="text-[12px] font-bold text-white truncate leading-snug">
+                <h3 className="text-xs font-bold text-zinc-100 truncate leading-snug">
                     {currentFlashcardSet.title}
                 </h3>
                 <PlayCircle className="w-4 h-4 text-purple-400 group-hover:text-purple-300 
                 transition-colors shrink-0" />
             </div>
             {/* Progress Bar */}
-            <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
                 <div className="h-full bg-purple-500 w-[75%] 
                 shadow-[0_0_10px_rgba(168,85,247,0.4)]" />
             </div>
@@ -50,5 +50,5 @@ export const MasterySetCard = ({
                 )}
             </div>
         </div>
-    )
+    );
 }

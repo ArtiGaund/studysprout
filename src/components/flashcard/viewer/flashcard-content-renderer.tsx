@@ -42,7 +42,7 @@ const MermaidDiagram: React.FC<{
             } catch (error) {
                 if(ref.current){
                     ref.current.innerHTML = `
-                    <p className="text-red-400 text-sm">Diagram render error</p>
+                    <p className="text-rose-400 text-xs font-mono">Diagram render error</p>
                     `
                 }
                 console.error("[Diagram render Error]: ",error);
@@ -52,10 +52,7 @@ const MermaidDiagram: React.FC<{
     },[
         diagramSyntax,
     ])
-    return <div
-    ref={ref}
-    className="w-full overflow-x-auto py-2"
-    />
+    return <div ref={ref} className="w-full overflow-x-auto py-2"/>
 }
 
 /**
@@ -83,12 +80,12 @@ const SimpleChart: React.FC<{
         const maxVal = Math.max(...values, 1);
 
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = "#1a1a2e";
+        ctx.fillStyle = "#0a0a0a";
         ctx.fillRect(0, 0, width, height);
 
         // Title
         ctx.fillStyle = "#a78bfa";
-        ctx.font = "bold 13px sans-serif";
+        ctx.font = "bold 13px monospace";
         ctx.textAlign = "center";
         ctx.fillText(title, width / 2, 20);
 
@@ -102,8 +99,8 @@ const SimpleChart: React.FC<{
                 ctx.fillStyle = `hsl(${260 + i * 30}, 70%, 60%)`;
                 ctx.fillRect(x, y, barWidth, barHeight);
 
-                ctx.fillStyle = "#9ca3af";
-                ctx.font = "10px sans-serif";
+                ctx.fillStyle = "#a3a3a3";
+                ctx.font = "10px monospace";
                 ctx.textAlign = "center";
                 ctx.fillText(label.slice(0, 8), x + barWidth / 2, height - 10);
                 ctx.fillText(String(values[i]), x + barWidth / 2, y - 4);
@@ -117,7 +114,8 @@ const SimpleChart: React.FC<{
         ref={canvasRef}
         width={320}
         height={200}
-        className="rounded-lg border border-gray-700 w-full max-w-sm mx-auto block"
+        className="rounded-lg border border-neutral-800 w-full max-w-sm mx-auto block 
+        bg-neutral-950"
     />
 }
 
@@ -142,51 +140,56 @@ const MediaContent: React.FC<MediaContentProps> = ({
 }) => {
     return(
         <CardContent className="space-y-4">
-            <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
-                <p className="text-xs text-gray-500 mb-2 uppercase tracking-wide">
+            <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800">
+                <p className="text-[10px] font-sans text-neutral-400 mb-2 uppercase 
+                tracking-wider">
                     {heading}
                 </p>
-                {type === "diagram" && 
-                    <MermaidDiagram 
-                    diagramSyntax={data}
-                    />}
-                {type === "chart" && 
-                    <SimpleChart 
-                        chartData={data}
-                    />
-                }
+                {type === "diagram" && <MermaidDiagram diagramSyntax={data} />}
+                {type === "chart" && <SimpleChart chartData={data} />}
                 {type === "image-labeling" && 
                     <img 
                         src = {question}
                         alt = "Label this image"
-                        className = "max-w-full rounded-lg mx-auto block"
+                        className = "max-w-full rounded-lg mx-auto block border border-neutral-800"
                         onError={(e) => {
                             (e.target as HTMLImageElement).style.display = "none";
                         }}
                     />
                 }
             </div>
-           {type !== "image-labeling" && <div className="bg-gray-900 p-4 rounded-lg text-sm text-gray-100">
-                <span className="text-gray-500">Question: </span>
-                {question}
-            </div>}
+           {type !== "image-labeling" &&( 
+                <div className="bg-neutral-900/90 p-4 rounded-lg text-sm text-neutral-100
+                border border-neutral-800/80">
+                    <span className="text-neutral-400 font-mono text-xs uppercase 
+                    tracking-wider block mb-1">
+                        Question: 
+                    </span>
+                    {question}
+                </div>
+            )}
 
             {type === "image-labeling" &&
-                <p className="text-sm text-gray-400">
+                <p className="text-xs font-mono text-neutral-400">
                     What are the key parts or labels in this image?
                 </p>
             }
             {!revealAnswer ? (
                 <button
                 onClick={() => setRevealAnswer(true)}
-                className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-500"
+                className="px-4 py-2 rounded-lg bg-violet-600 text-white text-sm font-medium
+                 hover:bg-violet-500 transition-colors shadow-sm"
                 >   
                     Reveal Answer
                 </button>
             ) : (
-                <div className="bg-gray-800 p-4 rounded-lg text-sm">
-                    <span className="text-gray-500">Answer: </span>
-                    <span className="text-gray-100">{answer}</span>
+                <div className="bg-neutral-900/90 p-4 rounded-lg text-sm border
+                 border-neutral-800">
+                    <span className="text-violet-400 font-mono text-xs uppercase 
+                    tracking-wider block mb-1">
+                        Answer: 
+                    </span>
+                    <span className="text-neutral-100">{answer}</span>
                 </div>
             )}
         </CardContent>
@@ -221,37 +224,49 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
     switch(card.type){
         case "question-answer":
             return (
-                <CardContent>
-                    <span className="p-2 text-gray-600">Question: </span>
-                        <div 
-                        className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm leading-relaxed"
-                        >
-                            {card.question}
-                        </div>
-                        {!revealAnswer ? (
-                            <button 
+                <CardContent className="space-y-3">
+                    <span className="text-[11px] font-mono uppercase tracking-wider
+                     text-neutral-400 block">
+                        Question: 
+                    </span>
+                    <div className="bg-neutral-950 text-neutral-100 p-4 rounded-xl text-sm 
+                    leading-relaxed border border-neutral-800">
+                        {card.question}
+                    </div>
+                    {!revealAnswer ? (
+                        <button 
                             onClick={() => setRevealAnswer(true)}
                             className="
-                            mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-300 transition
-                            disabled:text-gray-500 disabled:cursor-not-allowed
+                                mt-2 px-4 py-2 rounded-lg bg-violet-600 text-white text-sm
+                            hover:bg-violet-500 transition-colors font-medium shadow-sm
+                            disabled:opacity-50 disabled:cursor-not-allowed
                             "
-                            >
+                        >
                                 Reveal Answer
                             </button>
                             ) : (
-                                <button 
-                                onClick={() => setRevealAnswer(false)}
-                                className="mt-3 flex items-center gap-1 px-3 py-1"
-                                >
-                                   <Undo2 size={20}/>
-                                </button>
+                                <div className="space-y-2 pt-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-mono uppercase 
+                                        tracking-wider text-violet-400">
+                                            Answer:
+                                        </span>
+                                        <button 
+                                            onClick={() => setRevealAnswer(false)}
+                                            className="p-1 rounded-md text-neutral-400
+                                             hover:text-white hover:bg-neutral-800
+                                              transition-colors"
+                                              title="Hide answer"
+                                        >
+                                            <Undo2 size={20}/>
+                                        </button>
+                                    </div>
+                                    <div className="bg-neutral-950/80 text-neutral-200 p-4
+                                    rounded-xl border border-neutral-800 text-sm leading-relaxed">
+                                        {card.answer}
+                                    </div>
+                                </div>
                         )}
-                        { revealAnswer &&
-                           ( <>
-                                <span className="p-2 text-gray-600">Answer: </span>
-                                <div className="text-[15px]">{card.answer}</div>
-                             </>
-                          )}
                  </CardContent>
             );
        case "mcq": {
@@ -271,30 +286,44 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                 );
 
             return (
-                <CardContent>
-                    <span className="p-2 text-gray-600">Question: </span>
-                    <div className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm leading-relaxed">
-                        {card.question}
+                <CardContent className="space-y-4">
+                    <div>
+                        <span className="text-[11px] font-mono uppercase tracking-wider
+                         text-neutral-400 block mb-1">
+                            Question: 
+                        </span>
+                        <div className="bg-neutral-950 text-neutral-100 p-4 rounded-xl 
+                        text-sm border border-neutral-800 leading-relaxed">
+                            {card.question}
+                        </div>
                     </div>
-                    {card.options?.map((option: string, key: number) => {
-                        const isCorrect =
-                            key === answerIndex ||
-                            option === card.answer ||
-                            getOptionLetter(option) === answerLetter;
-                        const isSelected = option === selectedOption;
+                    
+                    <div className="space-y-2">
+                        {card.options?.map((option: string, key: number) => {
+                            const isCorrect =
+                                key === answerIndex ||
+                                option === card.answer ||
+                                getOptionLetter(option) === answerLetter;
+                            const isSelected = option === selectedOption;
 
-                        let optionStyle = "border-gray-300";
+                            let optionStyle = "border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 text-neutral-200";
 
-                        if(checked){
-                            if(isSelected && isCorrect) optionStyle = "text-green-600";
-                            else if(isSelected && !isCorrect) optionStyle = "text-red-600";
-                            else if(isCorrect) optionStyle = "text-green-600";
-                        }
+                            if (isSelected) {
+                                optionStyle = "border-violet-500/80 bg-violet-950/30 text-white";
+                            }
+                            if(checked){
+                                if(isSelected && isCorrect) 
+                                    optionStyle = "border-emerald-500 bg-emerald-950/40 text-emerald-300";
+                                else if(isSelected && !isCorrect) 
+                                    optionStyle = "order-rose-500 bg-rose-950/40 text-rose-300";
+                                else if(isCorrect) 
+                                    optionStyle = "border-emerald-500/80 bg-emerald-950/20 text-emerald-400";
+                            }
                         return(
                             <div key={key}
                                 onClick={() => !checked && setSelectedOption(option)}
                                 className={`p-3 border rounded-lg cursor-pointer text-sm
-                                     transition ${optionStyle}`}
+                                     transition-all flex items-center gap-3 ${optionStyle}`}
                             >
                                 <input
                                     type="radio"
@@ -302,18 +331,21 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                                     value={option}
                                     checked={isSelected}
                                     onChange={() => !checked && setSelectedOption(option)}
+                                    className="accent-violet-500"
                                 />
                                 <span>{option}</span>
                             </div>
                         )
                     })}
-                    <div className="flex flex-row gap-3">
+                    </div>
+                    <div className="flex flex-row items-center gap-3 pt-1">
                         <button
                             onClick={() => setChecked(true)}
                             disabled={!selectedOption || revealAnswer}
                             className="
-                                mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-300 transition
-                                disabled:text-gray-500 disabled:cursor-not-allowed disabled:bg-gray-300
+                                px-4 py-2 rounded-lg bg-violet-600 text-white text-sm 
+                                hover:bg-violet-500 transition-colors font-medium
+                                disabled:opacity-40 disabled:cursor-not-allowed
                                 "
                         >Check Answer</button>
 
@@ -325,8 +357,9 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                                     setChecked(true);
                                 }}
                                 className="
-                                    mt-3 px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800 transition
-                                    disabled:text-gray-500 disabled:cursor-not-allowed
+                                   px-4 py-2 rounded-lg border border-neutral-700
+                                    text-neutral-300 text-sm hover:bg-neutral-800
+                                     hover:text-white transition-colors
                                 "
                             >
                                 Reveal Answer
@@ -339,7 +372,8 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                                     setChecked(false);
                                     setRevealAnswer(false);
                                 }}
-                                className="mt-3 flex items-center gap-1 px-3 py-1"
+                                className="p-2 rounded-lg text-neutral-400 hover:text-white
+                                 hover:bg-neutral-800 transition-colors"
                             >
                                 <Undo2 size={20}/>
                             </button>
@@ -351,7 +385,8 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
         case "fill-in-the-blank":
             return(
                 <CardContent className="space-y-4">
-                    <div className="bg-[#0f172a] p-6 rounded-xl border border-slate-800 leading-relaxed">
+                    <div className="bg-neutral-950 p-6 rounded-xl border border-neutral-800 
+                    leading-relaxed">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-3 text-lg">
                             {card.question.split(/_{3,}/).map((
                                 part: string,
@@ -362,10 +397,12 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                                     const currentVal = userAnswer[i] || "";
                                     return (
                                         <React.Fragment key={i}>
-                                            <span className="text-slate-200">{part}</span>
+                                            <span className="text-neutral-200">{part}</span>
                                             {i !== arr.length - 1 && (
-                                                <div className="inline-grid items-center align-bottom">
-                                                    <span className="invisible whitespace-pre px-1 col-start-1 row-start-1 text-lg">
+                                                <div className="inline-grid items-center 
+                                                align-bottom">
+                                                    <span className="invisible whitespace-pre 
+                                                    px-1 col-start-1 row-start-1 text-lg">
                                                         {
                                                             ( revealAnswer 
                                                                 ? answerArray[i]
@@ -381,13 +418,14 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                                                             [i]: e.target.value
                                                         }))}
                                                         className={`
-                                                            col-start-1 row-start-1 bg-transparent border-b-2 text-center outline-none
-                                                            transition-all px-1 w-full
+                                                            col-start-1 row-start-1 bg-transparent 
+                                                            border-b-2 text-center outline-none
+                                                            transition-all px-1 w-full font-mono text-base
                                                             ${checked
                                                                 ? (currentVal.trim().toLowerCase() === (answerArray[i] || "").toLowerCase()
-                                                                    ? "border-green-500 text-green-400"
-                                                                    : "border-red-500 text-red-400")
-                                                                : "border-purple-500 focus:border-white"
+                                                                    ? "border-emerald-500 text-emerald-400"
+                                                                    : "border-rose-500 text-rose-400")
+                                                                : "border-violet-500 focus:border-white text-violet-200"
                                                             }
                                                             `}
                                                             placeholder="..."
@@ -399,7 +437,7 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                         </div>
                     </div>
                 
-                    <div className="flex flex-row gap-3">
+                    <div className="flex flex-row items-center gap-3">
                         {/* Control Bar for Fill-in-the-Blanks */}
                         {!checked && !revealAnswer && (
                             <>
@@ -407,8 +445,9 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                                     disabled={Object.keys(userAnswer).length === 0}
                                     onClick={() => setChecked(true)}
                                     className={`
-                                        px-4 py-2 rounded-lg bg-purple-600 text-white text-sm hover:bg-purple-800
-                                        disabled:bg-gray-700 transition
+                                        px-4 py-2 rounded-lg bg-violet-600 text-white text-sm
+                                         hover:bg-violet-800 font-medium transition-colors
+                                        disabled:opacity-40 disabled:cursor-not-allowed                                         
                                     `}
                                 >
                                     Check Answer
@@ -416,8 +455,9 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                                 <button
                                     onClick={() => setRevealAnswer(true)}
                                     className={`
-                                        px-4 py-2 rounded-lg border border-purple-600 text-purple-400 text-sm
-                                        hover:bg-purple-900/30 transition
+                                        px-4 py-2 rounded-lg border border-neutral-700
+                                         text-neutral-300 text-sm 
+                                        hover:bg-neutral-800 hover:text-white transition-colors
                                     `}
                                 >   
                                     Reveal Answer
@@ -431,10 +471,11 @@ export const FlashcardContentRenderer: React.FC<FlashcardContentRendererProps> =
                                     setChecked(false);
                                     setRevealAnswer(false);
                                 }}
-                                className="flex items-center gap-1 px-3 py-1 text-gray-400 hover:text-white"
+                                className="flex items-center gap-1 px-3 py-1 text-neutral-400
+                                 hover:text-white rounded-lg hover:bg-neutral-800 transition-colors"
                             >
                                 <Undo2 size={20}/>
-                                <span className="text-xs">Reset</span>
+                                <span className="text-xs font-mono">Reset</span>
                             </button>
                         )}
                     </div>

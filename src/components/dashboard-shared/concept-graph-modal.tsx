@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { X, ZoomIn, ZoomOut, RefreshCw, Network, RefreshCcw, GitBranch } from "lucide-react";
-import { ConceptGraph, ConceptGraphNode, ConceptGraphEdge } from "@/types/state.type";
+import { useState } from "react";
+import { X, Network, GitBranch } from "lucide-react";
+import { ConceptGraphEdge } from "@/types/state.type";
 import { useSelector } from "react-redux";
 import { selectCurrentFolder } from "@/store/selectors/folderSelector";
 import { ConceptGraphView } from "./concept-graph-view";
@@ -125,26 +125,28 @@ export const ConceptGraphModal = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 
         backdrop-blur-sm">
-            <div className="relative bg-[#111111] border border-white/10 rounded-2xl w-full
-             max-w-4xl mx-4 overflow-hidden shadow-2xl">
+            <div className="relative bg-[#110A10] border border-white/10 rounded-xl w-full
+             max-w-4xl mx-4 overflow-hidden shadow-2xl font-mono text-zinc-200">
 
                 {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                <div className="flex items-center justify-between px-6 py-4 border-b
+                 border-white/10 bg-[#0A0507]">
                     <div>
-                        <h2 className="text-sm font-semibold text-white">
+                        <h2 className="text-xs font-bold text-zinc-100 uppercase tracking-wider">
                             {modalTitle}
                         </h2>
-                        <p className="text-xs text-zinc-500 mt-0.5">{title}</p>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">{title}</p>
                     </div>
 
                     {/* Tab switcher */}
-                    <div className="flex items-center gap-x-1 bg-white/5 rounded-lg p-1">
+                    <div className="flex items-center gap-x-1 bg-[#110A10] border border-white/5
+                     rounded-lg p-1">
                         <button
                             onClick={() => setActiveTab("concepts")}
-                            className={`flex items-center gap-x-1.5 px-3 py-1.5 rounded-md text-sm
-                                font-medium transition-all 
+                            className={`flex items-center gap-x-1.5 px-3 py-1.5 rounded-md text-xs
+                                font-mono transition-all cursor-pointer
                                 ${activeTab === "concepts"
-                                    ? "bg-purple-600 text-white"
+                                    ? "bg-purple-600 text-white font-semibold"
                                     : "text-zinc-400 hover:text-white"
                                 }`
                             }
@@ -154,13 +156,13 @@ export const ConceptGraphModal = ({
                         </button>
                         <button
                             onClick={() => setActiveTab("path")}
-                            className={`flex items-center gap-x-1.5 px-3 py-1.5 rounded-md text-sm
-                                font-medium transition-all
+                            className={`flex items-center gap-x-1.5 px-3 py-1.5 rounded-md text-xs
+                                font-mono transition-all cursor-pointer
                                 ${activeTab === "path"
-                                    ? "bg-purple-600 text-white"
+                                    ? "bg-purple-600 text-white font-semibold"
                                     : "text-zinc-400 hover:text-white"
                                 }
-                                `}
+                            `}
                         >
                             <GitBranch className="w-3.5 h-3.5"/>
                             Learning Path
@@ -170,18 +172,19 @@ export const ConceptGraphModal = ({
                     <button
                         onClick={onClose}
                         className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 
-                        rounded-lg transition-colors"
+                        rounded-lg transition-colors cursor-pointer"
                     >
                         <X className="w-4 h-4" />
-                    </button>
-                        
+                    </button>                        
                 </div>
                 
                 {/* Content */}
-                {activeTab === "concepts"
-                    ? <ConceptGraphView level={level}/>
-                    : <LearningPathView level={level} id={entityId}/>
-                }
+                <div className="bg-[#0A0507]">
+                    {activeTab === "concepts"
+                        ? <ConceptGraphView level={level}/>
+                        : <LearningPathView level={level} id={entityId}/>
+                    }
+                </div>
             </div>
         </div>
     );

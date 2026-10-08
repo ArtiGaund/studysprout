@@ -5,72 +5,48 @@
 html,
 body {
   height: 100%;
+  background-color: #120C0E !important; /* Prevents raw canvas flickering on scroll */
+  color: #F5F0EB;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 266, 100%, 50%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --background: 340 14% 6%; /* #120C0E Warm dark background */
+    --foreground: 30 20% 94%;  /* #F5F0EB Soft warm text */
+    --card: 335 19% 8%;       /* #181013 Elevated card background */
+    --card-foreground: 30 20% 94%;
+    --popover: 335 19% 8%;
+    --popover-foreground: 30 20% 94%;
+    --primary: 45 68% 47%;     /* #C9A227 Warm gold primary */
+    --primary-foreground: 340 14% 6%;
+    --secondary: 335 19% 12%;
+    --secondary-foreground: 30 20% 94%;
+    --muted: 335 19% 12%;
+    --muted-foreground: 24 11% 58%; /* #8C7A6B Muted text */
+    --accent: 335 19% 12%;
+    --accent-foreground: 30 20% 94%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262.1 83.3% 57.8%;
+    --border: 335 16% 14%;    /* #2A1E22 Border tone */
+    --input: 335 16% 14%;
+    --ring: 45 68% 47%;
     --radius: 0.5rem;
   }
 
   .dark {
-    /* --background: 249 100% 3.9%;
-    --foreground: 248 100% 88%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 266, 100%, 50%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 30.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 247, 18.3%, 18.2%;
-    --input: 215 27.9% 16.9%;
-    --ring: 263.4 70% 50.4%; */
-
-    /* Standardized to StudySprout Neural Black (#050A0A) */
-    --background: 180 5% 3%; 
-    --foreground: 145 100% 95%; /* Light mint-white for better readability */
-    
-    /* Update Card and Popover to match #080C0C for subtle elevation */
-    --card: 180 5% 4%; 
-    --card-foreground: 145 100% 95%;
-    
-    --popover: 180 5% 4%;
-    --popover-foreground: 145 100% 95%;
-
-    /* Standardized Primary to StudySprout Mint (#63FF9D) */
-    --primary: 145 100% 69%; 
-    --primary-foreground: 180 5% 3%;
-
-    /* Keep your existing border and input logic but darken them to match */
-    --border: 180 5% 10%;
-    --input: 180 5% 10%;
-    --ring: 145 100% 69%;
+    --background: 340 14% 6%;
+    --foreground: 30 20% 94%;
+    --card: 335 19% 8%;
+    --card-foreground: 30 20% 94%;
+    --popover: 335 19% 8%;
+    --popover-foreground: 30 20% 94%;
+    --primary: 45 68% 47%;
+    --primary-foreground: 340 14% 6%;
+    --border: 335 16% 14%;
+    --input: 335 16% 14%;
+    --ring: 45 68% 47%;
   }
 }
 
@@ -81,6 +57,19 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Fix GPU Compositing Artifacts (Black Box Flashing on Firefox/Linux) */
+.backdrop-blur-3xl,
+.backdrop-blur-2xl,
+.backdrop-blur-xl,
+.backdrop-blur-lg,
+.backdrop-blur-md,
+.backdrop-blur {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .animate-slide {
@@ -125,11 +114,6 @@ body {
   @apply border-none outline-none;
 }
 
-/* .dotPattern {
-  background-image: radial-gradient(rgb(25, 25, 25) 1px, transparent 1px);
-  background-size: 30px 30px;
-} */
-
 .ql-toolbar::-webkit-scrollbar {
   display: none;
 }
@@ -152,39 +136,17 @@ ul {
   @apply dark:text-washed-purple-700;
 }
 
-*{
-    -ms-overflow-style: none;
+* {
+  -ms-overflow-style: none;
 }
 ::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
-:focus{
+:focus {
   outline: none;
 }
 
-/* ─── globals.css additions ───────────────────────────────────────────────── */
-
-/*
-  Add these to your globals.css / tailwind.config.js.
-  The xs breakpoint fills the gap between mobile (320px) and sm (640px),
-  which is crucial for thumb-friendly layouts on small phones.
-*/
-
-/* ── In tailwind.config.ts ── */
-/*
-  theme: {
-    extend: {
-      screens: {
-        'xs': '400px',   // small phones — Samsung Galaxy S8+, iPhone SE
-        '3xl': '1920px', // large monitors
-        '4xl': '2560px', // ultra-wide / 4K
-      },
-    },
-  },
-*/
-
-/* ── Custom scrollbars ── */
 .custom-scrollable::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
@@ -197,22 +159,20 @@ ul {
 
 .custom-scrollable::-webkit-scrollbar-thumb,
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(99, 255, 157, 0.15);
+  background: rgba(201, 162, 39, 0.2);
   border-radius: 2px;
 }
 
 .custom-scrollable::-webkit-scrollbar-thumb:hover,
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 255, 157, 0.3);
+  background: rgba(201, 162, 39, 0.4);
 }
 
-/* ── Prevent tap highlight on interactive elements ── */
 .touch-manipulation {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-/* ── Fluid clamp helpers (optional utility layer) ── */
 .text-fluid-hero {
   font-size: clamp(2rem, 8vw, 7rem);
 }
@@ -222,52 +182,9 @@ ul {
 }
 
 .inner-shadow-inset {
-    box-shadow: inset 0 2px 10px 0 rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0 2px 10px 0 rgba(0, 0, 0, 0.5);
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #3f3f46; /* zinc-700 */
-    border-radius: 10px;
-}
-
-/* ─── Notes on responsive strategy ────────────────────────────────────────────
-
-BREAKPOINTS USED
-  default (0px+)  – Very small phones (320px iPhone SE, Galaxy A series)
-  xs (400px+)     – Standard modern phones (iPhone 14, Pixel)
-  sm (640px+)     – Large phones / small tablets (iPad Mini portrait)
-  md (768px+)     – Tablets portrait (iPad, Android tablets)
-  lg (1024px+)    – Tablets landscape / small laptops
-  xl (1280px+)    – Laptops / desktops
-  2xl (1536px+)   – Large desktops
-  3xl (1920px+)   – Full HD monitors
-  4xl (2560px+)   – 4K / ultra-wide displays
-
-HERO SECTION
-  • clamp(2rem, 8vw, 7rem) — fluid font from 320px to 2560px+, no breakpoint jumps
-  • CTA buttons: min-h-[52px] on mobile (Apple HIG recommends ≥ 44px tap targets)
-  • Background orbs: max-h/max-w caps prevent over-blowing on 4K screens
-  • 3D tilt disabled on mobile (md:) to prevent clipping; re-enabled at md+
-
-SANDBOX / DASHBOARD PREVIEW
-  • Inline mode: visible on all screens, height fluid via clamp-style responsive values
-  • Fullscreen mode: fixed overlay, 100dvh, no body scroll, exit button always reachable
-  • Sidebar width: 160px (xs) → 256px (lg), uses flex-shrink-0
-  • All tap targets: min 32px height + touch-manipulation class
-  • AI guide pointer/tooltip: unchanged logic, works at all sizes
-  • Guide animation continues running even when fullscreen is closed
-    (SandboxContent always in DOM but hidden via opacity)
-
-─────────────────────────────────────────────────────────────────────────────── */
 @keyframes floatAmbient {
   0%, 100% { transform: translateY(0px) scale(1); opacity: 0.8; }
   50% { transform: translateY(-4px) scale(1.08); opacity: 1; }
@@ -284,7 +201,6 @@ SANDBOX / DASHBOARD PREVIEW
   66% { transform: rotate(-3deg) scale(0.95); opacity: 0.7; }
 }
 
-/* Helper utility binding hooks */
 .animate-ambient-float {
   animation: floatAmbient 4s ease-in-out infinite;
 }

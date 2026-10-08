@@ -19,8 +19,6 @@ import { selectWorkspaceMembers, selectWorkspaceMembersLoading, selectWorkspaceO
 import {  useMemo } from "react";
 import { useSelector } from "react-redux";
 import { selectUserId } from "@/store/selectors/userSelector";
-import CustomDialogTrigger from "../global/custom-dialog";
-import WorkspaceMembersManager from "./workspace-members-manager";
 import { Plus } from "lucide-react";
 
 const MAX_VISIBLE = 3;
@@ -79,72 +77,22 @@ const WorkspaceMembersAvatarGroup = ({
     const visibleUsers = orderedUsers.slice(0, MAX_VISIBLE);
     const remainingCount = totalUsers - visibleUsers.length;
 
-//    if(!owner){
-//     return (
-//         <div className="flex -space-x-2">
-//             <Avatar>
-//                 <AvatarFallback>
-//                     +
-//                 </AvatarFallback>
-//             </Avatar>
-//         </div>
-//     )
-//    }
-
     if(membersLoading){
         return(
             <div className="flex items-center -space-x-2 animate-pulse">
-                <div className="w-7 h-7 rounded-full bg-zinc-800 border border-white/5"/>
-                <div className="w-7 h-7 rounded-full bg-zinc-800 border border-white/5"/>
-                <div className="w-7 h-7 rounded-full bg-zinc-800 border border-white/5"/>
+                <div className="w-7 h-7 rounded-full bg-purple-950/40 border border-white/10"/>
+                <div className="w-7 h-7 rounded-full bg-purple-950/40 border border-white/10"/>
+                <div className="w-7 h-7 rounded-full bg-purple-950/40 border border-white/10"/>
             </div>
         )
     }
     return (
-        // <div className="flex items-center select-none">
-        //     <div className="flex items-center -space-x-2 isolations">
-        //        {membersLoading ? 
-        //        ( <div className="w-8 h-8 rounded-full bg-muted/50 animate-pulse"/>) 
-        //        : (
-        //         visibleUsers.map( user => (
-        //             <Avatar 
-        //             key={user?._id}
-        //             className="w-7 h-7 rounded-full border-2 border-[#080c0c] bg-zinc-900
-        //             transition-transform duration-200 hover:scale-105 hover:z-30 relative"
-        //             >
-        //                 { user?.avatarType === "image" && user.avatarUrl ? 
-        //                 (
-        //                     <AvatarImage 
-        //                     src={user.avatarUrl}
-        //                     className="object-cover w-full h-full rounded-full"
-        //                     />
-        //                 ) : null}
-        //                 <AvatarFallback className="bg-zinc-800 text-zinc-300 font-mono
-        //                 text-[10px] font-bold w-full h-full flex items-center justify-center
-        //                 rounded-full">
-        //                     {user?.avatarInitials ?? user?.username?.[0]?.toUpperCase() ?? "U"}
-        //                 </AvatarFallback>
-        //             </Avatar>
-        //         ))
-        //        )}
-
-        //        {/* Always show + */}
-        //        {/* <Avatar className="w-8 h-8">
-        //             <AvatarFallback>
-        //                 {remainingCount > 0 ? `+${remainingCount}` : "+"}
-        //             </AvatarFallback>
-        //        </Avatar> */}
-        //        <CustomDialogTrigger content={<}>
-
-        //        </CustomDialogTrigger>
-        //    </div>
-        // </div>
         <div className="flex items-center select-none">
             <div className="flex items-center -space-x-2.5 isolation">
                 {visibleUsers.map(user => (
                     <Avatar
                         key={user._id}
-                        className="w-7 h-7 rounded-full border-2 border-[#080c0c] bg-zinc-900
+                        className="w-7 h-7 rounded-full border-2 border-[#0A0507] bg-purple-950/60
                         transition-transform duration-200 hover:scale-105 hover:z-30 relative"
                     >   
                         {user?.avatarUrl && (
@@ -153,7 +101,7 @@ const WorkspaceMembersAvatarGroup = ({
                                 className="object-cover w-full h-full rounded-full"
                             />
                         )}
-                        <AvatarFallback className="bg-zinc-800 text-zinc-300 font-mono text-[10px]
+                        <AvatarFallback className="bg-purple-950 text-purple-200 font-mono text-[10px]
                         font-bold w-full h-full flex items-center justify-center rounded-full">
                             {user?.avatarInitials ?? user?.username?.[0].toUpperCase() ?? "U"}
                         </AvatarFallback>
@@ -164,9 +112,9 @@ const WorkspaceMembersAvatarGroup = ({
                 {remainingCount > 0 ? (
                     <button
                         type="button"
-                        className="w-7 h-7 rounded-full bg-zinc-900 border-2 border-[#080c0c]
-                        text-zinc-400 text-center flex items-center justify-center z-40
-                        relative"
+                        className="w-7 h-7 rounded-full bg-[#110A10] border-2 border-[#0A0507]
+                        text-purple-300 text-center flex items-center justify-center z-40
+                        relative hover:border-purple-500/40 transition-colors"
                     >
                         <span className="font-mono text-[9px] font-bold tracking-tighter">
                             +{remainingCount}
@@ -175,19 +123,14 @@ const WorkspaceMembersAvatarGroup = ({
                 ) : (
                     // Additional Track: Only render the add button icon if user has administrative rights
                     editable && (
-                        // <CustomDialogTrigger 
-                        //     content={<WorkspaceMembersManager workspaceId={workspaceId}/>}
-                        // >
-                            <div
-                                // type="button"
-                                className="w-7 h-7 rounded-full bg-zinc-900 border-2 border-[#080c0c]
-                                group-hover:bg-zinc-800 text-zinc-400 group-hover:text-white 
-                                transition-all flex items-center justify-center z-40 relative
-                                shadow-lg"
-                            >
-                                <Plus size={10} strokeWidth={3}/>
-                            </div>
-                        // </CustomDialogTrigger>
+                        <div
+                            className="w-7 h-7 rounded-full bg-[#110A10] border-2 
+                            border-[#0A0507] hover:border-purple-500/50 text-zinc-400
+                             hover:text-purple-200 transition-all flex items-center 
+                             justify-center z-40 relative"
+                        >
+                            <Plus size={10} strokeWidth={3}/>
+                        </div>
                     )
                 )}
             </div>

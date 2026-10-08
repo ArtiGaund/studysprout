@@ -204,7 +204,7 @@ const SettingsForm = () => {
     
     
     return (
-    <div className="w-full text-zinc-200 flex flex-col h-full bg-[#0c0c0e]">
+    <div className="w-full text-zinc-200 flex flex-col h-full bg-[#0A0507]">
         {/* Scrollable Container Body Area */}
         <div className="flex-1 px-4 sm:px-6 py-6 space-y-6 overflow-y-auto max-h-[75vh]
         md:max-h-[65vh] pr-2 scrollbar-thin scrollbar-thumb-zinc-800/60">
@@ -233,7 +233,7 @@ const SettingsForm = () => {
                             value={workspaceTitle}
                             placeholder="Workspace Name"
                             onChange={workspaceNameChange}
-                            className="w-full bg-[#141416] border border-white/5 rounded-lg
+                            className="w-full bg-[#120d0f] border border-white/5 rounded-lg
                             px-4 py-2.5 text-sm text-white outline-none focus:border-purple-500/30
                             font-medium transition-all"
                         />
@@ -271,7 +271,7 @@ const SettingsForm = () => {
                         text-zinc-500">
                             Workspace Logo
                         </Label>
-                        <div className="flex items-center gap-x-3 w-full bg-[#141416] border
+                        <div className="flex items-center gap-x-3 w-full bg-[#120d0f] border
                         border-white/5 rounded-lg p-2.5">
                             <input 
                                 ref={logoInputRef}
@@ -337,7 +337,7 @@ const SettingsForm = () => {
                             // onClick={onDeleteWorkspaceClick}
                             onClick={() => 
                             openModal(
-                                <div className="flex flex-col justify-center items-center p-2">
+                                <div className="flex flex-col justify-center items-center p-2 bg-[#0A0507]">
                                     <h2 className="text-xl p-3 text-white font-bold mb-2">
                                         Confirm Delete
                                     </h2>
@@ -385,8 +385,8 @@ const SettingsForm = () => {
                 </div>
 
                 {/* Identify Avatar Layout Node */}
-                <div className="flex items-center gap-x-4 bg-[#141416]/40 p-3 rounded-xl border
-                border-white/[0.02]">
+                <div className="flex items-center gap-x-4 bg-[#120d0f] p-3 rounded-xl border
+                border-white/10">
                     <Avatar className="w-12 h-12 rounded-xl border border-white/10 shrink-0">
                         <AvatarImage 
                             src={user?.avatarUrl || ''}
@@ -410,8 +410,8 @@ const SettingsForm = () => {
 
                 {/* Custom Form File Input Node - User Avatar Image */}
                 <div className="space-y-1.5">
-                    <div className="flex items-center gap-x-3 w-full bg-[#141416] border
-                    border-white/5 rounded-lg p-2.5">
+                    <div className="flex items-center gap-x-3 w-full bg-[#120d0f] border
+                    border-white/10 rounded-lg p-2.5">
                         <input 
                             ref={profileInputRef}
                             type="file"
@@ -512,7 +512,7 @@ const SettingsForm = () => {
         </div>
         
        {/* 3. STICKY ACTION FOOTER BAR */}
-        <div className="w-full px-6 py-4 border-t border-white/[0.04] bg-[#0c0c0e]/95 
+        <div className="w-full px-6 py-4 border-t border-white/[0.04] bg-[#0A0507] 
         backdrop-blur-md flex items-center justify-between sticky bottom-0 z-20 shrink-0 pb-safe">
             
             <LogoutButton className="flex items-center gap-x-2 text-[10px] font-mono font-bold

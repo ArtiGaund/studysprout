@@ -331,7 +331,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
         </div>
     )}
     return(
-        <div className="p-1">
+        <div className="bg-transparent text-white [&_.bn-container]:!bg-transparent 
+        [&_.bn-editor]:!bg-transparent">
             <BlockNoteView  
                 editor={editor}
                 theme= "dark"

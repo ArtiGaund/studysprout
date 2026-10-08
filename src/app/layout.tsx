@@ -40,7 +40,7 @@ interface RootLayoutProps {
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
       <head>
         {/* INLINE SCRIPT: Prevents "Flicker of Unstyled Content" (FOUC) by enforcing dark mode
         before the page paints. */}
@@ -63,7 +63,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       */}
       <AuthProvider>
         <ModalProvider>
-        <body className={inter.className} >
+       <body className={`${inter.className} bg-[#120C0E] text-[#F5F0EB] antialiased selection:bg-[#C9A227]/30 selection:text-[#F5F0EB]`}>
         <ReduxProvider>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <SocketProvider>

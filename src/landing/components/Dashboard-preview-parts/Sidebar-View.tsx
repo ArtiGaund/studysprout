@@ -42,20 +42,22 @@ export const SidebarView = ({
     },[editingId]);
 
     return(
-        <div className="w-64 border-r border-white/5 flex flex-col bg-[#080C0C] h-full overflow-hidden">
+        <div className="w-64 border-r border-[#2A1E22] flex flex-col bg-[#0E090B] h-full 
+        overflow-hidden">
             {/* Top: Brand/Workspace Info */}
-            <div className="flex-shrink-0 p-4 border-b border-white/5">
-                <div className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.03] border
-                border-white/5">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center
-                    justify-center text-purple-400">
+            <div className="flex-shrink-0 p-4 border-b border-[#2A1E22]">
+                <div className="flex items-center gap-3 p-2 rounded-xl [#160F12] border
+                 border-[#2A1E22]">
+                    <div className="w-8 h-8 rounded-lg bg-[#C9A227]/15 flex items-center
+                    justify-center text-[#C9A227] border border-[#C9A227]/30">
                         <Briefcase size={16}/>
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-[11px] font-bold text-white truncate">
+                        <span className="text-[11px] font-bold text-[#F5F0EB] truncate">
                             Collaboration
                         </span>
-                        <span className="text-[8px] text-gray-500 uppercase font-black">
+                        <span className="text-[8px] text-stone-500 uppercase font-mono font-bold
+                        tracking-widest">
                             Workspace
                         </span>
                     </div>
@@ -63,7 +65,7 @@ export const SidebarView = ({
             </div>
 
             {/* Global Navigation */}
-            <div className="flex-shrink-0 p-4 space-y-1 border-b border-white/5">
+            <div className="flex-shrink-0 p-4 space-y-1 border-b border-[#2A1E22]">
                 {[
                     {
                         // id: "Search",
@@ -91,8 +93,8 @@ export const SidebarView = ({
                     key={i}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
                         cursor-pointer ${(item as any).action 
-                            ? 'bg-white/5 text-white'
-                            : 'text-gray-500 hover:text-gray-300'
+                            ? 'bg-[#1D1418] text-[#C9A227] font-semibold border border-[#3A282E]'
+                            : 'text-stone-400 hover:text-[#F5F0EB] hover:bg-[#160F12]'
                         }`}
                     onClick={() => {
                         if((item as any).id){
@@ -112,19 +114,20 @@ export const SidebarView = ({
             {/* Scrollable Folders Section */}
             <div className="flex-1 overflow-y-auto p-4 custom-scrollable min-h-0">
                 <div className="flex items-center justify-between mb-4 group px-2">
-                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">
+                    <span className="text-[9px] font-mono text-stone-500 uppercase tracking-widest">
                         Public
                     </span>
                 </div>
 
                 <div className="flex items-center justify-between mb-4 px-2 group">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-mono font-bold text-stone-400 uppercase 
+                    tracking-widest">
                         FOLDERS
                     </span>
                     <div className="flex items-center gap-2">
                         <button
                             id="guide-pdf-btn"
-                            className="text-gray-600 hover:text-blue-400 transition-colors p-1
+                            className="text-stone-400 hover:text-[#C9A227] transition-colors p-1
                             rounded-md"
                             onClick={() => onViewChange('workspaces-section')}
                         >
@@ -136,7 +139,7 @@ export const SidebarView = ({
                             addFolder();
                             onRecordInteraction();
                         }}
-                        className="text-gray-500 hover:text-[#63FF9D] transition-colors p-1
+                        className="text-stone-500 hover:text-[#C9A227] transition-colors p-1
                         rounded-md"
                         >   
                             <Plus size={14}/>
@@ -151,7 +154,7 @@ export const SidebarView = ({
                         key={folder.id}
                         className="space-y-1"
                         >
-                            <div className="flex items-center gap-2 group hover:bg-white/5 p-1.5
+                            <div className="flex items-center gap-2 group hover:bg-[#160F12] p-1.5
                             rounded-lg transition-all">
                                 <button
                                 onClick={() => {
@@ -167,14 +170,14 @@ export const SidebarView = ({
                                 </button>
                                 <Folder 
                                 size={14}
-                                className="text-[#63FF9D] shrink-0"
+                                className="text-[#C9A227] shrink-0"
                                 />
 
                                 {editingId === folder.id 
                                 ? <input 
                                     ref={inputRef}
                                     className="bg-transparent border-none outline-none text-[11px]
-                                    text-white w-full caret-[#63FF9D]"
+                                    text-[#F5F0EB] w-full caret-[#C9A227]"
                                     value={folder.name}
                                     onChange={(e) => updateName(folder.id, e.target.value)}
                                      onKeyDown={(e) => e.key === 'Enter' && setEditingId(null)}
@@ -184,7 +187,7 @@ export const SidebarView = ({
                                         setEditingId(folder.id);
                                         onRecordInteraction();
                                     }}
-                                    className="text-[11px] text-gray-400 truncate flex-1 
+                                    className="text-[11px] text-stone-300 truncate flex-1 
                                     font-medium"
                                     >
                                         {folder.name}
@@ -201,7 +204,8 @@ export const SidebarView = ({
                                     >
                                         <Plus  
                                             size={12}  
-                                            className="text-gray-400 cursor-pointer hover:text-[#63FF9D]"  
+                                            className="text-stone-400 cursor-pointer 
+                                            hover:text-[#C9A227]"  
                                             onClick={(e) => {  
                                                 e.stopPropagation();  
                                                 addFile(folder.id);  
@@ -211,8 +215,8 @@ export const SidebarView = ({
                                     </span>
                                     <Trash 
                                     size={12}
-                                    className={`text-gray-400 transition-opacity 
-                                        cursor-pointer hover:text-[#63FF9D] ${
+                                    className={`text-stone-400 transition-opacity 
+                                        cursor-pointer hover:text-red-400 ${
                                             editingId === folder.id || expandedFolders[folder.id] 
                                             ? 'opacity-100' 
                                             : 'opacity-0 group-hover:opacity-100'
@@ -227,22 +231,22 @@ export const SidebarView = ({
 
                             {/* Accordion Files */}
                             {expandedFolders[folder.id] && (
-                                <div className="ml-5 border-l border-white/10 pl-3 space-y-1">
+                                <div className="ml-5 border-l border-[#2A1E22] pl-3 space-y-1">
                                     {nodes.filter(n => n.parentId === folder.id).map(file => (
                                         <div
                                         id={`node-${file.id}`}
                                         key={file.id}
-                                        className="flex items-center gap-2 p-1.5 hover:bg-white/5
+                                        className="flex items-center gap-2 p-1.5 hover:bg-[#160F12]
                                         rounded-md group"
                                         >
-                                            <FileText size={12} className="text-blue-500
+                                            <FileText size={12} className="text-[#C9A227]/70
                                              shrink-0"/>
                                             {editingId === file.id 
                                             ? <input
                                                 ref={inputRef}
                                                 className="bg-transparent border-none 
                                                 outline-none text-[11px]
-                                                text-white w-full caret-blue-400"
+                                                text-[#F5F0EB] w-full caret-[#C9A227]"
                                                 value={file.name}
                                                 onChange={(e) => 
                                                     updateName(file.id, e.target.value)
@@ -253,7 +257,7 @@ export const SidebarView = ({
                                                 }
                                                 />
                                             : <span 
-                                            className="text-[11px] text-gray-600 truncate
+                                            className="text-[11px] text-stone-400 truncate
                                              font-medium"
                                             onDoubleClick={() => {
                                                 setEditingId(file.id);
@@ -266,7 +270,9 @@ export const SidebarView = ({
 
                                             <Trash 
                                             size={12}
-                                            className="text-gray-400 flex justify-end"
+                                            className="text-stone-400 opacity-0 
+                                            group-hover:opacity-100 cursor-pointer 
+                                            hover:text-red-400 transition-opacity"
                                             onClick={() => {
                                                 deleteOperation(file.id);
                                                 onRecordInteraction();
@@ -282,15 +288,15 @@ export const SidebarView = ({
             </div>
 
             {/* Footer Profile */}
-            <div className="flex-shrink-0 p-4 border-t border-white/5 bg-white/[0.01] z-10">
+            <div className="flex-shrink-0 p-4 border-t border-[#2A1E22] bg-[#0E090B] z-10">
                 <div className="flex items-center gap-3 px-3 py-2 rounded-xl border
-                 border-white/5
-                bg-[#050A0A]">
-                    <div className="w-6 h-6 rounded-full bg-[#63FF9D] flex items-center 
-                    justify-center text-black text-[9px] font-black">
+                 border--[#2A1E22] bg-[#160F12]">
+                    <div className="w-6 h-6 rounded-full bg-[#C9A227] flex items-center 
+                    justify-center text-[#0E090B] text-[10px] font-mono font-bold">
                         A
                     </div>
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                    <span className="text-[10px] font-mono font-bold text-stone-400 uppercase 
+                    tracking-widest">
                         artigaund
                     </span>
                 </div>

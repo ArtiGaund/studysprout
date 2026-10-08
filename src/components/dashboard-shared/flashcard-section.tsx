@@ -168,24 +168,26 @@ export const FlashcardSection = ({
     }
     
     return (
-        <div className="flex flex-col gap-y-3">
+        <div className="flex flex-col gap-y-4">
 
             {/* Hero */}
             {isRelevant && lastStudied  ? (
-                <div className="bg-purple-900/20 border border-purple-500/20 rounded-xl p-4">
-                    <p className="text-[10px] text-purple-400 uppercase tracking-widest mb-2">
+                <div className="bg-[#110A10] border border-purple-500/20 rounded-xl p-4 
+                shadow-sm flex flex-col gap-y-1">
+                    <p className="text-[10px] font-mono font-semibold text-purple-300 uppercase
+                     tracking-widest mb-2">
                         Resume
                     </p>
-                    <p className="text-sm font-semibold text-white truncate">
+                    <p className="text-sm font-semibold text-white truncate mt-1">
                         {lastStudied.setTitle}
                     </p>
-                    <p className="text-sm text-zinc-400 mt-0.5">
+                    <p className="text-xs font-mono text-zinc-400 mt-0.5">
                         Card {resumeReviewedCount + 1} of {lastStudied.totalCards}
                     </p>
                     <button
                         onClick={handleResume}
                         className="mt-3 w-full bg-purple-600 hover:bg-purple-500 text-white
-                        text-xs font-medium py-2 rounded-lg transition-all"
+                        text-xs font-medium py-2 rounded-lg transition-all border border-purple-400/20 shadow-md"
                     >
                         Continue Studying
                     </button>
@@ -195,8 +197,8 @@ export const FlashcardSection = ({
             )}
 
             {/* Current level set */}
-            <div>
-                <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-2">
+            <div className="flex flex-col gap-y-2">
+                <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">
                     {sectionLabel}
                 </p>
                 {current ? (

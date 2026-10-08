@@ -25,13 +25,16 @@ export default function WorkspaceVisibilityToggle({
     return(
         <div 
             className="flex justify-center items-center gap-3"
-            onClick={(e) => e.preventDefault()}
+            onClick={(e) =>{ 
+                e.preventDefault();
+                e.stopPropagation();
+            }}
         >
             {/* The underlying UI primitive for the toggle action */}
             <ToggleSwitch 
-            checked={value}
-            onCheckedChange={onChange}
-            size="md"
+                checked={value}
+                onCheckedChange={onChange}
+                size="md"
             />
 
             {/* Semantic label that updates based on the boolean state */}

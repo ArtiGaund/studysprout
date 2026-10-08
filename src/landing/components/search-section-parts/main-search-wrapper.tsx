@@ -160,8 +160,8 @@ const getSearchResult = (raw: string): SearchResult => {
 // Small pill shown next to folder/file rows indicating which workspace (or file type, for files) 
 // the result belongs to.
 const WorkspaceTag: React.FC<{ workspace: string }> = ({ workspace }) => (
-    <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10
-    text-gray-400 shrink-0">
+    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#2A1E22] border 
+    border-[#2A1E22] text-[#8C7A6B] shrink-0">
         {workspace}
     </span>
 );
@@ -364,8 +364,8 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
         <div 
             ref={wrapperRef}
             onMouseDown={activate}
-            className="relative flex w-full rounded-2xl border border-white/10
-            bg-[#070B0A] shadow-2xl overflow-hidden min-h-[560px] items-center justify-center
+            className="relative flex w-full rounded-2xl border border-[#2A1E22] bg-[#181013]/90 
+            shadow-2xl overflow-hidden min-h-[560px] items-center justify-center
             p-4 sm:p-8 cursor-text"
         >
             {/* Decorative, non-interactive "fake dashboard" background — only shown
@@ -373,23 +373,25 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                app behind the search overlay. Never receives clicks (pointer-events-none). */}
             <div className="hidden lg:block absolute inset-0 opacity-[0.35] pointer-events-none
             blur-[1px] select-none">
-                <div className="flex items-center justify-between px-8 py-5 border-b border-white/5">
-                    <span className="text-xs text-gray-500">📁 Collaboration</span>
-                    <span className="text-[9px] px-2 py-0.5 rounded bg-[#63FF9D]/10
-                     text-[#63FF9D] font-bold uppercase tracking-widest">
+                <div className="flex items-center justify-between px-8 py-5 border-b border-[#2A1E22]">
+                    <span className="text-xs text-[#8C7A6B] font-mono">📁 Collaboration</span>
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-#C9A227]/10 border
+                     border-[#C9A227]/20 text-[#C9A227] font-mono font-bold uppercase 
+                     tracking-widest">
                         Saved
                     </span>
                 </div>
                 <div className="grid grid-cols-3 gap-4 px-8 pt-6">
                     {["Reading Time", "Concepts Mastered", "Recall Rate"].map((label) => (
                         <div key={label}
-                            className="p-4 rounded-xl border border-white/5 bg-white/[0.02]
+                            className="p-4 rounded-xl border border-[#2A1E22] bg-[#120C0E]/40
                             space-y-2"
                         >
-                            <span className="text-[9px] text-gray-600 uppercase tracking-widest">
+                            <span className="text-[9px] text-[#8C7A6B] uppercase tracking-widest
+                            font-mono">
                                 {label}
                             </span>
-                            <div className="h-4 w-1/2 bg-white/10 rounded"/>
+                            <div className="h-4 w-1/2 bg-[#2A1E22] rounded"/>
                         </div>
                     ))}
                 </div>
@@ -399,10 +401,10 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                 watching the auto-play demo or driving it themselves. Bounces to draw
                attention while in demo mode; goes still once interactive. */}
             <div className={`absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1.5
-                rounded-full text-[9px] font-black uppercase tracking-widest border
+                rounded-full text-[9px] font-mono uppercase tracking-widest border
                 transition-all z-10 text-center max-w-[92%] ${interactive
-                    ? "bg-white/5 border-white/10 text-gray-400"
-                    : "bg-violet-400/10 border-violet-400/20 text-violet-400 animate-bounce"
+                    ? "bg-[#120C0E] border-[#2A1E22] text-[#8C7A6B]"
+                    : "bg-[#C9A227]/10 border-[#C9A227]/30 text-[#C9A227] animate-bounce"
                 }
             `}>
                 {interactive 
@@ -413,15 +415,16 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
 
             {/* The Search modal itself — everything below this point is the actual
                 fake command palette UI (input, tabs, results, footer). */}
-            <div className="relative z-[1] w-full max-w-xl rounded-2xl border border-white/10
-            bg-[#0d1210]/95 backdrop-blur-2xl shadow-2xl overflow-hidden mt-10">
+            <div className="relative z-[1] w-full max-w-xl rounded-2xl border border-[#2A1E22] 
+            bg-[#120C0E]/95 backdrop-blur-2xl 
+            transform-gpu will-change-transform backface-hidden shadow-2xl overflow-hidden mt-10">
 
                 {/* Input row: search icon, either a live editable <input> (interactive
                     mode) or a static "fake caret" text display (auto-play mode) so the
                    demo text can't accidentally be edited by the user, plus a close (X)
                    button that always deactivates regardless of mode. */}
-                <div className="flex items-center gap-3 px-5 py-4">
-                    <Search size={16} className="text-gray-500 shrink-0"/>
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-[#2A1E22]">
+                    <Search size={16} className="text-[#C9A227] shrink-0"/>
                     {interactive ? (
                         <input 
                             ref={inputRef}
@@ -436,16 +439,18 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                                 }
                             }}
                             placeholder="Search files, folders, workspace, content..."
-                            className="flex-1 bg-transparent text-white text-sm font-medium
-                            placeholder:text-gray-600 outline-none min-w-0"
+                            className="flex-1 bg-transparent text-[#F5F0EB] text-sm font-sans
+                            placeholder:text-[#8C7A6B] outline-none min-w-0"
                         />
                     ) : (
-                        <div className="flex-1 text-sm font-medium min-w-0 truncate">
+                        <div className="flex-1 text-sm font-sans min-w-0 truncate">
                             {typed 
-                                ? <span className="text-white">{typed}</span>
-                                : <span className="text-gray-600">Search files, folders, workspace, content...</span>
+                                ? <span className="text-[#F5F0EB]">{typed}</span>
+                                : <span className="text-[#8C7A6B]">
+                                    Search files, folders, workspace, content...
+                                </span>
                             }
-                            <span className="inline-block w-[2px] h-4 bg-[#63FF9D] ml-0.5
+                            <span className="inline-block w-[2px] h-4 bg-[#C9A227] ml-0.5
                             align-middle animate-pulse"/>
                         </div>
                     )}
@@ -455,7 +460,8 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                             e.stopPropagation(); 
                             deactivate();
                         }}
-                        className="shrink-0 text-gray-600 hover:text-white transition-colors"
+                        className="shrink-0 text-[#8C7A6B] hover:text-[#F5F0EB] transition-colors
+                        p-1"
                         aria-label="Close search"
                     >
                         <X size={16}/>
@@ -466,7 +472,8 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                        activates the component (in case it was still auto-playing) and
                        switches the filter. Count badges only render once we actually
                        have a `results` state and the count is non-zero. */}
-                <div className="flex items-center gap-1 px-5 pb-3 border-b border-white/5">
+                <div className="flex items-center gap-1 px-5 pb-3 border-b border-[#2A1E22] 
+                bg-[#181013]/40">
                     {([
                         ["all", "All"],
                         ["workspace", "Workspace"],
@@ -482,13 +489,15 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                             }}
                             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold
                                 transition-colors ${activeTab === key
-                                    ? "bg-[#63FF9D]/15 text-[#63FF9D]"
-                                    : "text-gray-500 hover:text-white"
+                                    ? "bg-[[#C9A227]/10 text-[#C9A227] border border-[#C9A227]/30"
+                                    : "text-[#8C7A6B] hover:text-[#F5F0EB] border border-transparent"
                                 }`}
                         >
                             {label}
                             {result.kind === "results" && counts[key] > 0 && (
-                                <span className="ml-1 opacity-70">{counts[key]}</span>
+                                <span className="ml-1.5 text-[10px] opacity-70 font-mono">
+                                    {counts[key]}
+                                </span>
                             )}
                         </button>
                     ))}
@@ -504,17 +513,17 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                     {result.kind === "empty" && (
                         <div className="flex flex-col items-center justify-center gap-3
                         py-16 text-center">
-                            <Search size={20} className="text-gray-700"/>
-                            <p className="text-xs text-gray-400 font-medium">
+                            <Search size={20} className="text-[#8C7A6B]"/>
+                            <p className="text-xs text-[#A09388] font-mono">
                                 Search across all your workspaces
                             </p>
-                            <p className="text-[11px] text-gray-600">
+                            <p className="text-[11px] text-[#8C7A6B] font-sans">
                                 Finds files by title and content inside them.
                             </p>
 
                             {interactive && (
                                 <div className="flex flex-col items-center gap-2 pt-3">
-                                    <span className="text-[9px] text-gray-600 font-bold
+                                    <span className="text-[9px] text-[#8C7A6B] font-mono
                                     uppercase tracking-widest">
                                         Try one of these
                                     </span>
@@ -527,9 +536,9 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                                                     setActiveTab("all");
                                                 }}
                                                 className="px-2.5 py-1 rounded-full border
-                                                border-white/10 bg-white/5 text-[11px]
-                                                font-mono text-gray-300 hover:text-white 
-                                                hover:border-[#63FF9D]/40 transition-colors"
+                                                border-[#2A1E22] bg-[#181013] text-[11px]
+                                                font-mono text-[#A09388] hover:text-[#F5F0EB] 
+                                                hover:border-[#C9A227]/40 transition-colors"
                                             >
                                                 {q}
                                             </button>
@@ -546,10 +555,10 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                     {result.kind === "no-results" && (
                         <div className="flex flex-col items-center justify-center gap-3
                         py-16 text-center">
-                            <p className="text-xs text-gray-400 font-medium">
+                            <p className="text-xs text-[#A09388] font-mono">
                                 No matches for &ldquo;{typed}&rdquo;
                             </p>
-                            <p className="text-[11px] text-gray-600">
+                            <p className="text-[11px] text-[#8C7A6B] font-sans">
                                Try a different term or keyword
                             </p>
                             <div className="flex flex-wrap items-center justify-center gap-2">
@@ -561,9 +570,9 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                                             setActiveTab("all");
                                         }}
                                         className="px-2.5 py-1 rounded-full border
-                                        border-white/10 bg-white/5 text-[11px]
-                                        font-mono text-gray-300 hover:text-white 
-                                        hover:border-[#63FF9D]/40 transition-colors"
+                                        border-[#2A1E22] bg-[#181013] text-[11px]
+                                        font-mono text-[#A09388] hover:text-[#F5F0EB] 
+                                        hover:border-[#C9A227]/40 transition-colors"
                                     >
                                         {q}
                                     </button>
@@ -576,26 +585,25 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                         <div className="space-y-4">
                             {showWorkspaces.length > 0 && (
                                 <div className="space-y-1">
-                                    <p className="px-2 pb-1 text-[10px] text-gray-600
-                                    font-bold uppercase tracking-widest">
+                                    <p className="px-2 pb-1 text-[10px] text-[#8C7A6B] font-mono 
+                                    uppercase tracking-widest">
                                         Workspaces ({showWorkspaces.length})
                                     </p>
                                     {showWorkspaces.map((w) => (
                                         <div key={w.name}
-                                            className={`flex items-center justify-between px-3 \
+                                            className={`flex items-center justify-between px-3
                                                 py-2.5 rounded-lg transition-colors
                                                 ${w.name === firstResultKey
-                                                    ? "bg-[#63FF9D]/10"
-                                                    : "hover:bg-white/[0.03]"
+                                                    ? "bg-[#C9A227]/10 border border-[#C9A227]/20"
+                                                    : "hover:bg-[#181013]"
                                             }`}
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <Building2 size={15}
-                                                    className="text-violet-400 shrink-0"
+                                                    className="text-[#C9A227] shrink-0"
                                                 />
                                                 <div className="min-w-0">
-                                                    <p className="text-xs text-white
-                                                    font-medium truncate">
+                                                    <p className="text-xs text-[#F5F0EB] truncate">
                                                         <Highlight text={w.name} query={typed}/>
                                                     </p>
                                                     <p className="text-[10px] text-gray-600
@@ -607,7 +615,7 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                                             <div className="flex items-center gap-2 shrink-0">
                                                 {w.name === firstResultKey && (
                                                     <CornerDownLeft size={12} 
-                                                    className="text-[#63FF9D]"/>
+                                                    className="text-[#C9A227] shrink-0"/>
                                                 )}
                                             </div>
                                         </div>
@@ -617,8 +625,8 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
 
                             {showFolders.length > 0 && (
                                 <div className="space-y-1">
-                                    <p className="px-2 pb-1 text-[10px] text-gray-600
-                                    font-bold uppercase tracking-widest">
+                                    <p className="px-2 pb-1 text-[10px] text-[#8C7A6B] font-mono 
+                                    uppercase tracking-widest">
                                         Folders ({showFolders.length})
                                     </p>
                                     {showFolders.map((f) => (
@@ -626,21 +634,21 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                                             className={`flex items-center justify-between
                                                 px-3 py-2.5 rounded-lg transition-colors
                                                 ${f.name === firstResultKey
-                                                    ? "bg-[#63FF9D]/10"
-                                                    : "hover:bg-white/[0.03]"
+                                                    ? "bg-[#C9A227]/10 border border-[#C9A227]/20"
+                                                    : "hover:bg-[#181013]"
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <FolderClosed 
                                                     size={15}
-                                                    className="text-amber-400 shrink-0"
+                                                    className="text-[#C9A227] shrink-0"
                                                 />
                                                 <div className="min-w-0">
                                                     <p className="text-xs text-white
                                                     font-medium truncate">
                                                         <Highlight text={f.name} query={typed}/>
                                                     </p>
-                                                    <p className="text-[10px] text-gray-600
+                                                    <p className="text-[10px] text-[#F5F0EB]
                                                     truncate">
                                                         {f.breadcrumb}
                                                     </p>
@@ -650,7 +658,7 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                                                 <WorkspaceTag workspace={f.workspace}/>
                                                 {f.name === firstResultKey && (
                                                     <CornerDownLeft size={12} 
-                                                    className="text-[#63FF9D]" />  
+                                                    className="text-[#C9A227]" />  
                                                 )}
                                             </div>
                                         </div>
@@ -660,8 +668,8 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
 
                             {showFiles.length > 0 && (
                                 <div className="space-y-1">
-                                    <p className="px-2 pb-1 text-[10px] text-gray-600
-                                    font-bold uppercase tracking-widest">
+                                    <p className="px-2 pb-1 text-[10px] text-[#8C7A6B] font-mono 
+                                    uppercase tracking-widest">
                                         MAtching content ({showFiles.length})
                                     </p>
                                     {showFiles.map((f) => (
@@ -669,23 +677,23 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                                             className={`flex items-center justify-between
                                                 px-3 py-2.5 rounded-lg transition-colors
                                                 ${f.name === firstResultKey
-                                                    ? "bg-[#63FF9D]/10"
-                                                    : "hover:bg-white/[0.03]"
+                                                    ? "bg-[#C9A227]/10 border border-[#C9A227]/20"
+                                                    : "hover:bg-[#181013]"
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <FileText size={15} 
-                                                className="text-gray-500 shrink-0"/> 
+                                                className="text-[#A09388] shrink-0"/> 
                                                 <div className="min-w-0">
-                                                    <p className="text-xs text-white
+                                                    <p className="text-xs text-[#F5F0EB]
                                                     font-medium truncate">
                                                         <Highlight text={f.name} query={typed}/>                                                                                                                            
                                                     </p>
-                                                    <p className="text-[10px] text-gray-600
+                                                    <p className="text-[10px] text-[#8C7A6B]
                                                     truncate">
                                                         <Highlight text={f.snippet} query={typed} />
                                                     </p>
-                                                    <p className="text-[10px] text-gray-600
+                                                    <p className="text-[10px] text-[#8C7A6B]
                                                     truncate">
                                                         {f.breadcrumb}
                                                     </p>
@@ -696,7 +704,7 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                                                 {f.name === firstResultKey && (
                                                     <CornerDownLeft 
                                                         size={12}
-                                                        className="text-[#63FF9D]"
+                                                        className="text-[#C9A227]"
                                                     />
                                                 )}
                                             </div>
@@ -708,23 +716,19 @@ export const MainSearchWrapper: React.FC<MainSearchWrapperProps> = ({
                     )}
                 </div>
                 {/* Footer */}
-                <div className="flex items-center justify-between px-5 py-2.5 border-t border-white/5">
-                    <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1 text-[9px] text-gray-600 
-                        font-bold">
+                <div className="flex items-center justify-between px-5 py-2.5 border-t 
+                border-[#2A1E22] bg-[#181013]/405">
+                    <div className="flex items-center gap-3 text-[10px] text-[#8C7A6B] font-mono">
+                        <span className="flex items-center gap-1">
                             <ArrowUp size={11}/><ArrowDown size={11}/> Navigate
                         </span>
-                        <span className="flex items-center gap-1 text-[9px] text-gray-600
-                        font-bold">
+                        <span className="flex items-center gap-1">
                             <CornerDownLeft size={11}/> Command
                             <span className="uppercase tracking-widest ml-0.5">Open</span>
                         </span>
-                        <span className="text-[9px] text-gray-600 font-bold uppercase
-                        tracking-widest">
-                            Esc close
-                        </span>
+                        <span>Esc close</span>
                     </div>
-                    <span className="text-[9px] text-gray-600 font-medium">
+                    <span className="text-[9px] font-mono text-[#8C7A6B]">
                         {result.kind === "results" 
                             ? `${counts.all} results${counts.all === 1 ? "" : "s"}`
                             : ""

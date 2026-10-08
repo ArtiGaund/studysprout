@@ -50,7 +50,7 @@ const CircularProgress = ({ percent }: { percent: number }) => {
                     cy="50"
                     r={radius}
                     fill="none"
-                    stroke="#1f2937"
+                    stroke="#1A0F18"
                     strokeWidth="8"
                 />
                 {/* Progress */}
@@ -59,21 +59,21 @@ const CircularProgress = ({ percent }: { percent: number }) => {
                     cy="50"
                     r={radius}
                     fill="none"
-                    stroke="#7c3aed"
+                    stroke="#A855F7"
                     strokeWidth="8"
                     strokeLinecap="round"
                     strokeDasharray={circumference}
                     strokeDashoffset={offset}
-                    style={{ transition: "stroke-dashoffset 0.6s ease" }}
+                    className="transition-all duration-500 ease-out"
                 />
             </svg>
 
             {/* Label in career */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4 font-[700px] text-[#e2e2f0]">
+                <span className="text-base font-bold text-zinc-100 font-mono">
                     {percent}%
                 </span>
-                <span className="text-[10px] text-[#6b7280]">
+                <span className="text-[10px] font-mono text-zinc-500 tracking-wider">
                     GOAL
                 </span>
             </div>
@@ -122,18 +122,19 @@ const AdjustGoalModal = ({
 
     return (
         <div 
-            className="bg-black/60 fixed inset-0 flex items-center justify-center z-50"
+            className="bg-black/70 backdrop-blur-xs fixed inset-0 flex items-center 
+            justify-center z-50 p-4"
             onClick={onClose}
         >
             <div
-                className="bg-[#1a1a2e] border border-[#3a3a5c] rounded-[12px] p-7 w-[360px]
-                text-[#e2e2f0]"
+                className="bg-[#110A10] border border-white/10 rounded-xl p-7 w-[360px]
+                text-zinc-200"
                 onClick={(e) => e.stopPropagation()}
             >
-                <h3 className="mb-4.5 text-[16px] font-[600px]">
+                <h3 className="mb-4.5 text-xs font-mono font-bold text-zinc-100">
                     Adjust Weekly Goal
                 </h3>
-                <label className="text-[13px] text-[#a78bfa] block mb-1.5">
+                <label className="text-xs font-mono text-zinc-400 block mb-1.5">
                     Subject name (optional)
                 </label>
                 <input 
@@ -141,11 +142,11 @@ const AdjustGoalModal = ({
                     placeholder="e.g. Linear Algebra"
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}
-                    className="w-full bg-[#0f0f1a] border border-[#3a3a5c] rounded-xs
-                    text-[#e2e2f0] py-2 px-3 text-[14px] box-border mb-4"
+                    className="w-full bg-[#0A0507] border border-white/10 focus:border-purple-500/50 
+                    rounded-lg text-zinc-200 py-2 px-3 text-xs font-mono outline-none mb-4"
                 />
 
-                <label className="text-[13px] text-[#a78bfa] block mb-1.5">
+                <label className="text-xs font-mono text-zinc-400 block mb-1.5">
                     Weekly target (hours)
                 </label>
                 <input 
@@ -154,32 +155,36 @@ const AdjustGoalModal = ({
                     max={100}
                     value={hours}
                     onChange={(e) => setHours(Number(e.target.value))}
-                    className="w-full bg-[#0f0f1a] border border-[#3a3a5c] rounded-xs 
-                    text-[#e2e2f0] py-2 px-3 text-[15px] box-border"
+                    className="w-full bg-[#0A0507] border border-white/10 focus:border-purple-500/50 
+                    rounded-lg 
+                    text-zinc-200 py-2 px-3 text-xs font-mono outline-none"
                 />
 
                 <div className="flex gap-2.5 mt-5">
                     <button
                         onClick={onClose}
-                        className="flex-1 py-2 rounded-xs border border-[#3a3a5c] bg-transparent
-                        text-[#9ca3af] cursor-pointer text-[14px]"
+                        className="flex-1 py-2 rounded-lg border border-white/10 bg-transparent
+                         text-zinc-400 hover:text-white cursor-pointer text-xs font-mono
+                          transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className={`flex-1 py-2 rounded-xs border-none bg-[#7c3aed] text-white
-                        text-[14px] ${saving 
-                            ? "cursor-not-allowed opacity-[0.7px]" 
-                            : "cursor-pointer opacity-[1px]"}`}
+                        className={`flex-1 py-2 rounded-xs border border-purple-500/30 
+                            bg-purple-600 hover:bg-purple-500 text-white font-mono 
+                            font-semibold transition-colors text-xs ${saving 
+                                ? "cursor-not-allowed opacity-[0.7px]" 
+                                : "cursor-pointer opacity-[1px]"}`
+                        }
                     >
                         {saving ? "Saving..." : "Save" }
                     </button>
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
 // --- Deep Session
@@ -215,21 +220,22 @@ const DeepSessionDrawer = ({
 
     return (
         <div 
-            className="fixed inset-0 bg-black/60 flex items-end justify-center z-50"
+            className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-end 
+            justify-center z-50"
             onClick={onClose}
         >
             <div 
-            className="bg-[#111827] border border-[#1f2937] p-5 w-full max-w-[640px] max-h-[70vh]
-            overflow-auto text-[#e2e2f0] rounded-t-[12px]"
-            onClick={(e) => e.stopPropagation()}
+                className="bg-[#110A10] border border-white/10 p-5 w-full max-w-[640px] 
+                max-h-[70vh] overflow-auto text-zinc-200 rounded-t-[12px]"
+                onClick={(e) => e.stopPropagation()}
             >
-                <h3 className="text-[16px] font-[600px] mb-4">
+                <h3 className="text-sm font-mono text-zinc-100 mb-4">
                     Deep Session Planner
                 </h3>
 
                 {!plan ? (
                     <>
-                        <p className="text-[13px] text-[#6b7280] mb-4">
+                        <p className="text-xs font-mono text-zinc-400 mb-4">
                             How many minutes do you have?
                         </p>
                         <div className="flex gap-2.5 items-center">
@@ -239,17 +245,19 @@ const DeepSessionDrawer = ({
                                 max={480}
                                 value={minutes}
                                 onChange={(e) => setMinutes(Number(e.target.value))}
-                                className="flex-1 bg-[#0f172a] border border-[#1f2937]
-                                rounded-[6px] text-[#e2e2f0] py-2 px-3 text-[15px]"
+                                className="flex-1 bg-[#0A0507] border border-white/10
+                                rounded-lg text-zinc-200 py-2 px-3 text-xs font-mono 
+                                outline-none"
                             />
-                            <span className="text-[13px] text-[#6b7280]">
+                            <span className="text-xs font-mono text-zinc-500">
                                 minutes
                             </span>
                             <button
                                 onClick={fetchPlan}
                                 disabled={loading}
-                                className={`py-2 px-5 rounded-[6px] border-none bg-[#7c3aed] text-white
-                                text-[14px] ${loading 
+                                className={`py-2 px-5 rounded-[6px] bg-purple-600 hover:bg-purple-500 
+                                text-white font-mono font-semibold border border-purple-400/30 transition-all
+                                text-xs ${loading 
                                     ? "cursor-not-allowed opacity-[0.7px]" 
                                     : "cursor-pointer opacity-[1px]"}`}
                             >
@@ -259,35 +267,36 @@ const DeepSessionDrawer = ({
                     </>
                 ) : (
                    <>
-                        <p className="text-[13px] text-[#6ee7b7] mb-4">
+                        <p className="text-xs font-mono text-purple-300 mb-4">
                             {plan.message} · {plan.totalMinutes} min total
                         </p>
                         {plan.files.map((f, i) => (
                             <div
                                 key={f.fileId}
-                                className="flex justify-between py-2.5 border border-[#1f2937]
-                                text-[14px]"
+                                className="flex justify-between py-2.5 bg-[#0A0507] border
+                                 border-white/5 text-xs items-center rounded-lg font-mono"
                             >
-                                <span>
-                                    <span className="text-[#4b5563] mr-2.5">
+                                <span className="truncate pr-2 text-zinc-200">
+                                    <span className="text-zinc-500 mr-2.5">
                                         {i + 1}.
                                     </span>
                                     {f.title}
                                 </span>
-                                <span className="text-[#6b7280] flex-shrink-0">
+                                <span className="text-zinc-400 shrink-0">
                                     {f.readingTimeMinutes}
                                 </span>
                             </div>
                         ))}
                         {plan.remainingFiles > 0 && (
-                            <p className="text-[12px] text-[#4b5563] mt-3">
+                            <p className="text-[12px] font-mono text-zinc-500 mt-3">
                                 +{plan.remainingFiles} more files not included in this session
                             </p>
                         )}
                         <button
                             onClick={() => setPlan(null)}
-                            className="mt-4 bg-transparent border border-[#1f2937] rounded-[6px]
-                            text-[#6b7280] cursor-pointer py-2 px-4 text-[13px]"
+                            className="mt-4 bg-transparent border border-white/10 hover:border-white/20
+                             rounded-lg font-mono transition-colors
+                            text-zinc-400 hover:text-white cursor-pointer py-2 px-4 text-xs"
                         >
                              ← Change duration
                         </button>
@@ -332,8 +341,9 @@ export const WeeklyLearningGoal = ({
 
     if(loading){
         return (
-            <div className="bg-[#111827] rounded-[12px] p-6 text-[#4b5563] text-[13px]">
-                Loading goal...
+            <div className="bg-[#110A10] border border-white/10 rounded-[12px] p-6 
+            text-zinc-500 text-xs font-mono animate-pulse">
+                Loading learning target...
             </div>
         );
     }
@@ -349,44 +359,48 @@ export const WeeklyLearningGoal = ({
 
     return (
         <>
-            <div className="bg-[#111827] border border-[#1f2937] rounded-[12px] py-6 px-5 
-            sm:px-7 flex flex-col sm:flex-row gap-6 sm:items-center items-start text-[#e2e2f0]">
+            <div className="bg-[#110A10] border border-white/10 rounded-xl py-6 px-5 
+            sm:px-7 flex flex-col sm:flex-row gap-6 sm:items-center items-start ">
                 {/* Ring */}
                 <div className="self-center sm:self-auto">
                     <CircularProgress percent={d.progressPercent}/>
                 </div>
 
                 {/* Text + actions */}
-                <div className="flex-1">
-                    <h3 className="mb-2 text-[15px] font-[600px]">
+                <div className="flex-1 min-w-0">
+                    <h3 className="mb-2 text-sm font-mono font-bold text-zinc-100">
                         Weekly Learning Goal
                     </h3>
-                    <p className="mb-4 text-[13px] text-[#9ca3af] leading-1.6">
-                        {`You're`} <strong className="text-[#e2e2f0]">
-                            {d.hoursThisWeek}
-                        </strong> hours into yours{" "}
-                        <strong className="text-[#e2e2f0]">{d.weeklyTargetHours}</strong>-hour
+                    <p className="mb-4 text-xs font-mono text-zinc-400 leading-relaxed">
+                        {`You're`} <span className="text-zinc-100 font-bold">
+                            {d.hoursThisWeek} hours
+                        </span> into yours{" "}
+                        <span className="text-zinc-100 font-bold">{d.weeklyTargetHours}-hour</span>
                         weekly target 
                         {d.subjectLabel ? (
-                            <> for <strong className="text-[#e2e2f0]">{d.subjectLabel}</strong></>
+                            <> for <span className="text-purple-300 font-semibold">
+                                {d.subjectLabel}
+                            </span></>
                         ) : null}
                         . {`You've cleared`}{" "}
-                        <strong className="text-[#a78bfa]">
+                        <span className="text-purple-300 font-bold">
                             {d.subConceptsToday} sub-concepts
-                        </strong>{" "} today.
+                        </span>{" "} today.
                     </p>
                     <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => setShowGoalModal(true)}
-                            className="py-2 px-3 rounded-[6px] border border-[#3a3a5c] 
-                            bg-transparent text-[#e2e2f0] cursor-pointer text-[13px]"
+                            className="py-2 px-3 rounded-lg border border-white/10
+                             hover:border-purple-500/30 bg-[#0A0507] text-zinc-300
+                              cursor-pointer text-xs font-mono transition-all"
                         >
                             Adjust Goal
                         </button>
                         <button
                             onClick={() => setShowDeepSession(true)}
-                            className="py-2 px-4 rounded-[6px] border-none bg-[#7c3aed] text-white
-                            cursor-pointer text-[13px]"
+                            className="py-2 px-4 rounded-[6px] border border-purple-500/30
+                             bg-purple-600 hover:bg-purple-500 text-white
+                            cursor-pointer text-xs font-mono font-medium transition-all"
                         >
                             Deep Session
                         </button>
@@ -425,5 +439,5 @@ export const WeeklyLearningGoal = ({
                 />
             )}
         </>
-    )
+    );
 }

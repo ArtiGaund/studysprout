@@ -104,16 +104,18 @@ export const FileHeader = ({
             });
         }
     }
+
     return(
-        <div className="flex items-start justify-between gap-4 px-6 py-6 border-b border-white/10
-        flex-shrink-0">
+        <div className="flex flex-row flex-wrap justify-between items-end w-full gap-y-4
+         bg-transparent p-5">
 
             {/* Left: Icon + Title + Meta */}
-            <div className="flex items-center gap-4 min-w-0 group">
+            <div className="flex items-center gap-x-4 min-w-0 flex-1 group">
                 {/* File icon- swap with emoji picker output */}
-                <div className="w-12 h-12 rounded-xl bg-purple-900/40 border border-purple-500/20
-                flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-6 h-6 text-purple-400"/>
+                <div className="text-3xl sm:text-5xl shrink-0 select-none w-12 h-12
+                 bg-purple-950/30 border border-purple-500/20 rounded-lg flex items-center
+                  justify-center text-purple-300">
+                    <FileText size={16}/>
                 </div>
 
                 <div className="flex flex-col min-w-0 flex-1">
@@ -132,13 +134,13 @@ export const FileHeader = ({
                                 onKeyDown={handleKeyDown}
                                 onClick={(e) => e.stopPropagation()}
                                 onDoubleClick={(e) => e.stopPropagation()}
-                                className="text-xl sm:text-3xl font-bold text-white bg-zinc-900
+                                className="text-xl sm:text-3xl font-bold text-white bg-[#0A0507]
                                 outline-none border border-purple-500/50 rounded-xl px-3 py-1
-                                w-full max-w-xl cursor-text"
+                                w-full max-w-xl cursor-text font-mono"
                             />
                         ) : (
                             <>
-                                <h1 className="text-xl sm:text-3xl font-bold text-white 
+                                <h1 className="text-xl sm:text-3xl font-bold text-white font-mono
                                 tracking-tight leading-none truncate cursor-pointer max-w-max">
                                     {String(currentFile.title) || currentFile.title || "Untitled"}
                                 </h1>
@@ -149,7 +151,7 @@ export const FileHeader = ({
                                         if(!isEditing) startEditing();
                                     }}
                                     className="p-1.5 rounded-md text-zinc-500 hover:text-white
-                                    hover:bg-zinc-800 transition-all flex sm:opacity-0
+                                    hover:bg-white/5 transition-all flex sm:opacity-0
                                     sm:group-hover:opacity-100 opacity-100 shrink-0"
                                 >
                                     <Pencil size={16}/>
@@ -157,8 +159,8 @@ export const FileHeader = ({
                                 
                                 <button
                                     onClick={moveFolderToTrash}
-                                    className="p-1.5 rounded-md text-red-400 hover:text-white
-                                    hover:bg-red-500 transition-all flex sm:opacity-0
+                                    className="p-1.5 rounded-md text-zinc-500 hover:text-red-400
+                                    hover:bg-red-500/10 transition-all flex sm:opacity-0
                                     sm:group-hover:opacity-100 opacity-100 shrink-0"
                                 >
                                     <Trash2 size={16}/>
@@ -166,7 +168,9 @@ export const FileHeader = ({
                             </>
                         )}
                     </div>
-                    <p className="text-xs font-semibold tracking-widest uppercase text-white/40 mt-1">
+                    
+                    <p className="text-[10px] font-mono text-zinc-500 font-semibold 
+                    tracking-widest uppercase mt-2">
                         FILE
                         {folderName && (
                             <>

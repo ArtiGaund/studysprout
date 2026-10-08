@@ -75,6 +75,7 @@ const ToggleSwitch = forwardRef<HTMLButtonElement, ToggleSwitchProps>((props, re
   return (
     <button
       ref={ref}
+      type="button"
       role="switch"
       aria-checked={checked}
       disabled={disabled}
