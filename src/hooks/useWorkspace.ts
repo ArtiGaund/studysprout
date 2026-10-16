@@ -231,6 +231,7 @@ export function useWorkspace() {
         if(authStatus !== "authenticated" || !currentUserId)
              return {success: false, error: "User is not authenticated"};
         dispatch(SET_WORKSPACE_LOADING(true));
+        // Clear previous workspace fetch errors so creation attempts start clean
         dispatch(SET_WORKSPACE_ERROR(null));
         try {
             // Append ownership context if not present in the form payload
@@ -255,8 +256,12 @@ export function useWorkspace() {
             }
         } catch (error: any) {
             console.error('Error creating workspace in hook:', error);
-            const errorMessage = error.message || "Failed to create workspace";
-            dispatch(SET_WORKSPACE_ERROR(errorMessage));
+            let errorMessage = error.message || "Failed to create workspace";
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (errorMessage.includes("E11000") || errorMessage.includes("duplicate key")) {
+                errorMessage = "A workspace with this title already exists. Please choose a different name.";
+            }
             return { success: false, error: errorMessage };
         }finally{
             dispatch(SET_WORKSPACE_LOADING(false));

@@ -10,8 +10,10 @@ interface RevisionFlashcardSetListProps{
 }
 const SectionHeader = ({ label }: { label: string }) => {
     return(
-        <div className="flex sticky z-20 top-0 w-full h-8 justify-between items-center px-2">
-            <span className="font-semibold ml-4 text-[12px] text-Neutrals/neutrals-8 truncate">
+        <div className="flex sticky z-20 top-0 w-full h-8 justify-between items-center px-2
+         bg-[#0A0507]/90 backdrop-blur-sm my-1 border-b border-white/5">
+            <span className="font-mono text-[10px] font-bold text-neutral-500 uppercase 
+            tracking-widest truncate">
                 {label}
             </span>
         </div>
@@ -26,8 +28,9 @@ const RevisionFlashcardSetList: React.FC<RevisionFlashcardSetListProps> = ({
     const folderSets = sets.filter(set => set.resourceType === "Folder");
     const fileSets = sets.filter(set => set.resourceType === "File");
     return(
-        <div className="w-full px-2 min-w-0 overflow-hidden">
-            <span className="font-bold text-Neutrals/neutrals-8 text-[13px] block truncate">
+        <div className="w-full px-2 min-w-0 overflow-hidden space-y-3 font-mono">
+            <span className="font-bold uppercase text-neutral-400 text-[13px] block 
+            truncate tracking-widest pb-1 border-b border-white/10">
                 Flashcard Sets
             </span>
             

@@ -220,7 +220,8 @@ const FlashcardTypesForm: React.FC = () => {
   }
  
     return (
-        <SheetContent className="!w-full sm:!max-w-md overflow-y-auto bg-neutral-950 border-neutral-800 text-neutral-100 p-6">
+        <SheetContent className="!w-full sm:!max-w-md overflow-y-auto bg-[#0A0507]
+         border-neutral-800 text-neutral-100 p-6">
             <SheetHeader>
                 <SheetTitle className="text-white text-lg font-mono font-bold">
                   Customize Flashcard Generation
@@ -238,18 +239,19 @@ const FlashcardTypesForm: React.FC = () => {
                 </Label>
                 <div>
                   <ResourcePickerModel>
-                    <div className="flex items-center gap-2 cursor-pointer text-neutral-400 hover:text-white transition-colors">
-                      <button>
-                        <IconFolderOpen size={20} />
-                      </button>
+                    <div className="flex items-center gap-2 cursor-pointer text-neutral-400
+                     hover:text-white transition-colors">
+                      <button><IconFolderOpen size={20} /></button>
                       <span className="text-xs font-mono cursor-not-allowed">Change source</span>
                     </div>
                   </ResourcePickerModel>
 
                   {/* Dynamic Warning lock */}
                   {isCurrentResourceBusy && (
-                    <p className="mt-2 text-[11px] font-mono text-rose-400 bg-rose-950/30 p-2 rounded-lg border border-rose-900/50">
-                      This specific {selectedResourceType.toLowerCase()} is currently locked for AI generation.
+                    <p className="mt-2 text-[11px] font-mono text-rose-400 bg-rose-950/30 
+                    p-2 rounded-lg border border-rose-900/50">
+                      This specific {selectedResourceType.toLowerCase()} is currently locked for 
+                      AI generation.
                     </p>
                   )}
                 </div>
@@ -258,127 +260,157 @@ const FlashcardTypesForm: React.FC = () => {
 
            <form onSubmit={handleSumbit} className="space-y-6">
             {/* Generation Parameters */}
-            <div className="space-y-2">
-              <Label htmlFor="max-cards" className="text-xs font-mono text-neutral-300">
-                Max Cards to Generate:{" "}
-                <span className="text-neutral-500">(Min cards should be 5)</span></Label>
-              <Input 
-              id="max-cards"
-              type="number" 
-              name="cardCount"
-              value={cardCount}
-              min={MIN_CARDS}
-              onChange={(e) => {
-                const inputValue = e.target.value;
-                if(inputValue === ""){
-                  setCardCount("");
-                  return;
-                }
-                setCardCount(Number(inputValue));
-               
-              }}
-              onBlur={() => {
-                if(cardCount === '' || Number(cardCount) < MIN_CARDS || isNaN(Number(cardCount))){
-                  setCardCount(MIN_CARDS);
-                }
-              }}
-              className="bg-neutral-900 border-neutral-800 text-white font-mono focus:border-violet-500 rounded-lg"
-              />
-            </div>
+              <div className="space-y-2">
+                  <Label htmlFor="max-cards" className="text-xs font-mono text-neutral-300">
+                    Max Cards to Generate:{" "}
+                    <span className="text-neutral-500">(Min cards should be 5)</span>
+                  </Label>
+                  <Input 
+                    id="max-cards"
+                    type="number" 
+                    name="cardCount"
+                    value={cardCount}
+                    min={MIN_CARDS}
+                    onChange={(e) => {
+                      const inputValue = e.target.value;
+                      if(inputValue === ""){
+                        setCardCount("");
+                        return;
+                      }
+                      setCardCount(Number(inputValue));
+                    
+                    }}
+                    onBlur={() => {
+                      if(cardCount === '' || Number(cardCount) < MIN_CARDS || isNaN(Number(cardCount))){
+                        setCardCount(MIN_CARDS);
+                      }
+                    }}
+                    className="bg-neutral-900 border-neutral-800 text-white font-mono 
+                    focus:border-violet-500 rounded-lg"
+                  />
+              </div>
               <Separator className="my-5 bg-neutral-800"/>
               {/* Formatting Options */}
-            <div className="space-y-3">
-                <Label className="text-xs font-mono text-neutral-300">
-                  Question Format:
-                </Label>
-            </div>
-            <div className="space-y-3 pt-1">
-          <div className="flex items-center gap-3">
-            <Checkbox id="question-answer" name="question-answer"
-            className="border-neutral-700 data-[state=checked]:bg-violet-600"/>
-            <Label htmlFor="question-answer" className="text-sm font-mono text-neutral-200 cursor-pointer">
-              Question & Answer </Label>
-          </div>
-          <div className="flex flex-row gap-3">
-            <Checkbox id="fill-in-the-blank" name="fill-in-the-blank" 
-            className="border-neutral-700 data-[state=checked]:bg-violet-600"/>
-            <Label htmlFor="fill-in-the-blank" className="text-sm font-mono text-neutral-200 cursor-pointer">
-              Fill-in-the-Blank (Cloze)</Label>
-          </div>
-          <div className="flex flex-row gap-3">
-            <Checkbox id="mcq" name="mcq" className="border-neutral-700 data-[state=checked]:bg-violet-600"/>
-            <Label htmlFor="mcq" className="text-sm font-mono text-neutral-200 cursor-pointer">
-              Multiple Choice (MCQ)</Label>
-          </div>
-          <ComingSoonTooltip disabled side="top">
-            <div className="flex items-center gap-3 opacity-50 cursor-not-allowed">
-                <Checkbox id="diagram" name="diagram" disabled/>
-                <Label htmlFor="diagram" className="text-sm font-mono text-neutral-400">
-                  Concept Diagram
-                  <span className="text-sm font-mono text-neutral-400">
-                    Visual flow/relationship maps
-                  </span>
-                </Label>
-            </div>
-          </ComingSoonTooltip>
-          <ComingSoonTooltip disabled side="top">
-            <div className="flex items-center gap-3 opacity-50 cursor-not-allowed">
-                <Checkbox id="chart" name="chart" disabled/>
-                <Label htmlFor="chart" className="text-sm font-mono text-neutral-400">
-                  Chart-based
-                  <span className="ml-2 text-xs font-mono text-neutral-400">
-                      Data Visiualization questions
-                  </span>
-                </Label>
-            </div>
-          </ComingSoonTooltip>
-          <ComingSoonTooltip disabled side="top">
-            <div className="flex items-center gap-3 opacity-50 cursor-not-allowed">
-                <Checkbox id="image-labeling" name="image-labeling" disabled/>
-                <Label htmlFor="image-labeling" className="text-sm font-mono text-neutral-400">
-                    Image Labeling
-                    <span className="ml-2 text-xs font-mono text-neutral-400">
-                      Label parts of diagram or images
-                    </span>
-                </Label>
-            </div>
-          </ComingSoonTooltip>
-        </div>
+              <div className="space-y-3">
+                <Label className="text-xs font-mono text-neutral-300">Question Format:</Label>
+              </div>
+              <div className="space-y-3 pt-1">
+                  <div className="flex items-center gap-3">
+                      <Checkbox 
+                        id="question-answer" 
+                        name="question-answer"
+                        className="border-neutral-700 data-[state=checked]:bg-violet-600"
+                      />
+                      <Label 
+                        htmlFor="question-answer" 
+                        className="text-sm font-mono text-neutral-200 cursor-pointer"
+                      >
+                        Question & Answer 
+                      </Label>
+                  </div>
+                  <div className="flex flex-row gap-3">
+                      <Checkbox 
+                        id="fill-in-the-blank" 
+                        name="fill-in-the-blank" 
+                        className="border-neutral-700 data-[state=checked]:bg-violet-600"
+                      />
+                      <Label 
+                        htmlFor="fill-in-the-blank" 
+                        className="text-sm font-mono text-neutral-200 cursor-pointer"
+                      >
+                        Fill-in-the-Blank (Cloze)
+                      </Label>
+                  </div>
+                  <div className="flex flex-row gap-3">
+                      <Checkbox 
+                        id="mcq" 
+                        name="mcq" 
+                        className="border-neutral-700 data-[state=checked]:bg-violet-600"
+                      />
+                      <Label 
+                        htmlFor="mcq" 
+                        className="text-sm font-mono text-neutral-200 cursor-pointer"
+                      >
+                        Multiple Choice (MCQ)
+                      </Label>
+                  </div>
+                  <ComingSoonTooltip disabled side="top">
+                    <div className="flex items-center gap-3 opacity-50 cursor-not-allowed">
+                        <Checkbox id="diagram" name="diagram" disabled/>
+                        <Label htmlFor="diagram" className="text-sm font-mono text-neutral-400">
+                          Concept Diagram
+                          <span className="text-sm font-mono text-neutral-400">
+                            Visual flow/relationship maps
+                          </span>
+                        </Label>
+                    </div>
+                  </ComingSoonTooltip>
+                  <ComingSoonTooltip disabled side="top">
+                    <div className="flex items-center gap-3 opacity-50 cursor-not-allowed">
+                        <Checkbox id="chart" name="chart" disabled/>
+                        <Label htmlFor="chart" className="text-sm font-mono text-neutral-400">
+                          Chart-based
+                          <span className="ml-2 text-xs font-mono text-neutral-400">
+                              Data Visiualization questions
+                          </span>
+                        </Label>
+                    </div>
+                  </ComingSoonTooltip>
+                  <ComingSoonTooltip disabled side="top">
+                    <div className="flex items-center gap-3 opacity-50 cursor-not-allowed">
+                        <Checkbox id="image-labeling" name="image-labeling" disabled/>
+                        <Label htmlFor="image-labeling" className="text-sm font-mono text-neutral-400">
+                            Image Labeling
+                            <span className="ml-2 text-xs font-mono text-neutral-400">
+                              Label parts of diagram or images
+                            </span>
+                        </Label>
+                    </div>
+                  </ComingSoonTooltip>
+                </div>
       
-       {/* Actions */}
-        <SheetFooter className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-neutral-800">
-         { isGeneratingCards 
-         ?(
-            <div className="flex justify-center w-full py-2">
-              <Loader2 className="animate-spin text-violet-400"/> 
-            </div>
-        )
-         :<Button
-          className="w-full bg-violet-600 hover:bg-violet-500 text-white font-mono text-xs rounded-xl py-2.5 transition-colors"
-           type="submit">Generate Flashcard</Button>}
-          <SheetClose asChild>
-            <Button variant="outline"
-            className="w-full border-neutral-800 bg-neutral-900 text-neutral-300 hover:bg-neutral-800 hover:text-white font-mono text-xs rounded-xl"
-            >
-              Close</Button>
-          </SheetClose>
-        </SheetFooter>
-        </form>
+                {/* Actions */}
+                <SheetFooter className="flex flex-col sm:flex-row gap-3 pt-4 border-t
+                 border-neutral-800">
+                    { isGeneratingCards ? (
+                        <div className="flex justify-center w-full py-2">
+                          <Loader2 className="animate-spin text-violet-400"/> 
+                        </div>
+                    ) : 
+                      <Button
+                        className="w-full bg-violet-600 hover:bg-violet-500 text-white 
+                        font-mono text-xs rounded-xl py-2.5 transition-colors"
+                        type="submit">
+                          Generate Flashcard
+                      </Button>
+                    }
+                    <SheetClose asChild>
+                      <Button 
+                        variant="outline"
+                        className="w-full border-neutral-800 bg-neutral-900
+                         text-neutral-300 hover:bg-neutral-800 hover:text-white font-mono
+                          text-xs rounded-xl"
+                      >
+                          Close
+                      </Button>
+                    </SheetClose>
+                  </SheetFooter>
+                </form>
 
-        {/* Modal: Handles conflicts when a set already exists for this resource */}
-        {showOverwriteModal && lastPayload && (
-          <RegenerateFlashcardSet 
-          flashcardSetId={existingSetId!}
-          onClose={closeOverwriteModal}
-          payload={lastPayload}
-          onViewSet={(setId) => {
-            closeOverwriteModal();
-            closeFlashcardTypeSheet();
-            openFlashcardSetViewerSheet(setId);
-          }}
-          />
-        )}
-        </SheetContent>
+                {/* Modal: Handles conflicts when a set already exists for this resource */}
+                {showOverwriteModal && lastPayload && (
+                  <RegenerateFlashcardSet 
+                  flashcardSetId={existingSetId!}
+                  onClose={closeOverwriteModal}
+                  payload={lastPayload}
+                  onViewSet={(setId) => {
+                    closeOverwriteModal();
+                    closeFlashcardTypeSheet();
+                    openFlashcardSetViewerSheet(setId);
+                  }}
+                  />
+                )}
+          </SheetContent>
     )
 }
 

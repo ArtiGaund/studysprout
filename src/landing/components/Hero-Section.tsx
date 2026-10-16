@@ -19,6 +19,13 @@ interface UpdateItem {
 }
 
 const RECENT_UPDATES: UpdateItem[] = [
+   {
+    id: "ui-update",
+    title: "Sprout UI Updated",
+    description: "The Sprout UI has been updated with a new design and improved user experience.",
+    date: "2026-10-16T19:30:00.000Z", 
+    sectionId: "hero-section",
+  },
  {
     id: "clipper",
     title: "Sprout Clipper",
@@ -26,13 +33,6 @@ const RECENT_UPDATES: UpdateItem[] = [
     date: "2026-09-01T00:00:00.000Z", 
     sectionId: "clipper-section",
   },
-  // {
-  //   id: "editor",
-  //   title: "Sprout Editor",
-  //   description: "Real-time collaborative editing with offline-first sync.",
-  //   date: "2026-07-10T00:00:00.000Z", 
-  //   sectionId: "editor-section",
-  // },
   {
     id: "deployed",
     title: "StudySprout Deployed",

@@ -12,13 +12,13 @@
  */
 'use client';
 
-import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+import { Card, CardFooter, CardTitle } from "@/components/ui/card";
 import { useFlashcardGenerator } from "@/hooks/flashcard/useFlashcardGenerator";
 import { useFlashcardSRS } from "@/hooks/flashcard/useFlashcardSRS";
 import { resetSingleFlashcard, updateFlashcard } from "@/store/slices/flashcardSlice";
 import { format } from "date-fns";
 import { Check, Flame, Loader2, RotateCcw } from "lucide-react";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { FlashcardContentRenderer } from "./flashcard-content-renderer";
 
@@ -194,7 +194,8 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                 <div>
                     {isReviewed && (
                         <button
-                        className="p-1 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+                        className="p-1 rounded-md text-neutral-400 hover:text-white
+                         hover:bg-neutral-800 transition-colors"
                         onClick={async () => {
                             const result = await  resetCard(card._id);
                             if(result?.data){
@@ -206,7 +207,8 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                         }}
                         >
                            { reset ? 
-                                <Loader2 className="w-4 h-4 text-neutral-400 cursor-not-allowed animate-spin"/> :
+                                <Loader2 className="w-4 h-4 text-neutral-400 cursor-not-allowed 
+                                animate-spin"/> :
                                 <RotateCcw className="w-4 h-4 "/>
                             }
                         </button>
@@ -314,28 +316,36 @@ const FlashcardStudyCard: React.FC<FlashcardStudyCardProps> = ({
                          border-neutral-800 font-mono text-xs">
                             <button
                             onClick={() => handleRating("again")}
-                            className="py-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900/50 font-semibold transition-all text-center"
+                            className="py-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60
+                             text-rose-300 border border-rose-900/50 font-semibold 
+                             transition-all text-center"
                             >
                                 Again
                             </button>
                             
                             <button
                             onClick={() => handleRating("hard")}
-                            className="py-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-900/50 font-semibold transition-all text-center"
+                            className="py-2.5 rounded-xl bg-emerald-950/40 
+                            hover:bg-emerald-900/60 text-emerald-300 border
+                             border-emerald-900/50 font-semibold transition-all text-center"
                             >
                                 Hard
                             </button>
                             
                             <button
                             onClick={() => handleRating("good")}
-                            className="py-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-900/50 font-semibold transition-all text-center"
+                            className="py-2.5 rounded-xl bg-emerald-950/40
+                             hover:bg-emerald-900/60 text-emerald-300 border
+                              border-emerald-900/50 font-semibold transition-all text-center"
                             >
                                 Good
                             </button>
                             
                             <button
                             onClick={() => handleRating("easy")}
-                            className="py-2.5 rounded-xl bg-violet-950/40 hover:bg-violet-900/60 text-violet-300 border border-violet-900/50 font-semibold transition-all text-center"
+                            className="py-2.5 rounded-xl bg-violet-950/40
+                             hover:bg-violet-900/60 text-violet-300 border
+                              border-violet-900/50 font-semibold transition-all text-center"
                             >
                                 Easy
                             </button>

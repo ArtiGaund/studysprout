@@ -14,7 +14,7 @@
 
 import DashboardSetup from "@/components/dashboard-setup/dashboard-setup"
 import { useWorkspace } from "@/hooks/useWorkspace"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useRef, useState } from "react"
 import { useUser } from "@/lib/providers/user-provider"
 import { clearLastWorkspace, getLastWorkspace } from "@/lib/local-storage-workspace"
@@ -30,48 +30,50 @@ const DashboardContent = () => {
 
     // Workspace Management Hook
     const {
-         workspaces,
-          isLoadingWorkspaces, 
-          workspaceError, 
-          hasWorkspaces,
-          getWorkspaces,
-        } = useWorkspace();
+        workspaces,
+        isLoadingWorkspaces, 
+        workspaceError, 
+        hasWorkspaces,
+        getWorkspaces,
+    } = useWorkspace();
 
     const router = useRouter();
     const searchParams = useSearchParams();
 
     const hasNotifiedExtension = useRef(false);
 
-useEffect(() => {
-    if (searchParams.get("extension") !== "true") return;
-    if (hasNotifiedExtension.current) return;
-    hasNotifiedExtension.current = true;
+    useEffect(() => {
+        if (searchParams.get("extension") !== "true") return;
+        if (hasNotifiedExtension.current) return;
 
-    const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID;
-    if (!EXTENSION_ID) {
-        console.warn("NEXT_PUBLIC_EXTENSION_ID is missing!");
-        return;
-    }
-    if (typeof window !== "undefined" && (window as any).chrome?.runtime?.sendMessage) {
-        (window as any).chrome.runtime.sendMessage(
-            EXTENSION_ID,
-            { type: "STUDYSPROUT_LOGIN_SUCCESS" },
-            (response: any) => {
-                if ((window as any).chrome.runtime.lastError) {
-                    console.warn("Extension not reachable: ", (window as any).chrome.runtime.lastError);
-                } else {
-                    console.log("Extension notified: ", response);
+        hasNotifiedExtension.current = true;
+
+        const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID;
+
+        if (!EXTENSION_ID) {
+            console.warn("NEXT_PUBLIC_EXTENSION_ID is missing!");
+            return;
+        }
+        if (typeof window !== "undefined" && (window as any).chrome?.runtime?.sendMessage) {
+            (window as any).chrome.runtime.sendMessage(
+                EXTENSION_ID,
+                { type: "STUDYSPROUT_LOGIN_SUCCESS" },
+                (response: any) => {
+                    if ((window as any).chrome.runtime.lastError) {
+                        console.warn("Extension not reachable: ", (window as any).chrome.runtime.lastError);
+                    } else {
+                        console.log("Extension notified: ", response);
+                    }
                 }
-            }
-        );
-    }
-}, [searchParams]);
+            );
+        }
+    }, [searchParams]);
    
     /** *EFFECT: Workspace Synchronization
      * Fetch the workspace list once the user is confirmed as unauthenticated.
      */
-     useEffect(() => {
-         if(authStatus === "loading" ) return;
+    useEffect(() => {
+        if(authStatus === "loading" ) return;
         if(authStatus !== "authenticated" || !userId){
             return;
         }
@@ -83,78 +85,79 @@ useEffect(() => {
             }
         }
         fetchAndRedirect();
-        },[
-            authStatus,
-            userId,
-        ])
+    },[ authStatus, userId ]);
     
-        /**
-         * EFFECT: Smart Redirection logic
-         * After data is loaded, determine which specific workspace URL to push the user to.
-         */
-        useEffect(() => {
-            if(authStatus !== "authenticated" || !userId) return;
-            if(isLoadingWorkspaces) return;
-            if(!hasWorkspaces) return;
+    /**
+        * EFFECT: Smart Redirection logic
+        * After data is loaded, determine which specific workspace URL to push the user to.
+    */
+    useEffect(() => {
+        if(authStatus !== "authenticated" || !userId) return;
+        if(isLoadingWorkspaces) return;
+        if(!hasWorkspaces) return;
 
-            // Retrieve persistence: Try to find where the user left off
-            const lastWorkspaceId = getLastWorkspace(userId);
+        // Retrieve persistence: Try to find where the user left off
+        const lastWorkspaceId = getLastWorkspace(userId);
 
-            const validWorkspace = workspaces.find(
-                workspace => workspace._id === lastWorkspaceId
-            );
+        const validWorkspace = workspaces.find(workspace => workspace._id === lastWorkspaceId);
 
-            // Cleanup: If the saved workspace ID no longer exists, clear it. 
-            if(!validWorkspace && lastWorkspaceId){
-                clearLastWorkspace(userId);
-            }
-
-            // Fallback: Use last valid workspace OR the first one in the list
-            const workspaceToOpen = validWorkspace || workspaces[0];
-            if(workspaceToOpen){
-                router.replace(`/dashboard/${workspaceToOpen._id}`);
-            }
-
-        }, [
-            workspaces,
-            authStatus,
-            isLoadingWorkspaces,
-            hasWorkspaces,
-            userId,
-            router
-        ])
-       
-
-        //  --- RENDER STATES (Conditional UI) ---
-
-        // 1. Authentication check
-        if (authStatus === "loading" || (authStatus === "authenticated" && user === null)) {
-            return <div>Loading...</div>;
+        // Cleanup: If the saved workspace ID no longer exists, clear it. 
+        if(!validWorkspace && lastWorkspaceId){
+            clearLastWorkspace(userId);
         }
 
-        // 2. Account Consistency Check
-        if (authStatus === "authenticated" && !user) {
-            return (
-                <div className="flex flex-col justify-center items-center h-screen text-red-600 space-y-4">
-                    <p className="text-xl font-bold">Account Not Found</p>
-                    <p className="text-base">Your account was not found in our database.</p>
-                    <p className="text-sm text-gray-500">Please contact support or try signing up again.</p>
-                </div>
-            );
+        // Fallback: Use last valid workspace OR the first one in the list
+        const workspaceToOpen = validWorkspace || workspaces[0];
+        if(workspaceToOpen){
+            router.replace(`/dashboard/${workspaceToOpen._id}`);
         }
+
+    }, [
+        workspaces,
+        authStatus,
+        isLoadingWorkspaces,
+        hasWorkspaces,
+        userId,
+        router
+    ]);       
+
+    //  --- RENDER STATES (Conditional UI) ---
+
+    // 1. Authentication check
+    if (authStatus === "loading" || (authStatus === "authenticated" && user === null)) {
+        return <div>Loading...</div>;
+    }
+
+    // 2. Account Consistency Check
+    if (authStatus === "authenticated" && !user) {
+        return (
+            <div className="flex flex-col justify-center items-center h-screen text-red-600 
+            space-y-4">
+                <p className="text-xl font-bold">Account Not Found</p>
+                <p className="text-base">Your account was not found in our database.</p>
+                <p className="text-sm text-gray-500">
+                    Please contact support or try signing up again.
+                </p>
+            </div>
+        );
+    }
     
     // 3. Data Loading State
     if (isLoadingWorkspaces) {
-        return <div className="flex justify-center items-center h-screen text-lg font-semibold text-gray-700">Loading your dashboard...</div>;
+        return <div className="flex justify-center items-center h-screen text-lg font-semibold
+         text-gray-700">Loading your dashboard...</div>;
     }
 
     // 4. API Error Handling
     if (workspaceError) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen text-red-600 space-y-4">
+            <div className="flex flex-col justify-center items-center h-screen text-red-600 
+            space-y-4">
                 <p className="text-xl font-bold">Error Loading Dashboard</p>
                 <p className="text-base">{workspaceError}</p>
-                <p className="text-sm text-gray-500">Please try refreshing the page or contact support.</p>
+                <p className="text-sm text-gray-500">
+                    Please try refreshing the page or contact support.
+                </p>
             </div>
         );
     }
@@ -164,13 +167,12 @@ useEffect(() => {
         return <DashboardSetup />;
     }
    
-
     // 6. Redirection Bridge (Temporary fallback while router.replace executes)
    return( 
-   <div className="flex justify-center items-center h-screen text-gray-600">
-    Redirecting to your workspace...
-    </div>);
-
+        <div className="flex justify-center items-center h-screen text-gray-600">
+            Redirecting to your workspace...
+        </div>
+    );
 }
 
 export default function DashboardPage(){

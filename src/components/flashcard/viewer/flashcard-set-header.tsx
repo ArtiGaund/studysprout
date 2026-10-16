@@ -69,7 +69,8 @@ const FlashcardSetHeader: React.FC<FlashcardSetHeaderProps> = ({
                     onBlur={handleBlur}
                     onClick={(e) => e.stopPropagation()}
                     disabled={isSaving}
-                    className="text-[lg font-semibold text-white bg-neutral-950 border border-violet-500 rounded-lg px-2 py-0.5 outline-none w-full"
+                    className="text-[lg font-semibold text-white bg-neutral-950 border
+                     border-violet-500 rounded-lg px-2 py-0.5 outline-none w-full"
                 />
             ) : (
                <TooltipComponent
@@ -113,7 +114,8 @@ const FlashcardSetHeader: React.FC<FlashcardSetHeaderProps> = ({
                             e.stopPropagation();
                             startEditing();
                         }}
-                        className="p-1 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+                        className="p-1 rounded-md text-neutral-400 hover:text-white
+                         hover:bg-neutral-800 transition-colors"
                         title="Rename set"
                     >
                         <Pencil size={12}/>
@@ -123,7 +125,8 @@ const FlashcardSetHeader: React.FC<FlashcardSetHeaderProps> = ({
                             e.stopPropagation();
                             onDelete(set._id);
                         }}
-                        className="p-1 rounded-md text-neutral-400 hover:text-rose-400 hover:bg-rose-950/30 transition-colors"
+                        className="p-1 rounded-md text-neutral-400 hover:text-rose-400
+                         hover:bg-rose-950/30 transition-colors"
                         title="Delete set"
                     >
                         <Trash size={13}/>

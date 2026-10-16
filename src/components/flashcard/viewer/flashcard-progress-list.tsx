@@ -73,12 +73,14 @@ const FlashcardProgressList: React.FC<FlashcardProgressListProps> = ({
                 {/* Giving the modal to popover because scrollable area was not scrollable if added with the popover */}
                 <Popover modal>
                     <PopoverTrigger
-                    className="font-semibold text-amber-400 hover:text-amber-300 transition-colors tracking-wide"
+                    className="font-semibold text-amber-400 hover:text-amber-300 
+                    transition-colors tracking-wide"
                     >
                         TODO ({todo.length})
                     </PopoverTrigger>
                     <PopoverContent
-                    className="w-[260px] bg-neutral-900 border-neutral-800 p-2 rounded-xl shadow-xl"
+                    className="w-[260px] bg-neutral-900 border-neutral-800 p-2 rounded-xl 
+                    shadow-xl"
                     >
                         {todo.length === 0 && (
                             <p className="text-xs text-neutral-500 font-mono p-2">
@@ -116,12 +118,14 @@ const FlashcardProgressList: React.FC<FlashcardProgressListProps> = ({
                 {/* Giving the modal to popover because scrollable area was not scrollable if added with the popover */}
                 <Popover modal>
                     <PopoverTrigger
-                    className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors tracking-wide"
+                    className="font-semibold text-emerald-400 hover:text-emerald-300 
+                    transition-colors tracking-wide"
                     >
                         COMPLETED ({completed.length})
                     </PopoverTrigger>
                     <PopoverContent
-                    className="w-[260px] bg-neutral-900 border-neutral-800 p-2 rounded-xl shadow-xl"
+                    className="w-[260px] bg-neutral-900 border-neutral-800 p-2 rounded-xl 
+                    shadow-xl"
                     >
                         {completed.length === 0 && (
                             <p className="text-xs text-neutral-500 font-mono p-2">
@@ -136,7 +140,9 @@ const FlashcardProgressList: React.FC<FlashcardProgressListProps> = ({
                                     <div
                                     key={card._id}
                                     onClick={() => onSelect(card._id)}
-                                    className="p-2 bg-neutral-950/50 border-l-2 border-emerald-500 hover:bg-emerald-950/20 rounded-lg cursor-pointer text-xs transition-all"
+                                    className="p-2 bg-neutral-950/50 border-l-2
+                                     border-emerald-500 hover:bg-emerald-950/20 rounded-lg 
+                                     cursor-pointer text-xs transition-all"
                                     >
                                         <span className="text-eutral-500 line-through line-clamp-2">
                                         {card.question.slice(0,50)}...

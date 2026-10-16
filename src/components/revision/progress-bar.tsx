@@ -32,18 +32,18 @@ export const ProgressBar = ({
 }: ProgressBarProps) => {
     return (
          <div className={twMerge(
-            "flex flex-col w-full gap-2 p-3 px-4 border rounded-lg mb-4 transition-all",
+            "flex flex-col w-full gap-2 p-3 px-4 border rounded-xl mb-4 transition-all font-mono",
             // Conditional logic for theme switching
             others 
-            ? "bg-gray-900/40 border-white/5 opacity-80"
-            : "bg-purple-900/10 border-purple-500/20"
+            ? "bg-[#110A10] border-white/5 opacity-80"
+            : "bg-purple-950/20 border-purple-500/20"
          )}>
             <div className="flex justify-between items-center">
                 <span className={twMerge(
-                    "text-[10px] italic font-medium truncate pr-2",
+                    "text-[10px] font-semibold uppercase tracking-wider truncate pr-2",
                     others
-                    ? "text-gray-400"
-                    : "text-purple-400"
+                    ? "text-neutral-400"
+                    : "text-purple-300"
                 )}>
                     {title}
                 </span>
@@ -51,26 +51,26 @@ export const ProgressBar = ({
                 {/* Conditional rendering of control elements */}
                {onMinimize && ( <button
                 onClick={onMinimize}
-                className="text-[10px] text-gray-400 hover:text-white transition-colors"
+                className="text-[10px] text-neutral-500 hover:text-neutral-300 transition-colors"
                 >   
                 Minimize
                 </button>)}
             </div>
 
             {/* Progress Track */}
-            <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-[#0A0507] h-2 rounded-full overflow-hidden border border-white/5">
                 <div 
                 className={twMerge(
-                    "h-full transition-all duration-500",
+                    "h-full transition-all duration-500 rounded-full",
                     others
-                    ? "bg-gray-600"
-                    : "bg-purple-600"
+                    ? "bg-neutral-500"
+                    : "bg-purple-500"
                 )}
                 style={{ width: `${currentProgress ?? 0}%`}}
                 />
                 </div>
                 {/* Quantitative Metadata */}
-                <div className="flex justify-between text-[9px] text-gray-500">
+                <div className="flex justify-between text-[10px] text-neutral-500">
                     <span>{currentCount ?? 0} / {totalCards ?? 0}</span>
                     <span>{currentProgress}%</span>
                 </div>

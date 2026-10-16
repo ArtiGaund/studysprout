@@ -57,19 +57,19 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
 
     return (
         <WorkspaceSocketProvider>
-            <main className="flex overflow-hidden h-screen w-screen bg-neutral-950 text-neutral-100">
+            <main className="flex overflow-hidden h-screen w-screen bg-[#0A0507] text-white">
                 {mainSlotExtras}
                 <Sidebar params={params} className="hidden sm:flex"/>
 
                 {isRevisionSidebarOpen && (
-                    <div className="hidden sm:flex shrink-0 border-neutral-800/80 border-l-[1px]
+                    <div className="hidden sm:flex shrink-0 border-white/10 border-l-[1px]
                     relative overflow-y-auto overflow-x-hidden">
                         <RevisionSidebar params={params}/>
                     </div>
                 )}
 
                 {isInboxSidebarOpen && (
-                    <div className="hidden sm:flex shrink-0 border-neutral-800/80 border-l-[1px]
+                    <div className="hidden sm:flex shrink-0 border-white/10 border-l-[1px]
                     relative overflow-y-auto overflow-x-hidden">
                         <InboxSidebar />
                     </div>
@@ -83,7 +83,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({
                     <Sidebar params={params} className="w-full flex h-full"/>
                 </MobileSidebar>
 
-                <div className="border-neutral-800/80 border-l-[1px] w-full relative 
+                <div className="border-white/10 border-l-[1px] w-full relative 
                 overflow-y-auto overflow-x-hidden">
                     {children}
                 </div>

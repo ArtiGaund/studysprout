@@ -42,7 +42,6 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
 }) => {
     const dispatch = useDispatch();
     const [ activeIndex, setActiveIndex ] = useState(initialIndex);
-    const [ sessionMode, setSessionMode ] = useState<"all" | "due-only">("due-only");
     const [ sessionStats, setSessionStats ] = useState({
         again: 0, hard: 0, good: 0, easy: 0, startTime: new Date(),
     });
@@ -136,7 +135,10 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
         try {
             const newFlashcardSet = await regenerateFlashcardSet(set._id);
             if(!newFlashcardSet){
-                console.warn("[FlashcardSetViewerSheet] Error regenerating flashcard set", newFlashcardSet);
+                console.warn(
+                    "[FlashcardSetViewerSheet] Error regenerating flashcard set", 
+                    newFlashcardSet
+                );
                 return;
             }
             dispatch(setFlashcardsForSet({
@@ -211,10 +213,11 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
     }
 
     return (
-        <SheetContent className="!w-full sm:!max-w-[800px] bg-neutral-950 border-neutral-800 text-neutral-100 flex flex-col h-full p-6">
+        <SheetContent className="!w-full sm:!max-w-[800px] bg-[#0A0507] border-neutral-800 
+        text-neutral-100 flex flex-col h-full p-6">
             <SheetHeader className="space-y-0">
                 <SheetTitle className="flex flex-wrap items-center justify-between border-b
-                border-neutral-800 pb-3 bg-neutral-950 gap-2">
+                border-neutral-800 pb-3 bg-[#0A0507] gap-2">
                     {set && <FlashcardSetHeader set={set} onDelete={deleteFlashcard}/>}
                     {regenerating 
                         ? <Loader2 className="animate-spin w-5 h-5 text-violet-400"/>
@@ -226,7 +229,8 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                                 : "bg-violet-600 text-white hover:bg-violet-500"}`}
                         >
                             Regenerate Set
-                        </button>}
+                        </button>
+                    }
                 </SheetTitle>
                 {/* SRS Progress Dashboard */}
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-4
@@ -261,7 +265,8 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
             {/* Main Study Area */}
             <div className="flex-1 overflow-y-auto my-auto py-4">
                 {isSessionFinished ? (
-                    <div className={`flex flex-col items-center justify-center h-full gap-4 text-center`}>
+                    <div className={`flex flex-col items-center justify-center h-full gap-4 
+                    text-center`}>
                         <div className="p-3 bg-violet-950/50 rounded-2xl border
                          border-violet-800/50 text-violet-300"> 
                             <PartyPopper size={15} className="animate-bounce"/>
@@ -272,7 +277,9 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                         </p>
                         <button 
                             onClick={() => setActiveIndex(0)}
-                            className="mt-2 px-4 py-2 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-sm font-mono text-neutral-200 hover:text-white transition-colors"
+                            className="mt-2 px-4 py-2 rounded-xl bg-neutral-900 border 
+                            border-neutral-800 hover:border-neutral-700 text-sm font-mono
+                             text-neutral-200 hover:text-white transition-colors"
                         >
                             Review Again
                         </button>
@@ -282,7 +289,10 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                         <button
                             onClick={goPrev}
                             disabled={activeIndex === 0}
-                            className={`fp-2.5 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-neutral-900`}
+                            className={`fp-2.5 rounded-xl border border-neutral-800 
+                                bg-neutral-900 text-neutral-300 hover:bg-neutral-800
+                                 hover:text-white transition-colors disabled:opacity-30 
+                                 disabled:hover:bg-neutral-900`}
                         >
                             <ChevronLeft size={20}/>
                         </button>
@@ -295,7 +305,10 @@ const FlashcardSetViewerSheet: React.FC<FlashcardSetViewerSheetProps> = ({
                         <button
                             disabled={activeIndex === cards.length -1 }
                             onClick={goNext}
-                            className={`p-2.5 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors disabled:opacity-30 disabled:hover:bg-neutral-900`}
+                            className={`p-2.5 rounded-xl border border-neutral-800
+                                 bg-neutral-900 text-neutral-300 hover:bg-neutral-800
+                                  hover:text-white transition-colors disabled:opacity-30
+                                   disabled:hover:bg-neutral-900`}
                         >
                             <ChevronRight size={20}/>
                         </button>

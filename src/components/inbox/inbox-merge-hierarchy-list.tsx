@@ -112,35 +112,46 @@ const InboxMergeHierarchyList: React.FC<InboxMergeHierarchyListProps> = ({ onCon
 
     const isLoading = isLoadingWorkspace || isLoadingFolder || isLoadingFile;
 
-    if(isLoading){
+    if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-full min-h-[200px]">
-                <Loader2 className="h-6 w-6 animate-spin text-purple-500"/>
-                <span className="ml-2 text-gray-500">Loading resources...</span>
-            </div>
-        )
+            <DialogContent className="bg-[#110A10] border border-white/10 text-white 
+            font-mono max-w-lg select-none">
+                <div className="flex justify-center items-center h-48 gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin text-purple-400"/>
+                    <span className="text-xs text-neutral-400">Loading hierarchy...</span>
+                </div>
+            </DialogContent>
+        );
     }
 
     return (
-       <DialogContent>
+       <DialogContent className="bg-[#110A10] border border-white/10 text-white font-mono max-w-lg select-none">
             <DialogHeader>
-                <DialogTitle>Choose where to save this</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-base font-bold text-white tracking-tight">
+                    Choose where to save this
+                </DialogTitle>
+                <DialogDescription className="text-xs text-neutral-400">
                     Pick an existing file, or create a new workspace/folder/file to hold this content.
                 </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-row gap-2 text-sm">
-                <span className="text-gray-500">Selected file:</span>
-                <span className="text-[#63FF9D]">{selectedFileTitle || "None yet"}</span>
+            <div className="flex flex-row gap-2 text-sm py-1 px-2 bg-[#0A0507] border
+             border-white/10 rounded-xl">
+                <span className="text-neutral-400">Selected file:</span>
+                <span className="text-purple-400 font-bold truncate">
+                    {selectedFileTitle || "None yet"}
+                </span>
             </div>
 
             {/* New Workspace affordance sits above the tree, since it's a root-level action */}
             <div className="flex items-center justify-between px-2">
-                <span className="text-xs text-gray-500 uppercase tracking-wide">Workspaces</span>
+                <span className="text-xs text-neutral-500 uppercase tracking-widest font-bold">
+                    Workspaces
+                </span>
                 <span 
                     onClick={() => setWorkspaceDialogOpen(true)}
-                    className="text-xs text-[#63FF9D] hover:underline cursor-pointer"
+                    className="text-xs text-purple-400 hover:text-purple-300 hover:underline 
+                    cursor-pointer flex items-center gap-1"
                 >
                     <PlusIcon size={12}/> New Workspace
                 </span>
@@ -153,7 +164,8 @@ const InboxMergeHierarchyList: React.FC<InboxMergeHierarchyListProps> = ({ onCon
             >
                 <></>
             </CustomDialogTrigger>
-            <div className="h-auto max-h-[320px] overflow-y-auto">
+            <div className="h-auto max-h-[320px] overflow-y-auto bg-[#0A0507] border
+             border-white/10 rounded-xl p-2 custom-insights-scrollbar">
                 <div className="flex flex-col gap-1 p-2">
                     {workspaces.map((workspace) => (
                         <InboxMergePickerItem 
@@ -179,7 +191,9 @@ const InboxMergeHierarchyList: React.FC<InboxMergeHierarchyListProps> = ({ onCon
                 <DialogClose asChild>
                     <Button
                         disabled={!selectedFileId}
-                        className="w-[10rem] h-auto bg-purple-950 hover:bg-purple-800 disabled:opacity-40"
+                        className="w-[10rem] h-auto bg-purple-600 hover:bg-purple-500 
+                        disabled:opacity-40 text-white font-bold text-xs uppercase 
+                        tracking-wider rounded-xl py-2.5 transition-colors"
                         onClick={() => selectedFileId && onConfirm(selectedFileId, selectedFileTitle)}
                     >
                         Merge Here

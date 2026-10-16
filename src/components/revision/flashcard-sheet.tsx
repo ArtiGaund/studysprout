@@ -104,11 +104,11 @@ const FlashcardSheet = ({
         data-editable-container
         onClick={() => !isLockedByRemote && !isEditing && onOpen(set._id)}
         className={clsx(
-            "group relative flex justify-between items-center py-2 rounded",
-            "overflow-hidden transition-colors",
+            "group relative flex justify-between items-center py-2 rounded-xl",
+            "overflow-hidden transition-all border border-transparent font-mono",
             isLockedByRemote
-                ? "bg-emerald-950/40 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)] cursor-not-allowed"
-                : "cursor-pointer hover:bg-white/5"
+                ? "bg-emerald-950/40 border-emerald-500/30 cursor-not-allowed"
+                : "cursor-pointer hover:bg-[#110A10] hover:border-white/10"
         )}
         aria-label={`Study ${set.title}`}
     >
@@ -126,13 +126,13 @@ const FlashcardSheet = ({
                     onBlur={handleBlur}
                     onClick={(e) => e.stopPropagation()}
                     disabled={isSaving}
-                    className="text-[12px] font-medium text-white bg-zinc-900 border
+                    className="text-xs font-mono text-white bg-[#0A0507] border
                     border-purple-500/50 rounded px-1.5 py-0.5 outline-none w-full max-w-[130px]"
                 />
             ) : (
                 <TooltipComponent
                     className={isLockedByRemote
-                        ? "bg-cyan-400 text-cyan-950 font-bold border-none shadow-[0_0_20px_rgba(251,191,36,0.4)]"
+                        ? "bg-cyan-950 text-cyan-200 font-mono border border-cyan-800 text-xs"
                         : ""
                     }
                     message={isLockedByRemote ? `${remoteEditing.username} is editing...` : ""}
@@ -140,10 +140,10 @@ const FlashcardSheet = ({
                     <span 
                         onClick={(e) => !isLockedByRemote && handleMouseClickInterception(e)}
                         className={clsx(
-                            "text-[12px] truncate max-w-[110px] select-none",
+                            "text-xs truncate max-w-[110px] select-none font-medium",
                             isLockedByRemote
-                                ? "text-emerald-400 font-semibold italic opacity-90 cursor-not-allowed"
-                                : "text-gray-200 cursor-pointer"
+                                ? "text-emerald-400 italic opacity-90 cursor-not-allowed"
+                                : "text-gray-200 hover:text-white cursor-pointer"
                         )}
                     >
                         {displayedTitle}
@@ -165,14 +165,14 @@ const FlashcardSheet = ({
        
             {/* Urgency Indicators: Fire icon for due cards, Checkmark for completed */}
             {!isEditing && !isLockedByRemote && (realDueCount > 0 ? (
-                <span className="text-red-400 text-[11px] shrink-0 font-extrabold flex items-center
-                gap-1">
-                    <TrendingUp size={12} className="text-red-400"/> {realDueCount} due
+                <span className="text-amber-400 text-[11px] shrink-0 font-mono flex items-center
+                gap-1 font-bold ml-auto">
+                    <TrendingUp size={12} className="text-amber-400"/> {realDueCount} due
                 </span>
             ) 
             : (
-                <span className="text-green-400 text-[11px] shrink-0 font-extrabold">
-                    <CircleCheck size={13} className="text-green-400 shrink-0"/>
+                <span className="text-emerald-400 text-[11px] shrink-0 font-mono ml-auto">
+                    <CircleCheck size={13} className="text-emerald-400"/>
                 </span>)
             )}
 
@@ -180,19 +180,20 @@ const FlashcardSheet = ({
             {!isEditing && !isLockedByRemote && (
                 <div
                     className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5
-                    transition-all shrink-0"
+                    transition-all shrink-0 ml-1"
                 >   
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             startEditing();
                         }}
-                        className="p-1 rounded hover:bg-white/10 transition-colors"
+                        className="p-1 rounded text-neutral-400 hover:text-white
+                         hover:bg-white/10 transition-colors"
                         title="Rename set"
                     >
                         <Pencil 
                             size={12}
-                            className="text-gray-400 hover:text-white"
+                            // className="text-gray-400 hover:text-white"
                         />
                     </button>
                     <button
@@ -200,12 +201,13 @@ const FlashcardSheet = ({
                             e.stopPropagation();
                             onDelete(set._id);
                         }}
-                        className="p-1 rounded hover:bg-red-500/20 transition-colors"
+                        className="p-1 rounded text-neutral-400 hover:text-red-400
+                         hover:bg-red-500/10 transition-colors"
                         title="Delete set"
                     >
                         <Trash 
                         size={13}
-                        className="text-gray-400 group-hover:text-red-400"
+                        // className="text-gray-400 group-hover:text-red-400"
                         />
                     </button>
                 </div>

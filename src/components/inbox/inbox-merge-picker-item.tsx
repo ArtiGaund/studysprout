@@ -2,7 +2,6 @@
 
 import { ReduxFile, ReduxFolder, ReduxWorkSpace } from "@/types/state.type";
 import { IconChevronRight, IconPlus } from "@tabler/icons-react";
-import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface InboxMergePickerItemProps{
@@ -34,10 +33,6 @@ const InboxMergePickerItem: React.FC<InboxMergePickerItemProps> = ({
     onToggle,
     expandedIds,
 }) => {
-    // const [ creatingType, setCreatingType ] = useState<"folder" | "file" | null>(null);
-    // const [ newTitle, setNewTitle ] = useState("");
-    // const [ submitting, setSubmitting ] = useState(false);
-    
     const isExpandable = resourceType !== "File";
     const resourceId = resource._id;
     const resourceTitle = resource.title;
@@ -57,21 +52,22 @@ const InboxMergePickerItem: React.FC<InboxMergePickerItemProps> = ({
     const Icon = resource.iconId;
 
     return (
-        <div className="flex flex-col">
+        <div className="flex flex-col font-mono text-xs">
             <div
-                className="flex items-center w-full py-1.5 rounded-md hover:bg-gray-800 group
+                className="flex items-center w-full py-1.5 rounded-md hover:bg-white/5 group
                 transition-colors"
                 style={{ paddingLeft: `${paddingLeft}px`}}
             >
                 <span
-                    className="flex items-center w-4 h-4 mr-2 cursor-pointer"
+                    className="flex items-center w-4 h-4 mr-2 cursor-pointer text-neutral-500
+                     hover:text-white"
                     onClick={() => isExpandable && hasChildren && onToggle(resourceId)}
                 >
                     {isExpandable && hasChildren && (
                         <IconChevronRight 
                             className={twMerge(
                                 "w-4 h-4 transition-transform",
-                                isExpanding && "rotate-90"
+                                isExpanding && "rotate-90 text-purple-400"
                             )}
                         />
                     )}
@@ -79,13 +75,14 @@ const InboxMergePickerItem: React.FC<InboxMergePickerItemProps> = ({
 
                 <div 
                     className={twMerge(
-                        "flex items-center flex-grow truncate",
-                        resourceType === "File" && "cursor-pointer",
-                        resourceType === "File" && selectedFileId === resourceId && "bg-purple-950 p-1.5 rounded-md"
+                        "flex items-center flex-grow truncate px-1.5 py-1 rounded-md transition-colors",
+                        resourceType === "File" && "cursor-pointer hover:bg-white/10",
+                        resourceType === "File" && selectedFileId === resourceId && 
+                        "bg-purple-950/60 border border-purple-500/40 text-purple-300 font-bold"
                     )}
                     onClick={() => resourceType === "File" && onSelectFile(resourceId)}
                 >
-                    <span className="w-5 h-5 mr-2 text-purple-400">{Icon}</span>
+                    <span className="w-5 h-5 mr-2 text-purple-400 shrink-0">{Icon}</span>
                     <span className="text-sm truncate">{resourceTitle}</span>
                 </div>
 
@@ -93,7 +90,8 @@ const InboxMergePickerItem: React.FC<InboxMergePickerItemProps> = ({
                 {resourceType === "Workspace" && (
                     <button
                         onClick={() => onCreateFolder(resourceId)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-700
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 
+                        text-neutral-400 hover:text-white hover:bg-white/10 mr-1
                         rounded"
                         title="New Folder"
                     >
@@ -103,7 +101,8 @@ const InboxMergePickerItem: React.FC<InboxMergePickerItemProps> = ({
                  {resourceType === "Folder" && (
                     <button
                         onClick={() => onCreateFile(resourceId)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-700
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1
+                         text-neutral-400 hover:text-white hover:bg-white/10 mr-1
                         rounded"
                         title="New File"
                     >

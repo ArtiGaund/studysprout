@@ -378,17 +378,21 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
     return(
         <aside
             className={twMerge(
-                'flex flex-col shrink-0 p-2 gap-2 h-full overflow-hidden w-[260px]',
+                'flex flex-col shrink-0 p-2 gap-2 h-full overflow-hidden w-[260px] bg-[#0A0507] text-white font-mono select-none',
                 className
             )}
         >
             <div className="flex flex-col w-full min-w-0 overflow-hidden px-2 sm:px-0">
-                <div className="flex flex-col py-3 sm:items-start items-center">
-                    <span className="hidden sm:block font-bold text-sm">Revision Bar</span>
+                <div className="flex flex-col py-3 sm:items-start items-center
+                border-b border-white/10 pb-3 mb-2">
+                    <span className="hidden sm:block font-bold text-xs uppercase tracking-widest
+                     text-neutral-400">
+                        Revision Bar
+                    </span>
                     {/* Centered Mobile Header */}
                     <div className="sm:hidden flex flex-col items-center text-center mb-4">
                         <h2 className="text-2xl font-bold text-white">Flashcards</h2>
-                        <p className="text-xs text-muted-foreground">Revision Mode</p>
+                        <p className="text-xs text-neutral-500">Revision Mode</p>
                     </div>
                 </div>
 
@@ -415,7 +419,8 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
 
                 {/* Usage ring */}
                 {usage && (
-                    <div className="shrink-0 w-full min-w-0 flex flex-col items-center sm:items-stretch">
+                    <div className="shrink-0 w-full min-w-0 flex flex-col items-center 
+                    sm:items-stretch bg-[#110A10] border border-white/10 rounded-2xl mb-3">
                         <UsageRing usage={usage} isAtLimit={isAtLimit}/>
                     </div>
                 )}
@@ -423,15 +428,17 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
                 <div className="flex flex-row w-full items-center justify-center gap-2 px-2 py-1
                 min-w-0">
                     <Button
-                        className="flex-1 max-w-[200px] bg-purple-950 hover:bg-purple-800
-                            h-12 text-md"
+                        className="flex-1 max-w-[200px] bg-purple-600 hover:bg-purple-500
+                            h-12 text-white font-mono text-xs font-medium rounded-xl 
+                            transition-all border border-purple-400/30"
                         onClick={generateFlashcardOnThisLevel}
                         disabled={isCurrentLocationLocked || isRequesting}
                     >
                         {isCurrentLocationLocked 
                             ? (
                                 <div className="flex items-center gap-2 overflow-hidden">
-                                    <Loader2 className="w-3 h-3 animate-spin shrink-0"/>
+                                    <Loader2 className="w-3 h-3 animate-spin shrink-0 
+                                    text-purple-200"/>
                                     <span className="text-sm truncate">
                                         {isLocalActor ? "Generating..."  :"Busy..."}
                                     </span>
@@ -445,8 +452,8 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
                         <button
                             onClick={openFlashcardTypeSheet}
                             className={twMerge(
-                                "h-10 w-10 flex shrink-0 items-center justify-center",
-                                "hover:bg-gray-800 rounded-md transition-colors"
+                                "h-10 w-10 flex shrink-0 items-center justify-center text-neutral-300",
+                                "bg-[#110A10] hover:bg-white/10 border border-white/100 rounded-xl transition-colors"
                             )}
                         >   
                             <PlusIcon className="w-5 h-5"/>
@@ -456,11 +463,11 @@ const RevisionSidebar: React.FC<RevisionSidebarProps> = ({ params, className }) 
             </div>
 
             {/* Flashcard set List */}
-            <div className="flex-1 mt-5 overflow-y-auto min-w-0">
+            <div className="flex-1 mt-5 overflow-y-auto min-w-0 pr-1 custom-insights-scrollbar">
                 {loading 
                     ? (
                         <div className="flex justify-center py-10">
-                            <Loader2 className="w-6 h-6 animate-spin text-purple-500"/>
+                            <Loader2 className="w-6 h-6 animate-spin text-purple-400"/>
                         </div>
                     ) : (
                         <RevisionFlashcardSetList 
